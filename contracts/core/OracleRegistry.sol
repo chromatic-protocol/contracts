@@ -81,12 +81,7 @@ contract OracleRegistry is IOracleRegistry {
         // common
         lastSyncedRoundId[priceFeed] = roundId;
 
-        // syncedPhases.pop();
-        syncedPhases.length - 1;
-        /// 2 (3) 4
-        /// 1 2 3 4
-        // phases[chainlinkPriceFeeds[base][quote]];
-        // LibChainlinkRound.getPhase();
+        //TODO return 
     }
 
     // get version on current phase by using roundId
@@ -101,7 +96,7 @@ contract OracleRegistry is IOracleRegistry {
     function atVersion(
         address base,
         address quote,
-        uint256 oracleVersion
+        uint256 oracleVersion  // 30 
     ) external view returns (OracleVersion memory) {
         // version prev 50
         // last- start = version update count  > 50 else < 50 search prev phase struct
