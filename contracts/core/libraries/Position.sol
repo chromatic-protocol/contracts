@@ -4,7 +4,6 @@ pragma solidity 0.8.17;
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {LpSlotKey} from "@usum/core/libraries/LpSlotKey.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {LpSlotMargins} from "@usum/core/libraries/LpSlotMargins.sol";
 
 struct Position {
     uint256 oracleVersion;
