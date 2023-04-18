@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-struct OracleVersion {
-    uint256 version;
-    uint256 timestamp;
-    int256 price;
-}
+import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+
 struct Phase { 
     uint16 phaseId;
     uint256 startingRoundId;
