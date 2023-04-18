@@ -35,6 +35,8 @@ contract OracleRegistry is IOracleRegistry {
         (uint80 roundId, , , , ) = priceFeed.latestRoundData();
         require(roundId > 0); // FIXME
 
+        chainlinkPriceFeeds[base][quote] = priceFeed;
+        lastSyncedRoundId[priceFeed] = roundId;
         phases[chainlinkPriceFeeds[base][quote]].push(
             Phase({
                 phaseId: LibChainlinkRound.getPhaseId(roundId),
@@ -42,7 +44,7 @@ contract OracleRegistry is IOracleRegistry {
                 startingVersion: 1
             })
         );
-        chainlinkPriceFeeds[base][quote] = priceFeed;
+
         emit FeedRegistered(base, quote, chainlinkPriceFeed);
     }
 
@@ -60,35 +62,41 @@ contract OracleRegistry is IOracleRegistry {
 
         ) = priceFeed.latestRoundData();
 
-        Phase[] storage syncedPhases = phases[chainlinkPriceFeeds[base][quote]];
+        Phase[] storage syncedPhases = phases[priceFeed];
         if (syncedPhases.length == 0) revert NotRegistered();
 
         // sync
-        uint16 latestPhaseId = LibChainlinkRound.getPhaseId(roundId);
-        uint256 latestSyncedPhaseIndex = syncedPhases.length - 1;
-        Phase storage latestSyncedPhase = syncedPhases[latestSyncedPhaseIndex];
-        if (latestSyncedPhase.phaseId < latestPhaseId) {
-            uint256 latestPhaseRoundCnt = lastSyncedRoundId[priceFeed] -
-                latestSyncedPhase.startingRoundId +
+        uint16 currentPhaseId = LibChainlinkRound.getPhaseId(roundId);
+        uint256 syncedPhaseIndex = syncedPhases.length - 1;
+        Phase storage lastSyncedPhase = syncedPhases[syncedPhaseIndex];
+        uint256 newVersion;
+        if (lastSyncedPhase.phaseId < currentPhaseId) {
+            newVersion =
+                lastSyncedPhase.startingVersion +
+                lastSyncedRoundId[priceFeed] -
+                lastSyncedPhase.startingRoundId +
                 1;
 
             syncedPhases.push(
                 Phase({
-                    phaseId: latestPhaseId,
+                    phaseId: currentPhaseId,
                     startingRoundId: roundId,
-                    startingVersion: latestSyncedPhase.startingVersion +
-                        latestPhaseRoundCnt
+                    startingVersion: newVersion
                 })
             );
+        } else {
+            newVersion =
+                lastSyncedPhase.startingVersion +
+                roundId -
+                lastSyncedPhase.startingRoundId;
         }
-        // common
         lastSyncedRoundId[priceFeed] = roundId;
-        uint256 version = latestSyncedPhase.startingVersion + roundId - latestSyncedPhase.startingRoundId;
-        return OracleVersion({
-            version: version,
-            price:  answer,
-            timestamp: updatedAt
-        });
+        return
+            OracleVersion({
+                version: newVersion,
+                price: answer,
+                timestamp: updatedAt
+            });
     }
 
     function calcRoundId(
@@ -98,13 +106,15 @@ contract OracleRegistry is IOracleRegistry {
         uint256 phaseIndex = syncedPhases.length - 1;
         while (phaseIndex >= 0) {
             Phase storage phase = syncedPhases[phaseIndex];
-
             if (oracleVersion < phase.startingVersion) {
                 phaseIndex--;
                 continue;
             }
-
-            return uint80(phase.startingRoundId + (oracleVersion - phase.startingVersion));
+            return
+                uint80(
+                    phase.startingRoundId +
+                        (oracleVersion - phase.startingVersion)
+                );
         }
         return 0;
     }
@@ -118,7 +128,7 @@ contract OracleRegistry is IOracleRegistry {
         uint256 latestSyncedRoundId = lastSyncedRoundId[
             chainlinkPriceFeeds[base][quote]
         ];
-    
+
         // version
         uint80 roundId = calcRoundId(syncedPhases, oracleVersion);
         if (roundId > latestSyncedRoundId || roundId == 0)
@@ -130,12 +140,14 @@ contract OracleRegistry is IOracleRegistry {
             int256 answer,
             uint256 startedAt,
             uint256 updatedAt,
+
         ) = priceFeed.getRoundData(roundId);
 
-        return OracleVersion({
-            version: oracleVersion,
-            price:  answer,
-            timestamp: updatedAt
-        });
+        return
+            OracleVersion({
+                version: oracleVersion,
+                price: answer,
+                timestamp: updatedAt
+            });
     }
 }
