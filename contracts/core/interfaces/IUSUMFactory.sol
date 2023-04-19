@@ -12,8 +12,6 @@ interface IUSUMFactory {
         address market
     );
 
-    function dao() external view returns (address);
-
     function oracleRegistry() external view returns (IOracleRegistry);
 
     function getMarket(
