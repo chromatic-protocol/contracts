@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IUSUMFactory} from "./interfaces/IUSUMFactory.sol";
-import {IOracleRegistry} from "./interfaces/IOracleRegistry.sol";
-import {MarketDeployer} from "./base/MarketDeployer.sol";
+import {IUSUMFactory} from "@usum/core/interfaces/IUSUMFactory.sol";
+import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
+import {MarketDeployer} from "@usum/core/base/MarketDeployer.sol";
+import {SettlementTokenRegistry} from "@usum/core/base/SettlementTokenRegistry.sol";
 
-contract USUMFactory is IUSUMFactory, MarketDeployer {
+contract USUMFactory is IUSUMFactory, MarketDeployer, SettlementTokenRegistry {
     mapping(address => mapping(address => address)) private markets;
 
     IOracleRegistry public override oracleRegistry;
-    address public override dao;
 
     error NotRegisteredOracle();
     error WrongTokenAddress();
@@ -29,15 +29,12 @@ contract USUMFactory is IUSUMFactory, MarketDeployer {
     function createMarket(
         address oracleProvider,
         address settlementToken
-    ) external override {
-        // TODO settlementToken isRegistered check
-        // TODO oracleProvider isRegistered check
-
+    ) external override registeredOnly(settlementToken) {
         if (
             oracleProvider == address(0) ||
             !oracleRegistry.isRegistered(oracleProvider)
         ) revert NotRegisteredOracle();
-        
+
         if (settlementToken == address(0) || settlementToken == oracleProvider)
             revert WrongTokenAddress();
 
