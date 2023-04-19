@@ -109,13 +109,13 @@ library PositionParamLib {
         OracleVersion memory currentVersion,
         uint256 tokenPrecision
     ) internal view returns (int256) {
-        uint256 entryPrice = self.entryPrice(currentVersion);
-        uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
+        uint256 _entryPrice = self.entryPrice(currentVersion);
+        uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
         return
             PositionUtil.pnl(
                 self.qty * self.leverage.toInt256(),
-                entryPrice,
-                exitPrice,
+                _entryPrice,
+                _exitPrice,
                 tokenPrecision
             );
     }

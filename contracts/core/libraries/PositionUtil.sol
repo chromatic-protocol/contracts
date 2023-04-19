@@ -57,19 +57,19 @@ library PositionUtil {
 
     function pnl(
         int256 leveragedQty,
-        uint256 entryPrice,
-        uint256 exitPrice,
+        uint256 _entryPrice,
+        uint256 _exitPrice,
         uint256 tokenPrecision
     ) internal pure returns (int256) {
-        int256 delta = exitPrice > entryPrice
-            ? (exitPrice - entryPrice).toInt256()
-            : -(entryPrice - exitPrice).toInt256();
+        int256 delta = _exitPrice > _entryPrice
+            ? (_exitPrice - _entryPrice).toInt256()
+            : -(_entryPrice - _exitPrice).toInt256();
         if (leveragedQty < 0) delta *= -1;
 
         int256 absPnl = leveragedQty
             .abs()
             .mulDiv(tokenPrecision, LEVERAGED_QTY_PRECISION)
-            .mulDiv(delta.abs(), entryPrice)
+            .mulDiv(delta.abs(), _entryPrice)
             .toInt256();
 
         return delta < 0 ? -absPnl : absPnl;
