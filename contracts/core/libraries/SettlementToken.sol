@@ -41,8 +41,6 @@ library SettlementToken {
         Registry storage self,
         address token
     ) internal view returns (Record[] storage) {
-        require(contains(self, token), "SettlementToken: unregistered token");
-
         return self._interestRateRecords[token];
     }
 }

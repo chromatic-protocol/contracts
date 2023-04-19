@@ -7,7 +7,7 @@ interface ISettlementTokenRegistry {
 
     function registerSettlementToken(address token) external;
 
-    function isRegisteredSettlementToken(
+    function isRegistered(
         address token
     ) external view returns (bool);
 

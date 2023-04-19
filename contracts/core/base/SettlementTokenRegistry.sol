@@ -8,7 +8,7 @@ import {Registry} from "@usum/core/libraries/SettlementToken.sol";
 
 abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
     using InterestRateLib for Record[];
-   
+
     event RegisterSettlementToken(address indexed token);
     event AppendInterestRateRecord(
         address indexed token,
@@ -31,7 +31,7 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
         _;
     }
 
-    constructor(){
+    constructor() {
         dao = msg.sender;
     }
 
@@ -41,27 +41,22 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
 
     Registry private registry;
 
-    modifier isRegistered(address token) {
+    modifier registeredOnly(address token) {
         if (!registry.contains(token)) {
             revert UnregisteredToken();
         }
-
         _;
     }
 
     function registerSettlementToken(address token) external override onlyDao {
-        if (registry.contains(token)) {
+        if (!registry.register(token)) {
             revert AlreadyRegisteredToken();
         }
-
-        registry.register(token);
 
         emit RegisterSettlementToken(token);
     }
 
-    function isRegisteredSettlementToken(
-        address token
-    ) external view override returns (bool) {
+    function isRegistered(address token) external view override returns (bool) {
         return registry.contains(token);
     }
 
@@ -69,8 +64,8 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
         address token,
         uint256 annualRateBPS,
         uint256 beginTimestamp
-    ) external override onlyDao isRegistered(token)  {
-        registry.getInterestRateRecords(token).appendRecord(
+    ) external override onlyDao registeredOnly(token) {
+        getInterestRateRecords(token).appendRecord(
             annualRateBPS,
             beginTimestamp
         );
@@ -80,9 +75,8 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
 
     function removeLastInterestRateRecord(
         address token
-    ) external override onlyDao isRegistered(token) {
-        (bool removed, Record memory record) = registry
-            .getInterestRateRecords(token)
+    ) external override onlyDao registeredOnly(token) {
+        (bool removed, Record memory record) = getInterestRateRecords(token)
             .removeLastRecord();
 
         if (removed) {
@@ -100,12 +94,12 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
         external
         view
         override
-        isRegistered(token)
+        registeredOnly(token)
         returns (uint256 annualRateBPS)
     {
-        (Record memory record, ) = registry
-            .getInterestRateRecords(token)
-            .findRecordAt(block.timestamp);
+        (Record memory record, ) = getInterestRateRecords(token).findRecordAt(
+            block.timestamp
+        );
         return record.annualRateBPS;
     }
 
@@ -114,18 +108,14 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
         uint256 amount,
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
-    ) external view override isRegistered(token) returns (uint256) {
+    ) external view override registeredOnly(token) returns (uint256) {
         return
-            registry.getInterestRateRecords(token).calculateInterest(
-                amount,
-                from,
-                to
-            );
+            getInterestRateRecords(token).calculateInterest(amount, from, to);
     }
 
     function getInterestRateRecords(
         address token
-    ) internal view isRegistered(token) returns (Record[] storage) {
+    ) internal view returns (Record[] storage) {
         return registry.getInterestRateRecords(token);
     }
 }

@@ -29,7 +29,7 @@ contract USUMFactory is IUSUMFactory, MarketDeployer, SettlementTokenRegistry {
     function createMarket(
         address oracleProvider,
         address settlementToken
-    ) external override isRegistered(settlementToken) {
+    ) external override registeredOnly(settlementToken) {
         if (
             oracleProvider == address(0) ||
             !oracleRegistry.isRegistered(oracleProvider)
