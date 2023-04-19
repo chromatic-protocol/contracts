@@ -27,7 +27,7 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
     address public override dao;
 
     modifier onlyDao() {
-        require(msg.sender == dao);
+        require(msg.sender == dao, "only DAO can access");
         _;
     }
 
