@@ -7,6 +7,12 @@ struct OracleVersion {
     int256 price;
 }
 
+struct Phase {
+    uint16 phaseId;
+    uint256 startingRoundId;
+    uint256 startingVersion;
+}
+
 interface IOracleProvider {
     function syncVersion() external returns (OracleVersion memory);
 
