@@ -10,6 +10,8 @@ contract OracleRegistry is IOracleRegistry {
     mapping(address => mapping(address => IOracleProvider))
         private oracleProviders;
 
+    mapping(address => bool) private registeredMap;
+
     event FeedRegistered(address base, address quote, address oracleProvider);
 
     error AlreadyRegistered();
@@ -25,6 +27,8 @@ contract OracleRegistry is IOracleRegistry {
             revert AlreadyRegistered();
 
         oracleProviders[base][quote] = IOracleProvider(oracleProvider);
+        registeredMap[oracleProvider] = true;
+
         emit FeedRegistered(base, quote, oracleProvider);
     }
 
@@ -33,5 +37,11 @@ contract OracleRegistry is IOracleRegistry {
         address quote
     ) external view returns (address) {
         return address(oracleProviders[base][quote]);
+    }
+
+    function isRegistered(
+        address oracleProvider
+    ) external view override returns (bool) {
+        return registeredMap[oracleProvider];
     }
 }
