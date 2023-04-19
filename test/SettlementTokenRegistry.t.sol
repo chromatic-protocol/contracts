@@ -2,16 +2,58 @@
 pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
+import {USUMFactory} from "@usum/core/USUMFactory.sol";
+import {Record} from "@usum/core/libraries/InterestRate.sol";
 
+contract _SettlementTokenRegistry is USUMFactory {
+    constructor() USUMFactory(address(0)) {}
 
-contract TestArea is Test {
-   
-    function testCast() public {
-        // uint80 roundId = 0x5000000001CDAAC04;
-        uint80 roundId = 92233720369031851012;
-        // 0x5000000000000AC04 92233720368547802116
-        emit log_named_uint("full", roundId);
-        emit log_named_uint("casting", uint64(roundId)); 
-        assertEq(uint64(roundId), uint64(0x1CDAAC04));
+    function _getInterestRateRecords(
+        address token
+    ) public view returns (Record[] memory) {
+        return super.getInterestRateRecords(token);
     }
 }
+
+contract SettlementTokenRegistryTest is Test {
+    _SettlementTokenRegistry tokenRegistry;
+    
+
+    function setUp() public {
+        tokenRegistry = new _SettlementTokenRegistry();
+    }
+
+    function testAccessControl() public{
+        address attacker = vm.addr(1);
+        vm.prank(attacker);
+
+        vm.expectRevert(bytes("only DAO can access"));
+        tokenRegistry.registerSettlementToken(address(12345));
+        // tokenRegistry.updateDao(address(12345));
+        // tokenRegistry.appendInterestRateRecord(address(12345),1,1);
+        // tokenRegistry.removeLastInterestRateRecord(address(12345));
+    }
+
+    function testRegisterSettlementToken() public {
+        // registerSettlementToken
+        // isRegisteredSettlementToken
+        // legnth
+    }
+
+    function testUpdateInterstRate() public {
+        // appendInterestRateRecord
+        // removeLastInterestRateRecord
+        // currentInterestRate
+    }
+
+    function testCalculateInterest() public {
+        // calculateInterest
+    }
+}
+
+
+
+
+
+
+
