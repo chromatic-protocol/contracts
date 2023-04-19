@@ -32,7 +32,12 @@ contract USUMFactory is IUSUMFactory, MarketDeployer {
     ) external override {
         // TODO settlementToken isRegistered check
         // TODO oracleProvider isRegistered check
-        if (oracleProvider == address(0)) revert NotRegisteredOracle();
+
+        if (
+            oracleProvider == address(0) ||
+            !oracleRegistry.isRegistered(oracleProvider)
+        ) revert NotRegisteredOracle();
+        
         if (settlementToken == address(0) || settlementToken == oracleProvider)
             revert WrongTokenAddress();
 

@@ -14,4 +14,8 @@ interface IOracleRegistry {
         address base,
         address quote
     ) external view returns (address);
+
+    function isRegistered(
+        address oracleProvider
+    ) external view returns (bool);
 }
