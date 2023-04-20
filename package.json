@@ -2,7 +2,9 @@
   "name": "usum-protocol",
   "scripts": {
     "test": "forge test -vvv",
-    "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\""
+    "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
+    "coverage": "forge coverage --report lcov",
+    "coverage:watch": "watch -p \"**/*.sol\" -c \"yarn coverage\""
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
@@ -27,6 +29,7 @@
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
-    "typescript": ">=4.5.0"
+    "typescript": ">=4.5.0",
+    "watch-cli": "^0.2.3"
   }
 }
