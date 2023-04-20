@@ -9,6 +9,9 @@ import {Record} from "@usum/core/libraries/InterestRate.sol";
 contract _SettlementTokenRegistry is USUMFactory {
     constructor() USUMFactory(address(0)) {}
 
+    // add this to be excluded from coverage report
+    function test() public {}
+
     function _getInterestRateRecords(
         address token
     ) public view returns (Record[] memory) {
@@ -91,7 +94,6 @@ contract SettlementTokenRegistryTest is Test {
     }
 
     function testCalculateInterest() public {
-        
         // 0% interest
         assertEq(
             tokenRegistry.calculateInterest(
@@ -120,7 +122,7 @@ contract SettlementTokenRegistryTest is Test {
         );
 
         // block.timestamp + YEAR ~  :  10% interest => 1000 * 0.1 = 100
-         assertEq(
+        assertEq(
             tokenRegistry.calculateInterest(
                 testToken,
                 1000,
@@ -129,9 +131,7 @@ contract SettlementTokenRegistryTest is Test {
             ),
             100
         );
-
     }
-
 
     function appendInterestRate(
         uint256 interestRate,
