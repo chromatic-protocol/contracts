@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {IMarketDeployer} from "./IMarketDeployer.sol";
 import {IOracleRegistry} from "./IOracleRegistry.sol";
 
-interface IUSUMFactory {
+interface IUSUMFactory is IMarketDeployer {
 
     event MarketCreated(
         address oracleProvider,
