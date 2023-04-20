@@ -8,11 +8,13 @@ contract OracleProvider is IOracleProvider {
     Phase[] private phases;
     uint256 private lastSyncedRoundId;
     AggregatorV2V3Interface chainlinkPriceFeed;
+    uint256 public immutable override pricePrecision;
 
     error InvalidVersion();
 
     constructor(address _chainlinkPriceFeed) {
         chainlinkPriceFeed = AggregatorV2V3Interface(_chainlinkPriceFeed);
+        pricePrecision = 10 ** chainlinkPriceFeed.decimals();
 
         (uint80 roundId, , , , ) = chainlinkPriceFeed.latestRoundData();
         require(roundId > 0); // FIXME

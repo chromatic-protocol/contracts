@@ -17,6 +17,8 @@ struct PositionParam {
     uint256 takerMargin;
     uint256 makerMargin;
     uint256 timestamp;
+    OracleVersion _settleVersionCache;
+    OracleVersion _currentVersionCache;
 }
 
 using PositionParamLib for PositionParam global;
@@ -35,7 +37,7 @@ library PositionParamLib {
     function entryPrice(
         PositionParam memory self
     ) internal view returns (uint256) {
-        return self.entryPrice(self.currentOracleVersion());
+        return self.entryPrice(self.settleOracleVersion());
     }
 
     function entryPrice(
@@ -62,7 +64,9 @@ library PositionParamLib {
                 leverage: self.leverage,
                 takerMargin: self.takerMargin,
                 makerMargin: self.makerMargin,
-                timestamp: self.timestamp
+                timestamp: self.timestamp,
+                _settleVersionCache: self._settleVersionCache,
+                _currentVersionCache: self._currentVersionCache
             });
     }
 
@@ -84,10 +88,26 @@ library PositionParamLib {
         return self.qty < 0 ? -(_byShare) : _byShare;
     }
 
+    function settleOracleVersion(
+        PositionParam memory self
+    ) internal view returns (OracleVersion memory) {
+        if (self._settleVersionCache.version == 0) {
+            self._settleVersionCache = self.oracleVersionAt(
+                self.settleVersion()
+            );
+        }
+
+        return self._settleVersionCache;
+    }
+
     function currentOracleVersion(
         PositionParam memory self
     ) internal view returns (OracleVersion memory) {
-        return self.oracleProvider.currentVersion();
+        if (self._currentVersionCache.version == 0) {
+            self._currentVersionCache = self.oracleProvider.currentVersion();
+        }
+
+        return self._currentVersionCache;
     }
 
     function oracleVersionAt(
@@ -109,7 +129,7 @@ library PositionParamLib {
         OracleVersion memory currentVersion,
         uint256 tokenPrecision
     ) internal view returns (int256) {
-        uint256 _entryPrice = self.entryPrice(currentVersion);
+        uint256 _entryPrice = self.entryPrice();
         uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
         return
             PositionUtil.pnl(

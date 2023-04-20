@@ -19,6 +19,7 @@ library PositionUtil {
 
     error InvalidOracleVersion();
     error UnsettledPosition();
+    error InvalidPositionQty();
 
     function settleVersion(
         uint256 oracleVersion
@@ -73,5 +74,26 @@ library PositionUtil {
             .toInt256();
 
         return delta < 0 ? -absPnl : absPnl;
+    }
+
+    function checkOpenPositionQty(
+        int256 currentQty,
+        int256 openQty
+    ) internal pure {
+        if (
+            (currentQty > 0 && openQty <= 0) || (currentQty < 0 && openQty >= 0)
+        ) revert InvalidPositionQty();
+    }
+
+    function checkClosePositionQty(
+        int256 currentQty,
+        int256 closeQty
+    ) internal pure {
+        if (
+            (currentQty == 0) ||
+            (closeQty == 0) ||
+            (currentQty > 0 && closeQty > currentQty) ||
+            (currentQty < 0 && closeQty < currentQty)
+        ) revert InvalidPositionQty();
     }
 }
