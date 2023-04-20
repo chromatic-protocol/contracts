@@ -12,3 +12,6 @@ artifacts
 # Foundry files
 cache_forge
 out/*
+
+# coverage output
+lcov.info
