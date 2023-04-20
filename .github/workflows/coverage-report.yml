@@ -1,0 +1,44 @@
+name: Report code coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    # Optionally configure to run only for changes in specific files. For example:
+    paths:
+      - contracts/**
+      - test/**
+      - foundry.toml
+      - remappings.txt
+      - .github/workflows/coverage-report.yml
+
+jobs:
+  coverage_report:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - run: yarn install
+      - uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      # Add any step generating a gas report to a temporary file named gasreport.ansi. For example:
+      - name: Run coverage
+        run: |
+          forge coverage | sed -n -e '/| File/,$p' > coverage.ansi
+          sed '1 i\## coverage report\n\n' coverage.ansi > coverage.md
+
+      - name: Add coverage report to sticky comment
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          # delete the comment in case changes no longer impact gas costs
+          path: coverage.md
