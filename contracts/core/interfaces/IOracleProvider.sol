@@ -21,4 +21,6 @@ interface IOracleProvider {
     function atVersion(
         uint256 oracleVersion
     ) external view returns (OracleVersion memory);
+
+    function pricePrecision() external view returns (uint256);
 }

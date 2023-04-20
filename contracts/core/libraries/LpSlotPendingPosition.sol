@@ -11,13 +11,23 @@ struct LpSlotPendingPosition {
 }
 
 library LpSlotPendingPositionLib {
+    error InvalidOracleVersion();
+
     function openPosition(
         LpSlotPendingPosition storage self,
         PositionParam memory param,
         uint256 slotMargin
     ) internal {
-        self.oracleVersion = param.currentOracleVersion().version;
-        self.totalLeveragedQty += param.leveragedQtyByShare(slotMargin);
+        uint256 pendingVersion = self.oracleVersion;
+        if (pendingVersion != 0 && pendingVersion != param.oracleVersion)
+            revert InvalidOracleVersion();
+
+        int256 totalLeveragedQty = self.totalLeveragedQty;
+        int256 leveragedQty = param.leveragedQtyByShare(slotMargin);
+        PositionUtil.checkOpenPositionQty(totalLeveragedQty, leveragedQty);
+
+        self.oracleVersion = param.oracleVersion;
+        self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
     }
 
     function closePosition(
@@ -25,34 +35,53 @@ library LpSlotPendingPositionLib {
         PositionParam memory param,
         uint256 slotMargin
     ) internal {
-        if (self.oracleVersion >= param.currentOracleVersion().version) {
-            self.totalLeveragedQty -= param.leveragedQtyByShare(slotMargin);
-        }
+        if (self.oracleVersion != param.oracleVersion)
+            revert InvalidOracleVersion();
+
+        int256 totalLeveragedQty = self.totalLeveragedQty;
+        int256 leveragedQty = param.leveragedQtyByShare(slotMargin);
+        PositionUtil.checkClosePositionQty(totalLeveragedQty, leveragedQty);
+
+        self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
     }
 
     function unrealizedPnl(
         LpSlotPendingPosition storage self,
         IOracleProvider provider,
+        OracleVersion memory currentVersion,
         uint256 tokenPrecision
     ) internal view returns (int256) {
-        if (self.oracleVersion == 0) return 0;
+        if (
+            self.oracleVersion == 0 ||
+            self.oracleVersion >= currentVersion.version
+        ) return 0;
 
-        OracleVersion memory currentVersion = provider.currentVersion();
-        if (self.oracleVersion >= currentVersion.version) return 0;
-
-        uint256 entryPrice = PositionUtil.entryPrice(
+        uint256 _entryPrice = PositionUtil.entryPrice(
             provider,
             self.oracleVersion,
             currentVersion
         );
-        uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
+        uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         return
             PositionUtil.pnl(
                 self.totalLeveragedQty,
-                entryPrice,
-                exitPrice,
+                _entryPrice,
+                _exitPrice,
                 tokenPrecision
+            );
+    }
+
+    function entryPrice(
+        LpSlotPendingPosition memory self,
+        IOracleProvider provider,
+        OracleVersion memory currentVersion
+    ) internal view returns (uint256) {
+        return
+            PositionUtil.entryPrice(
+                provider,
+                self.oracleVersion,
+                currentVersion
             );
     }
 }
