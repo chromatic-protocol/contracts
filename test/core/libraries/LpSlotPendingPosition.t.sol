@@ -14,22 +14,23 @@ contract LpSlotPendingPositionTest is Test {
     using LpSlotPendingPositionLib for LpSlotPendingPosition;
 
     IOracleProvider provider;
+    IInterestCalculator calculator;
     LpSlotPendingPosition pending;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
+        calculator = IInterestCalculator(address(2));
     }
 
     function testOpenPosition_WhenEmpty() public {
         PositionParam memory param = _newPositionParam();
 
-        pending.openPosition(param, param.makerMargin);
+        pending.openPosition(param);
 
         assertEq(pending.oracleVersion, param.oracleVersion);
-        assertEq(
-            pending.totalLeveragedQty,
-            param.qty * param.leverage.toInt256()
-        );
+        assertEq(pending.totalLeveragedQty, param.leveragedQty);
+        assertEq(pending.totalMakerMargin, param.makerMargin);
+        assertEq(pending.totalTakerMargin, param.takerMargin);
     }
 
     function testOpenPosition_Normal() public {
@@ -38,13 +39,12 @@ contract LpSlotPendingPositionTest is Test {
 
         PositionParam memory param = _newPositionParam();
 
-        pending.openPosition(param, param.makerMargin);
+        pending.openPosition(param);
 
         assertEq(pending.oracleVersion, param.oracleVersion);
-        assertEq(
-            pending.totalLeveragedQty,
-            param.qty * param.leverage.toInt256() + 10
-        );
+        assertEq(pending.totalLeveragedQty, param.leveragedQty + 10);
+        assertEq(pending.totalMakerMargin, param.makerMargin);
+        assertEq(pending.totalTakerMargin, param.takerMargin);
     }
 
     function testOpenPosition_InvalidOracleVersion() public {
@@ -55,17 +55,18 @@ contract LpSlotPendingPositionTest is Test {
         param.oracleVersion = 2;
 
         vm.expectRevert(LpSlotPendingPositionLib.InvalidOracleVersion.selector);
-        pending.openPosition(param, param.makerMargin);
+        pending.openPosition(param);
     }
 
     function testOpenPosition_InvalidOpenPositionQty() public {
         pending.oracleVersion = 1;
         pending.totalLeveragedQty = 10;
 
-        PositionParam memory param = _newPositionParam().inverse();
+        PositionParam memory param = _newPositionParam().clone();
+        param.leveragedQty *= -1;
 
         vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
-        pending.openPosition(param, param.makerMargin);
+        pending.openPosition(param);
     }
 
     function testClosePosition_WhenEmpty() public {
@@ -74,19 +75,23 @@ contract LpSlotPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
-        pending.closePosition(param, param.makerMargin);
+        pending.closePosition(param);
     }
 
     function testClosePosition_Normal() public {
         pending.oracleVersion = 1;
         pending.totalLeveragedQty = 50;
+        pending.totalMakerMargin = 50;
+        pending.totalTakerMargin = 10;
 
         PositionParam memory param = _newPositionParam();
 
-        pending.closePosition(param, param.makerMargin);
+        pending.closePosition(param);
 
         assertEq(pending.oracleVersion, param.oracleVersion);
         assertEq(pending.totalLeveragedQty, 0);
+        assertEq(pending.totalMakerMargin, 0);
+        assertEq(pending.totalTakerMargin, 0);
     }
 
     function testClosePosition_InvalidOracleVersion() public {
@@ -97,7 +102,7 @@ contract LpSlotPendingPositionTest is Test {
         param.oracleVersion = 2;
 
         vm.expectRevert(LpSlotPendingPositionLib.InvalidOracleVersion.selector);
-        pending.closePosition(param, param.makerMargin);
+        pending.closePosition(param);
     }
 
     function testClosePosition_InvalidClosePositionQty() public {
@@ -107,7 +112,7 @@ contract LpSlotPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam(); // close using leveragedQty = 50
 
         vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
-        pending.closePosition(param, param.makerMargin);
+        pending.closePosition(param);
     }
 
     function testEntryPrice_AtCurrentVersion() public {
@@ -148,13 +153,12 @@ contract LpSlotPendingPositionTest is Test {
         return
             PositionParam({
                 oracleProvider: provider,
-                interestCalculator: IInterestCalculator(address(0)),
+                interestCalculator: calculator,
                 oracleVersion: 1,
-                qty: 10,
-                leverage: 5,
+                leveragedQty: 50,
                 takerMargin: 10,
                 makerMargin: 50,
-                timestamp: block.timestamp,
+                timestamp: 1,
                 _settleVersionCache: OracleVersion(0, 0, 0),
                 _currentVersionCache: OracleVersion(0, 0, 0)
             });
