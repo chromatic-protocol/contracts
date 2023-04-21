@@ -14,6 +14,7 @@ struct Phase {
 }
 
 interface IOracleProvider {
+    function description() external view returns (string memory);
     function syncVersion() external returns (OracleVersion memory);
 
     function currentVersion() external view returns (OracleVersion memory);
