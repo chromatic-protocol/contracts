@@ -2,8 +2,6 @@
 pragma solidity 0.8.17;
 
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {LpSlotKey} from "@usum/core/libraries/LpSlotKey.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 
 struct Position {
@@ -12,45 +10,42 @@ struct Position {
     uint256 timestamp;
     uint256 leverage;
     uint256 takerMargin;
-    LpSlotKey[] _slotKeys;
-    mapping(LpSlotKey => uint256) _slotMargins;
+    SlotMargin[] _slotMargins;
+}
+
+struct SlotMargin {
+    uint16 tradingFeeRate;
+    uint256 amount;
 }
 
 using PositionLib for Position global;
 
 library PositionLib {
     function settleVersion(
-        Position storage self
-    ) internal view returns (uint256) {
+        Position memory self
+    ) internal pure returns (uint256) {
         return PositionUtil.settleVersion(self.oracleVersion);
     }
 
     function entryPrice(
-        Position storage self,
+        Position memory self,
         IOracleProvider provider
     ) internal view returns (uint256) {
         return PositionUtil.entryPrice(provider, self.oracleVersion);
     }
 
     function makerMargin(
-        Position storage self
-    ) internal view returns (uint256 margin) {
-        LpSlotKey[] memory _keys = self._slotKeys;
-        for (uint256 i = 0; i < _keys.length; i++) {
-            margin += self._slotMargins[_keys[i]];
+        Position memory self
+    ) internal pure returns (uint256 margin) {
+        for (uint256 i = 0; i < self._slotMargins.length; i++) {
+            margin += self._slotMargins[i].amount;
         }
     }
 
     function setSlotMargins(
-        Position storage self,
-        LpSlotMargin[] memory margins
-    ) internal {
-        delete self._slotKeys;
-
-        for (uint256 i = 0; i < margins.length; i++) {
-            LpSlotMargin memory margin = margins[i];
-            self._slotKeys.push(margin.key);
-            self._slotMargins[margin.key] = margin.amount;
-        }
+        Position memory self,
+        SlotMargin[] memory margins
+    ) internal pure {
+        self._slotMargins = margins;
     }
 }
