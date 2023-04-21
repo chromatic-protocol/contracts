@@ -7,8 +7,8 @@ import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {AccruedInterest} from "@usum/core/libraries/AccruedInterest.sol";
 import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 
 struct LpSlotPendingPosition {
     uint256 oracleVersion;
@@ -25,21 +25,18 @@ library LpSlotPendingPositionLib {
 
     error InvalidOracleVersion();
 
-    modifier _settle(
-        LpSlotPendingPosition storage self,
-        PositionParam memory param
-    ) {
-        settleAccruedInterest(self, param.interestCalculator);
+    modifier _settle(LpSlotPendingPosition storage self, LpContext memory ctx) {
+        settleAccruedInterest(self, ctx);
 
         _;
     }
 
     function settleAccruedInterest(
         LpSlotPendingPosition storage self,
-        IInterestCalculator calculator
+        LpContext memory ctx
     ) internal {
         self.accruedInterest.accumulate(
-            calculator,
+            ctx.interestCalculator,
             self.totalMakerMargin,
             block.timestamp
         );
@@ -47,8 +44,9 @@ library LpSlotPendingPositionLib {
 
     function openPosition(
         LpSlotPendingPosition storage self,
+        LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, param) {
+    ) internal _settle(self, ctx) {
         uint256 pendingVersion = self.oracleVersion;
         if (pendingVersion != 0 && pendingVersion != param.oracleVersion)
             revert InvalidOracleVersion();
@@ -65,8 +63,9 @@ library LpSlotPendingPositionLib {
 
     function closePosition(
         LpSlotPendingPosition storage self,
+        LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, param) {
+    ) internal _settle(self, ctx) {
         if (self.oracleVersion != param.oracleVersion)
             revert InvalidOracleVersion();
 
@@ -77,23 +76,22 @@ library LpSlotPendingPositionLib {
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;
-        self.accruedInterest.deduct(param.calculateInterest(block.timestamp));
+        self.accruedInterest.deduct(
+            param.calculateInterest(ctx, block.timestamp)
+        );
     }
 
     function unrealizedPnl(
         LpSlotPendingPosition storage self,
-        IOracleProvider provider,
-        IInterestCalculator calculator,
-        OracleVersion memory currentVersion,
-        uint256 tokenPrecision
+        LpContext memory ctx
     ) internal view returns (int256) {
-        if (
-            self.oracleVersion == 0 ||
-            self.oracleVersion >= currentVersion.version
-        ) return 0;
+        if (self.oracleVersion == 0) return 0;
+
+        OracleVersion memory currentVersion = ctx.currentOracleVersion();
+        if (self.oracleVersion >= currentVersion.version) return 0;
 
         uint256 _entryPrice = PositionUtil.entryPrice(
-            provider,
+            ctx.oracleProvider,
             self.oracleVersion,
             currentVersion
         );
@@ -103,8 +101,8 @@ library LpSlotPendingPositionLib {
             self.totalLeveragedQty,
             _entryPrice,
             _exitPrice,
-            tokenPrecision
-        ) + currentInterest(self, calculator).toInt256();
+            ctx.tokenPrecision
+        ) + currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();
 
         if (pnl >= 0) {
@@ -116,11 +114,11 @@ library LpSlotPendingPositionLib {
 
     function currentInterest(
         LpSlotPendingPosition storage self,
-        IInterestCalculator calculator
+        LpContext memory ctx
     ) internal view returns (uint256) {
         return
             self.accruedInterest.calculateInterest(
-                calculator,
+                ctx.interestCalculator,
                 self.totalMakerMargin,
                 block.timestamp
             );
@@ -128,14 +126,13 @@ library LpSlotPendingPositionLib {
 
     function entryPrice(
         LpSlotPendingPosition storage self,
-        IOracleProvider provider,
-        OracleVersion memory currentVersion
+        LpContext memory ctx
     ) internal view returns (uint256) {
         return
             PositionUtil.entryPrice(
-                provider,
+                ctx.oracleProvider,
                 self.oracleVersion,
-                currentVersion
+                ctx.currentOracleVersion()
             );
     }
 }
