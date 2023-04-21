@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.14;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMFactory} from "@usum/core/interfaces/IUSUMFactory.sol";
 import {IUSUMMarket, IUSUMLiquidity} from "@usum/core/interfaces/IUSUMMarket.sol";
