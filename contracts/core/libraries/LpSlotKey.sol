@@ -36,10 +36,16 @@ library LpSlotKeyLib {
         return uint128(self.unwrap());
     }
 
+    function signedTradingFee(LpSlotKey self) internal pure returns (int128){
+        int8 sign = self.direction() == Direction.Long ? int8(1) : -1;
+        return int128(self.tradingFee()) * sign; // safe casting?
+    }
+
     function eq(LpSlotKey self, LpSlotKey other) internal pure returns (bool) {
         return self.unwrap() == other.unwrap();
     }
 
+    // slot list method => slot set
     function validTradingFee(LpSlotKey lpSlotKey) internal pure returns (bool) {
         uint128 fee = lpSlotKey.tradingFee();
         

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {MarketBase} from "./MarketBase.sol";
+import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
+import {LpSlotSet} from "@usum/core/libraries/LpSlotSetMock.sol";
+import {LpSlot} from "@usum/core/libraries/LpSlotMock.sol";
 
 abstract contract MarketValue is MarketBase {
     function _balance() internal view returns (uint256) {
