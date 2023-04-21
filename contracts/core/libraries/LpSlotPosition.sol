@@ -87,7 +87,7 @@ library LpSlotPositionLib {
             self._pending.closePosition(ctx, param);
         } else {
             int256 totalLeveragedQty = self.totalLeveragedQty;
-            int256 leveragedQty = param.leveragedQty(ctx);
+            int256 leveragedQty = param.leveragedQty;
             PositionUtil.checkClosePositionQty(totalLeveragedQty, leveragedQty);
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;

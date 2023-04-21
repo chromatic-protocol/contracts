@@ -52,7 +52,7 @@ library LpSlotPendingPositionLib {
             revert InvalidOracleVersion();
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty(ctx);
+        int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkOpenPositionQty(totalLeveragedQty, leveragedQty);
 
         self.oracleVersion = param.oracleVersion;
@@ -70,7 +70,7 @@ library LpSlotPendingPositionLib {
             revert InvalidOracleVersion();
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty(ctx);
+        int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkClosePositionQty(totalLeveragedQty, leveragedQty);
 
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;

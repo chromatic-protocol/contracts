@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
+import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
 struct Position {
     uint256 oracleVersion;
-    int256 qty;
+    int224 qty;
+    uint32 leverage;
     uint256 timestamp;
-    uint256 leverage;
     uint256 takerMargin;
     SlotMargin[] _slotMargins;
 }
@@ -21,10 +25,26 @@ struct SlotMargin {
 using PositionLib for Position global;
 
 library PositionLib {
+    using Math for uint256;
+    using SafeCast for uint256;
+    using SignedMath for int256;
+
     function settleVersion(
         Position memory self
     ) internal pure returns (uint256) {
         return PositionUtil.settleVersion(self.oracleVersion);
+    }
+
+    function leveragedQty(
+        Position memory self,
+        LpContext memory ctx
+    ) internal pure returns (int256) {
+        int256 qty = self.qty;
+        int256 leveraged = qty
+            .abs()
+            .mulDiv(self.leverage * ctx.tokenPrecision, QTY_LEVERAGE_PRECISION)
+            .toInt256();
+        return qty < 0 ? -leveraged : leveraged;
     }
 
     function entryPrice(

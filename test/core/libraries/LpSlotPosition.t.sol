@@ -64,8 +64,7 @@ contract LpSlotPositionTest is Test {
         return
             PositionParam({
                 oracleVersion: 1,
-                qty: 5,
-                leverage: 10,
+                leveragedQty: 50,
                 takerMargin: 10,
                 makerMargin: 50,
                 timestamp: 1,
