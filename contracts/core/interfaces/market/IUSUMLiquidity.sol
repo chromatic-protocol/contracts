@@ -4,8 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {LpSlotKey} from "@usum/core/libraries/LpSlotKey.sol";
 
 interface IUSUMLiquidity {
-    function updateReserveRatio(uint256) external;
-
     function mint(
         address recipient,
         LpSlotKey slotKey,

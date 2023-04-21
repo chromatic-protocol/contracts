@@ -16,11 +16,6 @@ abstract contract Liquidity is LpToken, MarketValue {
 
     // uint256 internal lpReserveRatio;
 
-    // onlyDao
-    function updateReserveRatio(uint256 _lpReserveRatio) external override {
-        // lpReserveRatio = _lpReserveRatio;
-    }
-
     function mint(
         address recipient,
         LpSlotKey slotKey,
