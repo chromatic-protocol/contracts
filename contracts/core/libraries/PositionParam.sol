@@ -2,8 +2,6 @@
 pragma solidity 0.8.17;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
@@ -12,8 +10,7 @@ struct PositionParam {
     IOracleProvider oracleProvider;
     IInterestCalculator interestCalculator;
     uint256 oracleVersion;
-    int256 qty;
-    uint256 leverage;
+    int256 leveragedQty;
     uint256 takerMargin;
     uint256 makerMargin;
     uint256 timestamp;
@@ -24,10 +21,6 @@ struct PositionParam {
 using PositionParamLib for PositionParam global;
 
 library PositionParamLib {
-    using Math for uint256;
-    using SafeCast for uint256;
-    using SignedMath for int256;
-
     function settleVersion(
         PositionParam memory self
     ) internal pure returns (uint256) {
@@ -52,7 +45,7 @@ library PositionParamLib {
             );
     }
 
-    function inverse(
+    function clone(
         PositionParam memory self
     ) internal pure returns (PositionParam memory) {
         return
@@ -60,32 +53,13 @@ library PositionParamLib {
                 oracleProvider: self.oracleProvider,
                 interestCalculator: self.interestCalculator,
                 oracleVersion: self.oracleVersion,
-                qty: -(self.qty),
-                leverage: self.leverage,
+                leveragedQty: self.leveragedQty,
                 takerMargin: self.takerMargin,
                 makerMargin: self.makerMargin,
                 timestamp: self.timestamp,
                 _settleVersionCache: self._settleVersionCache,
                 _currentVersionCache: self._currentVersionCache
             });
-    }
-
-    function leveragedQty(
-        PositionParam memory self
-    ) internal pure returns (int256) {
-        return self.qty * self.leverage.toInt256();
-    }
-
-    function leveragedQtyByShare(
-        PositionParam memory self,
-        uint256 slotMargin
-    ) internal pure returns (int256) {
-        int256 _byShare = self
-            .leveragedQty()
-            .abs()
-            .mulDiv(slotMargin, self.makerMargin)
-            .toInt256();
-        return self.qty < 0 ? -(_byShare) : _byShare;
     }
 
     function settleOracleVersion(
@@ -117,26 +91,17 @@ library PositionParamLib {
         return self.oracleProvider.atVersion(version);
     }
 
-    function currentPnl(
+    // use only to deduct accumulated accrued interest when close position
+    function calculateInterest(
         PositionParam memory self,
-        uint256 tokenPrecision
-    ) internal view returns (int256) {
-        return self.pnl(self.currentOracleVersion(), tokenPrecision);
-    }
-
-    function pnl(
-        PositionParam memory self,
-        OracleVersion memory currentVersion,
-        uint256 tokenPrecision
-    ) internal view returns (int256) {
-        uint256 _entryPrice = self.entryPrice();
-        uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
+        uint256 until
+    ) internal view returns (uint256) {
         return
-            PositionUtil.pnl(
-                self.qty * self.leverage.toInt256(),
-                _entryPrice,
-                _exitPrice,
-                tokenPrecision
+            self.interestCalculator.calculateInterest(
+                self.makerMargin,
+                self.timestamp,
+                until,
+                Math.Rounding.Up
             );
     }
 }
