@@ -31,12 +31,11 @@ abstract contract MarketBase is IUSUMMarket {
         (
             address _oracleProvider,
             address _settlementToken,
-            string memory lpTokenUri
         ) = factory.parameters();
 
         oracleProvider = IOracleProvider(_oracleProvider);
         settlementToken = IERC20(_settlementToken);
-        IUSUMLiquidity(address(this)).setURI(lpTokenUri);
+    
 
         // lpTokenName = string(
         //     abi.encodePacked(

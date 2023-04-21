@@ -68,7 +68,4 @@ abstract contract Liquidity is LpToken, MarketValue {
         _burn(recipient, slotKey.unwrap(), liquidity);
     }
 
-    function setURI(string memory _uri) public override {
-        _setURI(_uri);
-    }
 }

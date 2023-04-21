@@ -141,4 +141,9 @@ contract OracleProvider is IOracleProvider {
         }
         return 0;
     }
+
+    function description() external view override returns (string memory) {
+        return chainlinkPriceFeed.description();
+    }
+
 }
