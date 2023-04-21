@@ -7,7 +7,10 @@ import {IOracleProvider,OracleVersion} from "@usum/core/interfaces/IOracleProvid
 import {LpSlotKey, LpSlotKeyLib, Direction} from "@usum/core/libraries/LpSlotKey.sol";
 
 contract OracleProviderMock is IOracleProvider {
-    function description() external view override returns (string memory) {
+
+    // add this to be excluded from coverage report
+    function test() public {}
+    function description() external pure override returns (string memory) {
         return "ETH / USD";
     }
 
