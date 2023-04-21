@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 uint256 constant BPS = 10000;
 
@@ -88,6 +88,16 @@ library InterestRateLib {
         uint256 amount,
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
+    ) internal view returns (uint256) {
+        return calculateInterest(self, amount, from, to, Math.Rounding.Down);
+    }
+
+    function calculateInterest(
+        Record[] storage self,
+        uint256 amount,
+        uint256 from, // timestamp (inclusive)
+        uint256 to, // timestamp (exclusive)
+        Math.Rounding rounding // use Rouding.Up to deduct accumulated accrued interest
     ) internal view initialized(self) returns (uint256) {
         if (from >= to) {
             return 0;
@@ -106,7 +116,8 @@ library InterestRateLib {
                 amount,
                 record.annualRateBPS,
                 Math.min(to, endTimestamp) -
-                    Math.max(from, record.beginTimestamp)
+                    Math.max(from, record.beginTimestamp),
+                rounding
             );
             endTimestamp = record.beginTimestamp;
         }
@@ -117,8 +128,9 @@ library InterestRateLib {
     function _interest(
         uint256 amount,
         uint256 rateBPS, // annual rate
-        uint256 period // in seconds
+        uint256 period, // in seconds
+        Math.Rounding rounding
     ) private pure returns (uint256) {
-        return amount.mulDiv(rateBPS * period, BPS * YEAR);
+        return amount.mulDiv(rateBPS * period, BPS * YEAR, rounding);
     }
 }
