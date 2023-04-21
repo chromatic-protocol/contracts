@@ -17,4 +17,6 @@ interface IUSUMLiquidity {
         LpSlotKey slotKey,
         bytes calldata data
     ) external returns (uint256 amount);
+
+    function setURI(string memory uri) external;
 }

@@ -4,16 +4,13 @@ pragma solidity ^0.8.14;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMFactory} from "@usum/core/interfaces/IUSUMFactory.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMMarket, IUSUMLiquidity} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IMarketDeployer} from "@usum/core/interfaces/IMarketDeployer.sol";
 import {LpSlotPosition} from "@usum/core/libraries/LpSlotPosition.sol";
 
-import {LpSlotSet} from '@usum/core/libraries/LpSlotSetMock.sol';
-
-
+import {LpSlotSet} from "@usum/core/libraries/LpSlotSetMock.sol";
 
 abstract contract MarketBase is IUSUMMarket {
-
     IUSUMFactory public immutable override factory;
     IOracleProvider public immutable override oracleProvider;
     IERC20 public immutable override settlementToken;
@@ -23,7 +20,7 @@ abstract contract MarketBase is IUSUMMarket {
     // uint256 internal lpReserveRatio;
 
     modifier onlyDao() {
-        // TODO 
+        // TODO
         // require(msg.sender == factory.dao());
         _;
     }
@@ -31,11 +28,15 @@ abstract contract MarketBase is IUSUMMarket {
     constructor() {
         factory = IUSUMFactory(msg.sender);
 
-        (address _oracleProvider, address _settlementToken) = factory
-            .parameters();
+        (
+            address _oracleProvider,
+            address _settlementToken,
+            string memory lpTokenUri
+        ) = factory.parameters();
 
         oracleProvider = IOracleProvider(_oracleProvider);
         settlementToken = IERC20(_settlementToken);
+        IUSUMLiquidity(address(this)).setURI(lpTokenUri);
 
         // lpTokenName = string(
         //     abi.encodePacked(
