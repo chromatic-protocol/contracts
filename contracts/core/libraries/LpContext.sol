@@ -8,6 +8,7 @@ struct LpContext {
     IOracleProvider oracleProvider;
     IInterestCalculator interestCalculator;
     uint256 tokenPrecision;
+    uint256 _pricePrecision;
     OracleVersion _currentVersionCache;
 }
 
@@ -29,5 +30,14 @@ library LpContextLib {
         uint256 version
     ) internal view returns (OracleVersion memory) {
         return self.oracleProvider.atVersion(version);
+    }
+
+    function pricePrecision(
+        LpContext memory self
+    ) internal view returns (uint256) {
+        if (self._pricePrecision == 0) {
+            self._pricePrecision = self.oracleProvider.pricePrecision();
+        }
+        return self._pricePrecision;
     }
 }

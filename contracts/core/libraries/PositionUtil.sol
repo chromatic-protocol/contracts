@@ -10,7 +10,7 @@ uint256 constant QTY_DECIMALS = 4;
 uint256 constant LEVERAGE_DECIMALS = 2;
 uint256 constant QTY_PRECISION = 10 ** QTY_DECIMALS;
 uint256 constant LEVERAGE_PRECISION = 10 ** LEVERAGE_DECIMALS;
-uint256 constant LEVERAGED_QTY_PRECISION = QTY_PRECISION * LEVERAGE_PRECISION;
+uint256 constant QTY_LEVERAGE_PRECISION = QTY_PRECISION * LEVERAGE_PRECISION;
 
 library PositionUtil {
     using Math for uint256;
@@ -57,10 +57,9 @@ library PositionUtil {
     }
 
     function pnl(
-        int256 leveragedQty,
+        int256 leveragedQty, // as token precision
         uint256 _entryPrice,
-        uint256 _exitPrice,
-        uint256 tokenPrecision
+        uint256 _exitPrice
     ) internal pure returns (int256) {
         int256 delta = _exitPrice > _entryPrice
             ? (_exitPrice - _entryPrice).toInt256()
@@ -69,7 +68,6 @@ library PositionUtil {
 
         int256 absPnl = leveragedQty
             .abs()
-            .mulDiv(tokenPrecision, LEVERAGED_QTY_PRECISION)
             .mulDiv(delta.abs(), _entryPrice)
             .toInt256();
 

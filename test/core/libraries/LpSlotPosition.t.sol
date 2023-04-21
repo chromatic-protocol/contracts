@@ -54,7 +54,8 @@ contract LpSlotPositionTest is Test {
             LpContext({
                 oracleProvider: provider,
                 interestCalculator: calculator,
-                tokenPrecision: 10 * 18,
+                tokenPrecision: 10 ** 6,
+                _pricePrecision: 1,
                 _currentVersionCache: OracleVersion(0, 0, 0)
             });
     }
@@ -63,7 +64,8 @@ contract LpSlotPositionTest is Test {
         return
             PositionParam({
                 oracleVersion: 1,
-                leveragedQty: 50,
+                qty: 5,
+                leverage: 10,
                 takerMargin: 10,
                 makerMargin: 50,
                 timestamp: 1,

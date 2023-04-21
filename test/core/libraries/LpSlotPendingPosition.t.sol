@@ -30,7 +30,7 @@ contract LpSlotPendingPositionTest is Test {
         pending.openPosition(ctx, param);
 
         assertEq(pending.oracleVersion, param.oracleVersion);
-        assertEq(pending.totalLeveragedQty, param.leveragedQty);
+        assertEq(pending.totalLeveragedQty, param.leveragedQty(ctx));
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
@@ -45,7 +45,7 @@ contract LpSlotPendingPositionTest is Test {
         pending.openPosition(ctx, param);
 
         assertEq(pending.oracleVersion, param.oracleVersion);
-        assertEq(pending.totalLeveragedQty, param.leveragedQty + 10);
+        assertEq(pending.totalLeveragedQty, param.leveragedQty(ctx) + 10);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
@@ -68,7 +68,7 @@ contract LpSlotPendingPositionTest is Test {
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam().clone();
-        param.leveragedQty *= -1;
+        param.qty *= -1;
 
         vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
         pending.openPosition(ctx, param);
@@ -155,7 +155,8 @@ contract LpSlotPendingPositionTest is Test {
             LpContext({
                 oracleProvider: provider,
                 interestCalculator: calculator,
-                tokenPrecision: 10 * 18,
+                tokenPrecision: 10 ** 6,
+                _pricePrecision: 1,
                 _currentVersionCache: OracleVersion(0, 0, 0)
             });
     }
@@ -164,7 +165,8 @@ contract LpSlotPendingPositionTest is Test {
         return
             PositionParam({
                 oracleVersion: 1,
-                leveragedQty: 50,
+                qty: 5,
+                leverage: 10,
                 takerMargin: 10,
                 makerMargin: 50,
                 timestamp: 1,
