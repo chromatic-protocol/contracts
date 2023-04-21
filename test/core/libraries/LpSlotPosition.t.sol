@@ -12,15 +12,19 @@ contract LpSlotPositionTest is Test {
     using LpSlotPositionLib for LpSlotPosition;
 
     IOracleProvider provider;
+    IInterestCalculator calculator;
     LpSlotPosition position;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
+        calculator = IInterestCalculator(address(2));
     }
 
     function testClosePosition() public {
         position.totalLeveragedQty = 100;
         position.totalEntryAmount = 200000;
+        position._totalMakerMargin = 100;
+        position._totalTakerMargin = 100;
 
         PositionParam memory param = _newPositionParam();
         param._settleVersionCache = OracleVersion({
@@ -34,23 +38,24 @@ contract LpSlotPositionTest is Test {
             price: 2100
         });
 
-        position.closePosition(param, param.makerMargin);
+        position.closePosition(param);
 
         assertEq(position.totalLeveragedQty, 50);
         assertEq(position.totalEntryAmount, 100000);
+        assertEq(position._totalMakerMargin, 50);
+        assertEq(position._totalTakerMargin, 90);
     }
 
     function _newPositionParam() private view returns (PositionParam memory) {
         return
             PositionParam({
                 oracleProvider: provider,
-                interestCalculator: IInterestCalculator(address(0)),
+                interestCalculator: calculator,
                 oracleVersion: 1,
-                qty: 10,
-                leverage: 5,
+                leveragedQty: 50,
                 takerMargin: 10,
                 makerMargin: 50,
-                timestamp: block.timestamp,
+                timestamp: 1,
                 _settleVersionCache: OracleVersion(0, 0, 0),
                 _currentVersionCache: OracleVersion(0, 0, 0)
             });
