@@ -71,7 +71,7 @@ library LpSlotSetLib {
 
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
-            slotMargins[from - i] = LpSlotMargin({
+            slotMargins[i - from] = LpSlotMargin({
                 tradingFeeRate: _tradingFeeRates[i],
                 amount: _slotMargins[i]
             });
