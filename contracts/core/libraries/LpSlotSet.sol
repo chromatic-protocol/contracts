@@ -25,6 +25,7 @@ library LpSlotSetLib {
     using SignedMath for int256;
 
     uint256 private constant FEE_RATES_LENGTH = 36;
+    uint16 private constant MIN_FEE_RATE = 1;
 
     struct _proportionalPositionParamValue {
         int256 leveragedQty;
@@ -51,7 +52,9 @@ library LpSlotSetLib {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         uint256[FEE_RATES_LENGTH] memory _slotMargins;
 
-        uint256 from = minAvailableFeeRate(self, position);
+        uint16 _minFeeRate = minAvailableFeeRate(self, position);
+
+        uint256 from = findUpperBound(_tradingFeeRates, _minFeeRate);
         uint256 to = from;
         uint256 remain = makerMargin;
         for (; to < FEE_RATES_LENGTH; to++) {
@@ -241,20 +244,17 @@ library LpSlotSetLib {
         LpSlotSet storage self,
         Position memory position
     ) private view returns (uint16) {
-        return
-            position.qty < 0
-                ? self._minAvailableFeeRateShort
-                : self._minAvailableFeeRateLong;
+        return minAvailableFeeRate(self, position.qty);
     }
 
     function minAvailableFeeRate(
         LpSlotSet storage self,
         int256 sign
     ) private view returns (uint16) {
-        return
-            sign < 0
-                ? self._minAvailableFeeRateShort
-                : self._minAvailableFeeRateLong;
+        uint16 feeRate = sign < 0
+            ? self._minAvailableFeeRateShort
+            : self._minAvailableFeeRateLong;
+        return feeRate == 0 ? MIN_FEE_RATE : feeRate;
     }
 
     function setMinAvailableFeeRate(
@@ -285,9 +285,14 @@ library LpSlotSetLib {
         uint256 makerMargin,
         uint256 takerMargin,
         LpSlotMargin[] memory slotMargins
-    ) private pure returns (_proportionalPositionParamValue[] memory values) {
+    ) private pure returns (_proportionalPositionParamValue[] memory) {
         uint256 remainLeveragedQty = leveragedQty.abs();
         uint256 remainTakerMargin = takerMargin;
+
+        _proportionalPositionParamValue[]
+            memory values = new _proportionalPositionParamValue[](
+                slotMargins.length
+            );
 
         for (uint256 i = 0; i < slotMargins.length - 1; i++) {
             uint256 _qty = remainLeveragedQty.mulDiv(
@@ -299,7 +304,7 @@ library LpSlotSetLib {
                 makerMargin
             );
 
-            values[slotMargins.length - 1] = _proportionalPositionParamValue({
+            values[i] = _proportionalPositionParamValue({
                 leveragedQty: leveragedQty < 0
                     ? _qty.toInt256()
                     : -(_qty.toInt256()), // opposit side
@@ -316,6 +321,8 @@ library LpSlotSetLib {
                 : -(remainLeveragedQty.toInt256()), // opposit side
             takerMargin: remainTakerMargin
         });
+
+        return values;
     }
 
     function newPositionParam(
@@ -351,7 +358,7 @@ library LpSlotSetLib {
     {
         // prettier-ignore
         return [
-            1, 2, 3, 4, 5, 6, 7, 8, 9, // 0.01% ~ 0.09%, step 0.01%
+            MIN_FEE_RATE, 2, 3, 4, 5, 6, 7, 8, 9, // 0.01% ~ 0.09%, step 0.01%
             10, 20, 30, 40, 50, 60, 70, 80, 90, // 0.1% ~ 0.9%, step 0.1%
             100, 200, 300, 400, 500, 600, 700, 700, 900, // 1% ~ 9%, step 1%
             1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000 // 10% ~ 50%, step 5%
