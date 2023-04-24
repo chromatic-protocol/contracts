@@ -45,6 +45,8 @@ library AccruedInterestLib {
         uint256 tokenAmount,
         uint256 until
     ) internal view returns (uint256) {
+        if (tokenAmount == 0) return 0;
+
         uint256 accumulatedAt = self.accumulatedAt;
         uint256 accumulatedAmount = self.accumulatedAmount;
         if (until <= accumulatedAt) return accumulatedAmount;
