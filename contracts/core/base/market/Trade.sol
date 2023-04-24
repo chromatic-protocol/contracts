@@ -73,24 +73,10 @@ abstract contract Trade is MarketValue {
         //TODO get slotmargin by using makerMargin
         // calc protocol fee
 
-        OracleVersion memory currentOracleVersion = oracleProvider
-            .currentVersion();
-        PositionParam memory positionParam = PositionParam({
-            oracleVersion: currentOracleVersion.version,
-            leveragedQty: quantity * int32(leverage),
-            takerMargin: takerMargin,
-            makerMargin: makerMargin,
-            timestamp: block.timestamp,
-            _settleVersionCache: OracleVersion({
-                version: 0,
-                timestamp: 0,
-                price: 0
-            })
-        });
-
+        LpContext memory lpContext = newLpContext();
         Position memory position = Position({
             id: _positionId++,
-            oracleVersion: positionParam.oracleVersion,
+            oracleVersion: lpContext.currentOracleVersion().version,
             qty: quantity.toInt224(), //
              leverage: leverage,
             timestamp: block.timestamp,
@@ -98,12 +84,12 @@ abstract contract Trade is MarketValue {
             owner: msg.sender,
             _slotMargins: new LpSlotMargin[](0)
         });
-        LpContext memory lpContext = newLpContext();
-        lpSlotSet.prepareSlotMargins(position, makerMargin);
-        lpSlotSet.acceptOpenPosition(lpContext, position);
+        
         // position._slotMargins
+        
         uint256 protocolFee = getProtocolFee(takerMargin);
 
+        lpSlotSet.prepareSlotMargins(position, makerMargin);
         // call callback
         uint256 balanceBefore = _balance();
         uint256 requiredMargin = takerMargin +
@@ -117,11 +103,13 @@ abstract contract Trade is MarketValue {
         // check margin settlementToken increased
         if (balanceBefore + requiredMargin < _balance())
             revert NotEnoughMarginTransfered();
+        
+        
+        lpSlotSet.acceptOpenPosition(lpContext, position);
 
         transferProtocolFee(position.id, protocolFee);
 
         // write position
-        // positions[position.id] = position;
         position.storeTo(positions[position.id]);
 
         //TODO add event parameters
@@ -164,10 +152,8 @@ abstract contract Trade is MarketValue {
             position.leveragedQty(lpContext),
             PositionUtil.entryPrice(oracleProvider, position.oracleVersion),
             PositionUtil.oraclePrice(oracleProvider.currentVersion())
-        );
+        ) - interestFee.toInt256();
         lpSlotSet.acceptClosePosition(lpContext, position, realizedPnl);
-
-        realizedPnl -= interestFee.toInt256();
         int256 takerMargin = position.takerMargin.toInt256();
         if (takerMargin > 0) {
             transferMargin(takerMargin, realizedPnl, recipient);

@@ -10,9 +10,8 @@ import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquid
 import {Position} from "@usum/core/libraries/Position.sol";
 import {IAccount} from "@usum/periphery/interfaces/IAccount.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
-import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-contract Account is IAccount, VerifyCallback, IERC1155Receiver {
+contract Account is IAccount, VerifyCallback {
     using EnumerableSet for EnumerableSet.UintSet;
 
     struct OpenPositionCallbackData {
@@ -139,27 +138,5 @@ contract Account is IAccount, VerifyCallback, IERC1155Receiver {
         bytes calldata data
     ) external override verifyCallback {}
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external view override returns (bool) {}
-
-    function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external pure override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
-    ) external pure override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
+    
 }
