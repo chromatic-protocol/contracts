@@ -21,4 +21,5 @@ library LpSlotMarginLib {
         return
             self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION);
     }
+    
 }

@@ -21,7 +21,6 @@ interface IUSUMFactory is IMarketDeployer {
 
     function createMarket(
         address oracleProvider,
-        address settlementToken,
-        string memory lpTokenUri // TODO remove?
+        address settlementToken
     ) external;
 }

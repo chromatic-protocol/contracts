@@ -10,14 +10,14 @@ import {IMarketDeployer} from "@usum/core/interfaces/IMarketDeployer.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPosition} from "@usum/core/libraries/LpSlotPosition.sol";
 import {LpSlotSet} from "@usum/core/libraries/LpSlotSet.sol";
-
+import {Position} from "@usum/core/libraries/Position.sol";
 abstract contract MarketBase is IUSUMMarket {
     IUSUMFactory public immutable override factory;
     IOracleProvider public immutable override oracleProvider;
     IERC20Metadata public immutable override settlementToken;
-
     LpSlotSet internal lpSlotSet;
 
+    mapping(uint256 => Position) internal positions;
     // liquidity
     // uint256 internal lpReserveRatio;
 
@@ -30,21 +30,11 @@ abstract contract MarketBase is IUSUMMarket {
     constructor() {
         factory = IUSUMFactory(msg.sender);
 
-        (address _oracleProvider, address _settlementToken, ) = factory
+        (address _oracleProvider, address _settlementToken ) = factory
             .parameters();
 
         oracleProvider = IOracleProvider(_oracleProvider);
         settlementToken = IERC20Metadata(_settlementToken);
-
-        // lpTokenName = string(
-        //     abi.encodePacked(
-        //         "zsToken (",
-        //         underlyingAsset.symbol(),
-        //         "/",
-        //         settlementToken.symbol(),
-        //         ")"
-        //     )
-        // );
     }
 
     function newLpContext() internal view returns (LpContext memory) {

@@ -28,8 +28,7 @@ contract USUMFactory is IUSUMFactory, MarketDeployer, SettlementTokenRegistry {
 
     function createMarket(
         address oracleProvider,
-        address settlementToken,
-        string memory lpTokenUri
+        address settlementToken
     ) external override registeredOnly(settlementToken) {
         if (
             oracleProvider == address(0) ||
@@ -42,7 +41,7 @@ contract USUMFactory is IUSUMFactory, MarketDeployer, SettlementTokenRegistry {
         if (markets[oracleProvider][settlementToken] != address(0))
             revert ExistMarket();
 
-        address market = deploy(oracleProvider, settlementToken, lpTokenUri);
+        address market = deploy(oracleProvider, settlementToken);
 
         markets[oracleProvider][settlementToken] = market;
 

@@ -10,12 +10,14 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 
 struct Position {
+    uint256 id;
     uint256 oracleVersion;
     int224 qty;
     uint32 leverage;
     uint256 timestamp;
     uint256 takerMargin;
     LpSlotMargin[] _slotMargins;
+    address owner;
 }
 
 using PositionLib for Position global;
