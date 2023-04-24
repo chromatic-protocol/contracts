@@ -71,7 +71,7 @@ library LpSlotSetLib {
         }
 
         if (remain > 0) revert NotEnoughSlotBalance();
-
+        
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
             slotMargins[i - from] = LpSlotMargin({

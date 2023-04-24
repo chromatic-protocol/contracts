@@ -22,9 +22,10 @@ interface IAccount is IUSUMTradeCallback {
 
     function openPosition(
         address marketAddress,
-        int256 amountIn,
+        int256 quantity,
         uint32 leverage,
-        uint16 profitStop
+        uint256 takerMargin,
+        uint256 makerMargin
     ) external;
 
     function closePosition(address marketAddress, uint256 positionId) external;

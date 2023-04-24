@@ -3,13 +3,16 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {SafeERC20} from "core/libraries/SafeERC20.sol";
-import {IUSUMMarket} from "core/interfaces/IUSUMMarket.sol";
-// import {Position} from "core/Types.sol";
-import {IAccount} from "./interfaces/IAccount.sol";
-import {VerifyCallback} from "./base/VerifyCallback.sol";
+import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
+import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
+import {IAccount} from "@usum/periphery/interfaces/IAccount.sol";
+import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-contract Account is IAccount, VerifyCallback {
+contract Account is IAccount, VerifyCallback, IERC1155Receiver {
     using EnumerableSet for EnumerableSet.UintSet;
 
     struct OpenPositionCallbackData {
@@ -82,18 +85,21 @@ contract Account is IAccount, VerifyCallback {
 
     function openPosition(
         address marketAddress,
-        int256 amountIn,
+        int256 quantity,
         uint32 leverage,
-        uint16 profitStop
-    ) external override onlyRouter {
+        uint256 takerMargin,
+        uint256 makerMargin
+    ) external onlyRouter {
         _prepareMarket(marketAddress);
-        // Position memory position = IUSUMMarket(marketAddress).openPosition(
-        //     amountIn,
-        //     leverage,
-        //     profitStop,
-        //     abi.encode(OpenPositionCallbackData({trader: address(this)}))
-        // );
-        // addPositionId(position.id);
+
+        Position memory position = IUSUMMarket(marketAddress).openPosition(
+            quantity,
+            leverage,
+            takerMargin,
+            makerMargin,
+            abi.encode(OpenPositionCallbackData({trader: address(this)}))
+        );
+        addPositionId(position.id);
     }
 
     function closePosition(
@@ -102,12 +108,12 @@ contract Account is IAccount, VerifyCallback {
     ) external override onlyRouter {
         if (!hasPositionId(positionId)) revert NotExistPosition();
         _prepareMarket(marketAddress);
-        // IUSUMMarket(marketAddress).closePosition(
-        //     positionId,
-        //     address(this),
-        //     new bytes(0)
-        // );
-        // removePositionId(positionId);
+        IUSUMMarket(marketAddress).closePosition(
+            positionId,
+            address(this),
+            new bytes(0)
+        );
+        removePositionId(positionId);
     }
 
     function openPositionCallback(
@@ -132,4 +138,28 @@ contract Account is IAccount, VerifyCallback {
         uint256 marginTransfered,
         bytes calldata data
     ) external override verifyCallback {}
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external view override returns (bool) {}
+
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
 }

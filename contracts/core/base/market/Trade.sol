@@ -63,15 +63,14 @@ abstract contract Trade is MarketValue {
     function openPosition(
         int256 quantity,
         uint32 leverage,
-        uint256 takerMargin,
-        uint256 makerMargin,
+        uint256 takerMargin, // include losscut
+        uint256 makerMargin, // include profit stop
         // uint16 profitstop, // in bps ex) 10% = 1000
         // uint16 lossCut, // bps
         bytes calldata data
     ) external returns (Position memory) {
         if (quantity == 0) revert ZeroTargetAmount();
         //TODO get slotmargin by using makerMargin
-
         // calc protocol fee
 
         OracleVersion memory currentOracleVersion = oracleProvider
@@ -88,43 +87,49 @@ abstract contract Trade is MarketValue {
                 price: 0
             })
         });
+
         Position memory position = Position({
             id: _positionId++,
             oracleVersion: positionParam.oracleVersion,
             qty: quantity.toInt224(), //
+             leverage: leverage,
             timestamp: block.timestamp,
-            leverage: leverage,
             takerMargin: takerMargin,
-            _slotMargins: new LpSlotMargin[](0),
-            owner: msg.sender
+            owner: msg.sender,
+            _slotMargins: new LpSlotMargin[](0)
         });
         LpContext memory lpContext = newLpContext();
         lpSlotSet.prepareSlotMargins(position, makerMargin);
         lpSlotSet.acceptOpenPosition(lpContext, position);
         // position._slotMargins
-        uint256 protocolFee = getProtocolFeeRate();
+        uint256 protocolFee = getProtocolFee(takerMargin);
 
         // call callback
         uint256 balanceBefore = _balance();
-
+        uint256 requiredMargin = takerMargin +
+            protocolFee +
+            position.tradingFee();
         IUSUMTradeCallback(msg.sender).openPositionCallback(
             address(settlementToken),
-            takerMargin + protocolFee,
+            requiredMargin,
             data
         );
         // check margin settlementToken increased
-        if (balanceBefore + takerMargin + position.tradingFee() > _balance())
+        if (balanceBefore + requiredMargin < _balance())
             revert NotEnoughMarginTransfered();
 
         transferProtocolFee(position.id, protocolFee);
 
         // write position
-        positions[position.id] = position;
+        // positions[position.id] = position;
+        position.storeTo(positions[position.id]);
 
-        // TODO emit event
-
+        //TODO add event parameters
+        emit OpenPosition();
         return position;
     }
+    
+
 
     // can call keeper or onwer only
     function closePosition(
@@ -143,7 +148,7 @@ abstract contract Trade is MarketValue {
             marginTransferred,
             data
         );
-        
+
         delete positions[position.id];
         emit ClosePosition();
     }
@@ -164,7 +169,7 @@ abstract contract Trade is MarketValue {
 
         realizedPnl -= interestFee.toInt256();
         int256 takerMargin = position.takerMargin.toInt256();
-        if(takerMargin > 0){
+        if (takerMargin > 0) {
             transferMargin(takerMargin, realizedPnl, recipient);
         }
         return 0;
@@ -207,7 +212,7 @@ abstract contract Trade is MarketValue {
         return transferred;
     }
 
-    function getProtocolFeeRate() internal view returns (uint16) {
+    function getProtocolFee(uint256 margin) public view returns (uint16) {
         // returns (protocolFeeRate)
         // FIXME: TBA
         return 0;
