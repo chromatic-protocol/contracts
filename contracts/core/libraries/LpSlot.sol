@@ -27,11 +27,13 @@ library LpSlotLib {
     function openPosition(
         LpSlot storage self,
         LpContext memory ctx,
-        PositionParam memory param
+        PositionParam memory param,
+        uint256 tradingFee
     ) internal {
         if (param.makerMargin > self.balance()) revert NotEnoughSlotBalance();
 
         self._position.openPosition(ctx, param);
+        self.total += tradingFee;
     }
 
     function closePosition(

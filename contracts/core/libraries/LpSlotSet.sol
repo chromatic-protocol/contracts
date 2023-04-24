@@ -33,6 +33,13 @@ library LpSlotSetLib {
 
     error NotEnoughSlotBalance();
     error ExceedMarginRange();
+    error UnsupportedTradingFeeRate();
+
+    modifier _validTradingFeeRate(int16 tradingFeeRate) {
+        validateTradingFeeRate(tradingFeeRate);
+
+        _;
+    }
 
     function prepareSlotMargins(
         LpSlotSet storage self,
@@ -96,12 +103,24 @@ library LpSlotSetLib {
             position.timestamp
         );
         for (uint256 i = 0; i < slotMargins.length; i++) {
+            LpSlotMargin memory slotMargin = slotMargins[i];
+
             param.leveragedQty = paramValues[i].leveragedQty;
             param.takerMargin = paramValues[i].takerMargin;
-            param.makerMargin = slotMargins[i].amount;
+            param.makerMargin = slotMargin.amount;
 
-            _slots[slotMargins[i].tradingFeeRate].openPosition(ctx, param);
+            _slots[slotMargins[i].tradingFeeRate].openPosition(
+                ctx,
+                param,
+                slotMargin.tradingFee()
+            );
         }
+
+        setMinAvailableFeeRate(
+            self,
+            position,
+            slotMargins[slotMargins.length - 1].tradingFeeRate
+        );
     }
 
     function acceptClosePosition(
@@ -161,25 +180,45 @@ library LpSlotSetLib {
         if (remainRealizedPnl != 0) {
             revert ExceedMarginRange();
         }
+
+        uint16 _feeRate = slotMargins[0].tradingFeeRate;
+        if (_feeRate < minAvailableFeeRate(self, position)) {
+            setMinAvailableFeeRate(self, position, _feeRate);
+        }
     }
 
     function mint(
         LpSlotSet storage self,
-        int256 tradingFeeRate,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
         uint256 amount,
         uint256 totalLiquidity
-    ) internal returns (uint256) {
-        //
-        // slots = tradingFeeRate > 0 ? self.longSlots : self.shortSlots
-        // return slots[abs(tradingFeeRate)].mint(amount, totalLiquidity)
+    )
+        internal
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 liquidity)
+    {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+
+        liquidity = slot.mint(ctx, amount, totalLiquidity);
+
+        uint16 _feeRate = abs(tradingFeeRate);
+        if (_feeRate < minAvailableFeeRate(self, tradingFeeRate)) {
+            setMinAvailableFeeRate(self, tradingFeeRate);
+        }
     }
 
     function burn(
         LpSlotSet storage self,
-        int256 tradingFeeRate,
-        uint256 amount,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 liquidity,
         uint256 totalLiquidity
-    ) internal returns (uint256) {}
+    ) internal _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+
+        amount = slot.burn(ctx, liquidity, totalLiquidity);
+    }
 
     function targetSlots(
         LpSlotSet storage self,
@@ -188,12 +227,32 @@ library LpSlotSetLib {
         return position.qty < 0 ? self._shortSlots : self._longSlots;
     }
 
+    function targetSlot(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) private view returns (LpSlot storage) {
+        return
+            tradingFeeRate < 0
+                ? self._shortSlots[abs(tradingFeeRate)]
+                : self._longSlots[abs(tradingFeeRate)];
+    }
+
     function minAvailableFeeRate(
         LpSlotSet storage self,
         Position memory position
     ) private view returns (uint16) {
         return
             position.qty < 0
+                ? self._minAvailableFeeRateShort
+                : self._minAvailableFeeRateLong;
+    }
+
+    function minAvailableFeeRate(
+        LpSlotSet storage self,
+        int256 sign
+    ) private view returns (uint16) {
+        return
+            sign < 0
                 ? self._minAvailableFeeRateShort
                 : self._minAvailableFeeRateLong;
     }
@@ -207,6 +266,17 @@ library LpSlotSetLib {
             self._minAvailableFeeRateShort = feeRate;
         } else {
             self._minAvailableFeeRateLong = feeRate;
+        }
+    }
+
+    function setMinAvailableFeeRate(
+        LpSlotSet storage self,
+        int16 feeRate
+    ) private {
+        if (feeRate < 0) {
+            self._minAvailableFeeRateShort = abs(feeRate);
+        } else {
+            self._minAvailableFeeRateLong = abs(feeRate);
         }
     }
 
@@ -256,6 +326,24 @@ library LpSlotSetLib {
         param.timestamp = timestamp;
     }
 
+    function validateTradingFeeRate(int16 tradingFeeRate) private pure {
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+
+        uint16 absFeeRate = abs(tradingFeeRate);
+
+        uint256 idx = findUpperBound(_tradingFeeRates, absFeeRate);
+        if (
+            idx >= _tradingFeeRates.length ||
+            absFeeRate != _tradingFeeRates[idx]
+        ) {
+            revert UnsupportedTradingFeeRate();
+        }
+    }
+
+    function abs(int16 i) private pure returns (uint16) {
+        return i < 0 ? uint16(-i) : uint16(i);
+    }
+
     function tradingFeeRates()
         private
         pure
@@ -268,5 +356,36 @@ library LpSlotSetLib {
             100, 200, 300, 400, 500, 600, 700, 700, 900, // 1% ~ 9%, step 1%
             1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000 // 10% ~ 50%, step 5%
         ];
+    }
+
+    function findUpperBound(
+        uint16[FEE_RATES_LENGTH] memory array,
+        uint16 element
+    ) internal pure returns (uint256) {
+        if (array.length == 0) {
+            return 0;
+        }
+
+        uint256 low = 0;
+        uint256 high = array.length;
+
+        while (low < high) {
+            uint256 mid = Math.average(low, high);
+
+            // Note that mid will always be strictly less than high (i.e. it will be a valid array index)
+            // because Math.average rounds down (it does integer division with truncation).
+            if (array[mid] > element) {
+                high = mid;
+            } else {
+                low = mid + 1;
+            }
+        }
+
+        // At this point `low` is the exclusive upper bound. We will return the inclusive upper bound.
+        if (low > 0 && array[low - 1] == element) {
+            return low - 1;
+        } else {
+            return low;
+        }
     }
 }

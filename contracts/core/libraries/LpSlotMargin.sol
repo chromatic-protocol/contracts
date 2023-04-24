@@ -13,11 +13,12 @@ using LpSlotMarginLib for LpSlotMargin global;
 library LpSlotMarginLib {
     using Math for uint256;
 
-    uint256 constant TRADING_FEE_PRECISION = 10000;
+    uint256 constant TRADING_FEE_RATE_PRECISION = 10000;
 
     function tradingFee(
         LpSlotMargin memory self
     ) internal pure returns (uint256) {
-        return self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_PRECISION);
+        return
+            self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION);
     }
 }
