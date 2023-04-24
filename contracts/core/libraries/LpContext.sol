@@ -29,6 +29,9 @@ library LpContextLib {
         LpContext memory self,
         uint256 version
     ) internal view returns (OracleVersion memory) {
+        if (self._currentVersionCache.version == version) {
+            return self._currentVersionCache;
+        }
         return self.oracleProvider.atVersion(version);
     }
 
