@@ -8,13 +8,14 @@ import {IUSUMMarket, IUSUMLiquidity} from "@usum/core/interfaces/IUSUMMarket.sol
 import {IMarketDeployer} from "@usum/core/interfaces/IMarketDeployer.sol";
 import {LpSlotPosition} from "@usum/core/libraries/LpSlotPosition.sol";
 
-import {LpSlotSet} from "@usum/core/libraries/LpSlotSetMock.sol";
+import {LpSlotSet} from "@usum/core/libraries/LpSlotSet.sol";
 
 abstract contract MarketBase is IUSUMMarket {
     IUSUMFactory public immutable override factory;
     IOracleProvider public immutable override oracleProvider;
     IERC20 public immutable override settlementToken;
-    LpSlotSet public lpSlotSet; // TODO add interface
+    
+    LpSlotSet internal lpSlotSet;
 
     // liquidity
     // uint256 internal lpReserveRatio;

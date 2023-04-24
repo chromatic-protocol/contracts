@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
+
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+
+struct LpSlotMargin {
+    uint16 tradingFeeRate;
+    uint256 amount;
+}
+
+using LpSlotMarginLib for LpSlotMargin global;
+
+library LpSlotMarginLib {
+    using Math for uint256;
+
+    uint256 constant TRADING_FEE_PRECISION = 10000;
+
+    function tradingFee(
+        LpSlotMargin memory self
+    ) internal pure returns (uint256) {
+        return self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_PRECISION);
+    }
+}

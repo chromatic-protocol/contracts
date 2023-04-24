@@ -7,6 +7,7 @@ import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 
 struct Position {
     uint256 oracleVersion;
@@ -14,12 +15,7 @@ struct Position {
     uint32 leverage;
     uint256 timestamp;
     uint256 takerMargin;
-    SlotMargin[] _slotMargins;
-}
-
-struct SlotMargin {
-    uint16 tradingFeeRate;
-    uint256 amount;
+    LpSlotMargin[] _slotMargins;
 }
 
 using PositionLib for Position global;
@@ -62,9 +58,23 @@ library PositionLib {
         }
     }
 
+    function tradingFee(
+        Position memory self
+    ) internal pure returns (uint256 fee) {
+        for (uint256 i = 0; i < self._slotMargins.length; i++) {
+            fee += self._slotMargins[i].tradingFee();
+        }
+    }
+
+    function slotMargins(
+        Position memory self
+    ) internal pure returns (LpSlotMargin[] memory margins) {
+        return self._slotMargins;
+    }
+
     function setSlotMargins(
         Position memory self,
-        SlotMargin[] memory margins
+        LpSlotMargin[] memory margins
     ) internal pure {
         self._slotMargins = margins;
     }
