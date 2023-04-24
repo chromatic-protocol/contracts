@@ -1,56 +1,81 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {LpSlotKey} from "@usum/core/libraries/LpSlotKey.sol";
+import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 
 struct Position {
     uint256 oracleVersion;
-    int256 qty;
+    int224 qty;
+    uint32 leverage;
     uint256 timestamp;
-    uint256 leverage;
     uint256 takerMargin;
-    LpSlotKey[] _slotKeys;
-    mapping(LpSlotKey => uint256) _slotMargins;
+    LpSlotMargin[] _slotMargins;
 }
 
 using PositionLib for Position global;
 
 library PositionLib {
+    using Math for uint256;
+    using SafeCast for uint256;
+    using SignedMath for int256;
+
     function settleVersion(
-        Position storage self
-    ) internal view returns (uint256) {
+        Position memory self
+    ) internal pure returns (uint256) {
         return PositionUtil.settleVersion(self.oracleVersion);
     }
 
+    function leveragedQty(
+        Position memory self,
+        LpContext memory ctx
+    ) internal pure returns (int256) {
+        int256 qty = self.qty;
+        int256 leveraged = qty
+            .abs()
+            .mulDiv(self.leverage * ctx.tokenPrecision, QTY_LEVERAGE_PRECISION)
+            .toInt256();
+        return qty < 0 ? -leveraged : leveraged;
+    }
+
     function entryPrice(
-        Position storage self,
+        Position memory self,
         IOracleProvider provider
     ) internal view returns (uint256) {
         return PositionUtil.entryPrice(provider, self.oracleVersion);
     }
 
     function makerMargin(
-        Position storage self
-    ) internal view returns (uint256 margin) {
-        LpSlotKey[] memory _keys = self._slotKeys;
-        for (uint256 i = 0; i < _keys.length; i++) {
-            margin += self._slotMargins[_keys[i]];
+        Position memory self
+    ) internal pure returns (uint256 margin) {
+        for (uint256 i = 0; i < self._slotMargins.length; i++) {
+            margin += self._slotMargins[i].amount;
         }
     }
 
-    function setSlotMargins(
-        Position storage self,
-        LpSlotMargin[] memory margins
-    ) internal {
-        delete self._slotKeys;
-
-        for (uint256 i = 0; i < margins.length; i++) {
-            LpSlotMargin memory margin = margins[i];
-            self._slotKeys.push(margin.key);
-            self._slotMargins[margin.key] = margin.amount;
+    function tradingFee(
+        Position memory self
+    ) internal pure returns (uint256 fee) {
+        for (uint256 i = 0; i < self._slotMargins.length; i++) {
+            fee += self._slotMargins[i].tradingFee();
         }
+    }
+
+    function slotMargins(
+        Position memory self
+    ) internal pure returns (LpSlotMargin[] memory margins) {
+        return self._slotMargins;
+    }
+
+    function setSlotMargins(
+        Position memory self,
+        LpSlotMargin[] memory margins
+    ) internal pure {
+        self._slotMargins = margins;
     }
 }

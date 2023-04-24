@@ -67,8 +67,7 @@ contract LpSlotPendingPositionTest is Test {
         pending.totalLeveragedQty = 10;
 
         LpContext memory ctx = _newLpContext();
-        PositionParam memory param = _newPositionParam().clone();
-        param.leveragedQty *= -1;
+        PositionParam memory param = _newPositionParam().inverse();
 
         vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
         pending.openPosition(ctx, param);
@@ -155,7 +154,8 @@ contract LpSlotPendingPositionTest is Test {
             LpContext({
                 oracleProvider: provider,
                 interestCalculator: calculator,
-                tokenPrecision: 10 * 18,
+                tokenPrecision: 10 ** 6,
+                _pricePrecision: 1,
                 _currentVersionCache: OracleVersion(0, 0, 0)
             });
     }

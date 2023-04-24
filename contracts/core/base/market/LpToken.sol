@@ -48,7 +48,7 @@ abstract contract LpToken is ERC1155Supply {
     function uri(uint256 id) public view override returns (string memory) {
         LpSlotKey slotKey = LpSlotKey.wrap(id);
         Direction direction = slotKey.direction();
-        uint128 fee = slotKey.tradingFee();
+        uint16 feeRate = slotKey.tradingFeeRate();
         string memory indexName = IUSUMMarketState(address(this))
             .oracleProvider()
             .description();
@@ -61,7 +61,7 @@ abstract contract LpToken is ERC1155Supply {
             indexName,
             " ",
             direction == Direction.Long ? "Long " : "Short ",
-            fee.toString(),
+            uint256(feeRate).toString(),
             '", "image":"',
             imageUri,
             '"',

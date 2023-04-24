@@ -6,7 +6,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {AccruedInterest} from "@usum/core/libraries/AccruedInterest.sol";
 import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
-import {PositionUtil, LEVERAGED_QTY_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
+import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/libraries/LpSlotPendingPosition.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
@@ -56,9 +56,10 @@ library LpSlotPositionLib {
 
         int256 pendingQty = self._pending.totalLeveragedQty;
         self.totalLeveragedQty += pendingQty;
-        self.totalEntryAmount +=
-            pendingQty.abs() *
-            self._pending.entryPrice(ctx);
+        self.totalEntryAmount += pendingQty.abs().mulDiv(
+            self._pending.entryPrice(ctx),
+            ctx.pricePrecision()
+        );
         self._totalMakerMargin += self._pending.totalMakerMargin;
         self._totalTakerMargin += self._pending.totalTakerMargin;
         self._accruedInterest.accumulatedAmount += self
@@ -90,7 +91,10 @@ library LpSlotPositionLib {
             PositionUtil.checkClosePositionQty(totalLeveragedQty, leveragedQty);
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
-            self.totalEntryAmount -= leveragedQty.abs() * param.entryPrice(ctx);
+            self.totalEntryAmount -= leveragedQty.abs().mulDiv(
+                param.entryPrice(ctx),
+                ctx.pricePrecision()
+            );
             self._totalMakerMargin -= param.makerMargin;
             self._totalTakerMargin -= param.takerMargin;
             self._accruedInterest.deduct(
@@ -121,18 +125,14 @@ library LpSlotPositionLib {
         int256 sign = leveragedQty < 0 ? int256(-1) : int256(1);
         uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
-        int256 rawPnl = leveragedQty *
-            exitPrice.toInt256() -
-            self.totalEntryAmount.toInt256() *
-            sign;
-        int256 absRawPnl = rawPnl
+        int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
+        int256 exitAmount = leveragedQty
             .abs()
-            .mulDiv(
-                ctx.tokenPrecision,
-                LEVERAGED_QTY_PRECISION * ctx.oracleProvider.pricePrecision()
-            )
-            .toInt256();
-        int256 pnl = (rawPnl < 0 ? -absRawPnl : absRawPnl) +
+            .mulDiv(exitPrice, ctx.oracleProvider.pricePrecision())
+            .toInt256() * sign;
+
+        int256 rawPnl = exitAmount - entryAmount;
+        int256 pnl = rawPnl +
             self._pending.unrealizedPnl(ctx) +
             _currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();

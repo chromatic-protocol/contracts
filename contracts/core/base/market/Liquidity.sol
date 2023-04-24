@@ -33,7 +33,8 @@ abstract contract Liquidity is LpToken, MarketValue {
         if (amount == 0) return 0;
 
         liquidity = lpSlotSet.mint(
-            slotKey.signedTradingFee(),
+            newLpContext(),
+            slotKey.signedTradingFeeRate(),
             amount,
             totalSupply(slotKey.unwrap())
         );
@@ -60,12 +61,12 @@ abstract contract Liquidity is LpToken, MarketValue {
         // uint256 amount,
         // uint256 totalLiquidity
         amount = lpSlotSet.burn(
-            slotKey.signedTradingFee(),
+            newLpContext(),
+            slotKey.signedTradingFeeRate(),
             liquidity,
             _totalSupply
         );
         SafeERC20.safeTransfer(address(settlementToken), recipient, amount);
         _burn(recipient, slotKey.unwrap(), liquidity);
     }
-
 }

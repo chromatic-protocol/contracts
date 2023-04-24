@@ -36,20 +36,6 @@ library PositionParamLib {
             );
     }
 
-    function clone(
-        PositionParam memory self
-    ) internal pure returns (PositionParam memory) {
-        return
-            PositionParam({
-                oracleVersion: self.oracleVersion,
-                leveragedQty: self.leveragedQty,
-                takerMargin: self.takerMargin,
-                makerMargin: self.makerMargin,
-                timestamp: self.timestamp,
-                _settleVersionCache: self._settleVersionCache
-            });
-    }
-
     function settleOracleVersion(
         PositionParam memory self,
         LpContext memory ctx
@@ -76,5 +62,27 @@ library PositionParamLib {
                 until,
                 Math.Rounding.Up
             );
+    }
+
+    function clone(
+        PositionParam memory self
+    ) internal pure returns (PositionParam memory) {
+        return
+            PositionParam({
+                oracleVersion: self.oracleVersion,
+                leveragedQty: self.leveragedQty,
+                takerMargin: self.takerMargin,
+                makerMargin: self.makerMargin,
+                timestamp: self.timestamp,
+                _settleVersionCache: self._settleVersionCache
+            });
+    }
+
+    function inverse(
+        PositionParam memory self
+    ) internal pure returns (PositionParam memory) {
+        PositionParam memory param = self.clone();
+        param.leveragedQty *= -1;
+        return param;
     }
 }

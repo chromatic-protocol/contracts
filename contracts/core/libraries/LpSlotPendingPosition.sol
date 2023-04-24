@@ -100,8 +100,7 @@ library LpSlotPendingPositionLib {
         int256 pnl = PositionUtil.pnl(
             self.totalLeveragedQty,
             _entryPrice,
-            _exitPrice,
-            ctx.tokenPrecision
+            _exitPrice
         ) + currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();
 
