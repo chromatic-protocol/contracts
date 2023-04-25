@@ -154,10 +154,8 @@ abstract contract Trade is MarketValue {
             PositionUtil.oraclePrice(oracleProvider.currentVersion())
         ) - interestFee.toInt256();
         lpSlotSet.acceptClosePosition(lpContext, position, realizedPnl);
-        int256 takerMargin = position.takerMargin.toInt256();
-        if (takerMargin > 0) {
-            transferMargin(takerMargin, realizedPnl, recipient);
-        }
+        int256 takerMargin = position.takerMargin.toInt256() + realizedPnl;
+        transferMargin(takerMargin, recipient);
         return 0;
     }
 
@@ -180,16 +178,12 @@ abstract contract Trade is MarketValue {
 
     function transferMargin(
         int256 takerMargin,
-        int256 pnl,
         address recipient
     ) internal returns (uint256 marginTransferred) {
-        int256 takerLeftMargin = takerMargin + pnl;
-
-        if (takerLeftMargin <= 0) {
+        if (takerMargin <= 0) {
             return 0;
         }
-
-        uint256 transferred = uint256(takerLeftMargin);
+        uint256 transferred = uint256(takerMargin);
         SafeERC20.safeTransfer(
             address(settlementToken),
             recipient,

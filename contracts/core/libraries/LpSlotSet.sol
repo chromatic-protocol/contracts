@@ -365,16 +365,6 @@ library LpSlotSetLib {
         ];
     }
 
-    function tradingFeeRateIndex(uint16 tradingFeeRafe) internal pure returns (uint256){
-        uint16[FEE_RATES_LENGTH] memory feeRates = tradingFeeRates();
-        for (uint i = 0; i < FEE_RATES_LENGTH; i++) {
-            if(feeRates[i] == tradingFeeRafe){
-                return i;
-            }
-        }
-        revert("index not found");
-    }
-
     function findUpperBound(
         uint16[FEE_RATES_LENGTH] memory array,
         uint16 element
