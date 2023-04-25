@@ -8,7 +8,6 @@ abstract contract MarketDeployer is IMarketDeployer {
     struct Parameters {
         address oracleProvider; // abstract contract vs contract
         address settlementToken;
-        string lpTokenUri;
     }
 
     /// @inheritdoc IMarketDeployer
@@ -20,13 +19,11 @@ abstract contract MarketDeployer is IMarketDeployer {
     /// @param settlementToken The settlement token of the market
     function deploy(
         address oracleProvider,
-        address settlementToken,
-        string memory lpTokenUri
+        address settlementToken
     ) internal returns (address market) {
         parameters = Parameters({
             oracleProvider: oracleProvider,
-            settlementToken: settlementToken,
-            lpTokenUri: lpTokenUri
+            settlementToken: settlementToken
         });
         market = address(
             new USUMMarket{

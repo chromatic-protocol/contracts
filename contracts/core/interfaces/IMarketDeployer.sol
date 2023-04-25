@@ -17,7 +17,6 @@ interface IMarketDeployer {
         view
         returns (
             address oracleProvider,
-            address settlementToken,
-            string memory lpTokenUri
+            address settlementToken
         );
 }

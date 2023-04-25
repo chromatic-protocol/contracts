@@ -10,12 +10,15 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 
 struct Position {
+    uint256 id;
     uint256 oracleVersion;
     int224 qty;
     uint32 leverage;
     uint256 timestamp;
     uint256 takerMargin;
+    address owner;
     LpSlotMargin[] _slotMargins;
+    
 }
 
 using PositionLib for Position global;
@@ -69,7 +72,7 @@ library PositionLib {
     function slotMargins(
         Position memory self
     ) internal pure returns (LpSlotMargin[] memory margins) {
-        return self._slotMargins;
+        margins = self._slotMargins;
     }
 
     function setSlotMargins(
@@ -77,5 +80,20 @@ library PositionLib {
         LpSlotMargin[] memory margins
     ) internal pure {
         self._slotMargins = margins;
+    }
+
+    function storeTo(Position memory self, Position storage storedPosition) internal{
+        storedPosition.id  = self.id;
+        storedPosition.oracleVersion  = self.oracleVersion;
+        storedPosition.qty  = self.qty;
+        storedPosition.timestamp  = self.timestamp;
+        storedPosition.leverage  = self.leverage;
+        storedPosition.takerMargin  = self.takerMargin;
+        storedPosition.owner  = self.owner;
+        // can not convert memory array to storage array
+        delete storedPosition._slotMargins;
+        for (uint i = 0; i < self._slotMargins.length; i++) {
+            storedPosition._slotMargins.push(self._slotMargins[i]);
+        }
     }
 }
