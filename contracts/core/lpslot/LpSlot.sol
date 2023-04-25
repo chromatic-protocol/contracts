@@ -3,20 +3,19 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/libraries/LpSlotPosition.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
+import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/lpslot/LpSlotPosition.sol";
+import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
 
 struct LpSlot {
     uint256 total;
     LpSlotPosition _position;
 }
 
-using LpSlotLib for LpSlot global;
-
 library LpSlotLib {
     using Math for uint256;
     using SignedMath for int256;
+    using LpSlotLib for LpSlot;
     using LpSlotPositionLib for LpSlotPosition;
 
     uint256 private constant MIN_AMOUNT = 1000; // almost zero, prevent divide by zero

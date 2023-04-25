@@ -5,14 +5,16 @@ import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {QTY_PRECISION, LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {LpSlotSet} from "@usum/core/libraries/LpSlotSet.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/lpslot/LpSlot.sol";
+import {LpSlotSet} from "@usum/core/lpslot/LpSlotSet.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
+    using LpSlotLib for LpSlot;
 
     uint256 private constant PRICE_PRECISION = 10 ** 8;
 
@@ -32,7 +34,9 @@ contract LpSlotSetTest is Test {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
 
-        slotSet.prepareSlotMargins(position, 1500 ether);
+        position.setSlotMargins(
+            slotSet.prepareSlotMargins(position.qty, 1500 ether)
+        );
 
         assertEq(position.leveragedQty(ctx), 1500 ether);
         assertEq(position._slotMargins[0].tradingFeeRate, 1);
@@ -46,7 +50,9 @@ contract LpSlotSetTest is Test {
     function testAcceptOpenPosition() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        slotSet.prepareSlotMargins(position, 1500 ether);
+        position.setSlotMargins(
+            slotSet.prepareSlotMargins(position.qty, 1500 ether)
+        );
 
         slotSet.acceptOpenPosition(ctx, position);
 
@@ -60,7 +66,9 @@ contract LpSlotSetTest is Test {
     function testCloseOpenPosition_whenSameRound() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        slotSet.prepareSlotMargins(position, 1500 ether);
+        position.setSlotMargins(
+            slotSet.prepareSlotMargins(position.qty, 1500 ether)
+        );
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 1;
@@ -77,7 +85,9 @@ contract LpSlotSetTest is Test {
     function testCloseOpenPosition_whenNextRoundWithTakerProfit() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        slotSet.prepareSlotMargins(position, 1500 ether);
+        position.setSlotMargins(
+            slotSet.prepareSlotMargins(position.qty, 1500 ether)
+        );
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache = OracleVersion({
@@ -98,7 +108,9 @@ contract LpSlotSetTest is Test {
     function testCloseOpenPosition_whenNextRoundWithTakerLoss() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        slotSet.prepareSlotMargins(position, 1500 ether);
+        position.setSlotMargins(
+            slotSet.prepareSlotMargins(position.qty, 1500 ether)
+        );
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache = OracleVersion({

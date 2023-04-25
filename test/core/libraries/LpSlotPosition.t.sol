@@ -3,9 +3,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/libraries/LpSlotPosition.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
+import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/lpslot/LpSlotPosition.sol";
+import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 

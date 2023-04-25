@@ -4,11 +4,11 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {AccruedInterest} from "@usum/core/libraries/AccruedInterest.sol";
-import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/libraries/LpSlotPendingPosition.sol";
+import {AccruedInterest, AccruedInterestLib} from "@usum/core/lpslot/AccruedInterest.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
+import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/lpslot/LpSlotPendingPosition.sol";
+import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 
 struct LpSlotPosition {
@@ -24,6 +24,7 @@ library LpSlotPositionLib {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
+    using AccruedInterestLib for AccruedInterest;
     using LpSlotPendingPositionLib for LpSlotPendingPosition;
 
     modifier _settle(LpSlotPosition storage self, LpContext memory ctx) {

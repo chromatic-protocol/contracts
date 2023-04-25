@@ -84,7 +84,7 @@ contract Account is IAccount, VerifyCallback {
 
     function openPosition(
         address marketAddress,
-        int256 quantity,
+        int224 qty,
         uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin
@@ -92,7 +92,7 @@ contract Account is IAccount, VerifyCallback {
         _prepareMarket(marketAddress);
 
         Position memory position = IUSUMMarket(marketAddress).openPosition(
-            quantity,
+            qty,
             leverage,
             takerMargin,
             makerMargin,

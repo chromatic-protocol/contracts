@@ -78,7 +78,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         address settlementToken,
         uint256 takerMargin,
         uint256 makerMargin,
-        int256 qty,
+        int224 qty,
         uint32 leverage,
         uint256 deadline
     ) external ensure(deadline) {

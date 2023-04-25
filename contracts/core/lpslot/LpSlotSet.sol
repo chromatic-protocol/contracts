@@ -5,10 +5,10 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
-import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlot} from "@usum/core/libraries/LpSlot.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/lpslot/LpSlot.sol";
+import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
+import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
 
 struct LpSlotSet {
     uint16 _minAvailableFeeRateLong;
@@ -23,6 +23,7 @@ library LpSlotSetLib {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
+    using LpSlotLib for LpSlot;
 
     uint256 private constant FEE_RATES_LENGTH = 36;
     uint16 private constant MIN_FEE_RATE = 1;
@@ -44,15 +45,15 @@ library LpSlotSetLib {
 
     function prepareSlotMargins(
         LpSlotSet storage self,
-        Position memory position,
+        int224 qty,
         uint256 makerMargin
-    ) internal view {
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position);
+    ) external view returns (LpSlotMargin[] memory) {
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, qty);
 
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         uint256[FEE_RATES_LENGTH] memory _slotMargins;
 
-        uint16 _minFeeRate = minAvailableFeeRate(self, position);
+        uint16 _minFeeRate = minAvailableFeeRate(self, qty);
 
         uint256 from = findUpperBound(_tradingFeeRates, _minFeeRate);
         uint256 to = from;
@@ -80,15 +81,18 @@ library LpSlotSetLib {
             });
         }
 
-        position.setSlotMargins(slotMargins);
+        return slotMargins;
     }
 
     function acceptOpenPosition(
         LpSlotSet storage self,
         LpContext memory ctx,
         Position memory position
-    ) internal {
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position);
+    ) external {
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(
+            self,
+            position.qty
+        );
 
         uint256 makerMargin = position.makerMargin();
         LpSlotMargin[] memory slotMargins = position.slotMargins();
@@ -131,7 +135,7 @@ library LpSlotSetLib {
         LpContext memory ctx,
         Position memory position,
         int256 realizedPnl // realized position pnl (taker side)
-    ) internal {
+    ) external {
         uint256 absRealizedPnl = realizedPnl.abs();
         uint256 makerMargin = position.makerMargin();
         if (realizedPnl > 0 && absRealizedPnl > makerMargin)
@@ -139,7 +143,10 @@ library LpSlotSetLib {
         if (realizedPnl < 0 && absRealizedPnl > position.takerMargin)
             revert ExceedMarginRange();
 
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position);
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(
+            self,
+            position.qty
+        );
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
         _proportionalPositionParamValue[]
@@ -214,7 +221,7 @@ library LpSlotSetLib {
         }
 
         uint16 _feeRate = slotMargins[0].tradingFeeRate;
-        if (_feeRate < minAvailableFeeRate(self, position)) {
+        if (_feeRate < minAvailableFeeRate(self, position.qty)) {
             setMinAvailableFeeRate(self, position, _feeRate);
         }
     }
@@ -226,7 +233,7 @@ library LpSlotSetLib {
         uint256 amount,
         uint256 totalLiquidity
     )
-        internal
+        external
         _validTradingFeeRate(tradingFeeRate)
         returns (uint256 liquidity)
     {
@@ -246,7 +253,7 @@ library LpSlotSetLib {
         int16 tradingFeeRate,
         uint256 liquidity,
         uint256 totalLiquidity
-    ) internal _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
+    ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
         amount = slot.burn(ctx, liquidity, totalLiquidity);
@@ -254,9 +261,9 @@ library LpSlotSetLib {
 
     function targetSlots(
         LpSlotSet storage self,
-        Position memory position
+        int256 sign
     ) private view returns (mapping(uint16 => LpSlot) storage) {
-        return position.qty < 0 ? self._shortSlots : self._longSlots;
+        return sign < 0 ? self._shortSlots : self._longSlots;
     }
 
     function targetSlot(
@@ -267,13 +274,6 @@ library LpSlotSetLib {
             tradingFeeRate < 0
                 ? self._shortSlots[abs(tradingFeeRate)]
                 : self._longSlots[abs(tradingFeeRate)];
-    }
-
-    function minAvailableFeeRate(
-        LpSlotSet storage self,
-        Position memory position
-    ) private view returns (uint16) {
-        return minAvailableFeeRate(self, position.qty);
     }
 
     function minAvailableFeeRate(
