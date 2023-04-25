@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {LpSlotKey, Direction, LpSlotKeyLib} from "@usum/core/libraries/LpSlotKey.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 
@@ -15,6 +14,7 @@ import {Account} from "./Account.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
+
     struct MintCallbackData {
         address payer;
         uint256 amount;
@@ -123,7 +123,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         _prepareMarket(address(market));
         liquidity = IUSUMMarket(market).mint(
             recipient,
-            _getSlotKey(feeRate),
+            feeRate,
             abi.encode(MintCallbackData({payer: msg.sender, amount: amount}))
         );
     }
@@ -144,21 +144,12 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         _prepareMarket(address(market));
         amount = IUSUMMarket(market).burn(
             recipient,
-            _getSlotKey(feeRate),
+            feeRate,
             abi.encode(
                 BurnCallbackData({payer: msg.sender, liquidity: liquidity})
             )
         );
         require(amount >= amountMin, "TradeRouter: insufficient amount");
-    }
-
-    function _getSlotKey(
-        int16 feeRate
-    ) internal pure returns (LpSlotKey slotKey) {
-        slotKey = LpSlotKeyLib.from(
-            uint16(int256(feeRate).abs()),
-            feeRate < 0 ? Direction.Short : Direction.Long
-        );
     }
 
     function _getAccount(address owner) internal view returns (Account) {
