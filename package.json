@@ -4,7 +4,9 @@
     "test": "forge test -vvv",
     "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
     "coverage": "forge coverage --report lcov",
-    "coverage:watch": "watch -p \"**/*.sol\" -c \"yarn coverage\""
+    "coverage:watch": "watch -p \"**/*.sol\" -c \"yarn coverage\"",
+    "sizer": "forge build --sizes",
+    "sizer:hardhat": "hardhat size-contracts"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
