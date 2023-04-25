@@ -3,7 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {ERC1155Supply, ERC1155} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {LpSlotKey, Direction} from "@usum/core/libraries/LpSlotKey.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IUSUMMarketState} from "@usum/core/interfaces/market/IUSUMMarketState.sol";
 
 // fee pool slot
@@ -30,9 +31,14 @@ import {IUSUMMarketState} from "@usum/core/interfaces/market/IUSUMMarketState.so
 // TODO metadata
 // TODO 나중에 openPosition 할 때 수수료 저렴한거 부터 돌려야되는데 잔고가 있는 슬롯만 리스트로 관리(sort포함) 해야편할까?
 abstract contract LpToken is ERC1155Supply {
-    string private imageUri;
     using Strings for uint256;
     using Strings for uint128;
+    using SafeCast for uint256;
+    using SignedMath for int256;
+
+    uint256 constant DIRECTION_PRECISION = 10 ** 10;
+
+    string private imageUri;
 
     constructor() ERC1155("") {}
 
@@ -46,9 +52,8 @@ abstract contract LpToken is ERC1155Supply {
     }
 
     function uri(uint256 id) public view override returns (string memory) {
-        LpSlotKey slotKey = LpSlotKey.wrap(id);
-        Direction direction = slotKey.direction();
-        uint16 feeRate = slotKey.tradingFeeRate();
+        int16 tradingFeeRate = decodeId(id);
+
         string memory indexName = IUSUMMarketState(address(this))
             .oracleProvider()
             .description();
@@ -60,8 +65,8 @@ abstract contract LpToken is ERC1155Supply {
             '", "description": "',
             indexName,
             " ",
-            direction == Direction.Long ? "Long " : "Short ",
-            uint256(feeRate).toString(),
+            tradingFeeRate < 0 ? "Short " : "Long ",
+            int256(tradingFeeRate).abs().toString(),
             '", "image":"',
             imageUri,
             '"',
@@ -75,5 +80,18 @@ abstract contract LpToken is ERC1155Supply {
                     Base64.encode(metadata)
                 )
             );
+    }
+
+    function encodeId(int16 tradingFeeRate) internal pure returns (uint256 id) {
+        uint256 absFeeRate = int256(tradingFeeRate).abs();
+        id = tradingFeeRate < 0 ? absFeeRate + DIRECTION_PRECISION : absFeeRate;
+    }
+
+    function decodeId(uint256 id) internal pure returns (int16 tradingFeeRate) {
+        if (id >= DIRECTION_PRECISION) {
+            tradingFeeRate = -int16((id - DIRECTION_PRECISION).toUint16());
+        } else {
+            tradingFeeRate = int16(id.toUint16());
+        }
     }
 }

@@ -397,7 +397,7 @@ library LpSlotSetLib {
     function findUpperBound(
         uint16[FEE_RATES_LENGTH] memory array,
         uint16 element
-    ) internal pure returns (uint256) {
+    ) private pure returns (uint256) {
         if (array.length == 0) {
             return 0;
         }
