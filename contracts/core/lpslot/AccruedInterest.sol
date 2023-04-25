@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 
@@ -8,7 +8,7 @@ struct AccruedInterest {
     uint256 accumulatedAmount;
 }
 
-using AccruedInterestLib for AccruedInterest global;
+// using AccruedInterestLib for AccruedInterest global;
 
 library AccruedInterestLib {
     function accumulate(

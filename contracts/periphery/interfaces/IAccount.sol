@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 
@@ -22,7 +22,7 @@ interface IAccount is IUSUMTradeCallback {
 
     function openPosition(
         address marketAddress,
-        int256 quantity,
+        int224 qty,
         uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin

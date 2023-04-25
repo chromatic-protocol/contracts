@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
 
 struct PositionParam {
     uint256 oracleVersion;

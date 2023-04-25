@@ -5,7 +5,7 @@ import {Position} from '@usum/core/libraries/Position.sol';
 
 interface ITrade {
      function openPosition(
-        int256 quantity,
+        int224 qty,
         uint32 leverage, // BPS
         uint256 takerMargin,
         uint256 makerMargin,

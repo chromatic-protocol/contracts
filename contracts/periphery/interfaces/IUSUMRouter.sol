@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
 
@@ -9,7 +9,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         address settlementToken,
         uint256 takerMargin,
         uint256 makerMargin,
-        int256 qty,
+        int224 qty,
         uint32 leverage,
         uint256 deadline
     ) external;

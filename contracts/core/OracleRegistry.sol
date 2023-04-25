@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
+
 import {LibChainlinkRound} from "./libraries/LibChainlinkRound.sol";
 import {IOracleRegistry, OracleVersion} from "./interfaces/IOracleRegistry.sol";
 import {IOracleProvider} from "./interfaces/IOracleProvider.sol";

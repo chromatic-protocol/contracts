@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
@@ -78,7 +78,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         address settlementToken,
         uint256 takerMargin,
         uint256 makerMargin,
-        int256 qty,
+        int224 qty,
         uint32 leverage,
         uint256 deadline
     ) external ensure(deadline) {

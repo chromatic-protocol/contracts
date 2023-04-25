@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/libraries/LpSlotPendingPosition.sol";
+import {LpContext} from "@usum/core/lpslot/LpContext.sol";
+import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/lpslot/LpSlotPendingPosition.sol";
+import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 

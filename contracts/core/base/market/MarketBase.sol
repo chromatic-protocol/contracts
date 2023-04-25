@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.14;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {LpSlotSet} from "@usum/core/libraries/LpSlotSet.sol";
+import {LpSlotSet} from "@usum/core/lpslot/LpSlotSet.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 
 abstract contract MarketBase is IUSUMMarket {

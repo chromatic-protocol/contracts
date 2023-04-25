@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
@@ -84,7 +84,7 @@ contract Account is IAccount, VerifyCallback {
 
     function openPosition(
         address marketAddress,
-        int256 quantity,
+        int224 qty,
         uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin
@@ -92,7 +92,7 @@ contract Account is IAccount, VerifyCallback {
         _prepareMarket(marketAddress);
 
         Position memory position = IUSUMMarket(marketAddress).openPosition(
-            quantity,
+            qty,
             leverage,
             takerMargin,
             makerMargin,
