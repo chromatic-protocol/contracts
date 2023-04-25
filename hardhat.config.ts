@@ -1,5 +1,6 @@
 import "@nomicfoundation/hardhat-foundry";
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-contract-sizer";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 
@@ -10,7 +11,15 @@ const common = {
 };
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.17",
+  solidity: {
+    version: "0.8.17",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   networks: {
     anvil: {
       // localhost anvil
