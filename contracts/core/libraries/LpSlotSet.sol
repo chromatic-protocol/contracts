@@ -71,7 +71,7 @@ library LpSlotSetLib {
         }
 
         if (remain > 0) revert NotEnoughSlotBalance();
-        
+
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
             slotMargins[i - from] = LpSlotMargin({
@@ -132,9 +132,14 @@ library LpSlotSetLib {
         Position memory position,
         int256 realizedPnl // realized position pnl (taker side)
     ) internal {
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position);
-
+        uint256 absRealizedPnl = realizedPnl.abs();
         uint256 makerMargin = position.makerMargin();
+        if (realizedPnl > 0 && absRealizedPnl > makerMargin)
+            revert ExceedMarginRange();
+        if (realizedPnl < 0 && absRealizedPnl > position.takerMargin)
+            revert ExceedMarginRange();
+
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position);
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
         _proportionalPositionParamValue[]
@@ -145,43 +150,67 @@ library LpSlotSetLib {
                 slotMargins
             );
 
-        uint256 remainMakerMargin = makerMargin;
-        uint256 remainRealizedPnl = realizedPnl.abs();
         PositionParam memory param = newPositionParam(
             position.oracleVersion,
             position.timestamp
         );
-        for (uint256 i = 0; i < slotMargins.length; i++) {
-            param.leveragedQty = paramValues[i].leveragedQty;
-            param.takerMargin = paramValues[i].takerMargin;
-            param.makerMargin = slotMargins[i].amount;
 
-            uint256 absTakerPnl = remainRealizedPnl.mulDiv(
-                param.makerMargin,
-                remainMakerMargin
-            );
-            if (realizedPnl < 0) {
-                // maker profit
-                absTakerPnl = Math.min(absTakerPnl, param.takerMargin);
-            } else {
-                // taker profit
-                absTakerPnl = Math.min(absTakerPnl, param.makerMargin);
+        if (realizedPnl == 0) {
+            for (uint256 i = 0; i < slotMargins.length; i++) {
+                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+
+                param.leveragedQty = paramValues[i].leveragedQty;
+                param.takerMargin = paramValues[i].takerMargin;
+                param.makerMargin = slotMargins[i].amount;
+
+                _slot.closePosition(ctx, param, 0);
+            }
+        } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
+            for (uint256 i = 0; i < slotMargins.length; i++) {
+                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+
+                param.leveragedQty = paramValues[i].leveragedQty;
+                param.takerMargin = paramValues[i].takerMargin;
+                param.makerMargin = slotMargins[i].amount;
+
+                _slot.closePosition(ctx, param, param.makerMargin.toInt256());
+            }
+        } else {
+            uint256 remainMakerMargin = makerMargin;
+            uint256 remainRealizedPnl = absRealizedPnl;
+
+            for (uint256 i = 0; i < slotMargins.length; i++) {
+                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+
+                param.leveragedQty = paramValues[i].leveragedQty;
+                param.takerMargin = paramValues[i].takerMargin;
+                param.makerMargin = slotMargins[i].amount;
+
+                uint256 absTakerPnl = remainRealizedPnl.mulDiv(
+                    param.makerMargin,
+                    remainMakerMargin
+                );
+                if (realizedPnl < 0) {
+                    // maker profit
+                    absTakerPnl = Math.min(absTakerPnl, param.takerMargin);
+                } else {
+                    // taker profit
+                    absTakerPnl = Math.min(absTakerPnl, param.makerMargin);
+                }
+
+                int256 takerPnl = realizedPnl < 0
+                    ? -(absTakerPnl.toInt256())
+                    : absTakerPnl.toInt256();
+
+                _slot.closePosition(ctx, param, takerPnl);
+
+                remainMakerMargin -= param.makerMargin;
+                remainRealizedPnl -= absTakerPnl;
             }
 
-            _slots[slotMargins[i].tradingFeeRate].closePosition(
-                ctx,
-                param,
-                realizedPnl < 0
-                    ? -(absTakerPnl.toInt256())
-                    : absTakerPnl.toInt256()
-            );
-
-            remainMakerMargin -= param.makerMargin;
-            remainRealizedPnl -= absTakerPnl;
-        }
-
-        if (remainRealizedPnl != 0) {
-            revert ExceedMarginRange();
+            if (remainRealizedPnl != 0) {
+                revert ExceedMarginRange();
+            }
         }
 
         uint16 _feeRate = slotMargins[0].tradingFeeRate;
