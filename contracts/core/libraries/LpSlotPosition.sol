@@ -62,6 +62,8 @@ library LpSlotPositionLib {
         );
         self._totalMakerMargin += self._pending.totalMakerMargin;
         self._totalTakerMargin += self._pending.totalTakerMargin;
+
+        self._pending.settleAccruedInterest(ctx);
         self._accruedInterest.accumulatedAmount += self
             ._pending
             .accruedInterest
@@ -128,7 +130,7 @@ library LpSlotPositionLib {
         int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
         int256 exitAmount = leveragedQty
             .abs()
-            .mulDiv(exitPrice, ctx.oracleProvider.pricePrecision())
+            .mulDiv(exitPrice, ctx.pricePrecision())
             .toInt256() * sign;
 
         int256 rawPnl = exitAmount - entryAmount;
