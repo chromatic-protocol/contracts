@@ -137,6 +137,4 @@ contract Account is IAccount, VerifyCallback {
         uint256 marginTransfered,
         bytes calldata data
     ) external override verifyCallback {}
-
-    
 }
