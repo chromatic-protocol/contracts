@@ -4,25 +4,21 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {LpSlotPosition} from "@usum/core/libraries/LpSlotPosition.sol";
-import {LpSlot} from "@usum/core/libraries/LpSlot.sol";
-import {LpSlotKey} from "@usum/core/libraries/LpSlotKey.sol";
-import {LpSlotMargin, LpSlotMarginLib} from "@usum/core/libraries/LpSlotMargin.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/libraries/LpSlotPendingPosition.sol";
-import {PositionParam} from "@usum/core/libraries/PositionParam.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
     using SafeCast for int256;
     using SafeCast for uint256;
+    using SignedMath for int256;
 
     error ZeroTargetAmount();
 
@@ -148,10 +144,32 @@ abstract contract Trade is MarketValue {
             PositionUtil.entryPrice(oracleProvider, position.oracleVersion),
             PositionUtil.oraclePrice(oracleProvider.currentVersion())
         ) - interestFee.toInt256();
+
+        uint256 makerMargin = position.makerMargin();
+        uint256 takerMargin = position.takerMargin;
+
+        uint256 absRealizedPnl = realizedPnl.abs();
+        if (realizedPnl > 0) {
+            if (absRealizedPnl > makerMargin) {
+                realizedPnl = makerMargin.toInt256();
+                takerMargin += makerMargin;
+            } else {
+                takerMargin += absRealizedPnl;
+            }
+        } else {
+            if (absRealizedPnl > position.takerMargin) {
+                realizedPnl = -(position.takerMargin.toInt256());
+                takerMargin = 0;
+            } else {
+                takerMargin -= absRealizedPnl;
+            }
+        }
+
         lpSlotSet.acceptClosePosition(lpContext, position, realizedPnl);
-        int256 takerMargin = position.takerMargin.toInt256() + realizedPnl;
+
         transferMargin(takerMargin, recipient);
-        return 0;
+
+        return takerMargin;
     }
 
     function _incrementPositionId() internal returns (uint256) {
@@ -170,20 +188,12 @@ abstract contract Trade is MarketValue {
             );
     }
 
-    function transferMargin(
-        int256 takerMargin,
-        address recipient
-    ) internal returns (uint256 marginTransferred) {
-        if (takerMargin <= 0) {
-            return 0;
-        }
-        uint256 transferred = uint256(takerMargin);
+    function transferMargin(uint256 takerMargin, address recipient) internal {
         SafeERC20.safeTransfer(
             address(settlementToken),
             recipient,
-            transferred
+            takerMargin
         );
-        return transferred;
     }
 
     function getProtocolFee(uint256 margin) public view returns (uint16) {
