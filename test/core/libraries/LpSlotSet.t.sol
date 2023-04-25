@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -160,7 +160,7 @@ contract LpSlotSetTest is Test {
     function _newPosition() private pure returns (Position memory) {
         return
             Position({
-                id:1,
+                id: 1,
                 oracleVersion: 1,
                 qty: int224(150 * QTY_PRECISION.toInt256()),
                 leverage: uint32(10 * LEVERAGE_PRECISION),
