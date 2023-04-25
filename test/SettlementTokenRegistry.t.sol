@@ -2,12 +2,12 @@
 pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
-import {USUMFactory} from "@usum/core/USUMFactory.sol";
+import {USUMMarketFactory} from "@usum/core/USUMMarketFactory.sol";
 import {SettlementTokenRegistry} from "@usum/core/base/SettlementTokenRegistry.sol";
 import {Record} from "@usum/core/libraries/InterestRate.sol";
 
-contract _SettlementTokenRegistry is USUMFactory {
-    constructor() USUMFactory(address(0)) {}
+contract _SettlementTokenRegistry is USUMMarketFactory {
+    constructor() USUMMarketFactory(address(0)) {}
 
     // add this to be excluded from coverage report
     function test() public {}
