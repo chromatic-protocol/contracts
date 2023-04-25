@@ -18,8 +18,6 @@ import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {ISettlementTokenRegistry} from "@usum/core/interfaces/ISettlementTokenRegistry.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
@@ -78,15 +76,15 @@ abstract contract Trade is MarketValue {
             id: _positionId++,
             oracleVersion: lpContext.currentOracleVersion().version,
             qty: quantity.toInt224(), //
-             leverage: leverage,
+            leverage: leverage,
             timestamp: block.timestamp,
             takerMargin: takerMargin,
             owner: msg.sender,
             _slotMargins: new LpSlotMargin[](0)
         });
-        
+
         // position._slotMargins
-        
+
         uint256 protocolFee = getProtocolFee(takerMargin);
 
         lpSlotSet.prepareSlotMargins(position, makerMargin);
@@ -103,8 +101,7 @@ abstract contract Trade is MarketValue {
         // check margin settlementToken increased
         if (balanceBefore + requiredMargin < _balance())
             revert NotEnoughMarginTransfered();
-        
-        
+
         lpSlotSet.acceptOpenPosition(lpContext, position);
 
         transferProtocolFee(position.id, protocolFee);
@@ -116,8 +113,6 @@ abstract contract Trade is MarketValue {
         emit OpenPosition();
         return position;
     }
-    
-
 
     // can call keeper or onwer only
     function closePosition(
@@ -168,8 +163,7 @@ abstract contract Trade is MarketValue {
         Position memory position
     ) internal view returns (uint256) {
         return
-            ISettlementTokenRegistry(address(factory)).calculateInterest(
-                address(settlementToken),
+            calculateInterest(
                 position.makerMargin(),
                 position.timestamp,
                 block.timestamp

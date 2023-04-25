@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {InterestRateLib} from "@usum/core/libraries/InterestRate.sol";
 import {ISettlementTokenRegistry} from "@usum/core/interfaces/ISettlementTokenRegistry.sol";
 import {InterestRateLib, Record} from "@usum/core/libraries/InterestRate.sol";
@@ -108,9 +109,24 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
         uint256 amount,
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
-    ) external view override registeredOnly(token) returns (uint256) {
+    ) public view override registeredOnly(token) returns (uint256) {
+        return calculateInterest(token, amount, from, to, Math.Rounding.Down);
+    }
+
+    function calculateInterest(
+        address token,
+        uint256 amount,
+        uint256 from, // timestamp (inclusive)
+        uint256 to, // timestamp (exclusive)
+        Math.Rounding rounding
+    ) public view override registeredOnly(token) returns (uint256) {
         return
-            getInterestRateRecords(token).calculateInterest(amount, from, to);
+            getInterestRateRecords(token).calculateInterest(
+                amount,
+                from,
+                to,
+                rounding
+            );
     }
 
     function getInterestRateRecords(
