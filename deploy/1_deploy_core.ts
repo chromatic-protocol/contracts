@@ -25,6 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //   from: deployer,
   //   args: [oracleRegistry, liquidator, keeperFeePayer],
   // });
+  console.log(`oracleRegistry: ${oracleRegistry}`);
 };
 
 export default func;

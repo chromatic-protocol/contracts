@@ -7,6 +7,9 @@ import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 dotenv.config();
 
+const MNEMONIC_JUNK =
+  "test test test test test test test test test test test junk";
+
 const common = {
   accounts: {
     mnemonic: process.env.MNEMONIC || "",
@@ -28,9 +31,11 @@ const config: HardhatUserConfig = {
     anvil: {
       // localhost anvil
       ...common,
+      accounts: {
+        mnemonic: MNEMONIC_JUNK,
+      },
       url: "http://127.0.0.1:8545",
       chainId: 31337,
-      saveDeployments: false,
       tags: ["mockup", "core"],
     },
     arbitrum_nova: {
