@@ -15,14 +15,6 @@ abstract contract MarketBase is IUSUMMarket {
     LpSlotSet internal lpSlotSet;
 
     mapping(uint256 => Position) internal positions;
-    // liquidity
-    // uint256 internal lpReserveRatio;
-
-    modifier onlyDao() {
-        // TODO
-        // require(msg.sender == factory.dao());
-        _;
-    }
 
     constructor() {
         factory = IUSUMMarketFactory(msg.sender);

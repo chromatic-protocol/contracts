@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IMarketDeployer} from "./IMarketDeployer.sol";
-import {IOracleRegistry} from "./IOracleRegistry.sol";
+import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
+import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
 
-interface IUSUMMarketFactory is IMarketDeployer {
-
+interface IUSUMMarketFactory is IMarketDeployer, ISettlementTokenRegistry {
     event MarketCreated(
         address oracleProvider,
         address settlementToken,
         address market
     );
+
+    function dao() external view returns (address);
 
     function oracleRegistry() external view returns (IOracleRegistry);
 

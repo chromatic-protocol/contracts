@@ -3,11 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {InterestRateLib} from "@usum/core/libraries/InterestRate.sol";
-import {ISettlementTokenRegistry} from "@usum/core/interfaces/ISettlementTokenRegistry.sol";
 import {InterestRateLib, Record} from "@usum/core/libraries/InterestRate.sol";
 import {Registry} from "@usum/core/libraries/SettlementToken.sol";
+import {MarketFactoryBase} from "@usum/core/base/factory/MarketFactoryBase.sol";
 
-abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
+abstract contract SettlementTokenRegistry is MarketFactoryBase {
     using InterestRateLib for Record[];
 
     event RegisterSettlementToken(address indexed token);
@@ -24,21 +24,6 @@ abstract contract SettlementTokenRegistry is ISettlementTokenRegistry {
 
     error AlreadyRegisteredToken();
     error UnregisteredToken();
-
-    address public override dao;
-
-    modifier onlyDao() {
-        require(msg.sender == dao, "only DAO can access");
-        _;
-    }
-
-    constructor() {
-        dao = msg.sender;
-    }
-
-    function updateDao(address _dao) external onlyDao {
-        dao = _dao;
-    }
 
     Registry private registry;
 
