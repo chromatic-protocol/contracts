@@ -80,7 +80,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin,
-        uint16 maxAllowableTradingFeeRate,
+        uint256 maxAllowableTradingFee,
         uint256 deadline
     ) external ensure(deadline) {
         address market = marketFactory.getMarket(
@@ -93,7 +93,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             leverage,
             takerMargin,
             makerMargin,
-            maxAllowableTradingFeeRate
+            maxAllowableTradingFee
         );
     }
 

@@ -8,7 +8,7 @@ interface ITrade {
         uint32 leverage, // BPS
         uint256 takerMargin,
         uint256 makerMargin,
-        uint16 maxAllowableTradingFeeRate,
+        uint256 maxAllowableTradingFee,
         bytes calldata data
     ) external returns (Position memory);
 
