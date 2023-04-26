@@ -25,7 +25,8 @@ interface IAccount is IUSUMTradeCallback {
         int224 qty,
         uint32 leverage,
         uint256 takerMargin,
-        uint256 makerMargin
+        uint256 makerMargin,
+        uint16 maxAllowableTradingFeeRate
     ) external;
 
     function closePosition(address marketAddress, uint256 positionId) external;

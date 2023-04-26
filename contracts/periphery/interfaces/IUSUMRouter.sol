@@ -7,10 +7,11 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
     function openPosition(
         address oracleProvider,
         address settlementToken,
-        uint256 takerMargin,
-        uint256 makerMargin,
         int224 qty,
         uint32 leverage,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint16 maxAllowableTradingFeeRate,
         uint256 deadline
     ) external;
 

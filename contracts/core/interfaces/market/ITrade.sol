@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
-import {Position} from '@usum/core/libraries/Position.sol';
-
+import {Position} from "@usum/core/libraries/Position.sol";
 
 interface ITrade {
-     function openPosition(
+    function openPosition(
         int224 qty,
         uint32 leverage, // BPS
         uint256 takerMargin,
         uint256 makerMargin,
+        uint16 maxAllowableTradingFeeRate,
         bytes calldata data
     ) external returns (Position memory);
-     
-     function closePosition(
+
+    function closePosition(
         uint256 positionId,
         address recipient, // EOA or account contract
         bytes calldata data

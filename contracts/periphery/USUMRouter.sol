@@ -76,10 +76,11 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     function openPosition(
         address oracleProvider,
         address settlementToken,
-        uint256 takerMargin,
-        uint256 makerMargin,
         int224 qty,
         uint32 leverage,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint16 maxAllowableTradingFeeRate,
         uint256 deadline
     ) external ensure(deadline) {
         address market = marketFactory.getMarket(
@@ -91,7 +92,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             qty,
             leverage,
             takerMargin,
-            makerMargin
+            makerMargin,
+            maxAllowableTradingFeeRate
         );
     }
 

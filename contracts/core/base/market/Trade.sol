@@ -6,7 +6,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {LpContext} from "@usum/core/lpslot/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
+import {LpSlotMargin, TRADING_FEE_RATE_PRECISION} from "@usum/core/lpslot/LpSlotMargin.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
@@ -30,6 +30,7 @@ abstract contract Trade is MarketValue {
     error NotEnoughMarginTransfered();
     error NotExistPosition();
     error NotPermitted();
+    error ExceedMaxAllowableTradingFeeRate();
 
     event OpenPosition();
     event ClosePosition();
@@ -56,31 +57,37 @@ abstract contract Trade is MarketValue {
     function openPosition(
         int224 qty,
         uint32 leverage,
-        uint256 takerMargin, // include losscut
-        uint256 makerMargin, // include profit stop
-        // uint16 profitstop, // in bps ex) 10% = 1000
-        // uint16 lossCut, // bps
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint16 maxAllowableTradingFeeRate,
         bytes calldata data
     ) external returns (Position memory) {
         if (qty == 0) revert ZeroTargetAmount();
         //TODO get slotmargin by using makerMargin
-        // calc protocol fee
 
         LpContext memory ctx = newLpContext();
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 
-        // position._slotMargins
-
-        uint256 protocolFee = getProtocolFee(takerMargin);
-
         position.setSlotMargins(
             lpSlotSet.prepareSlotMargins(position.qty, makerMargin)
         );
+
+        // check trading fee
+        uint256 tradingFee = position.tradingFee();
+        if (
+            tradingFee >
+            makerMargin.mulDiv(
+                maxAllowableTradingFeeRate,
+                TRADING_FEE_RATE_PRECISION
+            )
+        ) {
+            revert ExceedMaxAllowableTradingFeeRate();
+        }
+
         // call callback
         uint256 balanceBefore = _balance();
-        uint256 requiredMargin = takerMargin +
-            protocolFee +
-            position.tradingFee();
+        uint256 protocolFee = getProtocolFee(takerMargin);
+        uint256 requiredMargin = takerMargin + protocolFee + tradingFee;
         IUSUMTradeCallback(msg.sender).openPositionCallback(
             address(settlementToken),
             requiredMargin,
