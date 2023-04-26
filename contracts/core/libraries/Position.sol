@@ -59,8 +59,8 @@ library PositionLib {
         return
             PositionUtil.pnl(
                 self.leveragedQty(ctx),
-                uint256(ctx.oracleProvider.atVersion(self.oracleVersion).price),
-                uint256(ctx.oracleProvider.currentVersion().price)
+                uint256(ctx.oracleVersionAt(self.oracleVersion).price),
+                uint256(ctx.currentOracleVersion().price)
             );
     }
 
