@@ -13,8 +13,9 @@ import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallb
 import {Position} from "@usum/core/libraries/Position.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 
-abstract contract Trade is MarketValue {
+abstract contract Trade is MarketValue, TransferKeeperFee {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
@@ -215,5 +216,44 @@ abstract contract Trade is MarketValue {
                 owner: msg.sender,
                 _slotMargins: new LpSlotMargin[](0)
             });
+    }
+
+function liquidate(
+        uint256 positionId,
+        uint256 usedKeeperFee
+    ) external onlyLiquidator {
+        // Position memory position = positions[positionId];
+        // if (position.id == 0) revert NotExistPosition();
+
+        // _closePosition(
+        //     position,
+        //     position.takerMargin.sub(usedKeeperFee),
+        //     position.owner
+        // );
+    }
+
+    function resolveLiquidation(
+        uint256 positionId
+    ) external view returns (bool) {
+        // Position memory position = positions[positionId];
+        // if (position.id == 0) return false;
+
+        // int256 quantity = position.quantity;
+        // uint256 exitCost = _simulateSwap(-quantity);
+        // int256 pnl = exitCost.sub(position.entryCost) * quantity.sign();
+
+        // // calc fee
+        // uint256 interestFee = _calcInterest(position);
+        // pnl -= int256(interestFee);
+
+        // // TODO: need keeper fee margin???
+
+        // if (pnl > 0) {
+        //     // whether to liquidate profits
+        //     return uint256(pnl) >= position.makerMargin;
+        // } else {
+        //     // whether to liquidate losses
+        //     return uint256(-pnl) >= position.takerMargin;
+        // }
     }
 }

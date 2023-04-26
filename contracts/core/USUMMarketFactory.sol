@@ -9,13 +9,21 @@ contract USUMMarketFactory is MarketDeployer, SettlementTokenRegistry {
     mapping(address => mapping(address => address)) private markets;
 
     IOracleRegistry public override oracleRegistry;
+    address public immutable override liquidator;
+    address public immutable override keeperFeePayer;
 
     error NotRegisteredOracle();
     error WrongTokenAddress();
     error ExistMarket();
 
-    constructor(address _oracleRegistry) {
+    constructor(
+        address _oracleRegistry,
+        address _liquidator,
+        address _keeperFeePayer
+    ) {
         oracleRegistry = IOracleRegistry(_oracleRegistry);
+        liquidator = _liquidator;
+        keeperFeePayer = _keeperFeePayer;
     }
 
     function getMarket(
