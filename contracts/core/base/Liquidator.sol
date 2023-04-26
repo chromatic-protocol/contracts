@@ -50,7 +50,7 @@ abstract contract Liquidator is IUSUMLiquidator {
         address _market,
         uint256 positionId
     ) external view override returns (bool canExec, bytes memory execPayload) {
-        if (IUSUMMarketLiquidate(_market).resolveLiquidation(positionId)) {
+        if (IUSUMMarketLiquidate(_market).checkLiquidation(positionId)) {
             return (
                 true,
                 abi.encodeCall(this.liquidate, (_market, positionId))

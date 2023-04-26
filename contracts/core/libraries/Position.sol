@@ -53,6 +53,16 @@ library PositionLib {
         return PositionUtil.entryPrice(provider, self.oracleVersion);
     }
 
+    function pnl(
+        Position memory self,
+        LpContext memory ctx
+    ) internal view returns (int256) {
+        return PositionUtil.pnl(
+            self.leveragedQty(ctx),
+            uint256(ctx.oracleProvider.atVersion(self.oracleVersion).price),
+            uint256(ctx.oracleProvider.currentVersion().price));
+    }
+
     function makerMargin(
         Position memory self
     ) internal pure returns (uint256 margin) {

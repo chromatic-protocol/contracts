@@ -8,7 +8,7 @@ interface IUSUMMarketLiquidate {
         uint256 positionId
     ) external returns (uint256);
 
-    function resolveLiquidation(
+    function checkLiquidation(
         uint256 positionId
     ) external view returns (bool);
 
