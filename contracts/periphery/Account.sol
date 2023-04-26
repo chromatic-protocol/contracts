@@ -87,7 +87,8 @@ contract Account is IAccount, VerifyCallback {
         int224 qty,
         uint32 leverage,
         uint256 takerMargin,
-        uint256 makerMargin
+        uint256 makerMargin,
+        uint256 maxAllowableTradingFee
     ) external onlyRouter {
         _prepareMarket(marketAddress);
 
@@ -96,6 +97,7 @@ contract Account is IAccount, VerifyCallback {
             leverage,
             takerMargin,
             makerMargin,
+            maxAllowableTradingFee,
             abi.encode(OpenPositionCallbackData({trader: address(this)}))
         );
         addPositionId(position.id);
