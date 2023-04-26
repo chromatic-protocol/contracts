@@ -4,8 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 interface ISettlementTokenRegistry {
-    function dao() external view returns (address);
-
     function registerSettlementToken(address token) external;
 
     function isRegistered(address token) external view returns (bool);

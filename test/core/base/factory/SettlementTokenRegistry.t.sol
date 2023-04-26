@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {USUMMarketFactory} from "@usum/core/USUMMarketFactory.sol";
-import {SettlementTokenRegistry} from "@usum/core/base/SettlementTokenRegistry.sol";
+import {SettlementTokenRegistry} from "@usum/core/base/factory/SettlementTokenRegistry.sol";
 import {Record} from "@usum/core/libraries/InterestRate.sol";
 
 contract _SettlementTokenRegistry is USUMMarketFactory {

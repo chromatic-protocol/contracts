@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
-import {MarketDeployer} from "@usum/core/base/MarketDeployer.sol";
-import {SettlementTokenRegistry} from "@usum/core/base/SettlementTokenRegistry.sol";
+import {MarketDeployer} from "@usum/core/base/factory/MarketDeployer.sol";
+import {SettlementTokenRegistry} from "@usum/core/base/factory/SettlementTokenRegistry.sol";
 
-contract USUMMarketFactory is IUSUMMarketFactory, MarketDeployer, SettlementTokenRegistry {
+contract USUMMarketFactory is MarketDeployer, SettlementTokenRegistry {
     mapping(address => mapping(address => address)) private markets;
 
     IOracleRegistry public override oracleRegistry;

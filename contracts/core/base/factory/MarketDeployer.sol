@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IMarketDeployer} from "../interfaces/IMarketDeployer.sol";
-import {USUMMarket} from "../USUMMarket.sol";
+import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {MarketFactoryBase} from "@usum/core/base/factory/MarketFactoryBase.sol";
+import {USUMMarket} from "@usum/core/USUMMarket.sol";
 
-abstract contract MarketDeployer is IMarketDeployer {
+abstract contract MarketDeployer is MarketFactoryBase {
     struct Parameters {
         address oracleProvider; // abstract contract vs contract
         address settlementToken;
@@ -27,12 +28,7 @@ abstract contract MarketDeployer is IMarketDeployer {
         });
         market = address(
             new USUMMarket{
-                salt: keccak256(
-                    abi.encode(
-                        oracleProvider,
-                        settlementToken
-                    )
-                )
+                salt: keccak256(abi.encode(oracleProvider, settlementToken))
             }()
         );
         delete parameters;

@@ -7,7 +7,7 @@ import {LpContext} from "@usum/core/lpslot/LpContext.sol";
 import {LpSlotSet} from "@usum/core/lpslot/LpSlotSet.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {ISettlementTokenRegistry} from "@usum/core/interfaces/ISettlementTokenRegistry.sol";
+import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
 
 abstract contract MarketValue is MarketBase, IInterestCalculator {
     function newLpContext() internal view returns (LpContext memory) {
