@@ -1,5 +1,6 @@
 import "@nomicfoundation/hardhat-foundry";
 import "@nomicfoundation/hardhat-toolbox";
+import "@usum-io/hardhat-package";
 import * as dotenv from "dotenv";
 import "hardhat-contract-sizer";
 import "hardhat-deploy";
@@ -22,12 +23,14 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  defaultNetwork: "anvil",
   networks: {
     anvil: {
       // localhost anvil
       ...common,
       url: "http://127.0.0.1:8545",
       chainId: 31337,
+      saveDeployments: false,
       tags: ["mockup", "core"],
     },
     arbitrum_nova: {
@@ -56,6 +59,9 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
     },
+  },
+  package: {
+    packageJson: "package.sdk.json",
   },
 };
 

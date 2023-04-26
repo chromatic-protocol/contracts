@@ -1014,6 +1014,11 @@
   dependencies:
     "@types/node" "*"
 
+"@usum-io/hardhat-package@^0.0.1-dev1":
+  version "0.0.1-dev1"
+  resolved "https://npm.pkg.github.com/download/@usum-io/hardhat-package/0.0.1-dev1/633610bc15497f4ce704f1e2d52884630c4b2d80#633610bc15497f4ce704f1e2d52884630c4b2d80"
+  integrity sha512-ka99WSAcHQkjky06EsTHT5otnR2t0EEuHTKZO5B4iZ13U++Ptr6pPeWMEZk9utvi4YyyT32eC9ZLW6dgn3x5Xg==
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"

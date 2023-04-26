@@ -7,14 +7,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts();
   console.log("network name:", network.name);
 
-  const res = await deploy("OracleRegistry", {
+  // FIXME
+  let opsAddress = ethers.constants.AddressZero;
+  let keeperFeePayer = ethers.constants.AddressZero;
+
+  let { address: oracleRegistry } = await deploy("OracleRegistry", {
     from: deployer,
   });
 
-  await deploy("USUMFactory", {
-    from: deployer,
-    args: [res.address],
-  });
+  // // FIXME: need ops mock or real one
+  // let { address: liquidator } = await deploy("USUMLiquidator", {
+  //   from: deployer,
+  //   args: [opsAddress],
+  // });
+
+  // await deploy("USUMMarketFactory", {
+  //   from: deployer,
+  //   args: [oracleRegistry, liquidator, keeperFeePayer],
+  // });
 };
 
 export default func;
