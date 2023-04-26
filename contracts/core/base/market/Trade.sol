@@ -13,8 +13,9 @@ import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallb
 import {Position} from "@usum/core/libraries/Position.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 
-abstract contract Trade is MarketValue {
+abstract contract Trade is MarketValue, TransferKeeperFee {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
@@ -91,16 +92,27 @@ abstract contract Trade is MarketValue {
         if (balanceBefore + requiredMargin < _balance())
             revert NotEnoughMarginTransfered();
 
-        lpSlotSet.acceptOpenPosition(ctx, position);
+        lpSlotSet.acceptOpenPosition(ctx, position); // settle()
 
         transferProtocolFee(position.id, protocolFee);
 
         // write position
         position.storeTo(positions[position.id]);
-
+        // create keeper task 
+        liquidator.createLiquidationTask(position.id);
+        
         //TODO add event parameters
         emit OpenPosition();
         return position;
+    }
+
+    modifier resolvePendingPositions() {
+        _;
+        // for loop
+        //
+        // ~
+        // struct 체결여부 : 단순조회용
+        // uint256[] pendingTakerPositionIds 관리
     }
 
     // can call keeper or onwer only
@@ -113,20 +125,21 @@ abstract contract Trade is MarketValue {
         if (position.id == 0) revert NotExistPosition();
         // TODO caller keeper || owner
         if (position.owner != msg.sender) revert NotPermitted();
-        uint256 marginTransferred = _closePosition(position, recipient);
+        uint256 marginTransferred = _closePosition(position, 0,recipient);
 
         IUSUMTradeCallback(msg.sender).closePositionCallback(
             address(settlementToken),
             marginTransferred,
             data
         );
+        liquidator.cancelLiquidationTask(position.id);
 
-        delete positions[position.id];
         emit ClosePosition();
     }
 
     function _closePosition(
         Position memory position,
+        uint256 usedKeeperFee, // TODO 
         address recipient
     ) internal returns (uint256 marginTransferred) {
         //TODO close position
@@ -140,11 +153,7 @@ abstract contract Trade is MarketValue {
             position.timestamp,
             block.timestamp
         );
-        int256 realizedPnl = PositionUtil.pnl(
-            position.leveragedQty(ctx),
-            PositionUtil.entryPrice(oracleProvider, position.oracleVersion),
-            PositionUtil.oraclePrice(oracleProvider.currentVersion())
-        ) - interestFee.toInt256();
+        int256 realizedPnl = position.pnl(ctx) - interestFee.toInt256();
 
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0) {
@@ -166,6 +175,8 @@ abstract contract Trade is MarketValue {
         lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
 
         transferMargin(takerMargin, recipient);
+
+        delete positions[position.id];
 
         return takerMargin;
     }
@@ -215,5 +226,40 @@ abstract contract Trade is MarketValue {
                 owner: msg.sender,
                 _slotMargins: new LpSlotMargin[](0)
             });
+    }
+
+    function liquidate(
+        uint256 positionId,
+        uint256 usedKeeperFee
+    ) external onlyLiquidator {
+        Position memory position = positions[positionId];
+        if (position.id == 0) revert NotExistPosition();
+        _closePosition(
+            position,
+            usedKeeperFee,
+            position.owner
+        );
+    }
+
+    function checkLiquidation(uint256 positionId) external view returns (bool) {
+        Position memory position = positions[positionId];
+        if (position.id == 0) return false;
+
+        uint256 interestFee = calculateInterest(
+            position.makerMargin(),
+            position.timestamp,
+            block.timestamp
+        );
+
+        int256 realizedPnl = position.pnl(newLpContext()) - interestFee.toInt256();
+        uint256 absRealizedPnl = realizedPnl.abs();
+        if(realizedPnl > 0 && absRealizedPnl >= position.makerMargin()){
+            //profit stop (taker side)
+            return true;
+        }else if(absRealizedPnl >= position.takerMargin) {
+            // loss cut (taker side)
+            return true;
+        }
+        return false;
     }
 }

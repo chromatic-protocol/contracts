@@ -6,6 +6,7 @@ import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlemen
 import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
 
 interface IUSUMMarketFactory is IMarketDeployer, ISettlementTokenRegistry {
+
     event MarketCreated(
         address oracleProvider,
         address settlementToken,
@@ -15,6 +16,10 @@ interface IUSUMMarketFactory is IMarketDeployer, ISettlementTokenRegistry {
     function dao() external view returns (address);
 
     function oracleRegistry() external view returns (IOracleRegistry);
+
+    function liquidator() external view returns (address);
+
+    function keeperFeePayer() external view returns (address);
 
     function getMarket(
         address oracleProvider,
