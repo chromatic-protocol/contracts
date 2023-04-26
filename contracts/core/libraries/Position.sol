@@ -18,7 +18,6 @@ struct Position {
     uint256 takerMargin;
     address owner;
     LpSlotMargin[] _slotMargins;
-    
 }
 
 using PositionLib for Position global;
@@ -57,10 +56,12 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        return PositionUtil.pnl(
-            self.leveragedQty(ctx),
-            uint256(ctx.oracleProvider.atVersion(self.oracleVersion).price),
-            uint256(ctx.oracleProvider.currentVersion().price));
+        return
+            PositionUtil.pnl(
+                self.leveragedQty(ctx),
+                uint256(ctx.oracleProvider.atVersion(self.oracleVersion).price),
+                uint256(ctx.oracleProvider.currentVersion().price)
+            );
     }
 
     function makerMargin(
@@ -92,14 +93,17 @@ library PositionLib {
         self._slotMargins = margins;
     }
 
-    function storeTo(Position memory self, Position storage storedPosition) internal{
-        storedPosition.id  = self.id;
-        storedPosition.oracleVersion  = self.oracleVersion;
-        storedPosition.qty  = self.qty;
-        storedPosition.timestamp  = self.timestamp;
-        storedPosition.leverage  = self.leverage;
-        storedPosition.takerMargin  = self.takerMargin;
-        storedPosition.owner  = self.owner;
+    function storeTo(
+        Position memory self,
+        Position storage storedPosition
+    ) internal {
+        storedPosition.id = self.id;
+        storedPosition.oracleVersion = self.oracleVersion;
+        storedPosition.qty = self.qty;
+        storedPosition.timestamp = self.timestamp;
+        storedPosition.leverage = self.leverage;
+        storedPosition.takerMargin = self.takerMargin;
+        storedPosition.owner = self.owner;
         // can not convert memory array to storage array
         delete storedPosition._slotMargins;
         for (uint i = 0; i < self._slotMargins.length; i++) {

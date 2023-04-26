@@ -98,7 +98,9 @@ abstract contract Trade is MarketValue, TransferKeeperFee {
 
         // write position
         position.storeTo(positions[position.id]);
-
+        // create keeper task 
+        liquidator.createLiquidationTask(position.id);
+        
         //TODO add event parameters
         emit OpenPosition();
         return position;
@@ -130,6 +132,7 @@ abstract contract Trade is MarketValue, TransferKeeperFee {
             marginTransferred,
             data
         );
+        liquidator.cancelLiquidationTask(position.id);
 
         emit ClosePosition();
     }

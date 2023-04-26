@@ -21,7 +21,7 @@ abstract contract MarketBase is IUSUMMarket {
     LpSlotSet internal lpSlotSet;
 
     mapping(uint256 => Position) internal positions;
-
+    
     modifier onlyLiquidator() {
         require(msg.sender == address(liquidator));
         _;
