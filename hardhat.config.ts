@@ -1,10 +1,14 @@
 import "@nomicfoundation/hardhat-foundry";
 import "@nomicfoundation/hardhat-toolbox";
+import "@usum-io/hardhat-package";
 import * as dotenv from "dotenv";
 import "hardhat-contract-sizer";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 dotenv.config();
+
+const MNEMONIC_JUNK =
+  "test test test test test test test test test test test junk";
 
 const common = {
   accounts: {
@@ -22,10 +26,14 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  defaultNetwork: "anvil",
   networks: {
     anvil: {
       // localhost anvil
       ...common,
+      accounts: {
+        mnemonic: MNEMONIC_JUNK,
+      },
       url: "http://127.0.0.1:8545",
       chainId: 31337,
       tags: ["mockup", "core"],
@@ -56,6 +64,9 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
     },
+  },
+  package: {
+    packageJson: "package.sdk.json",
   },
 };
 

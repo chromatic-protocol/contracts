@@ -1,0 +1,14 @@
+{
+  "name": "@quarkonix/usum-sdk",
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quarkonix/USUM.git"
+  },
+  "peerDependencies": {
+    "ethers": "^5.4.7"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
