@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import type { DeployFunction } from "hardhat-deploy/types";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
 
@@ -5,7 +6,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, network, ethers } = hre;
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
-  console.log("network name:", network.name);
+
+  console.log(chalk.yellow(`✨ Deploying... to ${network.name}`));
 
   // FIXME
   let opsAddress = ethers.constants.AddressZero;
@@ -25,7 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //   from: deployer,
   //   args: [oracleRegistry, liquidator, keeperFeePayer],
   // });
-  console.log(`oracleRegistry: ${oracleRegistry}`);
+  console.log(chalk.yellow(`✨ oracleRegistry: ${oracleRegistry}`));
 };
 
 export default func;
