@@ -30,7 +30,11 @@ jobs:
           envsubst < .npmrc_ci > .npmrc
           yarn install
           yarn clean
-          yarn build
+          anvil &
+          yarn hardhat compile
+          yarn hardhat --network anvil deploy --reset --write true
+          echo "deploy done"
+          yarn hardhat package
           rm .npmrc
       - uses: actions/setup-node@v3
         with:
