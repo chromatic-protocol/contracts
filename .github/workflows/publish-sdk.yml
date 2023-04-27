@@ -20,16 +20,29 @@ jobs:
       - uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-      - name: prepare npmrc
-        run: envsubst  < .npmrc_ci > .npmrc
-        env:
-          NODE_AUTH_TOKEN: "${{ secrets.NODE_AUTH_TOKEN}}"
       - uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
-      - run: yarn install
-      - run: yarn build
-      - run: cd dist && yarn publish
+      - name: build SDK
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN}}
+        run: |
+          envsubst < .npmrc_ci > .npmrc
+          yarn install
+          yarn clean
+          yarn build
+          rm .npmrc
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: https://npm.pkg.github.com/
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+      - name: publish
+        env:
+          SDK_VERSION: ${{ github.event.release.tag_name }}
+        working-directory: ./dist
+        run: |
+          envsubst < package.json > package.ver.json
+          mv package.ver.json package.json
+          npm publish

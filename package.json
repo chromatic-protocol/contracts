@@ -9,7 +9,7 @@
     "sizer:hardhat": "hardhat size-contracts",
     "deploy": "hardhat deploy",
     "chain": "anvil & yarn hardhat deploy --network anvil --reset ; wait",
-    "build": "anvil & yarn hardhat deploy --network anvil --reset ; kill -INT $! && yarn hardhat package && cd dist",
+    "build": "anvil & yarn hardhat deploy --network anvil --reset ; kill -INT $! && yarn hardhat package",
     "clean": "hardhat clean && rm -rf deployments"
   },
   "devDependencies": {
