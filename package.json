@@ -8,8 +8,9 @@
     "sizer": "forge build --sizes",
     "sizer:hardhat": "hardhat size-contracts",
     "deploy": "hardhat deploy",
-    "chain": "anvil & yarn hardhat deploy --network anvil --reset",
-    "build": "anvil & yarn hardhat deploy --network anvil --reset && yarn hardhat package && cd dist"
+    "chain": "anvil & yarn hardhat deploy --network anvil --reset ; wait",
+    "build": "anvil & yarn hardhat deploy --network anvil --reset ; kill -INT $! && yarn hardhat package && cd dist",
+    "clean": "hardhat clean && rm -rf deployments"
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
