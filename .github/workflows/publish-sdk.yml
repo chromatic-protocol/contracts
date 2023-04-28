@@ -20,28 +20,18 @@ jobs:
       - uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.15
       - name: build SDK
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN}}
-        run: |
-          envsubst < .npmrc_ci > .npmrc
-          yarn install
-          yarn clean
-          anvil &
-          yarn hardhat compile
-          yarn hardhat --network anvil deploy --reset --write true
-          echo "deploy done"
-          yarn hardhat package
-          rm .npmrc
-      - uses: actions/setup-node@v3
+        uses: actions/setup-node@v3
         with:
           node-version: 18.15
           registry-url: https://npm.pkg.github.com/
+          scope: "@usum-io"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          yarn install
+          yarn clean
+          yarn build
       - name: publish
         env:
           SDK_VERSION: ${{ github.event.release.tag_name }}
