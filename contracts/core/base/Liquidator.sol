@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMMarketLiquidate} from "@usum/core/interfaces/market/IUSUMMarketLiquidate.sol";
 
-import {IOps, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
+import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
 
 abstract contract Liquidator is IUSUMLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -12,7 +12,7 @@ abstract contract Liquidator is IUSUMLiquidator {
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
 
-    function getOps() internal view virtual returns (IOps);
+    function getAutomate() internal view virtual returns (IAutomate);
 
     function createLiquidationTask(uint256 positionId) external override {
         address market = msg.sender;
@@ -34,7 +34,7 @@ abstract contract Liquidator is IUSUMLiquidator {
             block.timestamp,
             LIQUIDATION_INTERVAL
         );
-        _liquidationTaskIds[market][positionId] = getOps().createTask(
+        _liquidationTaskIds[market][positionId] = getAutomate().createTask(
             address(this),
             abi.encode(this.liquidate.selector),
             moduleData,
@@ -70,7 +70,7 @@ abstract contract Liquidator is IUSUMLiquidator {
         market.liquidate(
             positionId,
             // Saving contract size (2.943 -> 2.933) : not assigned to local variable
-            market.transferKeeperFee(getOps().gelato(), fee, positionId)
+            market.transferKeeperFee(getAutomate().gelato(), fee, positionId)
         );
         _cancelLiquidationTask(_market, positionId);
     }
@@ -81,7 +81,7 @@ abstract contract Liquidator is IUSUMLiquidator {
     ) internal {
         bytes32 taskId = _liquidationTaskIds[market][positionId];
         if (taskId != bytes32(0)) {
-            getOps().cancelTask(taskId);
+            getAutomate().cancelTask(taskId);
             delete _liquidationTaskIds[market][positionId];
         }
     }

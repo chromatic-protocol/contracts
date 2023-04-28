@@ -2,14 +2,14 @@
 pragma solidity ^0.8.14;
 
 import "@usum/core/base/Liquidator.sol";
-import "@usum/core/base/gelato/OpsReady.sol";
+import "@usum/core/base/gelato/AutomateReady.sol";
 import "@usum/core/base/gelato/Types.sol";
 
-contract USUMLiquidator is Liquidator, OpsReady {
-    constructor(address _ops) OpsReady(_ops, address(this)) {}
+contract USUMLiquidator is Liquidator, AutomateReady {
+    constructor(address _automate) AutomateReady(_automate, address(this)) {}
 
-    function getOps() internal view override returns (IOps) {
-        return ops;
+    function getAutomate() internal view override returns (IAutomate) {
+        return automate;
     }
 
     function liquidate(
