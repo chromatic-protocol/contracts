@@ -6,6 +6,12 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
-  }
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@usum/*": ["./*"]
+    },   
+  },
+  "include": ["./scripts", "./test", "./typechain-types", "./deploy"],
+  "files": ["./hardhat.config.ts"]
 }

@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import "hardhat-contract-sizer";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
+import 'tsconfig-paths/register'
 dotenv.config();
 
 const MNEMONIC_JUNK =

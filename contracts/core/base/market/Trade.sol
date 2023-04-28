@@ -13,9 +13,9 @@ import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallb
 import {Position} from "@usum/core/libraries/Position.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 
-abstract contract Trade is MarketValue, TransferKeeperFee {
+
+abstract contract Trade is MarketValue {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
