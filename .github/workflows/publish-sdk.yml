@@ -27,6 +27,7 @@ jobs:
           registry-url: https://npm.pkg.github.com/
           scope: "@usum-io"
         env:
+          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
           yarn install
