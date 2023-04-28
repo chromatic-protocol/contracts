@@ -3,9 +3,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {LpContext} from "@usum/core/lpslot/LpContext.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/lpslot/LpSlotPosition.sol";
-import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
+import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 
 struct LpSlot {
     uint256 total;

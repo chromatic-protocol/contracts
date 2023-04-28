@@ -5,15 +5,15 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {LpContext} from "@usum/core/lpslot/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
+import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-
+import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;

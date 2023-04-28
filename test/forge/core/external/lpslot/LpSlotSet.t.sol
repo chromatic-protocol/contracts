@@ -5,10 +5,10 @@ import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {QTY_PRECISION, LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/lpslot/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/lpslot/LpSlot.sol";
-import {LpSlotSet} from "@usum/core/lpslot/LpSlotSet.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 

@@ -7,8 +7,8 @@ import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {LpSlotSet} from "@usum/core/lpslot/LpSlotSet.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
+import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 
 abstract contract MarketBase is IUSUMMarket {
     IUSUMMarketFactory public immutable override factory;
