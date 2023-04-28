@@ -7,7 +7,7 @@ import {SettlementTokenRegistry} from "@usum/core/base/factory/SettlementTokenRe
 import {Record} from "@usum/core/libraries/InterestRate.sol";
 
 contract _SettlementTokenRegistry is USUMMarketFactory {
-    constructor() USUMMarketFactory(address(0),address(0),address(0)) {}
+    constructor() USUMMarketFactory(address(0),address(0)) {}
 
     // add this to be excluded from coverage report
     function test() public {}

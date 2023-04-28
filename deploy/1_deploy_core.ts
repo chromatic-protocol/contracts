@@ -17,10 +17,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // FIXME
   let keeperFeePayer = ethers.constants.AddressZero
 
-  let { address: oracleRegistry } = await deploy("OracleRegistry", {
-    from: deployer,
-  })
-
   let { address: liquidator } = await deploy("USUMLiquidator", {
     from: deployer,
     args: [automateAddress],
@@ -31,7 +27,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //   from: deployer,
   //   args: [oracleRegistry, liquidator, keeperFeePayer],
   // });
-  console.log(chalk.yellow(`✨ OracleRegistry: ${oracleRegistry}`))
   console.log(chalk.yellow(`✨ USUMLiquidator: ${liquidator}`))
 }
 

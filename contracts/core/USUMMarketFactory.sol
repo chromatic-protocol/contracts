@@ -1,30 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {SettlementTokenRegistry} from "@usum/core/base/factory/SettlementTokenRegistry.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
+import {OracleRegistry, OracleRegistryLib} from "@usum/core/external/registry/OracleRegistry.sol";
 
-contract USUMMarketFactory is SettlementTokenRegistry {
+contract USUMMarketFactory is IUSUMMarketFactory, SettlementTokenRegistry {
+    using OracleRegistryLib for OracleRegistry;
     using MarketDeployerLib for MarketDeployer;
 
-    IOracleRegistry public override oracleRegistry;
     address public immutable override liquidator;
     address public immutable override keeperFeePayer;
 
-    MarketDeployer _deployer;
+    OracleRegistry private _oracleRegistry;
+
+    MarketDeployer private _deployer;
     mapping(address => mapping(address => address)) private _markets;
 
-    error NotRegisteredOracle();
+    error NotRegisteredOracleProvider();
     error WrongTokenAddress();
     error ExistMarket();
 
-    constructor(
-        address _oracleRegistry,
-        address _liquidator,
-        address _keeperFeePayer
-    ) {
-        oracleRegistry = IOracleRegistry(_oracleRegistry);
+    constructor(address _liquidator, address _keeperFeePayer) {
         liquidator = _liquidator;
         keeperFeePayer = _keeperFeePayer;
     }
@@ -42,8 +40,8 @@ contract USUMMarketFactory is SettlementTokenRegistry {
     ) external override registeredOnly(settlementToken) {
         if (
             oracleProvider == address(0) ||
-            !oracleRegistry.isRegistered(oracleProvider)
-        ) revert NotRegisteredOracle();
+            !_oracleRegistry.isRegistered(oracleProvider)
+        ) revert NotRegisteredOracleProvider();
 
         if (settlementToken == address(0) || settlementToken == oracleProvider)
             revert WrongTokenAddress();
@@ -66,5 +64,27 @@ contract USUMMarketFactory is SettlementTokenRegistry {
     {
         Parameters memory params = _deployer.parameters;
         return (params.oracleProvider, params.settlementToken);
+    }
+
+    // implement IOracleRegistry
+
+    function registerOracleProvider(
+        address oracleProvider
+    ) external override onlyDao {
+        _oracleRegistry.register(oracleProvider);
+        emit OracleProviderRegistered(oracleProvider);
+    }
+
+    function unregisterOracleProvider(
+        address oracleProvider
+    ) external override onlyDao {
+        _oracleRegistry.unregister(oracleProvider);
+        emit OracleProviderUnregistered(oracleProvider);
+    }
+
+    function isRegisteredOracleProvider(
+        address oracleProvider
+    ) external view override returns (bool) {
+        return _oracleRegistry.isRegistered(oracleProvider);
     }
 }

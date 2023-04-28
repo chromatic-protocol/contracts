@@ -3,10 +3,13 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
 import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
-import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
+import {IOracleRegistry} from "@usum/core/interfaces/factory/IOracleRegistry.sol";
 
-interface IUSUMMarketFactory is IMarketDeployer, ISettlementTokenRegistry {
-
+interface IUSUMMarketFactory is
+    IMarketDeployer,
+    IOracleRegistry,
+    ISettlementTokenRegistry
+{
     event MarketCreated(
         address oracleProvider,
         address settlementToken,
@@ -14,8 +17,6 @@ interface IUSUMMarketFactory is IMarketDeployer, ISettlementTokenRegistry {
     );
 
     function dao() external view returns (address);
-
-    function oracleRegistry() external view returns (IOracleRegistry);
 
     function liquidator() external view returns (address);
 
