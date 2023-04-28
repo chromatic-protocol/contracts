@@ -8,7 +8,7 @@ const ARB_GOERLI_SWAP_ROUTER_ADDRESS =
   "0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { config, deployments, getNamedAccounts, network, ethers } = hre
+  const { config, deployments, getNamedAccounts, network } = hre
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
