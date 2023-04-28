@@ -31,6 +31,7 @@
     "@types/chai": "^4.2.0",
     "@types/mocha": ">=9.1.0",
     "@types/node": ">=12.0.0",
+    "@uniswap/smart-order-router": "^3.11.2",
     "@uniswap/v3-periphery": "^1.4.3",
     "@usum-io/hardhat-package": "^0.0.1-dev1",
     "boxen": "^5",
