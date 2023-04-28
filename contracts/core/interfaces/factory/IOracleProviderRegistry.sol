@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-interface IOracleRegistry {
+interface IOracleProviderRegistry {
     event OracleProviderRegistered(address oracleProvider);
     event OracleProviderUnregistered(address oracleProvider);
 

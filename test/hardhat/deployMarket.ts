@@ -7,7 +7,7 @@ import { Token, AccountFactory, USUMRouter } from "../../typechain-types"
 
 export async function deploy() {
   const { gelato, taskTreasury, opsProxyFactory, ops } = await gelatoDeploy()
-  const { oracleRegistry, marketFactory, keeperFeePayer, liquidator } =
+  const { oracleProviderRegistry, marketFactory, keeperFeePayer, liquidator } =
     await marketFactoryDeploy(ops.address)
   const oracleProvider = await oracleProviderDeploy()
   const settlementToken = await deployContract<Token>("Token", {
@@ -15,7 +15,7 @@ export async function deploy() {
   })
 
   await (
-    await oracleRegistry.register(
+    await oracleProviderRegistry.register(
       ethers.Wallet.createRandom().address,
       ethers.Wallet.createRandom().address,
       oracleProvider.address
@@ -50,7 +50,7 @@ export async function deploy() {
   ).wait()
 
   return {
-    oracleRegistry,
+    oracleProviderRegistry,
     marketFactory,
     keeperFeePayer,
     liquidator,

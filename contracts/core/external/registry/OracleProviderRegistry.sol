@@ -3,17 +3,17 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-struct OracleRegistry {
+struct OracleProviderRegistry {
     EnumerableSet.AddressSet _oracleProviders;
 }
 
-library OracleRegistryLib {
+library OracleProviderRegistryLib {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     error AlreadyRegistered();
 
     function register(
-        OracleRegistry storage self,
+        OracleProviderRegistry storage self,
         address oracleProvider
     ) external {
         if (self._oracleProviders.contains(oracleProvider))
@@ -23,14 +23,14 @@ library OracleRegistryLib {
     }
 
     function unregister(
-        OracleRegistry storage self,
+        OracleProviderRegistry storage self,
         address oracleProvider
     ) external {
         self._oracleProviders.remove(oracleProvider);
     }
 
     function isRegistered(
-        OracleRegistry storage self,
+        OracleProviderRegistry storage self,
         address oracleProvider
     ) external view returns (bool) {
         return self._oracleProviders.contains(oracleProvider);

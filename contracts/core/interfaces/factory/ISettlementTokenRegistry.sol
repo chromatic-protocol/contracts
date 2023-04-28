@@ -4,9 +4,21 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 interface ISettlementTokenRegistry {
+    event SettlementTokenRegistered(address indexed token);
+    event InterestRateRecordAppended(
+        address indexed token,
+        uint256 annualRateBPS,
+        uint256 beginTimestamp
+    );
+    event LastInterestRateRecordRemoved(
+        address indexed token,
+        uint256 annualRateBPS,
+        uint256 beginTimestamp
+    );
+
     function registerSettlementToken(address token) external;
 
-    function isRegistered(address token) external view returns (bool);
+    function isRegisteredSettlementToken(address token) external view returns (bool);
 
     function appendInterestRateRecord(
         address token,

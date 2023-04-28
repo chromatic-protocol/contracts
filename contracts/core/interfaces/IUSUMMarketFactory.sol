@@ -3,11 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
 import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
-import {IOracleRegistry} from "@usum/core/interfaces/factory/IOracleRegistry.sol";
+import {IOracleProviderRegistry} from "@usum/core/interfaces/factory/IOracleProviderRegistry.sol";
 
 interface IUSUMMarketFactory is
     IMarketDeployer,
-    IOracleRegistry,
+    IOracleProviderRegistry,
     ISettlementTokenRegistry
 {
     event MarketCreated(
