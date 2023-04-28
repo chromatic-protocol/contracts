@@ -87,6 +87,7 @@ const config: HardhatUserConfig = {
   },
   package: {
     packageJson: "package.sdk.json",
+    excludes: ["**/external/**/*", "KeeperFeePayer"],
   },
 }
 
