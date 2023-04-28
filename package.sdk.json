@@ -1,6 +1,5 @@
 {
   "name": "@quarkonix/usum",
-  "version": "${SDK_VERSION}",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quarkonix/USUM.git"
