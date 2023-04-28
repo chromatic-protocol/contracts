@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/lpslot/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
@@ -56,12 +56,15 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (int256) {
+        OracleVersion memory currentVersion = ctx.currentOracleVersion();
         return
-            PositionUtil.pnl(
-                self.leveragedQty(ctx),
-                uint256(ctx.oracleVersionAt(self.oracleVersion).price),
-                uint256(ctx.currentOracleVersion().price)
-            );
+            self.oracleVersion >= currentVersion.version
+                ? int256(0)
+                : PositionUtil.pnl(
+                    self.leveragedQty(ctx),
+                    uint256(ctx.oracleVersionAt(self.settleVersion()).price),
+                    uint256(currentVersion.price)
+                );
     }
 
     function makerMargin(
