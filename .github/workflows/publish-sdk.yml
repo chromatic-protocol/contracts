@@ -20,12 +20,13 @@ jobs:
       - uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-      - name: build SDK
+      - name: setup node
         uses: actions/setup-node@v3
         with:
           node-version: 18.15
           registry-url: https://npm.pkg.github.com/
           scope: "@usum-io"
+      - name: build SDK
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
