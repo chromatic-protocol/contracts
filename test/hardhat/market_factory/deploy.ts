@@ -43,5 +43,5 @@ export async function deploy(opsAddress: string) {
     }
   )
 
-  return { oracleRegistry, marketFactory }
+  return { oracleRegistry, marketFactory, keeperFeePayer, liquidator }
 }

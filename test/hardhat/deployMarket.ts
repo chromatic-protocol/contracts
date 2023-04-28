@@ -5,11 +5,10 @@ import { deploy as oracleProviderDeploy } from "./oracle_provider/deploy"
 import { deployContract } from "./utils"
 import { Token, AccountFactory, USUMRouter } from "../../typechain-types"
 
-export async function main() {
+export async function deploy() {
   const { gelato, taskTreasury, opsProxyFactory, ops } = await gelatoDeploy()
-  const { oracleRegistry, marketFactory } = await marketFactoryDeploy(
-    ops.address
-  )
+  const { oracleRegistry, marketFactory, keeperFeePayer, liquidator } =
+    await marketFactoryDeploy(ops.address)
   const oracleProvider = await oracleProviderDeploy()
   const settlementToken = await deployContract<Token>("Token", {
     args: ["Token", "ST"],
@@ -41,12 +40,24 @@ export async function main() {
   const market = await ethers.getContractAt("USUMMarket", marketAddress)
 
   const usumRouter = await deployContract<USUMRouter>("USUMRouter")
-  const accountFactory = await deployContract<AccountFactory>("AccountFactory", {args: [usumRouter.address]})
+  const accountFactory = await deployContract<AccountFactory>(
+    "AccountFactory",
+    { args: [usumRouter.address] }
+  )
 
   await (
     await usumRouter.initalize(accountFactory.address, marketFactory.address)
   ).wait()
 
+  return {
+    oracleRegistry,
+    marketFactory,
+    keeperFeePayer,
+    liquidator,
+    oracleProvider,
+    market,
+    usumRouter,
+    accountFactory,
+    settlementToken
+  }
 }
-
-// main()

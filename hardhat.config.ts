@@ -29,18 +29,21 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: "anvil",
+  defaultNetwork: "hardhat",
   networks: {
     hardhat: {
-      forking: { url: "https://arb-goerli.g.alchemy.com/v2/TX5yVD-hPv6H9Dy7cuCQqD5I7S0NY-fP", blockNumber: 18064747 },
-      chainId: 421613,
-      // chainId: 31337,
-      tags: ["mockup", "core"],
-      allowUnlimitedContractSize: true,
+      // localhost anvil
+      forking: {
+        url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+        blockNumber: 18064747,
+      },
+      ...common,
       accounts: {
         ...common.accounts,
         mnemonic: MNEMONIC_JUNK,
       },
+      saveDeployments: false,
+      allowUnlimitedContractSize: true,
     },
     anvil: {
       // localhost anvil

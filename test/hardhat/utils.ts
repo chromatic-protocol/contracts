@@ -6,10 +6,11 @@ import util from "util"
 
 export async function deployContract<T>(
   contractName: string,
-  options?: Omit<DeployOptions, 'from'> & { from?: string}
+  options?: Omit<DeployOptions, "from"> & { from?: string }
 ): Promise<T> {
   return hardhatErrorPrettyPrint(async () => {
     const { deployer } = await getNamedAccounts()
+
     const result = await deployments.deploy(contractName, {
       from: options?.from || deployer,
       ...options,
@@ -20,13 +21,14 @@ export async function deployContract<T>(
   })
 }
 
+
 export async function hardhatErrorPrettyPrint<T>(
   method: () => Promise<T>
 ): Promise<T> {
   try {
     return await method()
   } catch (e: any) {
-    console.error(e);
+    console.error(e)
     const stackTraceString = /error=(.*)(?=, code)/g.exec(e.stack)?.[1]
     if (stackTraceString == null) {
       throw e.error || e
