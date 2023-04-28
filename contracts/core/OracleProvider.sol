@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IOracleProvider, OracleVersion, Phase} from "@usum/core/interfaces/IOracleProvider.sol";
 import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
-import {LibChainlinkRound} from "./libraries/LibChainlinkRound.sol";
+import {LibChainlinkRound} from "@usum/core/libraries/LibChainlinkRound.sol";
 
 contract OracleProvider is IOracleProvider {
     Phase[] private phases;
