@@ -21,14 +21,14 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: prepare npmrc
-        run: envsubst  < .npmrc_ci > .npmrc
-        env:
-          NODE_AUTH_TOKEN: "${{ secrets.NODE_AUTH_TOKEN}}"
       - uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 18.15
           cache: "yarn"
+          registry-url: https://npm.pkg.github.com/
+          scope: "@usum-io"
+        env:
+          NODE_AUTH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - run: yarn install
       - uses: onbjerg/foundry-toolchain@v1
         with:
