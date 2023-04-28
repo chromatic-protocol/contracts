@@ -5,7 +5,7 @@ import { USUMMarketFactory } from "@usum/typechain-types"
 import { Contract } from "ethers"
 import { deployContract } from "../utils"
 import {
-  OracleRegistry,
+  OracleProviderRegistry,
   KeeperFeePayerMock,
   USUMLiquidator,
   LpSlotSetLib,
@@ -14,7 +14,7 @@ import {
 export async function deploy(opsAddress: string) {
   const [deployer] = await ethers.getSigners()
 
-  const oracleRegistry = await deployContract<OracleRegistry>("OracleRegistry")
+  const oracleProviderRegistry = await deployContract<OracleProviderRegistry>("OracleProviderRegistry")
   const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
     "KeeperFeePayerMock"
   )
@@ -35,7 +35,7 @@ export async function deploy(opsAddress: string) {
     "USUMMarketFactory",
     {
       args: [
-        oracleRegistry.address,
+        oracleProviderRegistry.address,
         keeperFeePayer.address,
         liquidator.address,
       ],
@@ -43,5 +43,5 @@ export async function deploy(opsAddress: string) {
     }
   )
 
-  return { oracleRegistry, marketFactory, keeperFeePayer, liquidator }
+  return { oracleProviderRegistry, marketFactory, keeperFeePayer, liquidator }
 }

@@ -5,13 +5,13 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 uint256 constant BPS = 10000;
 
-struct Record {
-    uint256 annualRateBPS;
-    uint256 beginTimestamp;
-}
-
-library InterestRateLib {
+library InterestRate {
     using Math for uint256;
+
+    struct Record {
+        uint256 annualRateBPS;
+        uint256 beginTimestamp;
+    }
 
     uint256 private constant MAX_RATE_BPS = BPS; // max interest rate is 100%
     uint256 private constant YEAR = 365 * 24 * 3600;

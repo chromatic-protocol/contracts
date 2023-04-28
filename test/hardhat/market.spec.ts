@@ -6,7 +6,7 @@ import {
   AccountFactory,
   USUMRouter,
   KeeperFeePayerMock,
-  OracleRegistry,
+  OracleProviderRegistry,
   USUMLiquidator,
 } from "../../typechain-types"
 import { ethers } from "hardhat"
@@ -22,7 +22,7 @@ describe("market test", async function () {
   // open/close position
   // execute keeper
 
-  let oracleRegistry: OracleRegistry
+  let oracleProviderRegistry: OracleProviderRegistry
   let oracleProvider: OracleProviderMock
   let marketFactory: USUMMarketFactory
   let settlementToken: Token
@@ -36,7 +36,7 @@ describe("market test", async function () {
 
   before(async () => {
     ;({
-      oracleRegistry,
+      oracleProviderRegistry,
       marketFactory,
       keeperFeePayer,
       liquidator,

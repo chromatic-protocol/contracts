@@ -3,8 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
-import {LpContext} from "@usum/core/lpslot/LpContext.sol";
-import {LpSlotSet} from "@usum/core/lpslot/LpSlotSet.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";

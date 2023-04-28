@@ -5,10 +5,10 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
-import {LpContext} from "@usum/core/lpslot/LpContext.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/lpslot/LpSlot.sol";
-import {LpSlotMargin} from "@usum/core/lpslot/LpSlotMargin.sol";
-import {PositionParam} from "@usum/core/lpslot/PositionParam.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 
 struct LpSlotSet {
     uint16 _minAvailableFeeRateLong;

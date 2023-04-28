@@ -1,36 +1,87 @@
-import chalk from "chalk";
-import type { DeployFunction } from "hardhat-deploy/types";
-import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { GELATO_ADDRESSES } from "@gelatonetwork/automate-sdk"
+import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from "@uniswap/smart-order-router"
+import chalk from "chalk"
+import type { DeployFunction } from "hardhat-deploy/types"
+import type { HardhatRuntimeEnvironment } from "hardhat/types"
+
+const ARB_GOERLI_SWAP_ROUTER_ADDRESS =
+  "0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployments, getNamedAccounts, network, ethers } = hre;
-  const { deploy } = deployments;
-  const { deployer } = await getNamedAccounts();
+  const { config, deployments, getNamedAccounts, network, ethers } = hre
+  const { deploy } = deployments
+  const { deployer } = await getNamedAccounts()
 
-  console.log(chalk.yellow(`✨ Deploying... to ${network.name}`));
+  const echainId =
+    network.name === "anvil"
+      ? config.networks.arbitrum_one_goerli.chainId!
+      : network.config.chainId!
 
-  // FIXME
-  let opsAddress = ethers.constants.AddressZero;
-  let keeperFeePayer = ethers.constants.AddressZero;
+  console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
 
-  let { address: oracleRegistry } = await deploy("OracleRegistry", {
+  const swapRouterAddress =
+    echainId === config.networks.arbitrum_one_goerli.chainId!
+      ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
+      : SWAP_ROUTER_02_ADDRESSES(echainId)
+
+  const { address: keeperFeePayer } = await deploy("KeeperFeePayer", {
     from: deployer,
-  });
+    args: [swapRouterAddress, WETH9[echainId].address],
+  })
+  console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
-  // // FIXME: need ops mock or real one
-  // let { address: liquidator } = await deploy("USUMLiquidator", {
-  //   from: deployer,
-  //   args: [opsAddress],
-  // });
+  const { address: liquidator } = await deploy("USUMLiquidator", {
+    from: deployer,
+    args: [GELATO_ADDRESSES[echainId].automate],
+  })
+  console.log(chalk.yellow(`✨ USUMLiquidator: ${liquidator}`))
 
-  // await deploy("USUMMarketFactory", {
-  //   from: deployer,
-  //   args: [oracleRegistry, liquidator, keeperFeePayer],
-  // });
-  console.log(chalk.yellow(`✨ oracleRegistry: ${oracleRegistry}`));
-};
+  const { address: lpSlotSet } = await deploy("LpSlotSetLib", {
+    from: deployer,
+  })
+  console.log(chalk.yellow(`✨ LpSlotSetLib: ${lpSlotSet}`))
 
-export default func;
+  const { address: marketDeployer } = await deploy("MarketDeployerLib", {
+    from: deployer,
+    libraries: {
+      LpSlotSetLib: lpSlotSet,
+    },
+  })
+  console.log(chalk.yellow(`✨ MarketDeployerLib: ${marketDeployer}`))
 
-func.id = "deploy_core"; // id required to prevent reexecution
-func.tags = ["core"];
+  const { address: oracleProviderRegistry } = await deploy(
+    "OracleProviderRegistryLib",
+    {
+      from: deployer,
+    }
+  )
+  console.log(
+    chalk.yellow(`✨ OracleProviderRegistryLib: ${oracleProviderRegistry}`)
+  )
+
+  const { address: settlementTokenRegistry } = await deploy(
+    "SettlementTokenRegistryLib",
+    {
+      from: deployer,
+    }
+  )
+  console.log(
+    chalk.yellow(`✨ SettlementTokenRegistryLib: ${settlementTokenRegistry}`)
+  )
+
+  const { address: factory } = await deploy("USUMMarketFactory", {
+    from: deployer,
+    args: [liquidator, keeperFeePayer],
+    libraries: {
+      MarketDeployerLib: marketDeployer,
+      OracleProviderRegistryLib: oracleProviderRegistry,
+      SettlementTokenRegistryLib: settlementTokenRegistry,
+    },
+  })
+  console.log(chalk.yellow(`✨ USUMMarketFactory: ${factory}`))
+}
+
+export default func
+
+func.id = "deploy_core" // id required to prevent reexecution
+func.tags = ["core"]

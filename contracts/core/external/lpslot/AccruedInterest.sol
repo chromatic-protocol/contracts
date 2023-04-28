@@ -8,8 +8,6 @@ struct AccruedInterest {
     uint256 accumulatedAmount;
 }
 
-// using AccruedInterestLib for AccruedInterest global;
-
 library AccruedInterestLib {
     function accumulate(
         AccruedInterest storage self,

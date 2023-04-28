@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {OracleRegistry, OracleVersion} from "contracts/core/OracleRegistry.sol";
+import {OracleVersion} from "contracts/core/interfaces/IOracleProvider.sol";
 import {OracleProvider} from "contracts/core/OracleProvider.sol";
 import {PriceFeedMock} from "contracts/mocks/PriceFeedMock.sol";
 import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";

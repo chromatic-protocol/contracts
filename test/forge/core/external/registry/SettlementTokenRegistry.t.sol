@@ -2,50 +2,20 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {USUMMarketFactory} from "@usum/core/USUMMarketFactory.sol";
-import {SettlementTokenRegistry} from "@usum/core/base/factory/SettlementTokenRegistry.sol";
-import {Record} from "@usum/core/libraries/InterestRate.sol";
-
-contract _SettlementTokenRegistry is USUMMarketFactory {
-    constructor() USUMMarketFactory(address(0),address(0),address(0)) {}
-
-    // add this to be excluded from coverage report
-    function test() public {}
-
-    function _getInterestRateRecords(
-        address token
-    ) public view returns (Record[] memory) {
-        return super.getInterestRateRecords(token);
-    }
-}
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
+import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
 
 contract SettlementTokenRegistryTest is Test {
+    using SettlementTokenRegistryLib for SettlementTokenRegistry;
+
     uint256 private constant YEAR = 365 * 24 * 3600;
-    _SettlementTokenRegistry tokenRegistry;
     address testToken = address(7777777);
 
+    SettlementTokenRegistry tokenRegistry;
+
     function setUp() public {
-        tokenRegistry = new _SettlementTokenRegistry();
-        tokenRegistry.registerSettlementToken(testToken);
-    }
-
-    function testAccessControl() public {
-        // for InterestRateRecord append, remove testing
-        appendInterestRate(100, 1);
-
-        tokenRegistry.updateDao(address(1));
-
-        vm.expectRevert(bytes("only DAO can access"));
-        tokenRegistry.registerSettlementToken(address(12345));
-
-        vm.expectRevert(bytes("only DAO can access"));
-        tokenRegistry.updateDao(address(12345));
-
-        vm.expectRevert(bytes("only DAO can access"));
-        tokenRegistry.appendInterestRateRecord(address(12345), 1, 1);
-
-        vm.expectRevert(bytes("only DAO can access"));
-        tokenRegistry.removeLastInterestRateRecord(address(12345));
+        tokenRegistry.register(testToken);
     }
 
     function testRegisterSettlementToken() public {
@@ -54,15 +24,15 @@ contract SettlementTokenRegistryTest is Test {
 
         // duplicated token address test
         vm.expectRevert(
-            SettlementTokenRegistry.AlreadyRegisteredToken.selector
+            SettlementTokenRegistryLib.AlreadyRegisteredToken.selector
         );
-        tokenRegistry.registerSettlementToken(testToken);
+        tokenRegistry.register(testToken);
 
         assertEq(tokenRegistry.isRegistered(newToken), false);
 
         // register new token
-        tokenRegistry.registerSettlementToken(newToken);
-        assertEq(tokenRegistry._getInterestRateRecords(newToken).length, 1);
+        tokenRegistry.register(newToken);
+        assertEq(tokenRegistry.getInterestRateRecords(newToken).length, 1);
         assertEq(tokenRegistry.isRegistered(newToken), true);
         assertEq(tokenRegistry.currentInterestRate(newToken), 0);
     }
@@ -74,7 +44,7 @@ contract SettlementTokenRegistryTest is Test {
 
         // expect interest not deleted
         tokenRegistry.removeLastInterestRateRecord(testToken);
-        assertEq(tokenRegistry._getInterestRateRecords(testToken).length, 1);
+        assertEq(tokenRegistry.getInterestRateRecords(testToken).length, 1);
 
         // append interest rate
         appendInterestRate(100, 1);
@@ -83,14 +53,14 @@ contract SettlementTokenRegistryTest is Test {
         vm.expectRevert(bytes("not appendable"));
         appendInterestRate(100, 1);
 
-        assertEq(tokenRegistry._getInterestRateRecords(testToken).length, 2);
+        assertEq(tokenRegistry.getInterestRateRecords(testToken).length, 2);
         assertEq(tokenRegistry.currentInterestRate(testToken), 0);
         vm.warp(block.timestamp + 1);
         assertEq(tokenRegistry.currentInterestRate(testToken), 100);
 
         // remove interest test
         tokenRegistry.removeLastInterestRateRecord(testToken);
-        assertEq(tokenRegistry._getInterestRateRecords(testToken).length, 1);
+        assertEq(tokenRegistry.getInterestRateRecords(testToken).length, 1);
     }
 
     function testCalculateInterest() public {
@@ -100,7 +70,8 @@ contract SettlementTokenRegistryTest is Test {
                 testToken,
                 1000,
                 block.timestamp,
-                block.timestamp + YEAR
+                block.timestamp + YEAR,
+                Math.Rounding.Down
             ),
             0
         );
@@ -116,7 +87,8 @@ contract SettlementTokenRegistryTest is Test {
                 testToken,
                 1000,
                 block.timestamp,
-                block.timestamp + YEAR
+                block.timestamp + YEAR,
+                Math.Rounding.Down
             ),
             50
         );
@@ -127,7 +99,8 @@ contract SettlementTokenRegistryTest is Test {
                 testToken,
                 1000,
                 block.timestamp + YEAR,
-                block.timestamp + YEAR * 2
+                block.timestamp + YEAR * 2,
+                Math.Rounding.Down
             ),
             100
         );
