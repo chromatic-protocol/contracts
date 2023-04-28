@@ -38,5 +38,4 @@ jobs:
         working-directory: ./dist
         run: |
           npm version ${{ github.event.release.tag_name }}
-          mv package.ver.json package.json
           npm publish
