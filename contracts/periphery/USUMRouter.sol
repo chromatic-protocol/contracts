@@ -33,7 +33,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         _;
     }
 
-    function initalize(
+    function initialize(
         AccountFactory _accountFactory,
         IUSUMMarketFactory _marketFactory
     ) external onlyOwner {
