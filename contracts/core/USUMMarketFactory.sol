@@ -2,15 +2,18 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IOracleRegistry} from "@usum/core/interfaces/IOracleRegistry.sol";
-import {MarketDeployer} from "@usum/core/base/factory/MarketDeployer.sol";
 import {SettlementTokenRegistry} from "@usum/core/base/factory/SettlementTokenRegistry.sol";
+import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
 
-contract USUMMarketFactory is MarketDeployer, SettlementTokenRegistry {
-    mapping(address => mapping(address => address)) private markets;
+contract USUMMarketFactory is SettlementTokenRegistry {
+    using MarketDeployerLib for MarketDeployer;
 
     IOracleRegistry public override oracleRegistry;
     address public immutable override liquidator;
     address public immutable override keeperFeePayer;
+
+    MarketDeployer _deployer;
+    mapping(address => mapping(address => address)) private _markets;
 
     error NotRegisteredOracle();
     error WrongTokenAddress();
@@ -30,7 +33,7 @@ contract USUMMarketFactory is MarketDeployer, SettlementTokenRegistry {
         address oracleProvider,
         address settlementToken
     ) external view override returns (address market) {
-        market = markets[oracleProvider][settlementToken];
+        market = _markets[oracleProvider][settlementToken];
     }
 
     function createMarket(
@@ -45,13 +48,23 @@ contract USUMMarketFactory is MarketDeployer, SettlementTokenRegistry {
         if (settlementToken == address(0) || settlementToken == oracleProvider)
             revert WrongTokenAddress();
 
-        if (markets[oracleProvider][settlementToken] != address(0))
+        if (_markets[oracleProvider][settlementToken] != address(0))
             revert ExistMarket();
 
-        address market = deploy(oracleProvider, settlementToken);
+        address market = _deployer.deploy(oracleProvider, settlementToken);
 
-        markets[oracleProvider][settlementToken] = market;
+        _markets[oracleProvider][settlementToken] = market;
 
         emit MarketCreated(oracleProvider, settlementToken, market);
+    }
+
+    function parameters()
+        external
+        view
+        override
+        returns (address oracleProvider, address settlementToken)
+    {
+        Parameters memory params = _deployer.parameters;
+        return (params.oracleProvider, params.settlementToken);
     }
 }
