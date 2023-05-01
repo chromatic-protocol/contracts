@@ -18,6 +18,11 @@ interface ISettlementTokenRegistry {
 
     function registerSettlementToken(address token) external;
 
+    function registeredSettlementTokens()
+        external
+        view
+        returns (address[] memory);
+
     function isRegisteredSettlementToken(address token) external view returns (bool);
 
     function appendInterestRateRecord(

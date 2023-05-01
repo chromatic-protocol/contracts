@@ -16,9 +16,9 @@ interface IAccount is IUSUMTradeCallback {
         address settlementToken
     ) external;
 
-    function hasPositionId(uint256) external returns (bool);
+    function hasPositionId(uint256) external view returns (bool);
 
-    function getPositionIds() external returns (uint256[] memory);
+    function getPositionIds() external view returns (uint256[] memory);
 
     function openPosition(
         address marketAddress,

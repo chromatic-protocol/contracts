@@ -26,6 +26,7 @@ abstract contract Liquidator is IUSUMLiquidator {
 
         moduleData.modules[0] = Module.RESOLVER;
         moduleData.modules[1] = Module.TIME;
+        moduleData.modules[2] = Module.PROXY;
         moduleData.args[0] = _resolverModuleArg(
             address(this),
             abi.encodeCall(this.resolveLiquidation, (market, positionId))
@@ -34,6 +35,7 @@ abstract contract Liquidator is IUSUMLiquidator {
             block.timestamp,
             LIQUIDATION_INTERVAL
         );
+        moduleData.args[2] = _proxyModuleArg();
         _liquidationTaskIds[market][positionId] = getAutomate().createTask(
             address(this),
             abi.encode(this.liquidate.selector),
@@ -66,7 +68,8 @@ abstract contract Liquidator is IUSUMLiquidator {
         uint256 fee
     ) internal {
         IUSUMMarketLiquidate market = IUSUMMarketLiquidate(_market);
-        
+        if (!market.checkLiquidation(positionId)) return;
+
         market.liquidate(
             positionId,
             // Saving contract size (2.943 -> 2.933) : not assigned to local variable
@@ -98,5 +101,9 @@ abstract contract Liquidator is IUSUMLiquidator {
         uint256 _interval
     ) internal pure returns (bytes memory) {
         return abi.encode(uint128(_startTime), uint128(_interval));
+    }
+
+    function _proxyModuleArg() internal pure returns (bytes memory) {
+        return bytes("");
     }
 }

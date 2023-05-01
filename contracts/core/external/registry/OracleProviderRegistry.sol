@@ -29,6 +29,12 @@ library OracleProviderRegistryLib {
         self._oracleProviders.remove(oracleProvider);
     }
 
+    function oracleProviders(
+        OracleProviderRegistry storage self
+    ) external view returns (address[] memory) {
+        return self._oracleProviders.values();
+    }
+
     function isRegistered(
         OracleProviderRegistry storage self,
         address oracleProvider

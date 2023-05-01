@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
@@ -13,8 +13,8 @@ contract KeeperFeePayer is IKeeperFeePayer, Ownable {
     IWETH9 public WETH9;
 
     // TODO when liquidity is depleted???
-    uint24 uniswapFee = 3000; // 0.03%
-    // uint24 uniswapFee = 500; // 0.005%
+    uint24 uniswapFee = 3000; // 0.3%
+    // uint24 uniswapFee = 500; // 0.05%
 
     event SetRouter(address);
     event FeeChanged(uint24 previous, uint24 current);
