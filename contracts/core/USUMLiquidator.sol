@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.14;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.0 <0.9.0;
 
-import "@usum/core/base/Liquidator.sol";
-import "@usum/core/base/gelato/AutomateReady.sol";
-import "@usum/core/base/gelato/Types.sol";
+import {Liquidator} from "@usum/core/base/Liquidator.sol";
+import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
+import {IAutomate} from "@usum/core/base/gelato/Types.sol";
 
 contract USUMLiquidator is Liquidator, AutomateReady {
     constructor(address _automate) AutomateReady(_automate, address(this)) {}

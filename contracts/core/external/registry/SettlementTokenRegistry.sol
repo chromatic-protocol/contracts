@@ -38,6 +38,12 @@ library SettlementTokenRegistryLib {
         self._interestRateRecords[token].initialize();
     }
 
+    function settlmentTokens(
+        SettlementTokenRegistry storage self
+    ) external view returns (address[] memory) {
+        return self._tokens.values();
+    }
+
     function isRegistered(
         SettlementTokenRegistry storage self,
         address token

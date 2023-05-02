@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";

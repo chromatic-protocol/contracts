@@ -1,12 +1,12 @@
 import "@nomicfoundation/hardhat-foundry"
 import "@nomicfoundation/hardhat-toolbox"
+import "@nomiclabs/hardhat-ethers"
 import "@usum-io/hardhat-package"
 import * as dotenv from "dotenv"
 import "hardhat-contract-sizer"
-import { HardhatUserConfig } from "hardhat/config"
 import "hardhat-deploy"
+import { HardhatUserConfig } from "hardhat/config"
 import "tsconfig-paths/register"
-import "@nomiclabs/hardhat-ethers"
 dotenv.config()
 
 const MNEMONIC_JUNK =
@@ -15,7 +15,7 @@ const MNEMONIC_JUNK =
 const common = {
   accounts: {
     mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK,
-    count: 100,
+    count: 10,
   },
 }
 
@@ -83,7 +83,15 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
     },
-    gelato: 50,
+    gelato: 1,
+    alice: 2,
+    bob: 3,
+    charlie: 4,
+    david: 5,
+    eve: 6,
+    frank: 7,
+    grace: 8,
+    heidi: 9,
   },
   package: {
     packageJson: "package.sdk.json",

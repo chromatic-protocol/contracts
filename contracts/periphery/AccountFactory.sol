@@ -33,4 +33,8 @@ contract AccountFactory is IAccountFactory {
     ) external view onlyRouter returns (address) {
         return accounts[accountAddress];
     }
+
+    function getAccount() external view returns (address) {
+        return accounts[msg.sender];
+    }
 }

@@ -97,6 +97,15 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         emit OracleProviderUnregistered(oracleProvider);
     }
 
+    function registeredOracleProviders()
+        external
+        view
+        override
+        returns (address[] memory)
+    {
+        return _oracleProviderRegistry.oracleProviders();
+    }
+
     function isRegisteredOracleProvider(
         address oracleProvider
     ) external view override returns (bool) {
@@ -108,6 +117,15 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     function registerSettlementToken(address token) external override onlyDao {
         _settlementTokenRegistry.register(token);
         emit SettlementTokenRegistered(token);
+    }
+
+    function registeredSettlementTokens()
+        external
+        view
+        override
+        returns (address[] memory)
+    {
+        return _settlementTokenRegistry.settlmentTokens();
     }
 
     function isRegisteredSettlementToken(

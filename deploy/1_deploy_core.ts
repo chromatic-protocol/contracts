@@ -30,10 +30,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
-  const { address: liquidator } = await deploy("USUMLiquidator", {
-    from: deployer,
-    args: [GELATO_ADDRESSES[echainId].automate],
-  })
+  const { address: liquidator } = await deploy(
+    network.name === "anvil" ? "USUMLiquidatorMock" : "USUMLiquidator",
+    {
+      from: deployer,
+      args: [GELATO_ADDRESSES[echainId].automate],
+    }
+  )
   console.log(chalk.yellow(`✨ USUMLiquidator: ${liquidator}`))
 
   const { address: lpSlotSet } = await deploy("LpSlotSetLib", {

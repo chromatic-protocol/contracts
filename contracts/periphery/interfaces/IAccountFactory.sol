@@ -5,4 +5,6 @@ interface IAccountFactory {
     function createAccount() external;
 
     function getAccount(address accountAddress) external view returns (address);
+
+    function getAccount() external view returns (address);
 }

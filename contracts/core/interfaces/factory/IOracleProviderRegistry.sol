@@ -9,6 +9,11 @@ interface IOracleProviderRegistry {
 
     function unregisterOracleProvider(address oracleProvider) external;
 
+    function registeredOracleProviders()
+        external
+        view
+        returns (address[] memory);
+
     function isRegisteredOracleProvider(
         address oracleProvider
     ) external view returns (bool);
