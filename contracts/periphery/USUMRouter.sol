@@ -6,6 +6,7 @@ import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
 
 import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
@@ -82,19 +83,20 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
         uint256 deadline
-    ) external ensure(deadline) {
+    ) external ensure(deadline) returns (Position memory) {
         address market = marketFactory.getMarket(
             oracleProvider,
             settlementToken
         );
-        _getAccount(msg.sender).openPosition(
-            market,
-            qty,
-            leverage,
-            takerMargin,
-            makerMargin,
-            maxAllowableTradingFee
-        );
+        return
+            _getAccount(msg.sender).openPosition(
+                market,
+                qty,
+                leverage,
+                takerMargin,
+                makerMargin,
+                maxAllowableTradingFee
+            );
     }
 
     function closePosition(

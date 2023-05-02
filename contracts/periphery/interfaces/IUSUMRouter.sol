@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
 
 interface IUSUMRouter is IUSUMLiquidityCallback {
     function openPosition(
@@ -13,7 +14,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
         uint256 deadline
-    ) external;
+    ) external returns (Position memory);
 
     function closePosition(
         address oracleProvider,

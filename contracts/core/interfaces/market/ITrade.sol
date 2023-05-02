@@ -20,5 +20,5 @@ interface ITrade {
 
     function getPosition(
         uint256 positionId
-    ) external returns (Position memory position);
+    ) external view returns (Position memory position);
 }

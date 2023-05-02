@@ -1,8 +1,13 @@
-import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from "@uniswap/smart-order-router"
+import {
+  SWAP_ROUTER_02_ADDRESSES,
+  USDC_ARBITRUM_GOERLI,
+  WETH9,
+} from "@uniswap/smart-order-router"
 import { BigNumber, ethers } from "ethers"
 import { extendEnvironment } from "hardhat/config"
 import { lazyFunction, lazyObject } from "hardhat/plugins"
 import {
+  IUSUMMarketFactory__factory,
   OracleProviderMock__factory,
   USUMLiquidatorMock__factory,
 } from "../typechain-types"
@@ -19,7 +24,6 @@ const SIGNERS = [
   "heidi",
 ]
 
-const ARB_GOERLI_USDC_ADDRESS = "0x8FB1E3fC51F3b789dED7557E680551d93Ea9d892"
 const ARB_GOERLI_SWAP_ROUTER_ADDRESS =
   "0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86"
 
@@ -67,7 +71,7 @@ extendEnvironment((hre) => {
         signer,
         {
           weth: WETH9[echainId].address,
-          usdc: ARB_GOERLI_USDC_ADDRESS,
+          usdc: USDC_ARBITRUM_GOERLI.address,
           swapRouter:
             echainId === config.networks.arbitrum_one_goerli.chainId!
               ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
@@ -104,6 +108,17 @@ extendEnvironment((hre) => {
       ethers.utils.parseUnits(price.toString(), 8)
     )
 
+    const { address: marketFactoryAddress } = await deployments.get(
+      "USUMMarketFactory"
+    )
+    const marketFactory = IUSUMMarketFactory__factory.connect(
+      marketFactoryAddress,
+      deployer
+    )
+    const [marketAddress] = await marketFactory.getMarket(
+      oracleProvider.address,
+      USDC_ARBITRUM_GOERLI.address
+    )
     const { address: liquidatorAddress } = await deployments.get(
       "USUMLiquidatorMock"
     )
@@ -113,7 +128,7 @@ extendEnvironment((hre) => {
     )
     for (const signer of SIGNERS) {
       const w: ReplWallet = hre.w[signer]
-      const positionIds = await w.Account.getPositionIds()
+      const positionIds = await w.Account.getPositionIds(marketAddress)
       if (positionIds.length == 0) return
 
       for (const positionId of positionIds) {
