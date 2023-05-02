@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
 
 interface IAccount is IUSUMTradeCallback {
     function balance(address quote) external view returns (uint256);
@@ -16,9 +17,14 @@ interface IAccount is IUSUMTradeCallback {
         address settlementToken
     ) external;
 
-    function hasPositionId(uint256) external view returns (bool);
+    function hasPositionId(
+        address marketAddress,
+        uint256 positionId
+    ) external view returns (bool);
 
-    function getPositionIds() external view returns (uint256[] memory);
+    function getPositionIds(
+        address marketAddress
+    ) external view returns (uint256[] memory);
 
     function openPosition(
         address marketAddress,
