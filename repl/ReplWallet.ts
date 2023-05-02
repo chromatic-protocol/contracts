@@ -1,5 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
-import { ethers } from "ethers"
+import { BigNumber, ethers } from "ethers"
+import { parseEther, parseUnits } from "ethers/lib/utils"
 import {
   IAccount,
   IAccountFactory,
@@ -20,6 +21,11 @@ import {
   IWETH9,
   IWETH9__factory,
 } from "../typechain-types"
+import { PositionStructOutput } from "./../typechain-types/contracts/core/interfaces/IUSUMMarket"
+
+const QTY_DECIMALS = 4
+const LEVERAGE_DECIMALS = 2
+const FEE_RATE_DECIMALS = 4
 
 export class ReplWallet {
   public readonly address: string
@@ -107,7 +113,7 @@ export class ReplWallet {
   }
 
   async wrapEth(eth: number) {
-    await this.WETH9.deposit({ value: ethers.utils.parseEther(eth.toString()) })
+    await this.WETH9.deposit({ value: parseEther(eth.toString()) })
   }
 
   async swapEth(eth: number) {
@@ -123,12 +129,83 @@ export class ReplWallet {
       fee: 3000,
       // fee: 500,
       recipient: this.address,
-      deadline: (Date.now() / 1000).toFixed() + 30,
-      amountIn: ethers.utils.parseEther(eth.toString()),
+      deadline: deadline(),
+      amountIn: parseEther(eth.toString()),
       amountOutMinimum: 0,
       sqrtPriceLimitX96: 0,
     })
 
     await this.WETH9.approve(this.SwapRouter.address, 0)
   }
+
+  async positions(): Promise<PositionStructOutput[]> {
+    const positionIds = await this.Account.getPositionIds(
+      this.USUMMarket.address
+    )
+    return Promise.all(
+      positionIds.map(
+        async (positionId) => await this.USUMMarket.getPosition(positionId)
+      )
+    )
+  }
+
+  async openPosition(
+    qty: number,
+    leverage: number,
+    takerMargin: number,
+    makerMargin: number
+  ) {
+    const decimals = await this.USDC.decimals()
+    const _takerMargin = parseUnits(takerMargin.toString(), decimals)
+    const _makerMargin = parseUnits(makerMargin.toString(), decimals)
+
+    await this.USUMRouter.openPosition(
+      this.OracleProvider.address,
+      this.USDC.address,
+      parseUnits(qty.toString(), QTY_DECIMALS),
+      parseUnits(leverage.toString(), LEVERAGE_DECIMALS),
+      _takerMargin,
+      _makerMargin,
+      _makerMargin, // no limit trading fee
+      deadline()
+    )
+  }
+
+  async closePosition(positionId: number) {
+    await this.USUMRouter.closePosition(
+      this.OracleProvider.address,
+      this.USDC.address,
+      BigNumber.from(positionId),
+      deadline()
+    )
+  }
+
+  async addLiquidity(feeRate: number, amount: number) {
+    const decimals = await this.USDC.decimals()
+    await this.USUMRouter.addLiquidity(
+      this.OracleProvider.address,
+      this.USDC.address,
+      parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
+      parseUnits(amount.toString(), decimals),
+      this.address,
+      deadline()
+    )
+  }
+
+  async removeLiquidity(feeRate: number, liquidity: number, amountMin: number) {
+    const decimals = await this.USDC.decimals()
+    await this.USUMRouter.removeLiquidity(
+      this.OracleProvider.address,
+      this.USDC.address,
+      parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
+      parseUnits(liquidity.toString(), decimals),
+      parseUnits(amountMin.toString(), decimals),
+      this.address,
+      deadline()
+    )
+  }
+}
+
+function deadline(): number {
+  return Math.ceil(Date.now() / 1000) + 30
 }

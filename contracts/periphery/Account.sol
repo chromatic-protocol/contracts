@@ -100,10 +100,10 @@ contract Account is IAccount, VerifyCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external onlyRouter {
+    ) external onlyRouter returns (Position memory position) {
         _prepareMarket(marketAddress);
 
-        Position memory position = IUSUMMarket(marketAddress).openPosition(
+        position = IUSUMMarket(marketAddress).openPosition(
             qty,
             leverage,
             takerMargin,
@@ -112,7 +112,6 @@ contract Account is IAccount, VerifyCallback {
             abi.encode(OpenPositionCallbackData({trader: address(this)}))
         );
         addPositionId(marketAddress, position.id);
-        // refreshPositionIds(marketAddress);
     }
 
     function closePosition(

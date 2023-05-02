@@ -33,7 +33,7 @@ interface IAccount is IUSUMTradeCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external;
+    ) external returns (Position memory);
 
     function closePosition(address marketAddress, uint256 positionId) external;
 }
