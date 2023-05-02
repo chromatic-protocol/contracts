@@ -17,4 +17,8 @@ interface ITrade {
         address recipient, // EOA or account contract
         bytes calldata data
     ) external;
+
+    function getPosition(
+        uint256 positionId
+    ) external returns (Position memory position);
 }

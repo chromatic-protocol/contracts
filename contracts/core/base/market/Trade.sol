@@ -33,6 +33,8 @@ abstract contract Trade is MarketValue {
     error NotPermitted();
     error ExceedMaxAllowableTradingFee();
 
+    error ClosePositionCallbackError();
+
     event OpenPosition();
     event ClosePosition();
 
@@ -98,9 +100,9 @@ abstract contract Trade is MarketValue {
 
         // write position
         position.storeTo(positions[position.id]);
-        // create keeper task 
+        // create keeper task
         liquidator.createLiquidationTask(position.id);
-        
+
         //TODO add event parameters
         emit OpenPosition();
         return position;
@@ -125,13 +127,13 @@ abstract contract Trade is MarketValue {
         if (position.id == 0) revert NotExistPosition();
         // TODO caller keeper || owner
         if (position.owner != msg.sender) revert NotPermitted();
-        uint256 marginTransferred = _closePosition(position, 0,recipient);
-
-        IUSUMTradeCallback(msg.sender).closePositionCallback(
-            address(settlementToken),
-            marginTransferred,
+        uint256 marginTransferred = _closePosition(
+            position,
+            0,
+            recipient,
             data
         );
+
         liquidator.cancelLiquidationTask(position.id);
 
         emit ClosePosition();
@@ -139,8 +141,9 @@ abstract contract Trade is MarketValue {
 
     function _closePosition(
         Position memory position,
-        uint256 usedKeeperFee, // TODO 
-        address recipient
+        uint256 usedKeeperFee, // TODO
+        address recipient,
+        bytes memory data
     ) internal returns (uint256 marginTransferred) {
         //TODO close position
         LpContext memory ctx = newLpContext();
@@ -175,6 +178,19 @@ abstract contract Trade is MarketValue {
         lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
 
         transferMargin(takerMargin, recipient);
+
+        // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
+        try
+            IUSUMTradeCallback(position.owner).closePositionCallback(
+                address(this),
+                position.id,
+                data
+            )
+        {} catch {
+            if(msg.sender != address(liquidator)){
+                revert ClosePositionCallbackError();
+            }
+        }
 
         delete positions[position.id];
 
@@ -234,11 +250,7 @@ abstract contract Trade is MarketValue {
     ) external onlyLiquidator {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
-        _closePosition(
-            position,
-            usedKeeperFee,
-            position.owner
-        );
+        _closePosition(position, usedKeeperFee, position.owner, bytes(""));
     }
 
     function checkLiquidation(uint256 positionId) external view returns (bool) {
@@ -251,15 +263,22 @@ abstract contract Trade is MarketValue {
             block.timestamp
         );
 
-        int256 realizedPnl = position.pnl(newLpContext()) - interestFee.toInt256();
+        int256 realizedPnl = position.pnl(newLpContext()) -
+            interestFee.toInt256();
         uint256 absRealizedPnl = realizedPnl.abs();
-        if(realizedPnl > 0 && absRealizedPnl >= position.makerMargin()){
+        if (realizedPnl > 0 && absRealizedPnl >= position.makerMargin()) {
             //profit stop (taker side)
             return true;
-        }else if(absRealizedPnl >= position.takerMargin) {
+        } else if (absRealizedPnl >= position.takerMargin) {
             // loss cut (taker side)
             return true;
         }
         return false;
+    }
+
+    function getPosition(
+        uint256 positionId
+    ) external view override returns (Position memory position) {
+        position = positions[positionId];
     }
 }
