@@ -48,6 +48,11 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
+"@chromatic-finance/hardhat-package@^0.0.1-dev1":
+  version "0.0.1-dev1"
+  resolved "https://npm.pkg.github.com/download/@chromatic-finance/hardhat-package/0.0.1-dev1/76a26c04933de5125d8ff9ef2493651406445fa6#76a26c04933de5125d8ff9ef2493651406445fa6"
+  integrity sha512-ARcc1R13NqUFldNDOIeIlPboIw/q7gvVVPONgb0OTYZ+xKBzH6N06H7Xp2sKtsreMZy/MNUaAneOl5qfZ8/O6Q==
+
 "@colors/colors@1.5.0":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
@@ -1243,11 +1248,6 @@
     "@openzeppelin/contracts" "3.4.1-solc-0.7-2"
     "@uniswap/v3-core" "1.0.0"
     "@uniswap/v3-periphery" "^1.0.1"
-
-"@usum-io/hardhat-package@^0.0.1-dev1":
-  version "0.0.1-dev1"
-  resolved "https://npm.pkg.github.com/download/@usum-io/hardhat-package/0.0.1-dev1/633610bc15497f4ce704f1e2d52884630c4b2d80#633610bc15497f4ce704f1e2d52884630c4b2d80"
-  integrity sha512-ka99WSAcHQkjky06EsTHT5otnR2t0EEuHTKZO5B4iZ13U++Ptr6pPeWMEZk9utvi4YyyT32eC9ZLW6dgn3x5Xg==
 
 abbrev@1:
   version "1.1.1"

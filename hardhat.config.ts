@@ -1,7 +1,7 @@
 import "@nomicfoundation/hardhat-foundry"
 import "@nomicfoundation/hardhat-toolbox"
 import "@nomiclabs/hardhat-ethers"
-import "@usum-io/hardhat-package"
+import "@chromatic-finance/hardhat-package"
 import * as dotenv from "dotenv"
 import "hardhat-contract-sizer"
 import "hardhat-deploy"
