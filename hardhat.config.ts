@@ -1,7 +1,7 @@
+import "@chromatic-finance/hardhat-package"
 import "@nomicfoundation/hardhat-foundry"
 import "@nomicfoundation/hardhat-toolbox"
 import "@nomiclabs/hardhat-ethers"
-import "@chromatic-finance/hardhat-package"
 import * as dotenv from "dotenv"
 import "hardhat-contract-sizer"
 import "hardhat-deploy"
@@ -9,8 +9,7 @@ import { HardhatUserConfig } from "hardhat/config"
 import "tsconfig-paths/register"
 dotenv.config()
 
-const MNEMONIC_JUNK =
-  "test test test test test test test test test test test junk"
+const MNEMONIC_JUNK = "test test test test test test test test test test test junk"
 
 const common = {
   accounts: {
@@ -95,8 +94,20 @@ const config: HardhatUserConfig = {
   },
   package: {
     packageJson: "package.sdk.json",
-    excludes: ["**/external/**/*", "KeeperFeePayer"],
+    includes: ["**/core/**/*", "**/periphery/**/*"],
+    excludes: [
+      "**/external/**/*",
+      "**/mocks/**/*",
+      "**/libraries/**/*",
+      "**/*Lib",
+      "**/interfaces/**/*",
+      "**/base/**/*",
+      "KeeperFeePayer",
+      "USUMLiquidator",
+    ],
     includeDeployed: true,
+    artifactFromDeployment: false,
+    excludesFromDeployed: ["KeeperFeePayer", "*Lib"],
   },
 }
 

@@ -48,10 +48,10 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
-"@chromatic-finance/hardhat-package@^0.0.1-dev1":
-  version "0.0.1-dev1"
-  resolved "https://npm.pkg.github.com/download/@chromatic-finance/hardhat-package/0.0.1-dev1/76a26c04933de5125d8ff9ef2493651406445fa6#76a26c04933de5125d8ff9ef2493651406445fa6"
-  integrity sha512-ARcc1R13NqUFldNDOIeIlPboIw/q7gvVVPONgb0OTYZ+xKBzH6N06H7Xp2sKtsreMZy/MNUaAneOl5qfZ8/O6Q==
+"@chromatic-finance/hardhat-package@^0.0.1-dev.6":
+  version "0.0.1-dev.6"
+  resolved "https://npm.pkg.github.com/download/@chromatic-finance/hardhat-package/0.0.1-dev.6/a104d3ac0b63633bbb71a3ad52b6de78bb38841f#a104d3ac0b63633bbb71a3ad52b6de78bb38841f"
+  integrity sha512-RwfN5Zw9nrc+S9mYABUzZr/lrglMO64cqbZbudH/QPh0Taf5uwGhufur8VQAsCrVAEzXSTHmDcnFmEdDcY2RQw==
 
 "@colors/colors@1.5.0":
   version "1.5.0"
