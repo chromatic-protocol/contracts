@@ -48,10 +48,13 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
-"@chromatic-finance/hardhat-package@^0.0.1-dev.6":
-  version "0.0.1-dev.6"
-  resolved "https://npm.pkg.github.com/download/@chromatic-finance/hardhat-package/0.0.1-dev.6/a104d3ac0b63633bbb71a3ad52b6de78bb38841f#a104d3ac0b63633bbb71a3ad52b6de78bb38841f"
-  integrity sha512-RwfN5Zw9nrc+S9mYABUzZr/lrglMO64cqbZbudH/QPh0Taf5uwGhufur8VQAsCrVAEzXSTHmDcnFmEdDcY2RQw==
+"@chromatic-finance/hardhat-package@^0.0.1-dev.7":
+  version "0.0.1-dev.7"
+  resolved "https://npm.pkg.github.com/download/@chromatic-finance/hardhat-package/0.0.1-dev.7/4265425d223becde8ce6b670eb817ad5db2dfcfc#4265425d223becde8ce6b670eb817ad5db2dfcfc"
+  integrity sha512-UppS+/yNPn+ToGQfctqxzIuJjzhAzdiRldAiyYj+uRAqLxvCQ3U6tc47ffp2kUeLTTnU8N1H/MkYKWe3mRr6lw==
+  dependencies:
+    chalk "^2.4.2"
+    minimatch "^9.0.0"
 
 "@colors/colors@1.5.0":
   version "1.5.0"
@@ -3975,6 +3978,13 @@ minimatch@5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-5.0.1.tgz#fb9022f7528125187c92bd9e9b6366be1cf3415b"
   integrity sha512-nLDxIFRyhDblz3qMuq+SoRZED4+miJ/G+tdDrjkkkRnjAsBexeGpgjLEQ0blJy7rHhR2b93rhQY4SvyWu9v03g==
+  dependencies:
+    brace-expansion "^2.0.1"
+
+minimatch@^9.0.0:
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-9.0.0.tgz#bfc8e88a1c40ffd40c172ddac3decb8451503b56"
+  integrity sha512-0jJj8AvgKqWN05mrwuqi8QYKx1WmYSUoKSxu5Qhs9prezTz10sxAHGNZe9J9cqIJzta8DWsleh2KaVaLl6Ru2w==
   dependencies:
     brace-expansion "^2.0.1"
 
