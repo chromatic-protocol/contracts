@@ -8,6 +8,9 @@ import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
 struct SettlementTokenRegistry {
     EnumerableSet.AddressSet _tokens;
     mapping(address => InterestRate.Record[]) _interestRateRecords;
+    mapping(address => uint256) _minimumTakerMargins;
+    mapping(address => uint256) _flashLoanFeeRates;
+    mapping(address => uint24) _uniswapFeeTiers;
 }
 
 library SettlementTokenRegistryLib {
@@ -24,11 +27,18 @@ library SettlementTokenRegistryLib {
 
     function register(
         SettlementTokenRegistry storage self,
-        address token
+        address token,
+        uint256 minimumTakerMargin,
+        uint256 interestRate,
+        uint256 flashLoanFeeRate,
+        uint24 uniswapFeeTier
     ) external {
         require(self._tokens.add(token), "ART"); // Already Registered Token
 
-        self._interestRateRecords[token].initialize();
+        self._interestRateRecords[token].initialize(interestRate);
+        self._minimumTakerMargins[token] = minimumTakerMargin;
+        self._flashLoanFeeRates[token] = flashLoanFeeRate;
+        self._uniswapFeeTiers[token] = uniswapFeeTier;
     }
 
     function settlmentTokens(
@@ -42,6 +52,51 @@ library SettlementTokenRegistryLib {
         address token
     ) external view returns (bool) {
         return self._tokens.contains(token);
+    }
+
+    function getMinimumTakerMargin(
+        SettlementTokenRegistry storage self,
+        address token
+    ) external view returns (uint256) {
+        return self._minimumTakerMargins[token];
+    }
+
+    function setMinimumTakerMargin(
+        SettlementTokenRegistry storage self,
+        address token,
+        uint256 minimumTakerMargin
+    ) external {
+        self._minimumTakerMargins[token] = minimumTakerMargin;
+    }
+
+    function getFlashLoanFeeRate(
+        SettlementTokenRegistry storage self,
+        address token
+    ) external view returns (uint256) {
+        return self._flashLoanFeeRates[token];
+    }
+
+    function setFlashLoanFeeRate(
+        SettlementTokenRegistry storage self,
+        address token,
+        uint256 flashLoanFeeRate
+    ) external {
+        self._flashLoanFeeRates[token] = flashLoanFeeRate;
+    }
+
+    function getUniswapFeeTier(
+        SettlementTokenRegistry storage self,
+        address token
+    ) external view returns (uint24) {
+        return self._uniswapFeeTiers[token];
+    }
+
+    function setUniswapFeeTier(
+        SettlementTokenRegistry storage self,
+        address token,
+        uint24 uniswapFeeTier
+    ) external {
+        self._uniswapFeeTiers[token] = uniswapFeeTier;
     }
 
     function appendInterestRateRecord(
