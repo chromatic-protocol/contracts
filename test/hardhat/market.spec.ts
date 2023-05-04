@@ -105,20 +105,23 @@ describe("market test", async function () {
     }
   }
 
-  it("add/remove liquidty", async () => {
+  it("add/remove liquidity", async () => {
     const { amount, feeSlotKey } = await addLiquidity()
     expect(await market.totalSupply(feeSlotKey)).to.equal(amount)
 
     const removeLiqAmount = amount.div(2)
 
-    const removeLiqTx = await usumRouter.connect(tester).addLiquidity(
+    const removeLiqTx = await usumRouter.connect(tester).removeLiquidity(
       oracleProvider.address,
       settlementToken.address,
       feeSlotKey,
       removeLiqAmount,
+      0, // amountMin
       tester.address,
       ethers.constants.MaxUint256 // deadline
     )
+
+
 
     await removeLiqTx.wait()
 

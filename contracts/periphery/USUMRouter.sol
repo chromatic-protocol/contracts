@@ -7,11 +7,13 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "./AccountFactory.sol";
 import {Account} from "./Account.sol";
+import "hardhat/console.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -23,6 +25,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     struct BurnCallbackData {
         address payer;
+        uint256 tokenId;
         uint256 liquidity;
     }
 
@@ -66,11 +69,12 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             data,
             (BurnCallbackData)
         );
-        SafeERC20.safeTransferFrom(
-            lpToken,
+        IERC1155(lpToken).safeTransferFrom(
             callbackData.payer,
             msg.sender,
-            callbackData.liquidity
+            callbackData.tokenId,
+            callbackData.liquidity,
+            bytes("")
         );
     }
 
@@ -150,13 +154,17 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             recipient,
             feeRate,
             abi.encode(
-                BurnCallbackData({payer: msg.sender, liquidity: liquidity})
+                BurnCallbackData({
+                    payer: msg.sender,
+                    liquidity: liquidity,
+                    tokenId: encodeId(feeRate)
+                })
             )
         );
         require(amount >= amountMin, "TradeRouter: insufficient amount");
     }
 
-     function getAccount() external view returns (address) {
+    function getAccount() external view returns (address) {
         return accountFactory.getAccount(msg.sender);
     }
 

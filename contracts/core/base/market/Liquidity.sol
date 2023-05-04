@@ -6,7 +6,7 @@ import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquid
 import {LpToken} from "@usum/core/base/market/LpToken.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
-
+import 'hardhat/console.sol';
 abstract contract Liquidity is LpToken, MarketValue {
     using Math for uint256;
 
@@ -54,7 +54,9 @@ abstract contract Liquidity is LpToken, MarketValue {
         uint256 id = encodeId(tradingFeeRate);
 
         uint256 balanceBefore = balanceOf(address(this), id);
+        console.log('burn before callback');
         IUSUMLiquidityCallback(msg.sender).burnCallback(address(this), data);
+        console.log('burn after callback');
         uint256 liquidity = balanceOf(address(this), id) - balanceBefore;
         if (liquidity == 0) return 0;
 
@@ -62,12 +64,14 @@ abstract contract Liquidity is LpToken, MarketValue {
         // int256 tradingFeeRate,
         // uint256 amount,
         // uint256 totalLiquidity
+        console.log('burn!');
         amount = lpSlotSet.burn(
             newLpContext(),
             tradingFeeRate,
             liquidity,
             _totalSupply
         );
+        console.log('burned!');
         SafeERC20.safeTransfer(address(settlementToken), recipient, amount);
         _burn(recipient, id, liquidity);
     }

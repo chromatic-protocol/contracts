@@ -43,7 +43,7 @@ export async function deploy() {
     )
 
     await (
-      await usumRouter.initalize(accountFactory.address, marketFactory.address)
+      await usumRouter.initialize(accountFactory.address, marketFactory.address)
     ).wait()
 
     return {
