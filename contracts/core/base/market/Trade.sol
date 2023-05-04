@@ -21,6 +21,7 @@ abstract contract Trade is MarketValue {
     using SignedMath for int256;
 
     error ZeroTargetAmount();
+    error TooSmallTakerMargin();
 
     error InvalidProfitStop();
     error InvalidLossCut();
@@ -66,6 +67,10 @@ abstract contract Trade is MarketValue {
         bytes calldata data
     ) external returns (Position memory) {
         if (qty == 0) revert ZeroTargetAmount();
+        if (
+            takerMargin <
+            factory.getMinimumTakerMargin(address(settlementToken))
+        ) revert TooSmallTakerMargin();
         //TODO get slotmargin by using makerMargin
 
         LpContext memory ctx = newLpContext();
@@ -187,7 +192,7 @@ abstract contract Trade is MarketValue {
                 data
             )
         {} catch {
-            if(msg.sender != address(liquidator)){
+            if (msg.sender != address(liquidator)) {
                 revert ClosePositionCallbackError();
             }
         }

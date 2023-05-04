@@ -13,12 +13,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
     ISwapRouter uniswapRouter;
     IWETH9 public WETH9;
 
-    // TODO when liquidity is depleted???
-    uint24 uniswapFee = 3000; // 0.3%
-    // uint24 uniswapFee = 500; // 0.05%
-
     event SetRouter(address);
-    event FeeChanged(uint24 previous, uint24 current);
 
     modifier onlyDao() {
         require(msg.sender == factory.dao(), "only DAO can access");
@@ -38,12 +33,6 @@ contract KeeperFeePayer is IKeeperFeePayer {
     function setRouter(ISwapRouter _uniswapRouter) public onlyDao {
         uniswapRouter = _uniswapRouter;
         emit SetRouter(address(uniswapRouter));
-    }
-
-    function setUniswapFee(uint24 _fee) public onlyDao {
-        uint24 previousFee = uniswapFee;
-        uniswapFee = _fee;
-        emit FeeChanged(previousFee, uniswapFee);
     }
 
     // this contrct doesn't have balance
@@ -86,7 +75,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
             .ExactOutputSingleParams(
                 tokenIn,
                 address(WETH9),
-                uniswapFee,
+                factory.getUniswapFeeTier(tokenIn),
                 recipient,
                 block.timestamp,
                 amountOut,
