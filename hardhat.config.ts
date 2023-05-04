@@ -107,7 +107,7 @@ const config: HardhatUserConfig = {
     ],
     includeDeployed: true,
     artifactFromDeployment: false,
-    excludesFromDeployed: ["KeeperFeePayer", "*Lib"],
+    excludesFromDeployed: ["KeeperFeePayer", "*Lib", "*Mock"],
     docgen: {
       sourcesDir: "contracts",
       exclude: [
