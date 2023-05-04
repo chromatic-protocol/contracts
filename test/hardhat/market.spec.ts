@@ -63,7 +63,7 @@ describe("market test", async function () {
   async function faucet(account: SignerWithAddress) {
     const faucetTx = await settlementToken
       .connect(account)
-      .faucet(ethers.utils.parseEther("1000"));
+      .faucet(ethers.utils.parseEther("10000"));
     await faucetTx.wait();
   }
 
@@ -111,7 +111,9 @@ describe("market test", async function () {
 
     const removeLiqAmount = amount.div(2);
 
-    await (await market.connect(tester).setApprovalForAll(usumRouter.address, true)).wait();
+    await (
+      await market.connect(tester).setApprovalForAll(usumRouter.address, true)
+    ).wait();
 
     const removeLiqTx = await usumRouter.connect(tester).removeLiquidity(
       oracleProvider.address,
@@ -128,64 +130,69 @@ describe("market test", async function () {
     expect(await market.totalSupply(feeSlotKey)).to.equal(removeLiqAmount);
   });
 
-  // describe("position test", async () => {
-  //   let routerContract: USUMRouter
-  //   before(async () => {
-  //     const liqAmount = ethers.utils.parseEther("500")
-  //     await addLiquidity(liqAmount, 10)
-  //     await addLiquidity(liqAmount, -10)
-  //     const createAccountTx = await accountFactory
-  //       .connect(trader)
-  //       .createAccount()
-  //     await createAccountTx.wait()
+  describe("position test", async () => {
+    let routerContract: USUMRouter;
+    before(async () => {
+      const liqAmount = ethers.utils.parseEther("500");
+      await addLiquidity(liqAmount, 10);
+      await addLiquidity(liqAmount, -10);
+      const createAccountTx = await accountFactory
+        .connect(trader)
+        .createAccount();
+      await createAccountTx.wait();
 
-  //     const traderAccount = await usumRouter.connect(trader).getAccount()
+      const traderAccount = await usumRouter.connect(trader).getAccount();
 
-  //     logYellow(`\ttraderAccount: ${traderAccount}`)
+      logYellow(`\ttraderAccount: ${traderAccount}`);
 
-  //     const transferTx = await settlementToken
-  //       .connect(trader)
-  //       .transfer(traderAccount, ethers.utils.parseEther("50"))
-  //     await transferTx.wait()
+      const transferTx = await settlementToken
+        .connect(trader)
+        .transfer(traderAccount, ethers.utils.parseEther("50"));
+      await transferTx.wait();
 
-  //     routerContract = usumRouter.connect(trader)
-  //   })
-  //   it("open long position", async () => {
-  //     const takerMargin = ethers.utils.parseEther("1")
-  //     const makerMargin = ethers.utils.parseEther("5")
-  //     const openPositionTx = await routerContract.openPosition(
-  //       oracleProvider.address,
-  //       settlementToken.address,
-  //       1,
-  //       10000,
-  //       takerMargin, // losscut 1 token
-  //       makerMargin, // profit stop 10 token,
-  //       makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-  //       ethers.constants.MaxUint256
-  //     )
-  //     const receipt = await openPositionTx.wait()
-  //     console.log(receipt)
-  //     //TODO assert result
-  //   })
+      routerContract = usumRouter.connect(trader);
+      await (
+        await settlementToken
+          .connect(trader)
+          .approve(routerContract.address, ethers.constants.MaxUint256)
+      ).wait();
+    });
+    it("open long position", async () => {
+      const takerMargin = ethers.utils.parseEther("1");
+      const makerMargin = ethers.utils.parseEther("5");
+      const openPositionTx = await routerContract.openPosition(
+        oracleProvider.address,
+        settlementToken.address,
+        1,
+        10000,
+        takerMargin, // losscut 1 token
+        makerMargin, // profit stop 10 token,
+        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
+        ethers.constants.MaxUint256
+      );
+      const receipt = await openPositionTx.wait();
+      console.log(receipt);
+      //TODO assert result
+    });
 
-  //   it("open short position ", async () => {
-  //     const takerMargin = ethers.utils.parseEther("1")
-  //     const makerMargin = ethers.utils.parseEther("5")
-  //     const openPositionTx = await routerContract.openPosition(
-  //       oracleProvider.address,
-  //       settlementToken.address,
-  //       -1,
-  //       10000,
-  //       takerMargin, // losscut 1 token
-  //       makerMargin, // profit stop 10 token,
-  //       makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-  //       ethers.constants.MaxUint256
-  //     )
-  //     const receipt = await openPositionTx.wait()
-  //     console.log(receipt)
-  //     //TODO assert result
-  //   })
-  // })
+    it("open short position ", async () => {
+      const takerMargin = ethers.utils.parseEther("1");
+      const makerMargin = ethers.utils.parseEther("5");
+      const openPositionTx = await routerContract.openPosition(
+        oracleProvider.address,
+        settlementToken.address,
+        -1,
+        10000,
+        takerMargin, // losscut 1 token
+        makerMargin, // profit stop 10 token,
+        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
+        ethers.constants.MaxUint256
+      );
+      const receipt = await openPositionTx.wait();
+      console.log(receipt);
+      //TODO assert result
+    });
+  });
 
   // execute keeper
 });
