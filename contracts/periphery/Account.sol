@@ -139,12 +139,11 @@ contract Account is IAccount, VerifyCallback {
             data,
             (OpenPositionCallbackData)
         );
-        IAccount traderAccount = IAccount(callbackData.trader);
-        traderAccount.transferMargin(
-            marginRequired,
-            msg.sender,
-            settlementToken
-        );
+
+        if (balance(settlementToken) < marginRequired)
+            revert NotEnoughBalance();
+
+        SafeERC20.safeTransfer(settlementToken, msg.sender, marginRequired);
     }
 
     function closePositionCallback(

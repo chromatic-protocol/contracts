@@ -2,10 +2,11 @@ import { BigNumber } from "ethers"
 import { ethers } from "hardhat"
 import { logDeployed } from "../log-utils"
 import { USUMMarketFactory } from "@usum/typechain-types"
-import { Contract } from "ethers"
 import { deployContract } from "../utils"
 import {
-  OracleProviderRegistry,
+  OracleProviderRegistryLib,
+  SettlementTokenRegistryLib,
+  MarketDeployerLib,
   KeeperFeePayerMock,
   USUMLiquidator,
   LpSlotSetLib,
@@ -14,7 +15,6 @@ import {
 export async function deploy(opsAddress: string) {
   const [deployer] = await ethers.getSigners()
 
-  const oracleProviderRegistry = await deployContract<OracleProviderRegistry>("OracleProviderRegistry")
   const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
     "KeeperFeePayerMock"
   )
@@ -29,19 +29,34 @@ export async function deploy(opsAddress: string) {
     args: [opsAddress],
   })
 
+  const oracleProviderRegistryLib =
+    await deployContract<OracleProviderRegistryLib>("OracleProviderRegistryLib")
+  const settlementTokenRegistryLib =
+    await deployContract<SettlementTokenRegistryLib>(
+      "SettlementTokenRegistryLib"
+    )
+
   const lpSlotSetLib = await deployContract<LpSlotSetLib>("LpSlotSetLib")
+  const marketDeployerLib = await deployContract<MarketDeployerLib>(
+    "MarketDeployerLib",
+    {
+      libraries: {
+        LpSlotSetLib: lpSlotSetLib.address,
+      },
+    }
+  )
 
   const marketFactory = await deployContract<USUMMarketFactory>(
     "USUMMarketFactory",
     {
-      args: [
-        oracleProviderRegistry.address,
-        keeperFeePayer.address,
-        liquidator.address,
-      ],
-      libraries: { LpSlotSetLib: lpSlotSetLib.address },
+      args: [keeperFeePayer.address, liquidator.address],
+      libraries: {
+        OracleProviderRegistryLib: oracleProviderRegistryLib.address,
+        SettlementTokenRegistryLib: settlementTokenRegistryLib.address,
+        MarketDeployerLib: marketDeployerLib.address,
+      },
     }
   )
 
-  return { oracleProviderRegistry, marketFactory, keeperFeePayer, liquidator }
+  return { marketFactory, keeperFeePayer, liquidator }
 }

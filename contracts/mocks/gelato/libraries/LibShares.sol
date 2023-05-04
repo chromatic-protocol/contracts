@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.12;
+pragma solidity >=0.8.0 <0.9.0;
 import {ETH} from "../functions/FUtils.sol";
 import {IERC20Extended} from "../interfaces/IERC20Extended.sol";
 

@@ -11,11 +11,11 @@ interface IAccount is IUSUMTradeCallback {
 
     function initialize(address _owner, address _router) external;
 
-    function transferMargin(
-        uint256 marginRequired,
-        address marketAddress,
-        address settlementToken
-    ) external;
+    // function transferMargin(
+    //     uint256 marginRequired,
+    //     address marketAddress,
+    //     address settlementToken
+    // ) intern;
 
     function hasPositionId(
         address marketAddress,

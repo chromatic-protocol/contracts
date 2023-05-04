@@ -41,4 +41,6 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         address recipient,
         uint256 deadline
     ) external returns (uint256 amount);
+
+    function getAccount() external returns (address);
 }
