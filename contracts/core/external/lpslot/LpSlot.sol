@@ -20,16 +20,13 @@ library LpSlotLib {
 
     uint256 private constant MIN_AMOUNT = 1000; // almost zero, prevent divide by zero
 
-    error TooSmallAmount();
-    error NotEnoughSlotBalance();
-
     function openPosition(
         LpSlot storage self,
         LpContext memory ctx,
         PositionParam memory param,
         uint256 tradingFee
     ) internal {
-        if (param.makerMargin > self.balance()) revert NotEnoughSlotBalance();
+        require(param.makerMargin <= self.balance(), "NESB"); // Not Enough Slot Balance
 
         self._position.openPosition(ctx, param);
         self.total += tradingFee;
@@ -71,7 +68,7 @@ library LpSlotLib {
         uint256 amount,
         uint256 totalLiquidity
     ) internal returns (uint256 liquidity) {
-        if (amount <= MIN_AMOUNT) revert TooSmallAmount();
+        require(amount > MIN_AMOUNT, "TSA"); // Too Small Amount
 
         if (totalLiquidity == 0) {
             liquidity = amount;
@@ -93,7 +90,7 @@ library LpSlotLib {
         uint256 totalLiquidity
     ) internal returns (uint256 amount) {
         amount = liquidity.mulDiv(self.value(ctx), totalLiquidity);
-        if (amount > self.balance()) revert NotEnoughSlotBalance();
+        require(amount <= self.balance(), "NESB"); // Not Enough Slot Balance
 
         self.total -= amount;
     }

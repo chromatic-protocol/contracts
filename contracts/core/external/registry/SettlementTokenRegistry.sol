@@ -14,16 +14,11 @@ library SettlementTokenRegistryLib {
     using EnumerableSet for EnumerableSet.AddressSet;
     using InterestRate for InterestRate.Record[];
 
-    error AlreadyRegisteredToken();
-    error UnregisteredToken();
-
     modifier registeredOnly(
         SettlementTokenRegistry storage self,
         address token
     ) {
-        if (!self._tokens.contains(token)) {
-            revert UnregisteredToken();
-        }
+        require(self._tokens.contains(token), "URT"); // UnRegistered Token
         _;
     }
 
@@ -31,9 +26,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token
     ) external {
-        if (!self._tokens.add(token)) {
-            revert AlreadyRegisteredToken();
-        }
+        require(self._tokens.add(token), "ART"); // Already Registered Token
 
         self._interestRateRecords[token].initialize();
     }

@@ -33,10 +33,6 @@ library LpSlotSetLib {
         uint256 takerMargin;
     }
 
-    error NotEnoughSlotBalance();
-    error ExceedMarginRange();
-    error UnsupportedTradingFeeRate();
-
     modifier _validTradingFeeRate(int16 tradingFeeRate) {
         validateTradingFeeRate(tradingFeeRate);
 
@@ -71,7 +67,7 @@ library LpSlotSetLib {
             }
         }
 
-        if (remain > 0) revert NotEnoughSlotBalance();
+        require(remain == 0, "NESB"); // Not Enough Slot Balance
 
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
@@ -138,10 +134,11 @@ library LpSlotSetLib {
     ) external {
         uint256 absRealizedPnl = realizedPnl.abs();
         uint256 makerMargin = position.makerMargin();
-        if (realizedPnl > 0 && absRealizedPnl > makerMargin)
-            revert ExceedMarginRange();
-        if (realizedPnl < 0 && absRealizedPnl > position.takerMargin)
-            revert ExceedMarginRange();
+        require(
+            !((realizedPnl > 0 && absRealizedPnl > makerMargin) ||
+                (realizedPnl < 0 && absRealizedPnl > position.takerMargin)),
+            "EMR" // Exceed Margin Range
+        );
 
         mapping(uint16 => LpSlot) storage _slots = targetSlots(
             self,
@@ -215,9 +212,7 @@ library LpSlotSetLib {
                 remainRealizedPnl -= absTakerPnl;
             }
 
-            if (remainRealizedPnl != 0) {
-                revert ExceedMarginRange();
-            }
+            require(remainRealizedPnl == 0, "EMR"); // Exceed Margin Range
         }
 
         uint16 _feeRate = slotMargins[0].tradingFeeRate;
@@ -368,12 +363,11 @@ library LpSlotSetLib {
         uint16 absFeeRate = abs(tradingFeeRate);
 
         uint256 idx = findUpperBound(_tradingFeeRates, absFeeRate);
-        if (
-            idx >= _tradingFeeRates.length ||
-            absFeeRate != _tradingFeeRates[idx]
-        ) {
-            revert UnsupportedTradingFeeRate();
-        }
+        require(
+            idx < _tradingFeeRates.length &&
+                absFeeRate == _tradingFeeRates[idx],
+            "UTFR" // Unsupported Trading Fee Rate
+        );
     }
 
     function abs(int16 i) private pure returns (uint16) {

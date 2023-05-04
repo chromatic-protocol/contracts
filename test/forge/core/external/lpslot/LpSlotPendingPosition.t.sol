@@ -58,7 +58,7 @@ contract LpSlotPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
         param.oracleVersion = 2;
 
-        vm.expectRevert(LpSlotPendingPositionLib.InvalidOracleVersion.selector);
+        vm.expectRevert(bytes("IOV"));
         pending.openPosition(ctx, param);
     }
 
@@ -69,7 +69,7 @@ contract LpSlotPendingPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam().inverse();
 
-        vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
+        vm.expectRevert(bytes("IPQ"));
         pending.openPosition(ctx, param);
     }
 
@@ -79,7 +79,7 @@ contract LpSlotPendingPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
-        vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
+        vm.expectRevert(bytes("IPQ"));
         pending.closePosition(ctx, param);
     }
 
@@ -108,7 +108,7 @@ contract LpSlotPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
         param.oracleVersion = 2;
 
-        vm.expectRevert(LpSlotPendingPositionLib.InvalidOracleVersion.selector);
+        vm.expectRevert(bytes("IOV"));
         pending.closePosition(ctx, param);
     }
 
@@ -119,7 +119,7 @@ contract LpSlotPendingPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
-        vm.expectRevert(PositionUtil.InvalidPositionQty.selector);
+        vm.expectRevert(bytes("IPQ"));
         pending.closePosition(ctx, param);
     }
 
