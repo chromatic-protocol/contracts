@@ -1,6 +1,7 @@
 import { GELATO_ADDRESSES } from "@gelatonetwork/automate-sdk"
 import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from "@uniswap/smart-order-router"
 import chalk from "chalk"
+import { constants } from "ethers"
 import type { DeployFunction } from "hardhat-deploy/types"
 import type { HardhatRuntimeEnvironment } from "hardhat/types"
 
@@ -23,15 +24,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     echainId === config.networks.arbitrum_one_goerli.chainId!
       ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
       : SWAP_ROUTER_02_ADDRESSES(echainId)
-
-  const { address: liquidator } = await deploy(
-    network.name === "anvil" ? "USUMLiquidatorMock" : "USUMLiquidator",
-    {
-      from: deployer,
-      args: [GELATO_ADDRESSES[echainId].automate],
-    }
-  )
-  console.log(chalk.yellow(`✨ USUMLiquidator: ${liquidator}`))
 
   const { address: lpSlotSet } = await deploy("LpSlotSetLib", {
     from: deployer,
@@ -68,7 +60,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: factory, libraries } = await deploy("USUMMarketFactory", {
     from: deployer,
-    args: [liquidator],
     libraries: {
       MarketDeployerLib: marketDeployer,
       OracleProviderRegistryLib: oracleProviderRegistry,
@@ -83,14 +74,44 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
+  const { address: vault } = await deploy("USUMVault", {
+    from: deployer,
+    args: [factory],
+  })
+  console.log(chalk.yellow(`✨ USUMVault: ${vault}`))
+
+  const { address: liquidator } = await deploy(
+    network.name === "anvil" ? "USUMLiquidatorMock" : "USUMLiquidator",
+    {
+      from: deployer,
+      args: [
+        factory,
+        GELATO_ADDRESSES[echainId].automate,
+        constants.AddressZero,
+      ],
+    }
+  )
+  console.log(chalk.yellow(`✨ USUMLiquidator: ${liquidator}`))
+
   const MarketFactory = await ethers.getContractFactory("USUMMarketFactory", {
     libraries,
   })
   const marketFactory = MarketFactory.attach(factory)
+
   await marketFactory.setKeeperFeePayer(keeperFeePayer, {
     from: deployer,
   })
   console.log(chalk.yellow("✨ Set KeeperFeePayer"))
+
+  await marketFactory.setVault(vault, {
+    from: deployer,
+  })
+  console.log(chalk.yellow("✨ Set Vault"))
+
+  await marketFactory.setLiquidator(liquidator, {
+    from: deployer,
+  })
+  console.log(chalk.yellow("✨ Set Liquidator"))
 }
 
 export default func

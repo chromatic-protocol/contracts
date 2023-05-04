@@ -10,6 +10,8 @@ interface IUSUMMarketFactory is
     IOracleProviderRegistry,
     ISettlementTokenRegistry
 {
+    event SetLiquidator(address liquidator);
+    event SetVault(address vault);
     event SetKeeperFeePayer(address keeperFeePayer);
 
     event MarketCreated(
@@ -22,11 +24,21 @@ interface IUSUMMarketFactory is
 
     function liquidator() external view returns (address);
 
+    function vault() external view returns (address);
+
     function keeperFeePayer() external view returns (address);
 
+    function setLiquidator(address liquidator) external;
+
+    function setVault(address vault) external;
+
     function setKeeperFeePayer(address keeperFeePayer) external;
-    
+
     function getMarkets() external view returns (address[] memory market);
+
+    function getMarketsBySettlmentToken(
+        address settlementToken
+    ) external view returns (address[] memory);
 
     function createMarket(
         address oracleProvider,

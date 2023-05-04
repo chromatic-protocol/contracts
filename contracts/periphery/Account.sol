@@ -133,6 +133,7 @@ contract Account is IAccount, VerifyCallback {
 
     function openPositionCallback(
         address settlementToken,
+        address vault,
         uint256 marginRequired,
         bytes calldata data
     ) external override verifyCallback {
@@ -144,7 +145,7 @@ contract Account is IAccount, VerifyCallback {
         if (balance(settlementToken) < marginRequired)
             revert NotEnoughBalance();
 
-        SafeERC20.safeTransfer(settlementToken, msg.sender, marginRequired);
+        SafeERC20.safeTransfer(settlementToken, vault, marginRequired);
     }
 
     function closePositionCallback(

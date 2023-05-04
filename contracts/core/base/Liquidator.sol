@@ -3,18 +3,34 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMMarketLiquidate} from "@usum/core/interfaces/market/IUSUMMarketLiquidate.sol";
-
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
 
 abstract contract Liquidator is IUSUMLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 private constant LIQUIDATION_INTERVAL = 10 seconds;
+    uint256 private constant LIQUIDATION_INTERVAL = 30 seconds;
+
+    IUSUMMarketFactory factory;
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
 
+    error OnlyAccessableByMarket();
+
+    modifier onlyMarket() {
+        if (!factory.isRegisteredMarket(msg.sender))
+            revert OnlyAccessableByMarket();
+        _;
+    }
+
+    constructor(IUSUMMarketFactory _factory) {
+        factory = _factory;
+    }
+
     function getAutomate() internal view virtual returns (IAutomate);
 
-    function createLiquidationTask(uint256 positionId) external override {
+    function createLiquidationTask(
+        uint256 positionId
+    ) external override onlyMarket {
         address market = msg.sender;
         if (_liquidationTaskIds[market][positionId] != bytes32(0)) {
             return;
@@ -44,7 +60,9 @@ abstract contract Liquidator is IUSUMLiquidator {
         );
     }
 
-    function cancelLiquidationTask(uint256 positionId) external override {
+    function cancelLiquidationTask(
+        uint256 positionId
+    ) external override onlyMarket {
         _cancelLiquidationTask(msg.sender, positionId);
     }
 
@@ -68,14 +86,7 @@ abstract contract Liquidator is IUSUMLiquidator {
         uint256 fee
     ) internal {
         IUSUMMarketLiquidate market = IUSUMMarketLiquidate(_market);
-        if (!market.checkLiquidation(positionId)) return;
-
-        market.liquidate(
-            positionId,
-            // Saving contract size (2.943 -> 2.933) : not assigned to local variable
-            market.transferKeeperFee(getAutomate().gelato(), fee, positionId)
-        );
-        _cancelLiquidationTask(_market, positionId);
+        market.liquidate(positionId, getAutomate().gelato(), fee);
     }
 
     function _cancelLiquidationTask(

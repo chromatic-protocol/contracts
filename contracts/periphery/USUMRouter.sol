@@ -46,6 +46,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     function mintCallback(
         address settlementToken,
+        address vault,
         bytes calldata data
     ) external verifyCallback {
         MintCallbackData memory callbackData = abi.decode(
@@ -55,7 +56,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         SafeERC20.safeTransferFrom(
             settlementToken,
             callbackData.payer,
-            msg.sender,
+            vault,
             callbackData.amount
         );
     }

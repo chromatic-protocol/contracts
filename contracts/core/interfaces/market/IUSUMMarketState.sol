@@ -5,6 +5,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 
 interface IUSUMMarketState {
@@ -15,6 +16,8 @@ interface IUSUMMarketState {
     function oracleProvider() external view returns (IOracleProvider);
 
     function liquidator() external view returns (IUSUMLiquidator);
+
+    function vault() external view returns (IUSUMVault);
 
     function keeperFeePayer() external view returns (IKeeperFeePayer);
 }

@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {USUMLiquidator} from "@usum/core/USUMLiquidator.sol";
 import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
 
 contract USUMLiquidatorMock is USUMLiquidator {
-    constructor(address _automate, address opsProxyFactory) USUMLiquidator(_automate, opsProxyFactory) {}
+    constructor(
+        IUSUMMarketFactory _factory,
+        address _automate,
+        address opsProxyFactory
+    ) USUMLiquidator(_factory, _automate, opsProxyFactory) {}
 
     function liquidate(
         address market,
