@@ -7,11 +7,13 @@ import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@usum/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract USUMMarketFactory is IUSUMMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
     using SettlementTokenRegistryLib for SettlementTokenRegistry;
     using MarketDeployerLib for MarketDeployer;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     address public override dao;
 
@@ -22,7 +24,8 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     SettlementTokenRegistry private _settlementTokenRegistry;
 
     MarketDeployer private _deployer;
-    mapping(address => mapping(address => address)) private _markets;
+    mapping(address => mapping(address => bool)) private _registered;
+    EnumerableSet.AddressSet _markets;
 
     error NotRegisteredOracleProvider();
     error NotRegisteredSettlementToken();
@@ -50,12 +53,20 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         emit SetKeeperFeePayer(keeperFeePayer);
     }
 
-    function getMarket(
-        address oracleProvider,
-        address settlementToken
-    ) external view override returns (address market) {
-        market = _markets[oracleProvider][settlementToken];
+    function getMarkets() external override view returns (address[] memory) {
+        return _markets.values();
     }
+
+    function isRegisteredMarket(address market) external override view returns (bool) {
+        return _markets.contains(market);
+    }
+
+    // function getMarket(
+    //     address oracleProvider,
+    //     address settlementToken
+    // ) external view override returns (address market) {
+    //     market = _registered[oracleProvider][settlementToken]
+    // }
 
     function createMarket(
         address oracleProvider,
@@ -67,12 +78,13 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         if (!_settlementTokenRegistry.isRegistered(settlementToken))
             revert NotRegisteredSettlementToken();
 
-        if (_markets[oracleProvider][settlementToken] != address(0))
+        if (_registered[oracleProvider][settlementToken])
             revert ExistMarket();
 
         address market = _deployer.deploy(oracleProvider, settlementToken);
 
-        _markets[oracleProvider][settlementToken] = market;
+        _registered[oracleProvider][settlementToken] = true;
+        _markets.add(market);
 
         emit MarketCreated(oracleProvider, settlementToken, market);
     }

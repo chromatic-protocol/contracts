@@ -12,15 +12,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ USUMRouter: ${routerAddress}`))
 
-  const { address: accountFactoryAddress } = await deploy("AccountFactory", {
-    from: deployer,
-    args: [routerAddress],
-  })
-  console.log(chalk.yellow(`✨ AccountFactory: ${accountFactoryAddress}`))
 
   const { address: marketFactoryAddress } = await deployments.get(
     "USUMMarketFactory"
   )
+
+
+  const { address: accountFactoryAddress } = await deploy("AccountFactory", {
+    from: deployer,
+    args: [routerAddress, marketFactoryAddress],
+  })
+  console.log(chalk.yellow(`✨ AccountFactory: ${accountFactoryAddress}`))
 
   const Router = await ethers.getContractFactory("USUMRouter")
   const router = Router.attach(routerAddress)

@@ -6,8 +6,7 @@ import {Position} from "@usum/core/libraries/Position.sol";
 
 interface IUSUMRouter is IUSUMLiquidityCallback {
     function openPosition(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         int224 qty,
         uint32 leverage,
         uint256 takerMargin,
@@ -17,15 +16,13 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
     ) external returns (Position memory);
 
     function closePosition(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         uint256 positionId,
         uint256 deadline
     ) external;
 
     function addLiquidity(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         int16 feeRate,
         uint256 amount,
         address recipient,
@@ -33,8 +30,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
     ) external returns (uint256 liquidity);
 
     function removeLiquidity(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         int16 feeRate,
         uint256 liquidity,
         uint256 amountMin,

@@ -9,7 +9,7 @@ interface IAccount is IUSUMTradeCallback {
 
     function withdraw(address quote, uint256 amount) external;
 
-    function initialize(address _owner, address _router) external;
+    function initialize(address _owner, address _router, address _marketFactory) external;
 
     // function transferMargin(
     //     uint256 marginRequired,

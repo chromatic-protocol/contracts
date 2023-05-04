@@ -14,7 +14,6 @@ import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
-import "hardhat/console.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
@@ -108,8 +107,6 @@ abstract contract Trade is MarketValue {
         // write position
         position.storeTo(positions[position.id]);
         // create keeper task
-        console.logString("openPosition");
-        console.log(address(liquidator));
         liquidator.createLiquidationTask(position.id);
 
         //TODO add event parameters
@@ -187,7 +184,7 @@ abstract contract Trade is MarketValue {
         lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
 
         transferMargin(takerMargin, recipient);
-
+        
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
         try
             IUSUMTradeCallback(position.owner).closePositionCallback(
@@ -195,12 +192,11 @@ abstract contract Trade is MarketValue {
                 position.id,
                 data
             )
-        {} catch {
-            if (msg.sender != address(liquidator)) {
+        {} catch (bytes memory e/*lowLevelData*/){
+            if(msg.sender != address(liquidator)){
                 revert ClosePositionCallbackError();
             }
         }
-
         delete positions[position.id];
 
         return takerMargin;
@@ -272,16 +268,9 @@ abstract contract Trade is MarketValue {
             block.timestamp
         );
 
-
-        console.log(uint256(oracleProvider.currentVersion().price));
-
         int256 realizedPnl = position.pnl(newLpContext()) -
                 interestFee.toInt256();        
         uint256 absRealizedPnl = realizedPnl.abs();
-        console.log("realizedPnl");
-        console.logInt(realizedPnl);
-        console.log('absRealizedPnl', absRealizedPnl);
-        console.log('position taker margin', position.takerMargin);
         if (realizedPnl > 0 && absRealizedPnl >= position.makerMargin()) {
             //profit stop (taker side)
             return true;

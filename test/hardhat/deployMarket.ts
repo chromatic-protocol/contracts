@@ -22,24 +22,24 @@ export async function deploy() {
     await (
       await marketFactory.registerSettlementToken(settlementToken.address)
     ).wait()
-
-    await (
+    
+    const marketCreateResult = await (
       await marketFactory.createMarket(
         oracleProvider.address,
         settlementToken.address
       )
     ).wait()
+    const marketCreatedEvents = await marketFactory.queryFilter(marketFactory.filters.MarketCreated())
+    const marketAddress = marketCreatedEvents[0].args.market;
+    console.log('market create result ', marketAddress);
 
-    const marketAddress = await marketFactory.getMarket(
-      oracleProvider.address,
-      settlementToken.address
-    )
+    
     const market = await ethers.getContractAt("USUMMarket", marketAddress)
 
     const usumRouter = await deployContract<USUMRouter>("USUMRouter")
     const accountFactory = await deployContract<AccountFactory>(
       "AccountFactory",
-      { args: [usumRouter.address] }
+      { args: [usumRouter.address, marketFactory.address] }
     )
 
     await (

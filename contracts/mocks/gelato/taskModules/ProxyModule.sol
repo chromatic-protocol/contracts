@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {TaskModuleBase} from "./TaskModuleBase.sol";
 import {IOpsProxy} from "../interfaces/IOpsProxy.sol";
 import {IOpsProxyFactory} from "../interfaces/IOpsProxyFactory.sol";
-import "hardhat/console.sol";
 
 contract ProxyModule is TaskModuleBase {
     IOpsProxyFactory public immutable opsProxyFactory;
@@ -95,19 +94,16 @@ contract ProxyModule is TaskModuleBase {
             : _encodeWithOpsProxy(_execAddress, _execData);
 
         _execAddress = proxy;
-        console.log('proxy pre execall', _execAddress);
         return (_execAddress, execData);
     }
 
     function _deployIfNoProxy(address _taskCreator) private {
-        console.logString('_deploy if no proxy');
         bool isTaskCreatorProxy = opsProxyFactory.ownerOf(_taskCreator) !=
             address(0);
 
         if (!isTaskCreatorProxy) {
             (, bool deployed) = opsProxyFactory.getProxyOf(_taskCreator);
             if (!deployed){
-                 console.log('deployFor ', _taskCreator);
                   opsProxyFactory.deployFor(_taskCreator);
             }
         }

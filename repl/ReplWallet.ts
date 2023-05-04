@@ -64,11 +64,10 @@ export class ReplWallet {
     )
     const router = IUSUMRouter__factory.connect(addresses.router, signer)
 
-    const marketAddress = await marketFactory.getMarket(
-      oracleProvider.address,
-      usdc.address
-    )
-    const market = IUSUMMarket__factory.connect(marketAddress, signer)
+    const marketAddress = await marketFactory.getMarkets()
+      
+
+    const market = IUSUMMarket__factory.connect(marketAddress[0], signer)
 
     const w = new ReplWallet(
       signer,

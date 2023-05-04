@@ -9,22 +9,24 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 contract AccountFactory is IAccountFactory {
     Account private cloneBase;
     address private router;
+    address private marketFactory;
     mapping(address => address) private accounts;
 
-    constructor(address _router) {
+    constructor(address _router, address _marketFactory) {
         cloneBase = new Account();
         router = _router;
+        marketFactory = _marketFactory;
     }
 
     modifier onlyRouter() {
-        require(msg.sender == router, 'Only Router can call');
+        require(msg.sender == router, "Only Router can call");
         _;
     }
 
     function createAccount() external {
         require(accounts[msg.sender] == address(0));
         Account newAccount = Account(Clones.clone(address(cloneBase)));
-        newAccount.initialize(msg.sender, router);
+        newAccount.initialize(msg.sender, router, marketFactory);
         accounts[msg.sender] = address(newAccount);
     }
 

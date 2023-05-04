@@ -18,8 +18,7 @@ export const prepareMarketTest = async () => {
     const feeSlotKey = _feeSlotKey ?? 1;
   
     const addLiqTx = await usumRouter.connect(tester).addLiquidity(
-      oracleProvider.address,
-      settlementToken.address,
+      market.address,
       feeSlotKey,
       amount,
       tester.address,

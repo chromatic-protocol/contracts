@@ -17,7 +17,6 @@ import {
     ITaskTreasuryUpgradable
 } from "./interfaces/ITaskTreasuryUpgradable.sol";
 import {IAutomate} from "./interfaces/IAutomate.sol";
-import 'hardhat/console.sol';
 /**
  * @notice Automate enables everyone to have Gelato monitor and execute transactions.
  * @notice ExecAddress refers to the contract that has the function which Gelato will call.

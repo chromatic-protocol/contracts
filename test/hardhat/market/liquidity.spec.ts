@@ -44,8 +44,7 @@ describe("market test", async function () {
     ).wait()
 
     const removeLiqTx = await usumRouter.connect(tester).removeLiquidity(
-      oracleProvider.address,
-      settlementToken.address,
+      market.address,
       feeSlotKey,
       removeLiqAmount,
       0, // amountMin

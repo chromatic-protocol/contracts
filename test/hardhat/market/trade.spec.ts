@@ -31,8 +31,7 @@ describe("position & account test", async () => {
     const takerMargin = ethers.utils.parseEther("100")
     const makerMargin = ethers.utils.parseEther("500")
     const openPositionTx = await traderRouter.openPosition(
-      oracleProvider.address,
-      settlementToken.address,
+      market.address,
       1,
       500,
       takerMargin, // losscut 1 token
@@ -74,8 +73,7 @@ describe("position & account test", async () => {
       settlementToken,
     } = testData
     const openPositionTx = await traderRouter.openPosition(
-      oracleProvider.address,
-      settlementToken.address,
+      market.address,
       -1,
       500,
       takerMargin, // losscut 1 token
