@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.12;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {TaskModuleBase} from "./TaskModuleBase.sol";
 import {IOpsProxy} from "../interfaces/IOpsProxy.sol";
@@ -88,13 +88,12 @@ contract ProxyModule is TaskModuleBase {
         bytes calldata _execData
     ) external view override returns (address, bytes memory execData) {
         (address proxy, ) = opsProxyFactory.getProxyOf(_taskCreator);
-
+        
         execData = _execAddress == proxy
             ? _execData
             : _encodeWithOpsProxy(_execAddress, _execData);
 
         _execAddress = proxy;
-
         return (_execAddress, execData);
     }
 
@@ -104,7 +103,9 @@ contract ProxyModule is TaskModuleBase {
 
         if (!isTaskCreatorProxy) {
             (, bool deployed) = opsProxyFactory.getProxyOf(_taskCreator);
-            if (!deployed) opsProxyFactory.deployFor(_taskCreator);
+            if (!deployed){
+                  opsProxyFactory.deployFor(_taskCreator);
+            }
         }
     }
 

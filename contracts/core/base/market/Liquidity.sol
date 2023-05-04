@@ -54,7 +54,9 @@ abstract contract Liquidity is LpToken, MarketValue {
         uint256 id = encodeId(tradingFeeRate);
 
         uint256 balanceBefore = balanceOf(address(this), id);
+        
         IUSUMLiquidityCallback(msg.sender).burnCallback(address(this), data);
+        
         uint256 liquidity = balanceOf(address(this), id) - balanceBefore;
         if (liquidity == 0) return 0;
 
@@ -62,12 +64,14 @@ abstract contract Liquidity is LpToken, MarketValue {
         // int256 tradingFeeRate,
         // uint256 amount,
         // uint256 totalLiquidity
+    
         amount = lpSlotSet.burn(
             newLpContext(),
             tradingFeeRate,
             liquidity,
             _totalSupply
         );
+
         SafeERC20.safeTransfer(address(settlementToken), recipient, amount);
         _burn(recipient, id, liquidity);
     }

@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.12;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {
     SafeERC20,
     IERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {_transfer, ETH} from "../../functions/FUtils.sol";
-
-// import "hardhat/console.sol";
 
 abstract contract Gelatofied {
     address payable public immutable gelato;

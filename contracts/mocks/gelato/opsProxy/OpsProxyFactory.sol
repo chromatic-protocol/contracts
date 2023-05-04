@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.12;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {
     Initializable
@@ -101,7 +101,6 @@ contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
 
         _proxyOf[owner] = proxy;
         _ownerOf[proxy] = owner;
-
         emit DeployProxy(msg.sender, owner, address(proxy));
     }
 

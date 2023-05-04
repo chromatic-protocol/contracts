@@ -1,6 +1,6 @@
 import { decodeResolverArgs, decodeResolverResponse, Module } from '@usum/test/hardhat/gelato/utils'
 import { hardhatErrorPrettyPrint } from '@usum/test/hardhat/utils'
-import { IERC20, LibEvents, Ops } from '@usum/typechain-types'
+import { IERC20, LibEvents, Automate } from '@usum/typechain-types'
 import { BigNumber, providers, Signer } from 'ethers'
 import { ethers } from 'hardhat'
 
@@ -19,25 +19,26 @@ interface Task {
 }
 
 export class Keeper {
-  private ops: Ops
+  private automate: Automate
   private provider: providers.JsonRpcProvider
   private tasks: Array<Task> = []
   private onStop: () => void = () => {}
 
   constructor(
-    ops: Ops,
+    automate: Automate,
     private readonly gelato: Signer,
     private readonly fee: BigNumber,
     private readonly feeToken: IERC20
   ) {
-    this.ops = ops.connect(this.gelato)
-    this.provider = ops.provider as providers.JsonRpcProvider
+    console.log('gelato connect address', this.gelato.getAddress())
+    this.automate = automate.connect(this.gelato)
+    this.provider = automate.provider as providers.JsonRpcProvider
   }
 
   async start() {
     this.provider.pollingInterval = 100
 
-    const opsEvents = await ethers.getContractAt('LibEvents', this.ops.address)
+    const opsEvents = await ethers.getContractAt('LibEvents', this.automate.address)
     this.onTaskCreated(opsEvents)
     this.onTaskCanceled(opsEvents)
 
@@ -55,6 +56,7 @@ export class Keeper {
 
   private onTaskCanceled(contract: LibEvents) {
     contract.on(contract.filters.TaskCancelled(), (_0, _1, event) => {
+
       const taskId = event.args.taskId
       this.tasks = this.tasks.filter((t) => t.taskId != taskId)
     })
@@ -78,7 +80,7 @@ export class Keeper {
     for (let i = 0; i < task.moduleData.modules.length; i++) {
       if (i == Module.RESOLVER) {
         const { resolverAddress, resolverData } = decodeResolverArgs(task.moduleData.args[i])
-
+     
         const result = decodeResolverResponse(
           await this.provider.call({
             to: resolverAddress,
@@ -94,7 +96,7 @@ export class Keeper {
     }
 
     await hardhatErrorPrettyPrint(async () => {
-      await this.ops.exec(
+      await this.automate.exec(
         task.taskCreator,
         task.execAddress,
         execDataOrSelector,

@@ -20,8 +20,8 @@ abstract contract Liquidator is IUSUMLiquidator {
             return;
         }
         ModuleData memory moduleData = ModuleData({
-            modules: new Module[](2),
-            args: new bytes[](2)
+            modules: new Module[](3),
+            args: new bytes[](3)
         });
 
         moduleData.modules[0] = Module.RESOLVER;

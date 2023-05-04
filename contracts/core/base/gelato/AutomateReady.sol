@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.14;
+pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Types.sol";
-
 /**
  * @dev Inherit this contract to allow your smart contract to
  * - Make synchronous fee payments.
@@ -32,10 +31,11 @@ abstract contract AutomateReady {
      * @dev
      * _taskCreator is the address which will create tasks for this contract.
      */
-    constructor(address _automate, address _taskCreator) {
+    constructor(address _automate, address _taskCreator, address opsProxyFactory) {
         automate = IAutomate(_automate);
         _gelato = IAutomate(_automate).gelato();
-        (dedicatedMsgSender, ) = IOpsProxyFactory(OPS_PROXY_FACTORY).getProxyOf(
+        if(opsProxyFactory == address(0)) opsProxyFactory = OPS_PROXY_FACTORY;
+        (dedicatedMsgSender, ) = IOpsProxyFactory(opsProxyFactory).getProxyOf(
             _taskCreator
         );
     }

@@ -12,11 +12,11 @@ contract OracleProviderMock is IOracleProvider {
 
     function increaseVersion(int256 price) public {
         latestVersion++;
-        oracleVersions[latestVersion] = OracleVersion(
-            latestVersion,
-            block.timestamp,
-            price
-        );
+        oracleVersions[latestVersion] = OracleVersion({
+            version:latestVersion,
+            timestamp:block.timestamp,
+            price:price
+        });
     }
 
     function syncVersion() external override returns (OracleVersion memory) {

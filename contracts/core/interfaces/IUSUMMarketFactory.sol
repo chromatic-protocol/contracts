@@ -25,14 +25,13 @@ interface IUSUMMarketFactory is
     function keeperFeePayer() external view returns (address);
 
     function setKeeperFeePayer(address keeperFeePayer) external;
-
-    function getMarket(
-        address oracleProvider,
-        address settlementToken
-    ) external view returns (address market);
+    
+    function getMarkets() external view returns (address[] memory market);
 
     function createMarket(
         address oracleProvider,
         address settlementToken
     ) external;
+
+    function isRegisteredMarket(address market) external view returns (bool);
 }

@@ -45,11 +45,16 @@ contract Account is IAccount, VerifyCallback {
         _;
     }
 
-    function initialize(address _owner, address _router) external {
+    function initialize(
+        address _owner,
+        address _router,
+        address _marketFactory
+    ) external {
         if (isInitialized) revert AlreadyInitialized();
         owner = _owner;
         router = _router;
         isInitialized = true;
+        marketFactory = _marketFactory;
     }
 
     function balance(address quote) public view returns (uint256) {
@@ -101,9 +106,7 @@ contract Account is IAccount, VerifyCallback {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
     ) external onlyRouter returns (Position memory position) {
-        _prepareMarket(marketAddress);
-
-        position = IUSUMMarket(marketAddress).openPosition(
+        Position memory position = IUSUMMarket(marketAddress).openPosition(
             qty,
             leverage,
             takerMargin,
@@ -121,8 +124,6 @@ contract Account is IAccount, VerifyCallback {
         if (!hasPositionId(marketAddress, positionId))
             revert NotExistPosition();
 
-        _prepareMarket(marketAddress);
-
         IUSUMMarket(marketAddress).closePosition(
             positionId,
             address(this),
@@ -139,19 +140,17 @@ contract Account is IAccount, VerifyCallback {
             data,
             (OpenPositionCallbackData)
         );
-        IAccount traderAccount = IAccount(callbackData.trader);
-        traderAccount.transferMargin(
-            marginRequired,
-            msg.sender,
-            settlementToken
-        );
+
+        if (balance(settlementToken) < marginRequired)
+            revert NotEnoughBalance();
+
+        SafeERC20.safeTransfer(settlementToken, msg.sender, marginRequired);
     }
 
     function closePositionCallback(
-        address marketAddress,
         uint256 positionId,
         bytes calldata data
     ) external override verifyCallback {
-        removePositionId(marketAddress, positionId);
+        removePositionId(msg.sender, positionId);
     }
 }

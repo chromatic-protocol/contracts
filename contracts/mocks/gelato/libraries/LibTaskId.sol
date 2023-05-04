@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {LibDataTypes} from "./LibDataTypes.sol";
 
@@ -8,8 +8,6 @@ import {LibDataTypes} from "./LibDataTypes.sol";
  */
 // solhint-disable max-line-length
 library LibTaskId {
-    address internal constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     /**
      * @notice Returns taskId of taskCreator.
      * @notice To maintain the taskId of legacy tasks, if
@@ -29,8 +27,6 @@ library LibTaskId {
         LibDataTypes.ModuleData memory moduleData,
         address feeToken
     ) internal pure returns (bytes32 taskId) {
-        feeToken = ETH; // feeToken is fixed to ETH in mock version
-
         if (_shouldGetLegacyTaskId(moduleData.modules)) {
             bytes32 resolverHash = _getResolverHash(moduleData.args[0]);
 
@@ -91,9 +87,11 @@ library LibTaskId {
      * @dev For legacy tasks, resolvers are compulsory. Time tasks were also introduced.
      * The sequence of Module is enforced in {LibTaskModule-_validModules}
      */
-    function _shouldGetLegacyTaskId(
-        LibDataTypes.Module[] memory _modules
-    ) private pure returns (bool) {
+    function _shouldGetLegacyTaskId(LibDataTypes.Module[] memory _modules)
+        private
+        pure
+        returns (bool)
+    {
         uint256 length = _modules.length;
 
         if (
@@ -111,9 +109,11 @@ library LibTaskId {
      *
      * @param _resolverModuleArg Encoded value of resolverAddress and resolverData
      */
-    function _getResolverHash(
-        bytes memory _resolverModuleArg
-    ) private pure returns (bytes32) {
+    function _getResolverHash(bytes memory _resolverModuleArg)
+        private
+        pure
+        returns (bytes32)
+    {
         return keccak256(_resolverModuleArg);
     }
 }

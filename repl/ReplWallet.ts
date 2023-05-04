@@ -64,11 +64,10 @@ export class ReplWallet {
     )
     const router = IUSUMRouter__factory.connect(addresses.router, signer)
 
-    const marketAddress = await marketFactory.getMarket(
-      oracleProvider.address,
-      usdc.address
-    )
-    const market = IUSUMMarket__factory.connect(marketAddress, signer)
+    const marketAddress = await marketFactory.getMarkets()
+      
+
+    const market = IUSUMMarket__factory.connect(marketAddress[0], signer)
 
     const w = new ReplWallet(
       signer,
@@ -160,8 +159,7 @@ export class ReplWallet {
     const _makerMargin = parseUnits(makerMargin.toString(), decimals)
 
     await this.USUMRouter.openPosition(
-      this.OracleProvider.address,
-      this.USDC.address,
+      this.USUMMarket.address,
       parseUnits(qty.toString(), QTY_DECIMALS),
       parseUnits(leverage.toString(), LEVERAGE_DECIMALS),
       _takerMargin,
@@ -173,8 +171,7 @@ export class ReplWallet {
 
   async closePosition(positionId: number) {
     await this.USUMRouter.closePosition(
-      this.OracleProvider.address,
-      this.USDC.address,
+      this.USUMMarket.address,
       BigNumber.from(positionId),
       deadline()
     )
@@ -183,8 +180,7 @@ export class ReplWallet {
   async addLiquidity(feeRate: number, amount: number) {
     const decimals = await this.USDC.decimals()
     await this.USUMRouter.addLiquidity(
-      this.OracleProvider.address,
-      this.USDC.address,
+      this.USUMMarket.address,
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(amount.toString(), decimals),
       this.address,
@@ -195,8 +191,7 @@ export class ReplWallet {
   async removeLiquidity(feeRate: number, liquidity: number, amountMin: number) {
     const decimals = await this.USDC.decimals()
     await this.USUMRouter.removeLiquidity(
-      this.OracleProvider.address,
-      this.USDC.address,
+      this.USUMMarket.address,
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(liquidity.toString(), decimals),
       parseUnits(amountMin.toString(), decimals),

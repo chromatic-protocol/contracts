@@ -1,23 +1,55 @@
-import { BigNumber } from "ethers"
-import { ethers } from "hardhat"
-import { logDeployed } from "../log-utils"
-import { USUMMarketFactory } from "@usum/typechain-types"
-import { Contract } from "ethers"
-import { deployContract } from "../utils"
 import {
-  OracleProviderRegistry,
   KeeperFeePayerMock,
-  USUMLiquidator,
-  LpSlotSetLib,
+  USUMLiquidator, USUMMarketFactory
 } from "@usum/typechain-types"
+import { Contract } from "ethers"
+import { ethers } from "hardhat"
+import { deployContract } from "../utils"
 
-export async function deploy(opsAddress: string) {
+export async function deploy(opsAddress: string, opsProxyFactory: string) {
   const [deployer] = await ethers.getSigners()
 
-  const oracleProviderRegistry = await deployContract<OracleProviderRegistry>("OracleProviderRegistry")
-  const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
-    "KeeperFeePayerMock"
+  
+
+
+  const liquidator = await deployContract<USUMLiquidator>("USUMLiquidator", {
+    args: [opsAddress,opsProxyFactory],
+  })
+
+  const oracleProviderRegistryLib =
+    await deployContract<Contract>("OracleProviderRegistryLib")
+  const settlementTokenRegistryLib =
+    await deployContract<Contract>(
+      "SettlementTokenRegistryLib"
+    )
+
+  const lpSlotSetLib = await deployContract<Contract>("LpSlotSetLib")
+  const marketDeployerLib = await deployContract<Contract>(
+    "MarketDeployerLib",
+    {
+      libraries: {
+        LpSlotSetLib: lpSlotSetLib.address,
+      },
+    }
   )
+
+  const marketFactory = await deployContract<USUMMarketFactory>(
+    "USUMMarketFactory",
+    {
+      args: [liquidator.address],
+      libraries: {
+        OracleProviderRegistryLib: oracleProviderRegistryLib.address,
+        SettlementTokenRegistryLib: settlementTokenRegistryLib.address,
+        MarketDeployerLib: marketDeployerLib.address,
+      },
+    }
+  )
+
+  const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
+    "KeeperFeePayerMock",
+    {args: [marketFactory.address]}
+  )
+  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.address)).wait()
   await (
     await deployer.sendTransaction({
       to: keeperFeePayer.address,
@@ -25,23 +57,7 @@ export async function deploy(opsAddress: string) {
     })
   ).wait()
 
-  const liquidator = await deployContract<USUMLiquidator>("USUMLiquidator", {
-    args: [opsAddress],
-  })
-
-  const lpSlotSetLib = await deployContract<LpSlotSetLib>("LpSlotSetLib")
-
-  const marketFactory = await deployContract<USUMMarketFactory>(
-    "USUMMarketFactory",
-    {
-      args: [
-        oracleProviderRegistry.address,
-        keeperFeePayer.address,
-        liquidator.address,
-      ],
-      libraries: { LpSlotSetLib: lpSlotSetLib.address },
-    }
-  )
-
-  return { oracleProviderRegistry, marketFactory, keeperFeePayer, liquidator }
+  return { marketFactory, keeperFeePayer, liquidator }
+  
 }
+

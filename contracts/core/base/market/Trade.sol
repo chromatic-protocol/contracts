@@ -82,6 +82,7 @@ abstract contract Trade is MarketValue {
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
+
         if (tradingFee > maxAllowableTradingFee) {
             revert ExceedMaxAllowableTradingFee();
         }
@@ -183,20 +184,18 @@ abstract contract Trade is MarketValue {
         lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
 
         transferMargin(takerMargin, recipient);
-
+        
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
         try
             IUSUMTradeCallback(position.owner).closePositionCallback(
-                address(this),
                 position.id,
                 data
             )
-        {} catch {
-            if (msg.sender != address(liquidator)) {
+        {} catch (bytes memory e/*lowLevelData*/){
+            if(msg.sender != address(liquidator)){
                 revert ClosePositionCallbackError();
             }
         }
-
         delete positions[position.id];
 
         return takerMargin;
@@ -269,7 +268,7 @@ abstract contract Trade is MarketValue {
         );
 
         int256 realizedPnl = position.pnl(newLpContext()) -
-            interestFee.toInt256();
+                interestFee.toInt256();        
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0 && absRealizedPnl >= position.makerMargin()) {
             //profit stop (taker side)

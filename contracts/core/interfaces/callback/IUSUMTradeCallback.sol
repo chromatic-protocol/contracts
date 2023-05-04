@@ -10,7 +10,6 @@ interface IUSUMTradeCallback {
     ) external;
 
     function closePositionCallback(
-        address marketAddress,
         uint256 positionId,
         bytes calldata data
     ) external;

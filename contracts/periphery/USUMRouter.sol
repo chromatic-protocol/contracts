@@ -7,11 +7,13 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
-import {AccountFactory} from "./AccountFactory.sol";
-import {Account} from "./Account.sol";
+import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
+import {Account} from "@usum/periphery/Account.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -23,11 +25,11 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     struct BurnCallbackData {
         address payer;
+        uint256 tokenId;
         uint256 liquidity;
     }
 
     AccountFactory accountFactory;
-    IUSUMMarketFactory marketFactory;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, "TradeRouter: EXPIRED");
@@ -36,7 +38,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     function initialize(
         AccountFactory _accountFactory,
-        IUSUMMarketFactory _marketFactory
+        address _marketFactory
     ) external onlyOwner {
         accountFactory = _accountFactory;
         marketFactory = _marketFactory;
@@ -66,17 +68,17 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             data,
             (BurnCallbackData)
         );
-        SafeERC20.safeTransferFrom(
-            lpToken,
+        IERC1155(lpToken).safeTransferFrom(
             callbackData.payer,
             msg.sender,
-            callbackData.liquidity
+            callbackData.tokenId,
+            callbackData.liquidity,
+            bytes("")
         );
     }
 
     function openPosition(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         int224 qty,
         uint32 leverage,
         uint256 takerMargin,
@@ -84,47 +86,32 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 maxAllowableTradingFee,
         uint256 deadline
     ) external ensure(deadline) returns (Position memory) {
-        address market = marketFactory.getMarket(
-            oracleProvider,
-            settlementToken
+        _getAccount(msg.sender).openPosition(
+            market,
+            qty,
+            leverage,
+            takerMargin,
+            makerMargin,
+            maxAllowableTradingFee
         );
-        return
-            _getAccount(msg.sender).openPosition(
-                market,
-                qty,
-                leverage,
-                takerMargin,
-                makerMargin,
-                maxAllowableTradingFee
-            );
     }
 
     function closePosition(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         uint256 positionId,
         uint256 deadline
     ) external ensure(deadline) {
-        address market = marketFactory.getMarket(
-            oracleProvider,
-            settlementToken
-        );
         _getAccount(msg.sender).closePosition(market, positionId);
     }
 
     function addLiquidity(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         int16 feeRate,
         uint256 amount,
         address recipient,
         uint256 deadline
     ) external ensure(deadline) returns (uint256 liquidity) {
-        address market = marketFactory.getMarket(
-            oracleProvider,
-            settlementToken
-        );
-        _prepareMarket(address(market));
+    
         liquidity = IUSUMMarket(market).mint(
             recipient,
             feeRate,
@@ -133,27 +120,30 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     }
 
     function removeLiquidity(
-        address oracleProvider,
-        address settlementToken,
+        address market,
         int16 feeRate,
         uint256 liquidity,
         uint256 amountMin,
         address recipient,
         uint256 deadline
     ) external ensure(deadline) returns (uint256 amount) {
-        address market = marketFactory.getMarket(
-            oracleProvider,
-            settlementToken
-        );
-        _prepareMarket(address(market));
+    
         amount = IUSUMMarket(market).burn(
             recipient,
             feeRate,
             abi.encode(
-                BurnCallbackData({payer: msg.sender, liquidity: liquidity})
+                BurnCallbackData({
+                    payer: msg.sender,
+                    tokenId: LpTokenLib.encodeId(feeRate),
+                    liquidity: liquidity
+                })
             )
         );
         require(amount >= amountMin, "TradeRouter: insufficient amount");
+    }
+
+    function getAccount() external view returns (address) {
+        return accountFactory.getAccount(msg.sender);
     }
 
     function _getAccount(address owner) internal view returns (Account) {

@@ -16,6 +16,9 @@ out/*
 # coverage output
 lcov.info
 
+
 # packaging
 dist/
 package-build/
+
+.vsls.json

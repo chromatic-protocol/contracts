@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 
 abstract contract VerifyCallback {
     error NotMarket();
 
-    address private _callbackMarketAddressInTx;
+    address marketFactory;
 
     modifier verifyCallback() {
-        address marketAddress = _callbackMarketAddressInTx;
-        delete _callbackMarketAddressInTx;
-        if (msg.sender != marketAddress) revert NotMarket();
+        if (!IUSUMMarketFactory(marketFactory).isRegisteredMarket(msg.sender)) revert NotMarket();
         _;
-    }
-
-    function _prepareMarket(address marketAddress) internal {
-        _callbackMarketAddressInTx = marketAddress;
     }
 }

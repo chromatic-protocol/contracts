@@ -9,7 +9,7 @@ import {
   Module,
   ModuleData
 } from '@usum/test/hardhat/gelato/utils'
-import { CounterResolver, CounterWL, IERC20Metadata, Ops, OpsProxy, Token } from '@usum/typechain-types'
+import { CounterResolver, CounterWL, IERC20Metadata, Automate, OpsProxy, Token } from '@usum/typechain-types'
 import { Signer } from '@ethersproject/abstract-signer'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect, use } from 'chai'
@@ -26,7 +26,7 @@ async function fixture() {
     // const { fETH } = await deployFakeTokens()
     const factory = await ethers.getContractFactory('Token')
     const fETH = await factory.deploy('eth','ETH') as Token; 
-    const { gelato, taskTreasury, opsProxyFactory, ops } = await deploy()
+    const { gelato, taskTreasury, opsProxyFactory, automate } = await deploy()
 
     const counter = await (await ethers.getContractFactory('CounterWL')).deploy()
     const counterResolver = await (
@@ -61,17 +61,17 @@ async function fixture() {
       taskTreasury,
       opsProxyFactory,
       opsProxy,
-      ops,
+      automate,
       counter,
       counterResolver
     }
   })
 }
 
-describe('Ops multi module test', function () {
+describe('Automate multi module test', function () {
   let gelato: Signer
   let fETH: IERC20Metadata
-  let ops: Ops
+  let automate: Automate
   let counter: CounterWL
   let counterResolver: CounterResolver
   let opsProxy: OpsProxy
@@ -87,7 +87,7 @@ describe('Ops multi module test', function () {
   let startTime: number
 
   beforeEach(async function () {
-    ;({ gelato, user, userAddress, fETH, opsProxy, ops, counter, counterResolver } =
+    ;({ gelato, user, userAddress, fETH, opsProxy, ops: automate, counter, counterResolver } =
       await loadFixture(fixture))
 
     // create task
@@ -104,14 +104,14 @@ describe('Ops multi module test', function () {
 
     taskId = getTaskId(userAddress, counter.address, execSelector, moduleData, fETH.address)
 
-    await ops.connect(user).createTask(counter.address, execSelector, moduleData, fETH.address)
+    await automate.connect(user).createTask(counter.address, execSelector, moduleData, fETH.address)
 
     // whitelist proxy on counter
     expect(await counter.whitelisted(opsProxy.address)).to.be.true
   })
 
   it('getTaskId', async () => {
-    const thisTaskId = await ops['getTaskId(address,address,bytes4,(uint8[],bytes[]),address)'](
+    const thisTaskId = await automate['getTaskId(address,address,bytes4,(uint8[],bytes[]),address)'](
       userAddress,
       counter.address,
       execSelector,
@@ -125,12 +125,12 @@ describe('Ops multi module test', function () {
   })
 
   it('task created', async () => {
-    const taskIds = await ops.getTaskIdsByUser(userAddress)
+    const taskIds = await automate.getTaskIdsByUser(userAddress)
     expect(taskIds).include(taskId)
   })
 
   it('time initialised', async () => {
-    const time = await ops.timedTask(taskId)
+    const time = await automate.timedTask(taskId)
 
     expect(time.nextExec).to.be.eql(ethers.BigNumber.from(startTime))
     expect(time.interval).to.be.eql(ethers.BigNumber.from(INTERVAL))
@@ -143,8 +143,8 @@ describe('Ops multi module test', function () {
     }
 
     await expect(
-      ops.connect(user).createTask(counter.address, execSelector, moduleData, fETH.address)
-    ).to.be.revertedWith('Ops._validModules: Asc only')
+      automate.connect(user).createTask(counter.address, execSelector, moduleData, fETH.address)
+    ).to.be.revertedWith('Automate._validModules: Asc only')
   })
 
   it('duplicate modules', async () => {
@@ -154,17 +154,17 @@ describe('Ops multi module test', function () {
     }
 
     await expect(
-      ops.connect(user).createTask(counter.address, execSelector, moduleData, fETH.address)
-    ).to.be.revertedWith('Ops._validModules: Asc only')
+      automate.connect(user).createTask(counter.address, execSelector, moduleData, fETH.address)
+    ).to.be.revertedWith('Automate._validModules: Asc only')
   })
 
   it('no modules', async () => {
-    await counter.setWhitelist(ops.address, true)
-    expect(await counter.whitelisted(ops.address)).to.be.true
+    await counter.setWhitelist(automate.address, true)
+    expect(await counter.whitelisted(automate.address)).to.be.true
     moduleData = { modules: [], args: [] }
     const execData = counter.interface.encodeFunctionData('increaseCount', [10])
 
-    await ops.connect(user).createTask(counter.address, execData, moduleData, fETH.address)
+    await automate.connect(user).createTask(counter.address, execData, moduleData, fETH.address)
 
     const countBefore = await counter.count()
 
@@ -175,7 +175,7 @@ describe('Ops multi module test', function () {
   })
 
   it('exec - time should revert', async () => {
-    await expect(execute(true)).to.be.revertedWith('Ops.preExecCall: TimeModule: Too early')
+    await expect(execute(true)).to.be.revertedWith('Automate.preExecCall: TimeModule: Too early')
   })
 
   it('exec', async () => {
@@ -187,10 +187,10 @@ describe('Ops multi module test', function () {
     const countAfter = await counter.count()
     expect(countAfter).to.be.gt(countBefore)
 
-    const time = await ops.timedTask(taskId)
+    const time = await automate.timedTask(taskId)
     expect(time.nextExec).to.be.eql(ethers.BigNumber.from(0))
 
-    const taskIds = await ops.getTaskIdsByUser(userAddress)
+    const taskIds = await automate.getTaskIdsByUser(userAddress)
     expect(taskIds).to.not.include(taskId)
   })
 
@@ -198,7 +198,7 @@ describe('Ops multi module test', function () {
     await hardhatErrorPrettyPrint(async () => {
       const [, execData] = await counterResolver.checker()
 
-      await ops
+      await automate
         .connect(gelato)
         .exec(
           userAddress,
