@@ -4,6 +4,9 @@ import { deploy as marketFactoryDeploy } from "./market_factory/deploy"
 import { deploy as oracleProviderDeploy } from "./oracle_provider/deploy"
 import { deployContract, hardhatErrorPrettyPrint } from "./utils"
 import { Token, AccountFactory, USUMRouter } from "../../typechain-types"
+import { BigNumber } from "ethers"
+import { parseUnits } from "ethers/lib/utils"
+import { USDC_ARBITRUM_GOERLI } from "@uniswap/smart-order-router"
 
 export async function deploy() {
   return hardhatErrorPrettyPrint(async () => {
@@ -20,7 +23,12 @@ export async function deploy() {
     ).wait()
 
     await (
-      await marketFactory.registerSettlementToken(settlementToken.address)
+      await marketFactory.registerSettlementToken(settlementToken.address,
+        parseUnits("10", USDC_ARBITRUM_GOERLI.decimals), // minimumTakerMargin
+        BigNumber.from("1000"), // interestRate, 10%
+        BigNumber.from("500"), // flashLoanFeeRate, 5%
+        BigNumber.from("3000"), // uniswapFeeRate, 0.3%)
+      )
     ).wait()
     
     const marketCreateResult = await (

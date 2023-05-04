@@ -1,43 +1,30 @@
-import { BigNumber } from "ethers"
-import { ethers } from "hardhat"
-import { logDeployed } from "../log-utils"
-import { USUMMarketFactory } from "@usum/typechain-types"
-import { deployContract } from "../utils"
 import {
-  OracleProviderRegistryLib,
-  SettlementTokenRegistryLib,
-  MarketDeployerLib,
   KeeperFeePayerMock,
-  USUMLiquidator,
-  LpSlotSetLib,
+  USUMLiquidator, USUMMarketFactory
 } from "@usum/typechain-types"
+import { Contract } from "ethers"
+import { ethers } from "hardhat"
+import { deployContract } from "../utils"
 
 export async function deploy(opsAddress: string, opsProxyFactory: string) {
   const [deployer] = await ethers.getSigners()
 
-  const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
-    "KeeperFeePayerMock"
-  )
-  await (
-    await deployer.sendTransaction({
-      to: keeperFeePayer.address,
-      value: ethers.utils.parseEther("5"),
-    })
-  ).wait()
+  
+
 
   const liquidator = await deployContract<USUMLiquidator>("USUMLiquidator", {
     args: [opsAddress,opsProxyFactory],
   })
 
   const oracleProviderRegistryLib =
-    await deployContract<OracleProviderRegistryLib>("OracleProviderRegistryLib")
+    await deployContract<Contract>("OracleProviderRegistryLib")
   const settlementTokenRegistryLib =
-    await deployContract<SettlementTokenRegistryLib>(
+    await deployContract<Contract>(
       "SettlementTokenRegistryLib"
     )
 
-  const lpSlotSetLib = await deployContract<LpSlotSetLib>("LpSlotSetLib")
-  const marketDeployerLib = await deployContract<MarketDeployerLib>(
+  const lpSlotSetLib = await deployContract<Contract>("LpSlotSetLib")
+  const marketDeployerLib = await deployContract<Contract>(
     "MarketDeployerLib",
     {
       libraries: {
@@ -49,7 +36,7 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
   const marketFactory = await deployContract<USUMMarketFactory>(
     "USUMMarketFactory",
     {
-      args: [liquidator.address,keeperFeePayer.address],
+      args: [liquidator.address],
       libraries: {
         OracleProviderRegistryLib: oracleProviderRegistryLib.address,
         SettlementTokenRegistryLib: settlementTokenRegistryLib.address,
@@ -58,5 +45,19 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
     }
   )
 
+  const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
+    "KeeperFeePayerMock",
+    {args: [marketFactory.address]}
+  )
+  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.address)).wait()
+  await (
+    await deployer.sendTransaction({
+      to: keeperFeePayer.address,
+      value: ethers.utils.parseEther("5"),
+    })
+  ).wait()
+
   return { marketFactory, keeperFeePayer, liquidator }
+  
 }
+
