@@ -11,9 +11,9 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
-import {AccountFactory} from "./AccountFactory.sol";
-import {Account} from "./Account.sol";
-import "hardhat/console.sol";
+import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
+import {Account} from "@usum/periphery/Account.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -156,8 +156,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             abi.encode(
                 BurnCallbackData({
                     payer: msg.sender,
-                    liquidity: liquidity,
-                    tokenId: encodeId(feeRate)
+                    tokenId: LpTokenLib.encodeId(feeRate),
+                    liquidity: liquidity
                 })
             )
         );
