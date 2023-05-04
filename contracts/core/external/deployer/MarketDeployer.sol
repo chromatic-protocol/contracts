@@ -14,14 +14,6 @@ struct Parameters {
 
 library MarketDeployerLib {
 
-    // do not move
-    // to generate abi and typechain-types
-    event MarketDeployed(
-        address oracleProvider,
-        address settlementToken,
-        address market
-    );
-
     function deploy(
         MarketDeployer storage self,
         address oracleProvider,
@@ -36,7 +28,6 @@ library MarketDeployerLib {
                 salt: keccak256(abi.encode(oracleProvider, settlementToken))
             }()
         );
-        emit MarketDeployed(oracleProvider, settlementToken, market);
         delete self.parameters;
     }
 }
