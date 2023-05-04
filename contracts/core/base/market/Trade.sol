@@ -18,40 +18,6 @@ abstract contract Trade is MarketValue {
     using SafeCast for uint256;
     using SignedMath for int256;
 
-    error ZeroTargetAmount();
-    error TooSmallTakerMargin();
-
-    error InvalidProfitStop();
-    error InvalidLossCut();
-    error LossCutNotRequired();
-    error InvalidLeverage();
-    error InvalidBasis();
-
-    error NotEnoughMarginTransfered();
-    error NotExistPosition();
-    error NotPermitted();
-    error ExceedMaxAllowableTradingFee();
-
-    error ClosePositionCallbackError();
-
-    event OpenPosition();
-    event ClosePosition();
-
-    struct ClosePositionInfo {
-        int256 takerPosition;
-        uint256 exitPrice;
-        int256 takerPnl;
-        uint256 totalFee;
-        address recipient;
-    }
-
-    // constants
-    // uint32 public constant MIN_LEVERAGE_BPS = uint32(BPS);
-    // uint32 public constant MAX_LEVERAGE_BPS = 1000 * uint32(BPS);
-
-    // uint16 public constant MIN_PROFITSTOP_BPS = 1; // 0.01%
-    // uint16 public constant MAX_PROFITSTOP_BPS = type(uint16).max; // uint16(BPS); // 100%
-
     uint256 internal _positionId;
 
     function openPosition(
@@ -108,8 +74,8 @@ abstract contract Trade is MarketValue {
         // create keeper task
         liquidator.createLiquidationTask(position.id);
 
-        //TODO add event parameters
-        emit OpenPosition();
+        emit OpenPosition(position.owner, position.settleVersion(), position);
+        // emit OpenPosition(msg.sender, position.id, position.settleVersion(), qty, leverage);
         return position;
     }
 
@@ -129,8 +95,6 @@ abstract contract Trade is MarketValue {
             recipient,
             data
         );
-
-        emit ClosePosition();
     }
 
     function _closePosition(
@@ -193,10 +157,15 @@ abstract contract Trade is MarketValue {
         delete positions[position.id];
 
         liquidator.cancelLiquidationTask(position.id);
-
+        emit ClosePosition(
+            position.owner,
+            position.oracleVersion,
+            position,
+            realizedPnl
+        );
         return takerMargin;
     }
-
+    
     function getProtocolFee(uint256 margin) public view returns (uint16) {
         // returns (protocolFeeRate)
         // FIXME: TBA
@@ -237,6 +206,7 @@ abstract contract Trade is MarketValue {
             position.takerMargin
         );
         _closePosition(position, usedKeeperFee, position.owner, bytes(""));
+        emit Liquidate(positionId, usedKeeperFee);
     }
 
     function checkLiquidation(uint256 positionId) public view returns (bool) {

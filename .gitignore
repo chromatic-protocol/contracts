@@ -21,4 +21,5 @@ lcov.info
 dist/
 package-build/
 
+.idea
 .vsls.json

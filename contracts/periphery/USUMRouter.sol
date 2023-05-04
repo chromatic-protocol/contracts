@@ -44,7 +44,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         marketFactory = _marketFactory;
     }
 
-    function mintCallback(
+    function addLiquidityCallback(
         address settlementToken,
         address vault,
         bytes calldata data
@@ -61,7 +61,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         );
     }
 
-    function burnCallback(
+    function removeLiquidityCallback(
         address lpToken,
         bytes calldata data
     ) external verifyCallback {
@@ -113,7 +113,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 deadline
     ) external ensure(deadline) returns (uint256 liquidity) {
     
-        liquidity = IUSUMMarket(market).mint(
+        liquidity = IUSUMMarket(market).addLiquidity(
             recipient,
             feeRate,
             abi.encode(MintCallbackData({payer: msg.sender, amount: amount}))
@@ -129,7 +129,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 deadline
     ) external ensure(deadline) returns (uint256 amount) {
     
-        amount = IUSUMMarket(market).burn(
+        amount = IUSUMMarket(market).removeLiquidity(
             recipient,
             feeRate,
             abi.encode(
