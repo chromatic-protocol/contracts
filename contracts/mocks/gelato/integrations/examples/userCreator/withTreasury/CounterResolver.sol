@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0 <0.9.0;
 
 interface ICounter {
     function increaseCount(uint256 amount) external;

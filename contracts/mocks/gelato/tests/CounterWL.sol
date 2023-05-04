@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity >=0.8.0 <0.9.0;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
-import "hardhat/console.sol";
 
 // solhint-disable not-rely-on-time
 contract CounterWL is Ownable {
@@ -12,7 +10,6 @@ contract CounterWL is Ownable {
     mapping(address => bool) public whitelisted;
 
     modifier onlyWhitelisted() {
-        console.log("onlyWhitelisted: msg.sender=%s", msg.sender);
         require(
             whitelisted[msg.sender] || msg.sender == owner(),
             "Counter: Not whitelisted"
@@ -21,7 +18,6 @@ contract CounterWL is Ownable {
     }
 
     function increaseCount(uint256 amount) external onlyWhitelisted {
-        console.log("increaseCount: %s", amount);
         require(
             ((block.timestamp - lastExecuted) > 180),
             "Counter: increaseCount: Time not elapsed"
@@ -31,10 +27,10 @@ contract CounterWL is Ownable {
         lastExecuted = block.timestamp;
     }
 
-    function setWhitelist(
-        address _account,
-        bool _whitelist
-    ) external onlyOwner {
+    function setWhitelist(address _account, bool _whitelist)
+        external
+        onlyOwner
+    {
         whitelisted[_account] = _whitelist;
     }
 }

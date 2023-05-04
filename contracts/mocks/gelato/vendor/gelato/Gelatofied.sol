@@ -7,8 +7,6 @@ import {
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {_transfer, ETH} from "../../functions/FUtils.sol";
 
-// import "hardhat/console.sol";
-
 abstract contract Gelatofied {
     address payable public immutable gelato;
 

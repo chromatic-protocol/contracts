@@ -1,6 +1,6 @@
 import { Module } from "@usum/test/hardhat/gelato/utils"
 import { logDeployed } from "@usum/test/hardhat/log-utils"
-import { Ops, OpsProxy, TaskTreasuryUpgradable } from "@usum/typechain-types"
+import { Automate, OpsProxy, TaskTreasuryUpgradable } from "@usum/typechain-types"
 import { deployments, ethers, getNamedAccounts } from "hardhat"
 import { OpsProxyFactory } from "@usum/typechain-types/contracts/mocks/gelato/opsProxy/OpsProxyFactory"
 
@@ -39,26 +39,26 @@ async function deployTaskTreasury(
 async function deployOps(
   gelato: string,
   taskTreasury: TaskTreasuryUpgradable
-): Promise<Ops> {
+): Promise<Automate> {
   const { deployer } = await getNamedAccounts()
-  const { address } = await deployments.deploy("Ops", {
+  const { address } = await deployments.deploy("Automate", {
     from: deployer,
     proxy: { owner: deployer },
     args: [gelato, taskTreasury.address],
   })
-  const ops = await ethers.getContractAt("Ops", address)
-  logDeployed("Ops", ops.address)
+  const ops = await ethers.getContractAt("Automate", address)
+  logDeployed("Automate", ops.address)
   return ops
 }
 
-async function deployOpsProxy(ops: Ops): Promise<OpsProxy> {
+async function deployOpsProxy(ops: Automate): Promise<OpsProxy> {
   const factory = await ethers.getContractFactory("OpsProxy")
   const opsProxy = await factory.deploy(ops.address)
   logDeployed("OpsProxy", opsProxy.address)
   return opsProxy
 }
 async function deployOpsProxyFactory(
-  ops: Ops,
+  automate: Automate,
   opsProxy: OpsProxy
 ): Promise<OpsProxyFactory> {
   const { deployer } = await getNamedAccounts()
@@ -74,7 +74,7 @@ async function deployOpsProxyFactory(
         },
       },
     },
-    args: [ops.address],
+    args: [automate.address],
   })
   const opsProxyFactory = await ethers.getContractAt("OpsProxyFactory", address)
   logDeployed("OpsProxyFactory", opsProxyFactory.address)
