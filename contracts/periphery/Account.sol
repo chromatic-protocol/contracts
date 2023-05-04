@@ -6,7 +6,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
-import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {IAccount} from "@usum/periphery/interfaces/IAccount.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";

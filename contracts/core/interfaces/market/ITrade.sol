@@ -6,19 +6,12 @@ interface ITrade {
 
     error ZeroTargetAmount();
     error TooSmallTakerMargin();
-
-    error InvalidProfitStop();
-    error InvalidLossCut();
-    error LossCutNotRequired();
-    error InvalidLeverage();
-    error InvalidBasis();
-
     error NotEnoughMarginTransfered();
     error NotExistPosition();
     error NotPermitted();
     error ExceedMaxAllowableTradingFee();
-
     error ClosePositionCallbackError();
+    
     event OpenPosition(address indexed account, uint256 oracleVersion, Position position);
     event ClosePosition(address indexed account, uint256 oracleVersion, Position position, int256 realizedPnl);
     event TransferProtocolFee(uint256 positionId, uint256 amount);

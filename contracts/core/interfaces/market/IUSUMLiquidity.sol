@@ -2,13 +2,28 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 interface IUSUMLiquidity {
-    function mint(
+    event AddLiquidity(
+        address indexed recipient,
+        int16 indexed tradingFeeRate,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 liquidity
+    );
+    event RemoveLiquidity(
+        address indexed recipient,
+        int16 indexed tradingFeeRate,
+        uint256 tokenId,
+        uint256 amount,
+        uint256 liquidity
+    );
+
+    function addLiquidity(
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
     ) external returns (uint256 liquidity);
 
-    function burn(
+    function removeLiquidity(
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
