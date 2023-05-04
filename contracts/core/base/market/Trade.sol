@@ -188,7 +188,6 @@ abstract contract Trade is MarketValue {
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
         try
             IUSUMTradeCallback(position.owner).closePositionCallback(
-                address(this),
                 position.id,
                 data
             )

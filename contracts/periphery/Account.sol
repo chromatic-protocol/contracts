@@ -148,7 +148,6 @@ contract Account is IAccount, VerifyCallback {
     }
 
     function closePositionCallback(
-        address marketAddress,
         uint256 positionId,
         bytes calldata data
     ) external override verifyCallback {
