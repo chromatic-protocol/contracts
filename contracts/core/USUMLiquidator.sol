@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {Liquidator} from "@usum/core/base/Liquidator.sol";
 import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
 import {IAutomate} from "@usum/core/base/gelato/Types.sol";
+
 contract USUMLiquidator is Liquidator, AutomateReady {
-    constructor(address _automate, address opsProxyFactory) AutomateReady(_automate, address(this), opsProxyFactory ) {}
+    constructor(
+        IUSUMMarketFactory _factory,
+        address _automate,
+        address opsProxyFactory
+    )
+        Liquidator(_factory)
+        AutomateReady(_automate, address(this), opsProxyFactory)
+    {}
 
     function getAutomate() internal view override returns (IAutomate) {
         return automate;

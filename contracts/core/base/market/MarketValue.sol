@@ -45,10 +45,6 @@ abstract contract MarketValue is MarketBase, IInterestCalculator {
             );
     }
 
-    function _balance() internal view returns (uint256) {
-        return settlementToken.balanceOf(address(this));
-    }
-
     function _indexPrice() internal view returns (int256) {
         return oracleProvider.currentVersion().price;
     }

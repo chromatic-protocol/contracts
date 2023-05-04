@@ -5,13 +5,11 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
-import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 
@@ -46,8 +44,6 @@ abstract contract Trade is MarketValue {
         uint256 totalFee;
         address recipient;
     }
-
-    event TransferProtocolFee();
 
     // constants
     // uint32 public constant MIN_LEVERAGE_BPS = uint32(BPS);
@@ -88,21 +84,24 @@ abstract contract Trade is MarketValue {
         }
 
         // call callback
-        uint256 balanceBefore = _balance();
+        uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         uint256 protocolFee = getProtocolFee(takerMargin);
         uint256 requiredMargin = takerMargin + protocolFee + tradingFee;
         IUSUMTradeCallback(msg.sender).openPositionCallback(
             address(settlementToken),
+            address(vault),
             requiredMargin,
             data
         );
         // check margin settlementToken increased
-        if (balanceBefore + requiredMargin < _balance())
-            revert NotEnoughMarginTransfered();
+        if (
+            balanceBefore + requiredMargin <
+            settlementToken.balanceOf(address(vault))
+        ) revert NotEnoughMarginTransfered();
 
         lpSlotSet.acceptOpenPosition(ctx, position); // settle()
 
-        transferProtocolFee(position.id, protocolFee);
+        vault.onOpenPosition(position.id, takerMargin, tradingFee, protocolFee);
 
         // write position
         position.storeTo(positions[position.id]);
@@ -112,15 +111,6 @@ abstract contract Trade is MarketValue {
         //TODO add event parameters
         emit OpenPosition();
         return position;
-    }
-
-    modifier resolvePendingPositions() {
-        _;
-        // for loop
-        //
-        // ~
-        // struct 체결여부 : 단순조회용
-        // uint256[] pendingTakerPositionIds 관리
     }
 
     // can call keeper or onwer only
@@ -140,8 +130,6 @@ abstract contract Trade is MarketValue {
             data
         );
 
-        liquidator.cancelLiquidationTask(position.id);
-
         emit ClosePosition();
     }
 
@@ -155,7 +143,8 @@ abstract contract Trade is MarketValue {
         LpContext memory ctx = newLpContext();
 
         uint256 makerMargin = position.makerMargin();
-        uint256 takerMargin = position.takerMargin;
+        uint256 takerMargin = position.takerMargin - usedKeeperFee;
+        uint256 settlmentAmount = takerMargin;
 
         uint256 interestFee = calculateInterest(
             makerMargin,
@@ -168,65 +157,50 @@ abstract contract Trade is MarketValue {
         if (realizedPnl > 0) {
             if (absRealizedPnl > makerMargin) {
                 realizedPnl = makerMargin.toInt256();
-                takerMargin += makerMargin;
+                settlmentAmount += makerMargin;
             } else {
-                takerMargin += absRealizedPnl;
+                settlmentAmount += absRealizedPnl;
             }
         } else {
-            if (absRealizedPnl > position.takerMargin) {
-                realizedPnl = -(position.takerMargin.toInt256());
-                takerMargin = 0;
+            if (absRealizedPnl > takerMargin) {
+                realizedPnl = -(takerMargin.toInt256());
+                settlmentAmount = 0;
             } else {
-                takerMargin -= absRealizedPnl;
+                settlmentAmount -= absRealizedPnl;
             }
         }
 
         lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
 
-        transferMargin(takerMargin, recipient);
-        
+        vault.onClosePosition(
+            position.id,
+            recipient,
+            takerMargin,
+            settlmentAmount
+        );
+
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
         try
             IUSUMTradeCallback(position.owner).closePositionCallback(
                 position.id,
                 data
             )
-        {} catch (bytes memory e/*lowLevelData*/){
-            if(msg.sender != address(liquidator)){
+        {} catch (bytes memory e /*lowLevelData*/) {
+            if (msg.sender != address(liquidator)) {
                 revert ClosePositionCallbackError();
             }
         }
         delete positions[position.id];
 
-        return takerMargin;
-    }
+        liquidator.cancelLiquidationTask(position.id);
 
-    function transferMargin(uint256 takerMargin, address recipient) internal {
-        SafeERC20.safeTransfer(
-            address(settlementToken),
-            recipient,
-            takerMargin
-        );
+        return takerMargin;
     }
 
     function getProtocolFee(uint256 margin) public view returns (uint16) {
         // returns (protocolFeeRate)
         // FIXME: TBA
         return 0;
-    }
-
-    function transferProtocolFee(uint256 positionId, uint256 amount) internal {
-        // FIXME: get DAO address
-        address dao;
-
-        if (amount > 0) {
-            SafeERC20.safeTransfer(
-                address(settlementToken),
-                dao,
-                uint256(amount)
-            );
-            emit TransferProtocolFee();
-        }
     }
 
     function newPosition(
@@ -250,14 +224,22 @@ abstract contract Trade is MarketValue {
 
     function liquidate(
         uint256 positionId,
-        uint256 usedKeeperFee
+        address keeper,
+        uint256 keeperFee // native token amount
     ) external onlyLiquidator {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
+        if (!checkLiquidation(positionId)) return;
+
+        uint256 usedKeeperFee = vault.transferKeeperFee(
+            keeper,
+            keeperFee,
+            position.takerMargin
+        );
         _closePosition(position, usedKeeperFee, position.owner, bytes(""));
     }
 
-    function checkLiquidation(uint256 positionId) external view returns (bool) {
+    function checkLiquidation(uint256 positionId) public view returns (bool) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
 
@@ -268,7 +250,7 @@ abstract contract Trade is MarketValue {
         );
 
         int256 realizedPnl = position.pnl(newLpContext()) -
-                interestFee.toInt256();        
+            interestFee.toInt256();
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0 && absRealizedPnl >= position.makerMargin()) {
             //profit stop (taker side)

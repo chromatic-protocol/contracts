@@ -5,7 +5,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
 import {LpToken} from "@usum/core/base/market/LpToken.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 
 abstract contract Liquidity is LpToken, MarketValue {
     using Math for uint256;
@@ -23,13 +22,17 @@ abstract contract Liquidity is LpToken, MarketValue {
         // liquidity = lpSlots.mint()
         // liquidity 수량만큼 token mint
 
-        uint256 balanceBefore = _balance();
+        uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         IUSUMLiquidityCallback(msg.sender).mintCallback(
             address(settlementToken),
+            address(vault),
             data
         );
-        uint256 amount = _balance() - balanceBefore;
+        uint256 amount = settlementToken.balanceOf(address(vault)) -
+            balanceBefore;
         if (amount == 0) return 0;
+
+        vault.onMint(amount);
 
         uint256 id = encodeId(tradingFeeRate);
 
@@ -54,9 +57,9 @@ abstract contract Liquidity is LpToken, MarketValue {
         uint256 id = encodeId(tradingFeeRate);
 
         uint256 balanceBefore = balanceOf(address(this), id);
-        
+
         IUSUMLiquidityCallback(msg.sender).burnCallback(address(this), data);
-        
+
         uint256 liquidity = balanceOf(address(this), id) - balanceBefore;
         if (liquidity == 0) return 0;
 
@@ -64,7 +67,7 @@ abstract contract Liquidity is LpToken, MarketValue {
         // int256 tradingFeeRate,
         // uint256 amount,
         // uint256 totalLiquidity
-    
+
         amount = lpSlotSet.burn(
             newLpContext(),
             tradingFeeRate,
@@ -72,7 +75,8 @@ abstract contract Liquidity is LpToken, MarketValue {
             _totalSupply
         );
 
-        SafeERC20.safeTransfer(address(settlementToken), recipient, amount);
+        vault.onBurn(recipient, amount);
+
         _burn(recipient, id, liquidity);
     }
 }

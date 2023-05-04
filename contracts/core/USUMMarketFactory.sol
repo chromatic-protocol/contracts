@@ -17,16 +17,21 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     address public override dao;
 
-    address public immutable override liquidator;
     address public override keeperFeePayer;
+    address public override vault;
+    address public override liquidator;
 
     OracleProviderRegistry private _oracleProviderRegistry;
     SettlementTokenRegistry private _settlementTokenRegistry;
 
     MarketDeployer private _deployer;
     mapping(address => mapping(address => bool)) private _registered;
-    EnumerableSet.AddressSet _markets;
+    mapping(address => address[]) private _marketsBySettlementToken;
+    EnumerableSet.AddressSet private _markets;
 
+    error AlreadySetLiquidator();
+    error AlreadySetVault();
+    error AlreadySetKeeperFeePayer();
     error NotRegisteredOracleProvider();
     error NotRegisteredSettlementToken();
     error WrongTokenAddress();
@@ -37,36 +42,52 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         _;
     }
 
-    constructor(address _liquidator) {
+    constructor() {
         dao = msg.sender;
-        liquidator = _liquidator;
     }
 
     function updateDao(address _dao) external onlyDao {
         dao = _dao;
     }
 
+    function setLiquidator(address _liquidator) external override onlyDao {
+        if (liquidator != address(0)) revert AlreadySetLiquidator();
+
+        liquidator = _liquidator;
+        emit SetLiquidator(liquidator);
+    }
+
+    function setVault(address _vault) external override onlyDao {
+        if (vault != address(0)) revert AlreadySetVault();
+
+        vault = _vault;
+        emit SetVault(vault);
+    }
+
     function setKeeperFeePayer(
         address _keeperFeePayer
     ) external override onlyDao {
+        if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
+
         keeperFeePayer = _keeperFeePayer;
         emit SetKeeperFeePayer(keeperFeePayer);
     }
 
-    function getMarkets() external override view returns (address[] memory) {
+    function getMarkets() external view override returns (address[] memory) {
         return _markets.values();
     }
 
-    function isRegisteredMarket(address market) external override view returns (bool) {
-        return _markets.contains(market);
+    function getMarketsBySettlmentToken(
+        address settlementToken
+    ) external view override returns (address[] memory) {
+        return _marketsBySettlementToken[settlementToken];
     }
 
-    // function getMarket(
-    //     address oracleProvider,
-    //     address settlementToken
-    // ) external view override returns (address market) {
-    //     market = _registered[oracleProvider][settlementToken]
-    // }
+    function isRegisteredMarket(
+        address market
+    ) external view override returns (bool) {
+        return _markets.contains(market);
+    }
 
     function createMarket(
         address oracleProvider,
@@ -78,12 +99,12 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         if (!_settlementTokenRegistry.isRegistered(settlementToken))
             revert NotRegisteredSettlementToken();
 
-        if (_registered[oracleProvider][settlementToken])
-            revert ExistMarket();
+        if (_registered[oracleProvider][settlementToken]) revert ExistMarket();
 
         address market = _deployer.deploy(oracleProvider, settlementToken);
 
         _registered[oracleProvider][settlementToken] = true;
+        _marketsBySettlementToken[settlementToken].push(market);
         _markets.add(market);
 
         emit MarketCreated(oracleProvider, settlementToken, market);
