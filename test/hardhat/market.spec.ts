@@ -7,6 +7,7 @@ import {
   USUMRouter,
   KeeperFeePayerMock,
   USUMLiquidator,
+  Account,
 } from "../../typechain-types";
 import { ethers } from "hardhat";
 import { expect } from "chai";
@@ -16,6 +17,66 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
 import { logYellow } from "./log-utils";
 
+let oracleProvider: OracleProviderMock;
+let marketFactory: USUMMarketFactory;
+let settlementToken: Token;
+let market: USUMMarket;
+let accountFactory: AccountFactory;
+let usumRouter: USUMRouter;
+let owner: SignerWithAddress;
+let tester: SignerWithAddress;
+let trader: SignerWithAddress;
+let liquidator: USUMLiquidator;
+let keeperFeePayer: KeeperFeePayerMock;
+let traderAccount: Account;
+let traderRouter: USUMRouter;
+const eth100 = ethers.utils.parseEther("100");
+
+
+async function faucet(account: SignerWithAddress) {
+  const faucetTx = await settlementToken
+    .connect(account)
+    .faucet(ethers.utils.parseEther("10000"));
+  await faucetTx.wait();
+}
+
+const prepareMarketTest = async () => {
+  ({
+    marketFactory,
+    keeperFeePayer,
+    liquidator,
+    oracleProvider,
+    market,
+    usumRouter,
+    accountFactory,
+    settlementToken,
+  } = await loadFixture(marketDeploy));
+  [owner, tester, trader] = await ethers.getSigners();
+  console.log("owner", owner.address);
+
+  await faucet(tester);
+  await faucet(trader);
+
+  const createAccountTx = await accountFactory.connect(trader).createAccount();
+  await createAccountTx.wait();
+
+  const traderAccountAddr = await usumRouter.connect(trader).getAccount();
+  traderAccount = await ethers.getContractAt("Account", traderAccountAddr);
+
+  logYellow(`\ttraderAccount: ${traderAccount}`);
+
+  const transferTx = await settlementToken
+    .connect(trader)
+    .transfer(traderAccountAddr, ethers.utils.parseEther("500"));
+  await transferTx.wait();
+
+  traderRouter = usumRouter.connect(trader);
+  await (
+    await settlementToken
+      .connect(trader)
+      .approve(traderRouter.address, ethers.constants.MaxUint256)
+  ).wait();
+};
 describe("market test", async function () {
   // start anvil & deploy contract
   // current oracle view
@@ -24,48 +85,9 @@ describe("market test", async function () {
   // open/close position
   // execute keeper
 
-  let oracleProvider: OracleProviderMock;
-  let marketFactory: USUMMarketFactory;
-  let settlementToken: Token;
-  let market: USUMMarket;
-  let accountFactory: AccountFactory;
-  let usumRouter: USUMRouter;
-  let owner: SignerWithAddress;
-  let tester: SignerWithAddress;
-  let trader: SignerWithAddress;
-  let liquidator: USUMLiquidator;
-  let keeperFeePayer: KeeperFeePayerMock;
-
   before(async () => {
-    ({
-      marketFactory,
-      keeperFeePayer,
-      liquidator,
-      oracleProvider,
-      market,
-      usumRouter,
-      accountFactory,
-      settlementToken,
-    } = await loadFixture(marketDeploy));
-    [owner, tester, trader] = await ethers.getSigners();
-    console.log("owner", owner.address);
-
-    const marketAddress = await marketFactory.getMarket(
-      oracleProvider.address,
-      settlementToken.address
-    );
-    market = await ethers.getContractAt("USUMMarket", marketAddress);
-
-    await faucet(tester);
-    await faucet(trader);
+    await prepareMarketTest();
   });
-
-  async function faucet(account: SignerWithAddress) {
-    const faucetTx = await settlementToken
-      .connect(account)
-      .faucet(ethers.utils.parseEther("10000"));
-    await faucetTx.wait();
-  }
 
   it("change oracle price ", async () => {
     const { version, timestamp, price } = await oracleProvider.currentVersion();
@@ -104,7 +126,6 @@ describe("market test", async function () {
       feeSlotKey,
     };
   }
-
   it("add/remove liquidity", async () => {
     const { amount, feeSlotKey } = await addLiquidity();
     expect(await market.totalSupply(feeSlotKey)).to.equal(amount);
@@ -130,41 +151,29 @@ describe("market test", async function () {
     expect(await market.totalSupply(feeSlotKey)).to.equal(removeLiqAmount);
   });
 
-  describe("position test", async () => {
-    let routerContract: USUMRouter;
+  describe("position & account test", async () => {
     before(async () => {
-      const liqAmount = ethers.utils.parseEther("500");
-      await addLiquidity(liqAmount, 10);
-      await addLiquidity(liqAmount, -10);
-      const createAccountTx = await accountFactory
-        .connect(trader)
-        .createAccount();
-      await createAccountTx.wait();
-
-      const traderAccount = await usumRouter.connect(trader).getAccount();
-
-      logYellow(`\ttraderAccount: ${traderAccount}`);
-
-      const transferTx = await settlementToken
-        .connect(trader)
-        .transfer(traderAccount, ethers.utils.parseEther("50"));
-      await transferTx.wait();
-
-      routerContract = usumRouter.connect(trader);
-      await (
-        await settlementToken
-          .connect(trader)
-          .approve(routerContract.address, ethers.constants.MaxUint256)
-      ).wait();
+      // market deploy
+      await prepareMarketTest();
+      
+      await addLiquidity(eth100, 1);
+      await addLiquidity(eth100.mul(5), 10);
+      await addLiquidity(eth100, -1);
+      await addLiquidity(eth100.mul(5), -10);
     });
+
     it("open long position", async () => {
-      const takerMargin = ethers.utils.parseEther("1");
-      const makerMargin = ethers.utils.parseEther("5");
-      const openPositionTx = await routerContract.openPosition(
+      expect(
+        await traderAccount.getPositionIds(market.address)
+      ).to.deep.equal([]);
+
+      const takerMargin = ethers.utils.parseEther("100");
+      const makerMargin = ethers.utils.parseEther("500");
+      const openPositionTx = await traderRouter.openPosition(
         oracleProvider.address,
         settlementToken.address,
         1,
-        10000,
+        500,
         takerMargin, // losscut 1 token
         makerMargin, // profit stop 10 token,
         makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
@@ -172,17 +181,35 @@ describe("market test", async function () {
       );
       const receipt = await openPositionTx.wait();
       console.log(receipt);
-      //TODO assert result
+
+      const positionIds = await traderAccount.getPositionIds(
+        market.address
+      );
+      console.log(positionIds);
+      
+
+      expect(positionIds.length).to.equal(1);
+      const position = await market.getPosition(positionIds[0]);
+
+      console.log("position", position);
+      console.log('slot0 amount' , position._slotMargins[0].amount)
+      const slot0 = position._slotMargins.find(p=>p.tradingFeeRate == 1)
+      console.log('slot0', slot0)
+      expect(slot0?.amount).to.equal(eth100)
+      const slot2 = position._slotMargins.find(p=>p.tradingFeeRate === 10)
+      expect(slot2?.amount).to.equal(eth100.mul(4))
+      const totalSlotMargin = position._slotMargins.reduce((acc,curr)=>acc.add(curr.amount), BigNumber.from(0));
+      expect(makerMargin).to.equal(totalSlotMargin);
     });
 
     it("open short position ", async () => {
-      const takerMargin = ethers.utils.parseEther("1");
-      const makerMargin = ethers.utils.parseEther("5");
-      const openPositionTx = await routerContract.openPosition(
+      const takerMargin = ethers.utils.parseEther("100");
+      const makerMargin = ethers.utils.parseEther("500");
+      const openPositionTx = await traderRouter.openPosition(
         oracleProvider.address,
         settlementToken.address,
         -1,
-        10000,
+        500,
         takerMargin, // losscut 1 token
         makerMargin, // profit stop 10 token,
         makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
@@ -191,8 +218,28 @@ describe("market test", async function () {
       const receipt = await openPositionTx.wait();
       console.log(receipt);
       //TODO assert result
+
+      const positionIds = await traderAccount.getPositionIds(
+        market.address
+      );
+      console.log(positionIds);
+      
+
+      expect(positionIds.length).to.equal(2);
+      const position = await market.getPosition(positionIds[1]);
+
+      console.log("position", position);
+      console.log('slot0 amount' , position._slotMargins[0].amount)
+      const slot0 = position._slotMargins.find(p=>p.tradingFeeRate === 1)
+      console.log('slot0', slot0)
+      expect(slot0?.amount).to.equal(eth100)
+      const slot2 = position._slotMargins.find(p=>p.tradingFeeRate === 10)
+      expect(slot2?.amount).to.equal(eth100.mul(4))
+      const totalSlotMargin = position._slotMargins.reduce((acc,curr)=>acc.add(curr.amount), BigNumber.from(0));
+      expect(makerMargin).to.equal(totalSlotMargin);
     });
   });
 
+  
   // execute keeper
 });

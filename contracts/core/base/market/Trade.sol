@@ -14,7 +14,6 @@ import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {TransferKeeperFee} from "@usum/core/base/market/TransferKeeperFee.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
-import "hardhat/console.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
@@ -84,9 +83,6 @@ abstract contract Trade is MarketValue {
         // check trading fee
         uint256 tradingFee = position.tradingFee();
 
-        console.log("console.log(tradingFee);");
-        console.log(tradingFee);
-        console.log(maxAllowableTradingFee);
         if (tradingFee > maxAllowableTradingFee) {
             revert ExceedMaxAllowableTradingFee();
         }
