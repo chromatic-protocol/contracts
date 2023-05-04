@@ -7,9 +7,9 @@ import { Token, AccountFactory, USUMRouter } from "../../typechain-types"
 
 export async function deploy() {
   return hardhatErrorPrettyPrint(async () => {
-    const { gelato, taskTreasury, opsProxyFactory, ops } = await gelatoDeploy()
+    const { gelato, taskTreasury, opsProxyFactory, automate } = await gelatoDeploy()
     const { marketFactory, keeperFeePayer, liquidator } =
-      await marketFactoryDeploy(ops.address)
+      await marketFactoryDeploy(automate.address, opsProxyFactory.address)
     const oracleProvider = await oracleProviderDeploy()
     const settlementToken = await deployContract<Token>("Token", {
       args: ["Token", "ST"],
@@ -55,6 +55,9 @@ export async function deploy() {
       usumRouter,
       accountFactory,
       settlementToken,
+      gelato : {
+        gelato, taskTreasury, opsProxyFactory, automate
+      }
     }
   })
 }

@@ -13,6 +13,7 @@ async function deployTaskTreasury(
 
   const { deployer } = await getNamedAccounts()
   const maxFee = ethers.utils.parseEther("0")
+  
 
   const { address } = await deployments.deploy("TaskTreasuryUpgradable", {
     from: deployer,
@@ -28,6 +29,7 @@ async function deployTaskTreasury(
     },
     args: [oldTreasury.address],
   })
+  
   const taskTreasury = await ethers.getContractAt(
     "TaskTreasuryUpgradable",
     address
@@ -85,9 +87,9 @@ export async function deploy() {
   const { gelato } = await getNamedAccounts()
   console.log("gelato ", gelato)
   const taskTreasury = await deployTaskTreasury(gelato)
-  const ops = await deployOps(gelato, taskTreasury)
-  const opsProxy = await deployOpsProxy(ops)
-  const opsProxyFactory = await deployOpsProxyFactory(ops, opsProxy)
+  const automate = await deployOps(gelato, taskTreasury)
+  const opsProxy = await deployOpsProxy(automate)
+  const opsProxyFactory = await deployOpsProxyFactory(automate, opsProxy)
 
   const resolverModule = await (
     await ethers.getContractFactory("ResolverModule")
@@ -106,8 +108,8 @@ export async function deploy() {
   ).deploy()
   logDeployed("singleExecModule", singleExecModule.address)
 
-  await taskTreasury.updateWhitelistedService(ops.address, true)
-  await ops.setModule(
+  await taskTreasury.updateWhitelistedService(automate.address, true)
+  await automate.setModule(
     [Module.RESOLVER, Module.TIME, Module.PROXY, Module.SINGLE_EXEC],
     [
       resolverModule.address,
@@ -121,7 +123,7 @@ export async function deploy() {
     gelato: await ethers.getSigner(gelato),
     taskTreasury,
     opsProxyFactory,
-    ops,
+    automate,
   }
 }
 

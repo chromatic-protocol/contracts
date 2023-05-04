@@ -7,7 +7,7 @@ import {
 import {EIP173OpsProxy} from "../vendor/proxy/EIP173/EIP173OpsProxy.sol";
 import {Proxied} from "../vendor/proxy/EIP173/Proxied.sol";
 import {IOpsProxyFactory} from "../interfaces/IOpsProxyFactory.sol";
-
+import 'hardhat/console.sol';
 // solhint-disable max-states-count
 contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
     address public immutable ops;
@@ -101,7 +101,7 @@ contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
 
         _proxyOf[owner] = proxy;
         _ownerOf[proxy] = owner;
-
+        console.log('deployFor ' , msg.sender, owner, address(proxy));
         emit DeployProxy(msg.sender, owner, address(proxy));
     }
 

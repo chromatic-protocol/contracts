@@ -13,8 +13,8 @@ abstract contract AutomateTaskCreator is AutomateReady {
     address public immutable fundsOwner;
     ITaskTreasuryUpgradable public immutable taskTreasury;
 
-    constructor(address _automate, address _fundsOwner)
-        AutomateReady(_automate, address(this))
+    constructor(address _automate, address _fundsOwner, address opsTaskFactory)
+        AutomateReady(_automate, address(this), opsTaskFactory)
     {
         fundsOwner = _fundsOwner;
         taskTreasury = automate.taskTreasury();

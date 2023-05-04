@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-
+import 'hardhat/console.sol';
 contract OracleProviderMock is IOracleProvider {
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
@@ -12,11 +12,11 @@ contract OracleProviderMock is IOracleProvider {
 
     function increaseVersion(int256 price) public {
         latestVersion++;
-        oracleVersions[latestVersion] = OracleVersion(
-            latestVersion,
-            block.timestamp,
-            price
-        );
+        oracleVersions[latestVersion] = OracleVersion({
+            version:latestVersion,
+            timestamp:block.timestamp,
+            price:price
+        });
     }
 
     function syncVersion() external override returns (OracleVersion memory) {
@@ -35,6 +35,8 @@ contract OracleProviderMock is IOracleProvider {
     function atVersion(
         uint256 version
     ) external view override returns (OracleVersion memory oracleVersion) {
+        console.logString('version');
+        console.log(version);
         oracleVersion = oracleVersions[version];
         if (version != oracleVersion.version) revert InvalidVersion();
     }

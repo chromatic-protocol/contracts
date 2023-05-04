@@ -6,7 +6,7 @@ import {_call, _delegateCall} from "../functions/FExec.sol";
 import {LibDataTypes} from "./LibDataTypes.sol";
 import {LibTaskModuleConfig} from "./LibTaskModuleConfig.sol";
 import {ITaskModule} from "../interfaces/ITaskModule.sol";
-
+import 'hardhat/console.sol';
 // solhint-disable function-max-lines
 /// @notice Library to call task modules on task creation and execution.
 library LibTaskModule {
@@ -181,6 +181,7 @@ library LibTaskModule {
             "Automate.onExecTask: execAddress cannot be taskTreasury"
         );
 
+        console.log('onTaskExec', _execAddress, _taskCreator);
         (callSuccess, ) = _call(
             _execAddress,
             abi.encodePacked(_execData, _taskCreator),

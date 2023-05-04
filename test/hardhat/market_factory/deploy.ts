@@ -12,7 +12,7 @@ import {
   LpSlotSetLib,
 } from "@usum/typechain-types"
 
-export async function deploy(opsAddress: string) {
+export async function deploy(opsAddress: string, opsProxyFactory: string) {
   const [deployer] = await ethers.getSigners()
 
   const keeperFeePayer = await deployContract<KeeperFeePayerMock>(
@@ -26,7 +26,7 @@ export async function deploy(opsAddress: string) {
   ).wait()
 
   const liquidator = await deployContract<USUMLiquidator>("USUMLiquidator", {
-    args: [opsAddress],
+    args: [opsAddress,opsProxyFactory],
   })
 
   const oracleProviderRegistryLib =
@@ -49,7 +49,7 @@ export async function deploy(opsAddress: string) {
   const marketFactory = await deployContract<USUMMarketFactory>(
     "USUMMarketFactory",
     {
-      args: [keeperFeePayer.address, liquidator.address],
+      args: [liquidator.address,keeperFeePayer.address],
       libraries: {
         OracleProviderRegistryLib: oracleProviderRegistryLib.address,
         SettlementTokenRegistryLib: settlementTokenRegistryLib.address,

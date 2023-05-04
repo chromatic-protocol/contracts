@@ -26,7 +26,7 @@ async function fixture() {
     // const { fETH } = await deployFakeTokens()
     const factory = await ethers.getContractFactory('Token')
     const fETH = await factory.deploy('eth','ETH') as Token; 
-    const { gelato, taskTreasury, opsProxyFactory, ops } = await deploy()
+    const { gelato, taskTreasury, opsProxyFactory, automate } = await deploy()
 
     const counter = await (await ethers.getContractFactory('CounterWL')).deploy()
     const counterResolver = await (
@@ -61,7 +61,7 @@ async function fixture() {
       taskTreasury,
       opsProxyFactory,
       opsProxy,
-      ops,
+      automate,
       counter,
       counterResolver
     }

@@ -5,7 +5,7 @@ import {USUMLiquidator} from "@usum/core/USUMLiquidator.sol";
 import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
 
 contract USUMLiquidatorMock is USUMLiquidator {
-    constructor(address _automate) USUMLiquidator(_automate) {}
+    constructor(address _automate, address opsProxyFactory) USUMLiquidator(_automate, opsProxyFactory) {}
 
     function liquidate(
         address market,

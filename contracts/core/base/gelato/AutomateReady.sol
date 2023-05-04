@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Types.sol";
-
+import 'hardhat/console.sol';
 /**
  * @dev Inherit this contract to allow your smart contract to
  * - Make synchronous fee payments.
@@ -24,6 +24,9 @@ abstract contract AutomateReady {
      * the functions with this modifier.
      */
     modifier onlyDedicatedMsgSender() {
+        console.logString("LiQ onlyDedicatedMsgSender");
+        console.log(dedicatedMsgSender);
+        console.log(msg.sender);
         require(msg.sender == dedicatedMsgSender, "Only dedicated msg.sender");
         _;
     }
@@ -32,10 +35,11 @@ abstract contract AutomateReady {
      * @dev
      * _taskCreator is the address which will create tasks for this contract.
      */
-    constructor(address _automate, address _taskCreator) {
+    constructor(address _automate, address _taskCreator, address opsProxyFactory) {
         automate = IAutomate(_automate);
         _gelato = IAutomate(_automate).gelato();
-        (dedicatedMsgSender, ) = IOpsProxyFactory(OPS_PROXY_FACTORY).getProxyOf(
+        if(opsProxyFactory == address(0)) opsProxyFactory = OPS_PROXY_FACTORY;
+        (dedicatedMsgSender, ) = IOpsProxyFactory(opsProxyFactory).getProxyOf(
             _taskCreator
         );
     }

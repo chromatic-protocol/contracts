@@ -30,6 +30,7 @@ export class Keeper {
     private readonly fee: BigNumber,
     private readonly feeToken: IERC20
   ) {
+    console.log('gelato connect address', this.gelato.getAddress())
     this.automate = automate.connect(this.gelato)
     this.provider = automate.provider as providers.JsonRpcProvider
   }
@@ -55,6 +56,7 @@ export class Keeper {
 
   private onTaskCanceled(contract: LibEvents) {
     contract.on(contract.filters.TaskCancelled(), (_0, _1, event) => {
+
       const taskId = event.args.taskId
       this.tasks = this.tasks.filter((t) => t.taskId != taskId)
     })
@@ -78,7 +80,7 @@ export class Keeper {
     for (let i = 0; i < task.moduleData.modules.length; i++) {
       if (i == Module.RESOLVER) {
         const { resolverAddress, resolverData } = decodeResolverArgs(task.moduleData.args[i])
-
+     
         const result = decodeResolverResponse(
           await this.provider.call({
             to: resolverAddress,
