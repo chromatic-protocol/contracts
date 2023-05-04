@@ -48,22 +48,6 @@ describe("liquidation test", async () => {
   }
 
   describe("long position", async () => {
-    it("loss cut", async () => {
-      await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther("100") // 100 usd
-      const makerMargin = ethers.utils.parseEther("500") // 500 usd
-      const openPositionTx = await testData.traderRouter.openPosition(
-        testData.market.address,
-        10 ** 4 * 500, //price precision  (4 decimals)
-        100, // leverage ( x1 )
-        takerMargin, // losscut <= qty
-        makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-        ethers.constants.MaxUint256
-      )
-      await simulate([2000, 1800, 1600], [1, 1, 0])
-    })
-
     it("profit stop", async () => {
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther("100") // 100 usd
@@ -78,7 +62,23 @@ describe("liquidation test", async () => {
         ethers.constants.MaxUint256
       )
 
-      await simulate([2000, 2200, 2400], [1, 1, 0])
+      await simulate([2000, 2200, 2400], [1, 1, 0], true)
+    })
+
+    it("loss cut", async () => {
+      await updatePrice(2000)
+      const takerMargin = ethers.utils.parseEther("100") // 100 usd
+      const makerMargin = ethers.utils.parseEther("500") // 500 usd
+      const openPositionTx = await testData.traderRouter.openPosition(
+        testData.market.address,
+        10 ** 4 * 500, //price precision  (4 decimals)
+        100, // leverage ( x1 )
+        takerMargin, // losscut <= qty
+        makerMargin, // profit stop 10 token,
+        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
+        ethers.constants.MaxUint256
+      )
+      await simulate([2000, 1800, 1600], [1, 1, 0], false)
     })
   })
 
@@ -96,7 +96,7 @@ describe("liquidation test", async () => {
         makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
         ethers.constants.MaxUint256
       )
-      await simulate([2000, 1800, 1600], [1, 1, 0])
+      await simulate([2000, 1800, 1600], [1, 1, 0], true)
     })
 
     it("loss cut", async () => {
@@ -113,14 +113,18 @@ describe("liquidation test", async () => {
         ethers.constants.MaxUint256
       )
 
-      await simulate([2000, 2200, 2400], [1, 1, 0])
+      await simulate([2000, 2200, 2400], [1, 1, 0], false)
     })
   })
 
   async function simulate(
     priceChanges: number[],
-    expectedPreservedPositionLength: number[]
+    expectedPreservedPositionLength: number[],
+    isProfitStopCase: boolean
   ) {
+    const { traderAccount, settlementToken } = testData
+    const traderBalance = await settlementToken.balanceOf(traderAccount.address)
+    console.log(`account balance : ${traderBalance}`)
     await priceChanges.reduce(async (prev, curr, index) => {
       await prev
       await updatePrice(curr)
@@ -128,7 +132,21 @@ describe("liquidation test", async () => {
       let positionIds = await testData.traderAccount.getPositionIds(
         testData.market.address
       )
-      expect(positionIds.length).to.equal(expectedPreservedPositionLength[index])
+      const traderBalance = await settlementToken.balanceOf(
+        traderAccount.address
+      )
+      console.log(`oracle price ${curr}, account balance : ${traderBalance}`)
+      expect(positionIds.length).to.equal(
+        expectedPreservedPositionLength[index]
+      )
     }, Promise.resolve())
+    const afterTraderBalance = await settlementToken.balanceOf(
+      traderAccount.address
+    )
+    if (isProfitStopCase) {
+      expect(traderBalance.lt(afterTraderBalance)).to.be.true 
+    } else {
+      expect(afterTraderBalance.eq(traderBalance)).to.be.true
+    }
   }
 })
