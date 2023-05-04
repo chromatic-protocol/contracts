@@ -8,7 +8,7 @@ const ARB_GOERLI_SWAP_ROUTER_ADDRESS =
   "0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86"
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { config, deployments, getNamedAccounts, network } = hre
+  const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
@@ -23,12 +23,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     echainId === config.networks.arbitrum_one_goerli.chainId!
       ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
       : SWAP_ROUTER_02_ADDRESSES(echainId)
-
-  const { address: keeperFeePayer } = await deploy("KeeperFeePayer", {
-    from: deployer,
-    args: [swapRouterAddress, WETH9[echainId].address],
-  })
-  console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
   const { address: liquidator } = await deploy(
     network.name === "anvil" ? "USUMLiquidatorMock" : "USUMLiquidator",
@@ -72,9 +66,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     chalk.yellow(`✨ SettlementTokenRegistryLib: ${settlementTokenRegistry}`)
   )
 
-  const { address: factory } = await deploy("USUMMarketFactory", {
+  const { address: factory, libraries } = await deploy("USUMMarketFactory", {
     from: deployer,
-    args: [liquidator, keeperFeePayer],
+    args: [liquidator],
     libraries: {
       MarketDeployerLib: marketDeployer,
       OracleProviderRegistryLib: oracleProviderRegistry,
@@ -82,6 +76,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
   })
   console.log(chalk.yellow(`✨ USUMMarketFactory: ${factory}`))
+
+  const { address: keeperFeePayer } = await deploy("KeeperFeePayer", {
+    from: deployer,
+    args: [factory, swapRouterAddress, WETH9[echainId].address],
+  })
+  console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
+
+  const MarketFactory = await ethers.getContractFactory("USUMMarketFactory", {
+    libraries,
+  })
+  const marketFactory = MarketFactory.attach(factory)
+  await marketFactory.setKeeperFeePayer(keeperFeePayer, {
+    from: deployer,
+  })
+  console.log(chalk.yellow("✨ Set KeeperFeePayer"))
 }
 
 export default func
