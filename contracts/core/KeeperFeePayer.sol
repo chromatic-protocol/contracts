@@ -6,39 +6,37 @@ import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IWETH9} from "@usum/core/interfaces/IWETH9.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 
-contract KeeperFeePayer is IKeeperFeePayer, Ownable {
+contract KeeperFeePayer is IKeeperFeePayer {
+    IUSUMMarketFactory factory;
     ISwapRouter uniswapRouter;
     IWETH9 public WETH9;
 
-    // TODO when liquidity is depleted???
-    uint24 uniswapFee = 3000; // 0.3%
-    // uint24 uniswapFee = 500; // 0.05%
-
     event SetRouter(address);
-    event FeeChanged(uint24 previous, uint24 current);
 
-    
+    modifier onlyDao() {
+        require(msg.sender == factory.dao(), "only DAO can access");
+        _;
+    }
 
-    constructor(ISwapRouter _uniswapRouter, IWETH9 _weth) {
+    constructor(
+        IUSUMMarketFactory _factory,
+        ISwapRouter _uniswapRouter,
+        IWETH9 _weth
+    ) {
+        factory = _factory;
         uniswapRouter = _uniswapRouter;
         WETH9 = _weth;
     }
 
-    function setRouter(ISwapRouter _uniswapRouter) public onlyOwner {
+    function setRouter(ISwapRouter _uniswapRouter) public onlyDao {
         uniswapRouter = _uniswapRouter;
         emit SetRouter(address(uniswapRouter));
     }
 
-    function setUniswapFee(uint24 _fee) public onlyOwner {
-        uint24 previousFee = uniswapFee;
-        uniswapFee = _fee;
-        emit FeeChanged(previousFee, uniswapFee);
-    }
-
     // this contrct doesn't have balance
-    function approveToRouter(address token, bool approve) external onlyOwner {
+    function approveToRouter(address token, bool approve) external onlyDao {
         IERC20(token).approve(
             address(uniswapRouter),
             approve ? type(uint256).max : 0
@@ -77,7 +75,7 @@ contract KeeperFeePayer is IKeeperFeePayer, Ownable {
             .ExactOutputSingleParams(
                 tokenIn,
                 address(WETH9),
-                uniswapFee,
+                factory.getUniswapFeeTier(tokenIn),
                 recipient,
                 block.timestamp,
                 amountOut,
@@ -87,9 +85,7 @@ contract KeeperFeePayer is IKeeperFeePayer, Ownable {
         return uniswapRouter.exactOutputSingle(swapParam);
     }
 
+    receive() external payable {}
 
-    receive() external payable{
-    }
-    fallback() external payable {
-    }
+    fallback() external payable {}
 }

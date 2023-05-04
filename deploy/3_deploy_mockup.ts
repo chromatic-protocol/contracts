@@ -1,5 +1,7 @@
 import { USDC_ARBITRUM_GOERLI } from "@uniswap/smart-order-router"
 import chalk from "chalk"
+import { BigNumber } from "ethers"
+import { parseUnits } from "ethers/lib/utils"
 import { DeployFunction } from "hardhat-deploy/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 
@@ -29,9 +31,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow("✨ Register OracleProvider"))
 
-  await marketFactory.registerSettlementToken(USDC_ARBITRUM_GOERLI.address, {
-    from: deployer,
-  })
+  await marketFactory.registerSettlementToken(
+    USDC_ARBITRUM_GOERLI.address,
+    parseUnits("10", USDC_ARBITRUM_GOERLI.decimals), // minimumTakerMargin
+    BigNumber.from("1000"), // interestRate, 10%
+    BigNumber.from("500"), // flashLoanFeeRate, 5%
+    BigNumber.from("3000"), // uniswapFeeRate, 0.3%
+    {
+      from: deployer,
+    }
+  )
   console.log(chalk.yellow("✨ Register SettlementToken"))
 
   await marketFactory.createMarket(

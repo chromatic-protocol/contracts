@@ -15,7 +15,7 @@ contract SettlementTokenRegistryTest is Test {
     SettlementTokenRegistry tokenRegistry;
 
     function setUp() public {
-        tokenRegistry.register(testToken);
+        tokenRegistry.register(testToken, 0, 0, 0, 0);
     }
 
     function testRegisterSettlementToken() public {
@@ -24,12 +24,12 @@ contract SettlementTokenRegistryTest is Test {
 
         // duplicated token address test
         vm.expectRevert(bytes("ART"));
-        tokenRegistry.register(testToken);
+        tokenRegistry.register(testToken, 0, 0, 0, 0);
 
         assertEq(tokenRegistry.isRegistered(newToken), false);
 
         // register new token
-        tokenRegistry.register(newToken);
+        tokenRegistry.register(newToken, 0, 0, 0, 0);
         assertEq(tokenRegistry.getInterestRateRecords(newToken).length, 1);
         assertEq(tokenRegistry.isRegistered(newToken), true);
         assertEq(tokenRegistry.currentInterestRate(newToken), 0);
@@ -37,7 +37,7 @@ contract SettlementTokenRegistryTest is Test {
 
     function testInterestRate() public {
         // invalid timestamp test
-        vm.expectRevert(bytes("past timestamp"));
+        vm.expectRevert(bytes("IRPT"));
         appendInterestRate(1, 0);
 
         // expect interest not deleted
@@ -48,7 +48,7 @@ contract SettlementTokenRegistryTest is Test {
         appendInterestRate(100, 1);
 
         // latestRateTime < newRateTime test
-        vm.expectRevert(bytes("not appendable"));
+        vm.expectRevert(bytes("IRNA"));
         appendInterestRate(100, 1);
 
         assertEq(tokenRegistry.getInterestRateRecords(testToken).length, 2);

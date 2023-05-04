@@ -17,12 +17,17 @@ library InterestRate {
     uint256 private constant YEAR = 365 * 24 * 3600;
 
     modifier initialized(Record[] storage self) {
-        require(self.length > 0, "not initalized");
+        require(self.length > 0, "IRNI"); // Interest Rate Not Initialized
         _;
     }
 
-    function initialize(Record[] storage self) internal {
-        self.push(Record({annualRateBPS: 0, beginTimestamp: 0}));
+    function initialize(
+        Record[] storage self,
+        uint256 initialInterestRate
+    ) internal {
+        self.push(
+            Record({annualRateBPS: initialInterestRate, beginTimestamp: 0})
+        );
     }
 
     function appendRecord(
@@ -30,11 +35,11 @@ library InterestRate {
         uint256 annualRateBPS,
         uint256 beginTimestamp
     ) internal initialized(self) {
-        require(annualRateBPS <= MAX_RATE_BPS, "annual rate bps overflow");
-        require(beginTimestamp > block.timestamp, "past timestamp");
+        require(annualRateBPS <= MAX_RATE_BPS, "IROF"); // Interest Rate OvferFlow
+        require(beginTimestamp > block.timestamp, "IRPT"); // Interest Rate Past Timestamp
 
         Record memory lastRecord = self[self.length - 1];
-        require(beginTimestamp > lastRecord.beginTimestamp, "not appendable");
+        require(beginTimestamp > lastRecord.beginTimestamp, "IRNA"); // Interest Rate Not Appendable
 
         self.push(
             Record({
@@ -53,10 +58,7 @@ library InterestRate {
         }
 
         Record memory lastRecord = self[self.length - 1];
-        require(
-            block.timestamp >= lastRecord.beginTimestamp,
-            "already applied interest rate"
-        );
+        require(block.timestamp >= lastRecord.beginTimestamp, "IRAA"); // Interest Rate Already Applied
 
         self.pop();
 

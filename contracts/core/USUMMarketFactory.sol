@@ -16,7 +16,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     address public override dao;
 
     address public immutable override liquidator;
-    address public immutable override keeperFeePayer;
+    address public override keeperFeePayer;
 
     OracleProviderRegistry private _oracleProviderRegistry;
     SettlementTokenRegistry private _settlementTokenRegistry;
@@ -34,14 +34,20 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         _;
     }
 
-    constructor(address _liquidator, address _keeperFeePayer) {
+    constructor(address _liquidator) {
         dao = msg.sender;
         liquidator = _liquidator;
-        keeperFeePayer = _keeperFeePayer;
     }
 
     function updateDao(address _dao) external onlyDao {
         dao = _dao;
+    }
+
+    function setKeeperFeePayer(
+        address _keeperFeePayer
+    ) external override onlyDao {
+        keeperFeePayer = _keeperFeePayer;
+        emit SetKeeperFeePayer(keeperFeePayer);
     }
 
     function getMarket(
@@ -114,9 +120,27 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     // implement ISettlementTokenRegistry
 
-    function registerSettlementToken(address token) external override onlyDao {
-        _settlementTokenRegistry.register(token);
-        emit SettlementTokenRegistered(token);
+    function registerSettlementToken(
+        address token,
+        uint256 minimumTakerMargin,
+        uint256 interestRate,
+        uint256 flashLoanFeeRate,
+        uint24 uniswapFeeTier
+    ) external override onlyDao {
+        _settlementTokenRegistry.register(
+            token,
+            minimumTakerMargin,
+            interestRate,
+            flashLoanFeeRate,
+            uniswapFeeTier
+        );
+        emit SettlementTokenRegistered(
+            token,
+            minimumTakerMargin,
+            interestRate,
+            flashLoanFeeRate,
+            uniswapFeeTier
+        );
     }
 
     function registeredSettlementTokens()
@@ -132,6 +156,49 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         address token
     ) external view override returns (bool) {
         return _settlementTokenRegistry.isRegistered(token);
+    }
+
+    function getMinimumTakerMargin(
+        address token
+    ) external view returns (uint256) {
+        return _settlementTokenRegistry.getMinimumTakerMargin(token);
+    }
+
+    function setMinimumTakerMargin(
+        address token,
+        uint256 minimumTakerMargin
+    ) external onlyDao {
+        _settlementTokenRegistry.setMinimumTakerMargin(
+            token,
+            minimumTakerMargin
+        );
+        emit SetMinimumTakerMargin(token, minimumTakerMargin);
+    }
+
+    function getFlashLoanFeeRate(
+        address token
+    ) external view returns (uint256) {
+        return _settlementTokenRegistry.getFlashLoanFeeRate(token);
+    }
+
+    function setFlashLoanFeeRate(
+        address token,
+        uint256 flashLoanFeeRate
+    ) external onlyDao {
+        _settlementTokenRegistry.setFlashLoanFeeRate(token, flashLoanFeeRate);
+        emit SetFlashLoanFeeRate(token, flashLoanFeeRate);
+    }
+
+    function getUniswapFeeTier(address token) external view returns (uint24) {
+        return _settlementTokenRegistry.getUniswapFeeTier(token);
+    }
+
+    function setUniswapFeeTier(
+        address token,
+        uint24 uniswapFeeTier
+    ) external onlyDao {
+        _settlementTokenRegistry.setUniswapFeeTier(token, uniswapFeeTier);
+        emit SetUniswapFeeTier(token, uniswapFeeTier);
     }
 
     function appendInterestRateRecord(
