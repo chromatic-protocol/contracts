@@ -23,9 +23,7 @@ contract SettlementTokenRegistryTest is Test {
         assertEq(tokenRegistry.isRegistered(testToken), true);
 
         // duplicated token address test
-        vm.expectRevert(
-            SettlementTokenRegistryLib.AlreadyRegisteredToken.selector
-        );
+        vm.expectRevert(bytes("ART"));
         tokenRegistry.register(testToken);
 
         assertEq(tokenRegistry.isRegistered(newToken), false);

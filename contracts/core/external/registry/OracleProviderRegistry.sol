@@ -10,14 +10,11 @@ struct OracleProviderRegistry {
 library OracleProviderRegistryLib {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    error AlreadyRegistered();
-
     function register(
         OracleProviderRegistry storage self,
         address oracleProvider
     ) external {
-        if (self._oracleProviders.contains(oracleProvider))
-            revert AlreadyRegistered();
+        require(!self._oracleProviders.contains(oracleProvider), "ARO"); // Already Registered Oracle provider
 
         self._oracleProviders.add(oracleProvider);
     }

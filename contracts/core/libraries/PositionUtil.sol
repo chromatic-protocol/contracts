@@ -17,14 +17,10 @@ library PositionUtil {
     using SafeCast for uint256;
     using SignedMath for int256;
 
-    error InvalidOracleVersion();
-    error UnsettledPosition();
-    error InvalidPositionQty();
-
     function settleVersion(
         uint256 oracleVersion
     ) internal pure returns (uint256) {
-        if (oracleVersion == 0) revert InvalidOracleVersion();
+        require(oracleVersion > 0, "IOV"); // Invalid Oracle Version
         return oracleVersion + 1;
     }
 
@@ -41,7 +37,7 @@ library PositionUtil {
         OracleVersion memory currentVersion
     ) internal view returns (uint256) {
         uint256 _settleVersion = settleVersion(oracleVersion);
-        if (_settleVersion > currentVersion.version) revert UnsettledPosition();
+        require(_settleVersion <= currentVersion.version, "USP"); // UnSettled Position
 
         OracleVersion memory _oracleVersion = _settleVersion ==
             currentVersion.version
@@ -78,20 +74,23 @@ library PositionUtil {
         int256 currentQty,
         int256 openQty
     ) internal pure {
-        if (
-            (currentQty > 0 && openQty <= 0) || (currentQty < 0 && openQty >= 0)
-        ) revert InvalidPositionQty();
+        require(
+            !((currentQty > 0 && openQty <= 0) ||
+                (currentQty < 0 && openQty >= 0)),
+            "IPQ" // Invalid Position Qty
+        );
     }
 
     function checkClosePositionQty(
         int256 currentQty,
         int256 closeQty
     ) internal pure {
-        if (
-            (currentQty == 0) ||
-            (closeQty == 0) ||
-            (currentQty > 0 && closeQty > currentQty) ||
-            (currentQty < 0 && closeQty < currentQty)
-        ) revert InvalidPositionQty();
+        require(
+            !((currentQty == 0) ||
+                (closeQty == 0) ||
+                (currentQty > 0 && closeQty > currentQty) ||
+                (currentQty < 0 && closeQty < currentQty)),
+            "IPQ" // Invalid Position Qty
+        );
     }
 }

@@ -24,8 +24,6 @@ library LpSlotPendingPositionLib {
     using SignedMath for int256;
     using AccruedInterestLib for AccruedInterest;
 
-    error InvalidOracleVersion();
-
     modifier _settle(LpSlotPendingPosition storage self, LpContext memory ctx) {
         settleAccruedInterest(self, ctx);
 
@@ -49,8 +47,10 @@ library LpSlotPendingPositionLib {
         PositionParam memory param
     ) internal _settle(self, ctx) {
         uint256 pendingVersion = self.oracleVersion;
-        if (pendingVersion != 0 && pendingVersion != param.oracleVersion)
-            revert InvalidOracleVersion();
+        require(
+            pendingVersion == 0 || pendingVersion == param.oracleVersion,
+            "IOV" // Invalid Oracle Version
+        );
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
@@ -67,8 +67,7 @@ library LpSlotPendingPositionLib {
         LpContext memory ctx,
         PositionParam memory param
     ) internal _settle(self, ctx) {
-        if (self.oracleVersion != param.oracleVersion)
-            revert InvalidOracleVersion();
+        require(self.oracleVersion == param.oracleVersion, "IOV"); // Invalid Oracle Version
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
