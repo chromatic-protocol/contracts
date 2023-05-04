@@ -61,7 +61,7 @@ abstract contract Trade is MarketValue {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
         bytes calldata data
-    ) external returns (Position memory) {
+    ) external nonReentrant returns (Position memory) {
         if (qty == 0) revert ZeroTargetAmount();
         if (
             takerMargin <
@@ -118,7 +118,7 @@ abstract contract Trade is MarketValue {
         uint256 positionId,
         address recipient, // EOA or account contract
         bytes calldata data
-    ) external {
+    ) external nonReentrant {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
         // TODO caller keeper || owner
@@ -226,7 +226,7 @@ abstract contract Trade is MarketValue {
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external onlyLiquidator {
+    ) external nonReentrant onlyLiquidator {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
         if (!checkLiquidation(positionId)) return;
