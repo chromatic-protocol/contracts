@@ -1,6 +1,6 @@
 import { expect } from "chai"
 import { ethers } from "hardhat"
-import { prepareMarketTest } from "./testHelper"
+import { prepareMarketTest,helpers } from "./testHelper"
 
 describe("market test", async function () {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
@@ -32,8 +32,8 @@ describe("market test", async function () {
       tester,
       oracleProvider,
       settlementToken,
-      addLiquidity,
     } = testData
+    const { addLiquidity } = helpers(testData);
     const { amount, feeSlotKey } = await addLiquidity()
     expect(await market.totalSupply(feeSlotKey)).to.equal(amount)
 

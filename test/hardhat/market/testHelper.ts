@@ -6,29 +6,27 @@ import { deploy as marketDeploy } from "../deployMarket"
 import { logYellow } from "../log-utils"
 
 export const prepareMarketTest = async () => {
-
-
   async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
     const approveTx = await settlementToken
       .connect(tester)
-      .approve(usumRouter.address, ethers.constants.MaxUint256);
-    await approveTx.wait();
-  
-    const amount = _amount ?? ethers.utils.parseEther("100");
-    const feeSlotKey = _feeSlotKey ?? 1;
-  
+      .approve(usumRouter.address, ethers.constants.MaxUint256)
+    await approveTx.wait()
+
+    const amount = _amount ?? ethers.utils.parseEther("100")
+    const feeSlotKey = _feeSlotKey ?? 1
+
     const addLiqTx = await usumRouter.connect(tester).addLiquidity(
       market.address,
       feeSlotKey,
       amount,
       tester.address,
       ethers.constants.MaxUint256 // deadline
-    );
-    await addLiqTx.wait();
+    )
+    await addLiqTx.wait()
     return {
       amount,
       feeSlotKey,
-    };
+    }
   }
 
   async function faucet(account: SignerWithAddress) {
@@ -47,7 +45,7 @@ export const prepareMarketTest = async () => {
     accountFactory,
     settlementToken,
     gelato,
-  } = await loadFixture(marketDeploy);
+  } = await loadFixture(marketDeploy)
   const [owner, tester, trader] = await ethers.getSigners()
   console.log("owner", owner.address)
 
@@ -73,6 +71,15 @@ export const prepareMarketTest = async () => {
       .connect(trader)
       .approve(traderRouter.address, ethers.constants.MaxUint256)
   ).wait()
+
+  async function updatePrice(price: number) {
+    await (
+      await oracleProvider.increaseVersion(
+        BigNumber.from(price.toString()).mul(10 ** 8)
+      )
+    ).wait()
+  }
+
   return {
     oracleProvider,
     marketFactory,
@@ -88,6 +95,55 @@ export const prepareMarketTest = async () => {
     traderAccount,
     traderRouter,
     gelato,
+    // addLiquidity,
+    // updatePrice,
+  }
+}
+
+export const helpers = function (
+  testData: Awaited<ReturnType<typeof prepareMarketTest>>
+) {
+  const { oracleProvider, settlementToken, tester, usumRouter, market } =
+    testData
+  async function updatePrice(price: number) {
+    await (
+      await oracleProvider.increaseVersion(
+        BigNumber.from(price.toString()).mul(10 ** 8)
+      )
+    ).wait()
+  }
+
+  async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
+    const approveTx = await settlementToken
+      .connect(tester)
+      .approve(usumRouter.address, ethers.constants.MaxUint256)
+    await approveTx.wait()
+
+    const amount = _amount ?? ethers.utils.parseEther("100")
+    const feeSlotKey = _feeSlotKey ?? 1
+
+    const addLiqTx = await usumRouter.connect(tester).addLiquidity(
+      market.address,
+      feeSlotKey,
+      amount,
+      tester.address,
+      ethers.constants.MaxUint256 // deadline
+    )
+    await addLiqTx.wait()
+    return {
+      amount,
+      feeSlotKey,
+    }
+  }
+  async function awaitTx(response: any) {
+    response = await response
+    if (typeof response.wait === "function") return await response.wait()
+    return response
+  }
+
+  return {
+    updatePrice,
     addLiquidity,
+    awaitTx,
   }
 }
