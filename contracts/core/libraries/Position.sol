@@ -110,7 +110,10 @@ library PositionLib {
         // can not convert memory array to storage array
         delete storedPosition._slotMargins;
         for (uint i = 0; i < self._slotMargins.length; i++) {
-            storedPosition._slotMargins.push(self._slotMargins[i]);
+            LpSlotMargin memory slotMargin = self._slotMargins[i];
+            if (slotMargin.amount > 0) {
+                storedPosition._slotMargins.push(self._slotMargins[i]);
+            }
         }
     }
 }

@@ -188,7 +188,7 @@ describe("interest fee test", async function () {
           amount: ethers.utils.parseEther("10"),
         },
         {
-          tradingFee: 2,
+          tradingFee: 3,
           amount: ethers.utils.parseEther("100"),
         },
       ],
