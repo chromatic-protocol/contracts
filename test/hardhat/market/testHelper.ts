@@ -6,29 +6,6 @@ import { deploy as marketDeploy } from "../deployMarket"
 import { logYellow } from "../log-utils"
 
 export const prepareMarketTest = async () => {
-  async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
-    const approveTx = await settlementToken
-      .connect(tester)
-      .approve(usumRouter.address, ethers.constants.MaxUint256)
-    await approveTx.wait()
-
-    const amount = _amount ?? ethers.utils.parseEther("100")
-    const feeSlotKey = _feeSlotKey ?? 1
-
-    const addLiqTx = await usumRouter.connect(tester).addLiquidity(
-      market.address,
-      feeSlotKey,
-      amount,
-      tester.address,
-      ethers.constants.MaxUint256 // deadline
-    )
-    await addLiqTx.wait()
-    return {
-      amount,
-      feeSlotKey,
-    }
-  }
-
   async function faucet(account: SignerWithAddress) {
     const faucetTx = await settlementToken
       .connect(account)
