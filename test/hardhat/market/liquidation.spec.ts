@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers"
 import { ethers } from "hardhat"
 import { Keeper } from "../gelato/keeper"
-import { prepareMarketTest } from "./testHelper"
+import { prepareMarketTest, helpers } from "./testHelper"
 import { expect } from "chai"
 describe("liquidation test", async () => {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
@@ -11,7 +11,7 @@ describe("liquidation test", async () => {
   before(async () => {
     testData = await prepareMarketTest()
 
-    const addLiquidity = testData.addLiquidity
+    const { addLiquidity } = helpers(testData)
     // add 10000 usdc liquidity to 0.01% long /short  slot
     await addLiquidity(eth100.mul(100), 1)
     await addLiquidity(eth100.mul(100), -1)
@@ -144,7 +144,7 @@ describe("liquidation test", async () => {
       traderAccount.address
     )
     if (isProfitStopCase) {
-      expect(traderBalance.lt(afterTraderBalance)).to.be.true 
+      expect(traderBalance.lt(afterTraderBalance)).to.be.true
     } else {
       expect(afterTraderBalance.eq(traderBalance)).to.be.true
     }

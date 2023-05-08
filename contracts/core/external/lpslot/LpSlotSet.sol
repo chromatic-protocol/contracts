@@ -108,15 +108,17 @@ library LpSlotSetLib {
         for (uint256 i = 0; i < slotMargins.length; i++) {
             LpSlotMargin memory slotMargin = slotMargins[i];
 
-            param.leveragedQty = paramValues[i].leveragedQty;
-            param.takerMargin = paramValues[i].takerMargin;
-            param.makerMargin = slotMargin.amount;
+            if (slotMargin.amount > 0) {
+                param.leveragedQty = paramValues[i].leveragedQty;
+                param.takerMargin = paramValues[i].takerMargin;
+                param.makerMargin = slotMargin.amount;
 
-            _slots[slotMargins[i].tradingFeeRate].openPosition(
-                ctx,
-                param,
-                slotMargin.tradingFee()
-            );
+                _slots[slotMargins[i].tradingFeeRate].openPosition(
+                    ctx,
+                    param,
+                    slotMargin.tradingFee()
+                );
+            }
         }
 
         setMinAvailableFeeRate(
@@ -161,55 +163,71 @@ library LpSlotSetLib {
 
         if (realizedPnl == 0) {
             for (uint256 i = 0; i < slotMargins.length; i++) {
-                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+                if (slotMargins[i].amount > 0) {
+                    LpSlot storage _slot = _slots[
+                        slotMargins[i].tradingFeeRate
+                    ];
 
-                param.leveragedQty = paramValues[i].leveragedQty;
-                param.takerMargin = paramValues[i].takerMargin;
-                param.makerMargin = slotMargins[i].amount;
+                    param.leveragedQty = paramValues[i].leveragedQty;
+                    param.takerMargin = paramValues[i].takerMargin;
+                    param.makerMargin = slotMargins[i].amount;
 
-                _slot.closePosition(ctx, param, 0);
+                    _slot.closePosition(ctx, param, 0);
+                }
             }
         } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
             for (uint256 i = 0; i < slotMargins.length; i++) {
-                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+                if (slotMargins[i].amount > 0) {
+                    LpSlot storage _slot = _slots[
+                        slotMargins[i].tradingFeeRate
+                    ];
 
-                param.leveragedQty = paramValues[i].leveragedQty;
-                param.takerMargin = paramValues[i].takerMargin;
-                param.makerMargin = slotMargins[i].amount;
+                    param.leveragedQty = paramValues[i].leveragedQty;
+                    param.takerMargin = paramValues[i].takerMargin;
+                    param.makerMargin = slotMargins[i].amount;
 
-                _slot.closePosition(ctx, param, param.makerMargin.toInt256());
+                    _slot.closePosition(
+                        ctx,
+                        param,
+                        param.makerMargin.toInt256()
+                    );
+                }
             }
         } else {
             uint256 remainMakerMargin = makerMargin;
             uint256 remainRealizedPnl = absRealizedPnl;
 
             for (uint256 i = 0; i < slotMargins.length; i++) {
-                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+                if (slotMargins[i].amount > 0) {
+                    LpSlot storage _slot = _slots[
+                        slotMargins[i].tradingFeeRate
+                    ];
 
-                param.leveragedQty = paramValues[i].leveragedQty;
-                param.takerMargin = paramValues[i].takerMargin;
-                param.makerMargin = slotMargins[i].amount;
+                    param.leveragedQty = paramValues[i].leveragedQty;
+                    param.takerMargin = paramValues[i].takerMargin;
+                    param.makerMargin = slotMargins[i].amount;
 
-                uint256 absTakerPnl = remainRealizedPnl.mulDiv(
-                    param.makerMargin,
-                    remainMakerMargin
-                );
-                if (realizedPnl < 0) {
-                    // maker profit
-                    absTakerPnl = Math.min(absTakerPnl, param.takerMargin);
-                } else {
-                    // taker profit
-                    absTakerPnl = Math.min(absTakerPnl, param.makerMargin);
+                    uint256 absTakerPnl = remainRealizedPnl.mulDiv(
+                        param.makerMargin,
+                        remainMakerMargin
+                    );
+                    if (realizedPnl < 0) {
+                        // maker profit
+                        absTakerPnl = Math.min(absTakerPnl, param.takerMargin);
+                    } else {
+                        // taker profit
+                        absTakerPnl = Math.min(absTakerPnl, param.makerMargin);
+                    }
+
+                    int256 takerPnl = realizedPnl < 0
+                        ? -(absTakerPnl.toInt256())
+                        : absTakerPnl.toInt256();
+
+                    _slot.closePosition(ctx, param, takerPnl);
+
+                    remainMakerMargin -= param.makerMargin;
+                    remainRealizedPnl -= absTakerPnl;
                 }
-
-                int256 takerPnl = realizedPnl < 0
-                    ? -(absTakerPnl.toInt256())
-                    : absTakerPnl.toInt256();
-
-                _slot.closePosition(ctx, param, takerPnl);
-
-                remainMakerMargin -= param.makerMargin;
-                remainRealizedPnl -= absTakerPnl;
             }
 
             require(remainRealizedPnl == 0, "EMR"); // Exceed Margin Range

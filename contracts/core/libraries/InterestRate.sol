@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
-
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-
 uint256 constant BPS = 10000;
 
 library InterestRate {
@@ -108,8 +106,8 @@ library InterestRate {
         uint256 interest = 0;
 
         uint256 endTimestamp = type(uint256).max;
-        for (uint256 idx = self.length - 1; idx > 0; idx--) {
-            Record memory record = self[idx];
+        for (uint256 idx = self.length; idx > 0; idx--) {
+            Record memory record = self[idx - 1];
             if (endTimestamp <= from) {
                 break;
             }
@@ -123,7 +121,6 @@ library InterestRate {
             );
             endTimestamp = record.beginTimestamp;
         }
-
         return interest;
     }
 

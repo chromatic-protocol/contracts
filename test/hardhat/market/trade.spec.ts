@@ -1,21 +1,30 @@
 import { expect } from "chai"
-import { BigNumber, ethers } from "ethers"
-import { prepareMarketTest } from "./testHelper"
-import { deploy as gelatoDeploy } from "../gelato/deploy"
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
+import { BigNumber } from "ethers"
+import { ethers } from "hardhat"
+import { helpers, prepareMarketTest } from "./testHelper"
+import { time } from "@nomicfoundation/hardhat-network-helpers"
+import {
+  addYears,
+  differenceInYears,
+  fromUnixTime,
+  getUnixTime,
+} from "date-fns"
 
-describe("position & account test", async () => {
+describe("position & account test", async function () {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
-  const eth100 = ethers.utils.parseEther("100")
+  const base = ethers.utils.parseEther("10")
+  async function initialize() {
+    testData = await prepareMarketTest()
+    const { addLiquidity } = helpers(testData)
+    await addLiquidity(base, 1)
+    await addLiquidity(base.mul(5), 10)
+    await addLiquidity(base, -1)
+    await addLiquidity(base.mul(5), -10)
+  }
+
   before(async () => {
     // market deploy
-    testData = await prepareMarketTest()
-    const { addLiquidity } = testData
-    await addLiquidity(eth100, 1)
-    await addLiquidity(eth100.mul(5), 10)
-    await addLiquidity(eth100, -1)
-    await addLiquidity(eth100.mul(5), -10)
-    
+    await initialize()
   })
 
   it("open long position", async () => {
@@ -26,10 +35,12 @@ describe("position & account test", async () => {
       oracleProvider,
       settlementToken,
     } = testData
+    const { updatePrice } = helpers(testData)
     expect(await traderAccount.getPositionIds(market.address)).to.deep.equal([])
 
-    const takerMargin = ethers.utils.parseEther("100")
-    const makerMargin = ethers.utils.parseEther("500")
+    await updatePrice(1000)
+    const takerMargin = ethers.utils.parseEther("10")
+    const makerMargin = ethers.utils.parseEther("50")
     const openPositionTx = await traderRouter.openPosition(
       market.address,
       1,
@@ -52,9 +63,9 @@ describe("position & account test", async () => {
     console.log("slot0 amount", position._slotMargins[0].amount)
     const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
     console.log("slot0", slot0)
-    expect(slot0?.amount).to.equal(eth100)
+    expect(slot0?.amount).to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
-    expect(slot2?.amount).to.equal(eth100.mul(4))
+    expect(slot2?.amount).to.equal(base.mul(4))
     const totalSlotMargin = position._slotMargins.reduce(
       (acc, curr) => acc.add(curr.amount),
       BigNumber.from(0)
@@ -63,8 +74,8 @@ describe("position & account test", async () => {
   })
 
   it("open short position ", async () => {
-    const takerMargin = ethers.utils.parseEther("100")
-    const makerMargin = ethers.utils.parseEther("500")
+    const takerMargin = ethers.utils.parseEther("10")
+    const makerMargin = ethers.utils.parseEther("50")
     const {
       traderAccount,
       market,
@@ -72,6 +83,8 @@ describe("position & account test", async () => {
       oracleProvider,
       settlementToken,
     } = testData
+    const { updatePrice } = helpers(testData)
+    await updatePrice(1000)
     const openPositionTx = await traderRouter.openPosition(
       market.address,
       -1,
@@ -95,9 +108,9 @@ describe("position & account test", async () => {
     console.log("slot0 amount", position._slotMargins[0].amount)
     const slot0 = position._slotMargins.find((p) => p.tradingFeeRate === 1)
     console.log("slot0", slot0)
-    expect(slot0?.amount).to.equal(eth100)
+    expect(slot0?.amount).to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
-    expect(slot2?.amount).to.equal(eth100.mul(4))
+    expect(slot2?.amount).to.equal(base.mul(4))
     const totalSlotMargin = position._slotMargins.reduce(
       (acc, curr) => acc.add(curr.amount),
       BigNumber.from(0)
@@ -105,3 +118,5 @@ describe("position & account test", async () => {
     expect(makerMargin).to.equal(totalSlotMargin)
   })
 })
+
+
