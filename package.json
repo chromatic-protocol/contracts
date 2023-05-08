@@ -5,6 +5,7 @@
     "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
     "coverage": "forge coverage --report lcov",
     "coverage:watch": "watch -p \"**/*.sol\" -c \"yarn coverage\"",
+    "hardhat:compile:w": "find contracts -iname '*.sol' | entr -cnr npx hardhat compile",
     "sizer": "forge build --sizes",
     "sizer:hardhat": "hardhat size-contracts",
     "deploy": "hardhat deploy",
