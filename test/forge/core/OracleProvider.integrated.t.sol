@@ -9,6 +9,12 @@ import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/
 
 // forge test --fork-url https://eth.llamarpc.com --fork-block-number 10000000 -vv
 contract OracleProviderTest is Test {
+    event OracleVersionUpdated(
+        uint256 newVersion,
+        uint256 timestamp,
+        int256 price
+    );
+
     OracleProvider oracleProvider;
     PriceFeedMock priceFeedMock;
     address ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -65,5 +71,16 @@ contract OracleProviderTest is Test {
         updateAnswer();
         syncVersion();
         updateAnswer();
+    }
+
+    function testVersionUpdateEvent() public {
+        priceFeedMock.setRoundData(77777);
+        
+        uint256 latestVersion = oracleProvider.currentVersion().version;
+
+        vm.expectEmit(false, false, false, true);
+        emit OracleVersionUpdated(latestVersion + 1, block.timestamp, 77777);
+
+        oracleProvider.syncVersion();
     }
 }
