@@ -106,7 +106,7 @@ const config: HardhatUserConfig = {
       "USUMLiquidator",
     ],
     includeDeployed: true,
-    artifactFromDeployment: false,
+    artifactFromDeployment: true,
     excludesFromDeployed: ["KeeperFeePayer", "*Lib", "*Mock"],
     docgen: {
       sourcesDir: "contracts",
