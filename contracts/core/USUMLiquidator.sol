@@ -17,6 +17,7 @@ contract USUMLiquidator is Liquidator, AutomateReady {
         AutomateReady(_automate, address(this), opsProxyFactory)
     {}
 
+    ///@inheritdoc Liquidator
     function getAutomate() internal view override returns (IAutomate) {
         return automate;
     }
