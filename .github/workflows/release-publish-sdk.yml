@@ -62,17 +62,18 @@ jobs:
       - uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
-      - name: build SDK
+      - name: setup to build
         uses: actions/setup-node@v3
         with:
           cache: yarn
           node-version: 18.15
           registry-url: https://npm.pkg.github.com/
           scope: "@chromatic-finance"
+      - name: build SDK
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
-      - run: |
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           yarn install
           yarn clean
           yarn build
