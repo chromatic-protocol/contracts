@@ -71,6 +71,7 @@ jobs:
           scope: "@chromatic-finance"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
       - run: |
           yarn install
           yarn clean
