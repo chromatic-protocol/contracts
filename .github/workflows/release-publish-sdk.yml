@@ -1,0 +1,76 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+
+name: Release and Publish SDK
+
+on:
+  pull_request:
+    types:
+      - closed
+    paths:
+      - contracts/**
+      - deploy/**
+      - package.sdk.json
+permissions:
+  contents: write
+
+jobs:
+  Release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.changelog.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v3 # Checkout our working repository
+      - name: Conventional Changelog Action
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.github_token }}
+          output-file: false
+          pre-release: true
+          skip-on-empty: false
+          git-push: false
+          skip-version-file: true
+          skip-commit: true
+      - name: Create Release # This action will create the actual release
+        uses: actions/create-release@v1.1.4
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          release_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+          prerelease: true
+  Publish:
+    needs: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: build SDK
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.15
+          registry-url: https://npm.pkg.github.com/
+          scope: "@chromatic-finance"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          yarn install
+          yarn clean
+          yarn build
+      - name: publish
+        working-directory: ./dist
+        run: |
+          npm version ${{needs.Release.outputs.tag_name}}
+          npm publish
+
