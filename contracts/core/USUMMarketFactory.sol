@@ -46,6 +46,8 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         dao = msg.sender;
     }
 
+    // set DAO address 
+    /// @param _dao new DAO address to set
     function updateDao(address _dao) external onlyDao {
         dao = _dao;
     }
