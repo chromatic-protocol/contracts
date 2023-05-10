@@ -8,6 +8,7 @@ import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@usum/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
 
 contract USUMMarketFactory is IUSUMMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
@@ -112,6 +113,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         emit MarketCreated(oracleProvider, settlementToken, market);
     }
 
+    ///@inheritdoc IMarketDeployer
     function parameters()
         external
         view
