@@ -53,12 +53,19 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+      - name: Cache foundry
+        id: cache-foundry
+        uses: actions/cache@v3
+        with:
+          path: ~/.foundry
+          key: ${{ runner.os }}-foundry
       - uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
       - name: build SDK
         uses: actions/setup-node@v3
         with:
+          cache: yarn
           node-version: 18.15
           registry-url: https://npm.pkg.github.com/
           scope: "@chromatic-finance"
