@@ -65,6 +65,7 @@ jobs:
       - name: build SDK
         uses: actions/setup-node@v3
         with:
+          cache: yarn
           node-version: 18.15
           registry-url: https://npm.pkg.github.com/
           scope: "@chromatic-finance"
