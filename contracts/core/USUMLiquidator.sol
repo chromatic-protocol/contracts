@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
+import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {Liquidator} from "@usum/core/base/Liquidator.sol";
 import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
 import {IAutomate} from "@usum/core/base/gelato/Types.sol";
@@ -20,6 +21,7 @@ contract USUMLiquidator is Liquidator, AutomateReady {
         return automate;
     }
 
+    ///@inheritdoc IUSUMLiquidator
     function liquidate(
         address market,
         uint256 positionId
