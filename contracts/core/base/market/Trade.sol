@@ -12,6 +12,7 @@ import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
+import {ITrade} from "@usum/core/interfaces/market/ITrade.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
@@ -20,6 +21,7 @@ abstract contract Trade is MarketValue {
 
     uint256 internal _positionId;
 
+    ///@inheritdoc ITrade
     function openPosition(
         int224 qty,
         uint32 leverage,

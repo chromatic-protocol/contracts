@@ -79,6 +79,8 @@ jobs:
           yarn build
       - name: publish
         working-directory: ./dist
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm version ${{needs.Release.outputs.tag_name}}
           npm publish
