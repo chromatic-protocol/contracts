@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
+import {IUSUMFlashLoanCallback} from "@usum/core/interfaces/callback/IUSUMFlashLoanCallback.sol";
+import {Constants} from "@usum/core/libraries/Constants.sol";
 
 contract USUMVault is IUSUMVault {
+    using Math for uint256;
+
     IUSUMMarketFactory factory;
     IKeeperFeePayer keeperFeePayer;
 
@@ -15,8 +20,11 @@ contract USUMVault is IUSUMVault {
     mapping(address => uint256) takerBalance;
     mapping(address => uint256) makerBalancePerMarket;
     mapping(address => uint256) takerBalancePerMarket;
+    mapping(address => uint256) pendingMakerEarns;
 
     error OnlyAccessableByMarket();
+    error NotEnoughBalance();
+    error NotEnoughFeePaid();
 
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender))
@@ -28,6 +36,8 @@ contract USUMVault is IUSUMVault {
         factory = _factory;
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
     }
+
+    // implement IVault
 
     function onOpenPosition(
         uint256 positionId,
@@ -166,5 +176,60 @@ contract USUMVault is IUSUMVault {
             );
             emit TransferProtocolFee(market, positionId, amount);
         }
+    }
+
+    // implement ILendingPool
+
+    function flashLoan(
+        address token,
+        uint256 amount,
+        address recipient,
+        bytes calldata data
+    ) external {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+
+        if (amount > balance) revert NotEnoughBalance();
+
+        uint256 fee = amount.mulDiv(
+            factory.getFlashLoanFeeRate(token),
+            Constants.BPS,
+            Math.Rounding.Up
+        );
+
+        SafeERC20.safeTransfer(IERC20(token), recipient, amount);
+
+        IUSUMFlashLoanCallback(msg.sender).flashLoanCallback(fee, data);
+
+        uint256 balanceAfter = IERC20(token).balanceOf(address(this));
+
+        if (balanceAfter < balance + fee) revert NotEnoughFeePaid();
+
+        uint256 paid = balanceAfter - balance;
+
+        uint256 _takerBalance = takerBalance[token];
+        uint256 _makerBalance = makerBalance[token];
+        uint256 paidToTakerPool = paid.mulDiv(
+            _takerBalance,
+            _takerBalance + _makerBalance
+        );
+        uint256 paidToMakerPool = paid - paidToTakerPool;
+
+        if (paidToTakerPool > 0) {
+            SafeERC20.safeTransfer(
+                IERC20(token),
+                factory.treasury(),
+                paidToTakerPool
+            );
+        }
+        pendingMakerEarns[token] += paidToMakerPool;
+
+        emit FlashLoan(
+            msg.sender,
+            recipient,
+            amount,
+            paid,
+            paidToTakerPool,
+            paidToMakerPool
+        );
     }
 }
