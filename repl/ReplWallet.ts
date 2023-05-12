@@ -108,6 +108,7 @@ export class ReplWallet {
       await this.AccountFactory.createAccount()
       accountAddress = await this.AccountFactory["getAccount()"]()
     }
+    console.log(`crete Account, signer: ${accountAddress}, ${this.signer.address}`)
     this.Account = IAccount__factory.connect(accountAddress, this.signer)
   }
 
