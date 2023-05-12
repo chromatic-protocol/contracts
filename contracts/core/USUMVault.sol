@@ -155,7 +155,7 @@ contract USUMVault is IUSUMVault {
         uint256 amount
     ) internal {
         if (amount > 0) {
-            SafeERC20.safeTransfer(settlementToken, factory.dao(), amount);
+            SafeERC20.safeTransfer(settlementToken, factory.treasury(), amount);
             emit TransferProtocolFee(market, positionId, amount);
         }
     }

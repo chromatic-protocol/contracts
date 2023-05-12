@@ -18,9 +18,10 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     address public override dao;
 
-    address public override keeperFeePayer;
-    address public override vault;
     address public override liquidator;
+    address public override vault;
+    address public override keeperFeePayer;
+    address public override treasury;
 
     OracleProviderRegistry private _oracleProviderRegistry;
     SettlementTokenRegistry private _settlementTokenRegistry;
@@ -45,12 +46,19 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     constructor() {
         dao = msg.sender;
+        treasury = dao;
     }
 
     // set DAO address 
     /// @param _dao new DAO address to set
-    function updateDao(address _dao) external onlyDao {
+    function updateDao(address _dao) external override onlyDao {
         dao = _dao;
+        emit UpdateDao(dao);
+    }
+
+    function updateTreasury(address _treasury) external override onlyDao {
+        treasury = _treasury;
+        emit UpdateTreasury(treasury);
     }
 
     function setLiquidator(address _liquidator) external override onlyDao {
