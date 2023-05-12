@@ -9,8 +9,9 @@ import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     IUSUMMarketFactory public immutable override factory;
@@ -26,7 +27,10 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     mapping(uint256 => Position) internal positions;
 
     modifier onlyLiquidator() {
-        require(msg.sender == address(liquidator));
+        require(
+            msg.sender == address(liquidator),
+            Errors.ONLY_LIQUIDATOR_CAN_ACCESS
+        );
         _;
     }
 

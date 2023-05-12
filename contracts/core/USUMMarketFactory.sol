@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
+import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@usum/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 contract USUMMarketFactory is IUSUMMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
@@ -40,7 +41,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     error ExistMarket();
 
     modifier onlyDao() {
-        require(msg.sender == dao, "only DAO can access");
+        require(msg.sender == dao, Errors.ONLY_DAO_CAN_ACCESS);
         _;
     }
 

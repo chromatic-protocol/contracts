@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./AutomateReady.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ITaskTreasuryUpgradable, ModuleData} from "@usum/core/base/gelato/Types.sol";
+import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 /**
  * @dev Inherit this contract to allow your smart contract
@@ -13,9 +16,11 @@ abstract contract AutomateTaskCreator is AutomateReady {
     address public immutable fundsOwner;
     ITaskTreasuryUpgradable public immutable taskTreasury;
 
-    constructor(address _automate, address _fundsOwner, address opsTaskFactory)
-        AutomateReady(_automate, address(this), opsTaskFactory)
-    {
+    constructor(
+        address _automate,
+        address _fundsOwner,
+        address opsTaskFactory
+    ) AutomateReady(_automate, address(this), opsTaskFactory) {
         fundsOwner = _fundsOwner;
         taskTreasury = automate.taskTreasury();
     }
@@ -27,7 +32,7 @@ abstract contract AutomateTaskCreator is AutomateReady {
     function withdrawFunds(uint256 _amount, address _token) external {
         require(
             msg.sender == fundsOwner,
-            "Only funds owner can withdraw funds"
+            Errors.ONLY_FUNDS_OWNER_CAN_WITHDRAW_FUNDS
         );
 
         taskTreasury.withdrawFunds(payable(fundsOwner), _token, _amount);
@@ -68,11 +73,10 @@ abstract contract AutomateTaskCreator is AutomateReady {
         return abi.encode(_resolverAddress, _resolverData);
     }
 
-    function _timeModuleArg(uint256 _startTime, uint256 _interval)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function _timeModuleArg(
+        uint256 _startTime,
+        uint256 _interval
+    ) internal pure returns (bytes memory) {
         return abi.encode(uint128(_startTime), uint128(_interval));
     }
 

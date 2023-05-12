@@ -3,9 +3,10 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct LpSlot {
     uint256 total;
@@ -26,7 +27,10 @@ library LpSlotLib {
         PositionParam memory param,
         uint256 tradingFee
     ) internal {
-        require(param.makerMargin <= self.balance(), "NESB"); // Not Enough Slot Balance
+        require(
+            param.makerMargin <= self.balance(),
+            Errors.NOT_ENOUGH_SLOT_BALANCE
+        );
 
         self._position.openPosition(ctx, param);
         self.total += tradingFee;
@@ -68,7 +72,7 @@ library LpSlotLib {
         uint256 amount,
         uint256 totalLiquidity
     ) internal returns (uint256 liquidity) {
-        require(amount > MIN_AMOUNT, "TSA"); // Too Small Amount
+        require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
         if (totalLiquidity == 0) {
             liquidity = amount;
@@ -90,7 +94,7 @@ library LpSlotLib {
         uint256 totalLiquidity
     ) internal returns (uint256 amount) {
         amount = liquidity.mulDiv(self.value(ctx), totalLiquidity);
-        require(amount <= self.balance(), "NESB"); // Not Enough Slot Balance
+        require(amount <= self.balance(), Errors.NOT_ENOUGH_SLOT_BALANCE);
 
         self.total -= amount;
     }

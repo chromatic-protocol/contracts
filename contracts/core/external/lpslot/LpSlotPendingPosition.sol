@@ -4,11 +4,12 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {AccruedInterest, AccruedInterestLib} from "@usum/core/external/lpslot/AccruedInterest.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct LpSlotPendingPosition {
     uint256 oracleVersion;
@@ -49,7 +50,7 @@ library LpSlotPendingPositionLib {
         uint256 pendingVersion = self.oracleVersion;
         require(
             pendingVersion == 0 || pendingVersion == param.oracleVersion,
-            "IOV" // Invalid Oracle Version
+            Errors.INVALID_ORACLE_VERSION
         );
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
@@ -67,7 +68,10 @@ library LpSlotPendingPositionLib {
         LpContext memory ctx,
         PositionParam memory param
     ) internal _settle(self, ctx) {
-        require(self.oracleVersion == param.oracleVersion, "IOV"); // Invalid Oracle Version
+        require(
+            self.oracleVersion == param.oracleVersion,
+            Errors.INVALID_ORACLE_VERSION
+        );
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;

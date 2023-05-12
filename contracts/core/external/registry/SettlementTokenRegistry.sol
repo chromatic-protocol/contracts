@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct SettlementTokenRegistry {
     EnumerableSet.AddressSet _tokens;
@@ -21,7 +22,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token
     ) {
-        require(self._tokens.contains(token), "URT"); // UnRegistered Token
+        require(self._tokens.contains(token), Errors.UNREGISTERED_TOKEN);
         _;
     }
 
@@ -33,7 +34,7 @@ library SettlementTokenRegistryLib {
         uint256 flashLoanFeeRate,
         uint24 uniswapFeeTier
     ) external {
-        require(self._tokens.add(token), "ART"); // Already Registered Token
+        require(self._tokens.add(token), Errors.ALREADY_REGISTERED_TOKEN);
 
         self._interestRateRecords[token].initialize(interestRate);
         self._minimumTakerMargins[token] = minimumTakerMargin;

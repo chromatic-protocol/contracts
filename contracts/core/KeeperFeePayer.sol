@@ -2,11 +2,12 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IWETH9} from "@usum/core/interfaces/IWETH9.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
+import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 contract KeeperFeePayer is IKeeperFeePayer {
     IUSUMMarketFactory factory;
@@ -16,7 +17,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
     event SetRouter(address);
 
     modifier onlyDao() {
-        require(msg.sender == factory.dao(), "only DAO can access");
+        require(msg.sender == factory.dao(), Errors.ONLY_DAO_CAN_ACCESS);
         _;
     }
 
@@ -57,9 +58,12 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
         // send eth to keeper
         (bool success, ) = keeperAddress.call{value: amountOut}("");
-        require(success, "_transfer: ETH transfer failed");
+        require(success, Errors.ETH_TRANSFER_FAILED);
         uint256 remainedBalance = IERC20(tokenIn).balanceOf(address(this));
-        require(remainedBalance + amountIn >= balance, "invaild swap value");
+        require(
+            remainedBalance + amountIn >= balance,
+            Errors.INVALID_SWAP_VALUE
+        );
 
         SafeERC20.safeTransfer(tokenIn, msg.sender, remainedBalance);
     }

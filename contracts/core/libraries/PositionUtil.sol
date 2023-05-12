@@ -5,6 +5,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 uint256 constant QTY_DECIMALS = 4;
 uint256 constant LEVERAGE_DECIMALS = 2;
@@ -20,7 +21,7 @@ library PositionUtil {
     function settleVersion(
         uint256 oracleVersion
     ) internal pure returns (uint256) {
-        require(oracleVersion > 0, "IOV"); // Invalid Oracle Version
+        require(oracleVersion > 0, Errors.INVALID_ORACLE_VERSION);
         return oracleVersion + 1;
     }
 
@@ -37,7 +38,10 @@ library PositionUtil {
         OracleVersion memory currentVersion
     ) internal view returns (uint256) {
         uint256 _settleVersion = settleVersion(oracleVersion);
-        require(_settleVersion <= currentVersion.version, "USP"); // UnSettled Position
+        require(
+            _settleVersion <= currentVersion.version,
+            Errors.UNSETTLED_POSITION
+        );
 
         OracleVersion memory _oracleVersion = _settleVersion ==
             currentVersion.version
@@ -77,7 +81,7 @@ library PositionUtil {
         require(
             !((currentQty > 0 && openQty <= 0) ||
                 (currentQty < 0 && openQty >= 0)),
-            "IPQ" // Invalid Position Qty
+            Errors.INVALID_POSITION_QTY
         );
     }
 
@@ -90,7 +94,7 @@ library PositionUtil {
                 (closeQty == 0) ||
                 (currentQty > 0 && closeQty > currentQty) ||
                 (currentQty < 0 && closeQty < currentQty)),
-            "IPQ" // Invalid Position Qty
+            Errors.INVALID_POSITION_QTY
         );
     }
 }

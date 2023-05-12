@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
+
 uint256 constant BPS = 10000;
 
 library InterestRate {
@@ -15,7 +17,7 @@ library InterestRate {
     uint256 private constant YEAR = 365 * 24 * 3600;
 
     modifier initialized(Record[] storage self) {
-        require(self.length > 0, "IRNI"); // Interest Rate Not Initialized
+        require(self.length > 0, Errors.INTEREST_RATE_NOT_INITIALIZED);
         _;
     }
 
@@ -33,11 +35,17 @@ library InterestRate {
         uint256 annualRateBPS,
         uint256 beginTimestamp
     ) internal initialized(self) {
-        require(annualRateBPS <= MAX_RATE_BPS, "IROF"); // Interest Rate OvferFlow
-        require(beginTimestamp > block.timestamp, "IRPT"); // Interest Rate Past Timestamp
+        require(annualRateBPS <= MAX_RATE_BPS, Errors.INTEREST_RATE_OVERFLOW);
+        require(
+            beginTimestamp > block.timestamp,
+            Errors.INTEREST_RATE_PAST_TIMESTAMP
+        );
 
         Record memory lastRecord = self[self.length - 1];
-        require(beginTimestamp > lastRecord.beginTimestamp, "IRNA"); // Interest Rate Not Appendable
+        require(
+            beginTimestamp > lastRecord.beginTimestamp,
+            Errors.INTEREST_RATE_NOT_APPENDABLE
+        );
 
         self.push(
             Record({
@@ -56,7 +64,10 @@ library InterestRate {
         }
 
         Record memory lastRecord = self[self.length - 1];
-        require(block.timestamp >= lastRecord.beginTimestamp, "IRAA"); // Interest Rate Already Applied
+        require(
+            block.timestamp >= lastRecord.beginTimestamp,
+            Errors.INTEREST_RATE_ALREADY_APPLIED
+        );
 
         self.pop();
 

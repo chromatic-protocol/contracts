@@ -4,11 +4,12 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct LpSlotSet {
     uint16 _minAvailableFeeRateLong;
@@ -67,7 +68,7 @@ library LpSlotSetLib {
             }
         }
 
-        require(remain == 0, "NESB"); // Not Enough Slot Balance
+        require(remain == 0, Errors.NOT_ENOUGH_SLOT_BALANCE);
 
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
@@ -139,7 +140,7 @@ library LpSlotSetLib {
         require(
             !((realizedPnl > 0 && absRealizedPnl > makerMargin) ||
                 (realizedPnl < 0 && absRealizedPnl > position.takerMargin)),
-            "EMR" // Exceed Margin Range
+            Errors.EXCEED_MARGIN_RANGE
         );
 
         mapping(uint16 => LpSlot) storage _slots = targetSlots(
@@ -230,7 +231,7 @@ library LpSlotSetLib {
                 }
             }
 
-            require(remainRealizedPnl == 0, "EMR"); // Exceed Margin Range
+            require(remainRealizedPnl == 0, Errors.EXCEED_MARGIN_RANGE);
         }
 
         uint16 _feeRate = slotMargins[0].tradingFeeRate;
@@ -384,7 +385,7 @@ library LpSlotSetLib {
         require(
             idx < _tradingFeeRates.length &&
                 absFeeRate == _tradingFeeRates[idx],
-            "UTFR" // Unsupported Trading Fee Rate
+            Errors.UNSUPPORTED_TRADING_FEE_RATE
         );
     }
 
