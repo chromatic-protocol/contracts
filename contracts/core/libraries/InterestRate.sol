@@ -82,7 +82,8 @@ library InterestRate {
         initialized(self)
         returns (Record memory interestRate, uint256 index)
     {
-        for (index = self.length - 1; index >= 0; index--) {
+        for (uint256 i = self.length; i > 0; i--) {
+            index = i - 1;
             interestRate = self[index];
 
             if (interestRate.beginTimestamp <= timestamp) {
