@@ -44,7 +44,6 @@ abstract contract Liquidator is IUSUMLiquidator {
         moduleData.modules[1] = Module.TIME;
         moduleData.modules[2] = Module.PROXY;
         moduleData.args[0] = _resolverModuleArg(
-            address(this),
             abi.encodeCall(this.resolveLiquidation, (market, positionId))
         );
         moduleData.args[1] = _timeModuleArg(
@@ -75,9 +74,9 @@ abstract contract Liquidator is IUSUMLiquidator {
                 true,
                 abi.encodeCall(this.liquidate, (_market, positionId))
             );
-        } else {
-            return (false, "");
         }
+
+        return (false, "");
     }
 
     function _liquidate(
@@ -101,10 +100,9 @@ abstract contract Liquidator is IUSUMLiquidator {
     }
 
     function _resolverModuleArg(
-        address _resolverAddress,
         bytes memory _resolverData
-    ) internal pure returns (bytes memory) {
-        return abi.encode(_resolverAddress, _resolverData);
+    ) internal view returns (bytes memory) {
+        return abi.encode(address(this), _resolverData);
     }
 
     function _timeModuleArg(

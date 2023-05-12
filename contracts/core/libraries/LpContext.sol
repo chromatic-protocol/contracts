@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
+import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 struct LpContext {
-    IOracleProvider oracleProvider;
-    IInterestCalculator interestCalculator;
+    IUSUMMarket market;
     uint256 tokenPrecision;
     uint256 _pricePrecision;
     OracleVersion _currentVersionCache;
@@ -19,7 +18,10 @@ library LpContextLib {
         LpContext memory self
     ) internal view returns (OracleVersion memory) {
         if (self._currentVersionCache.version == 0) {
-            self._currentVersionCache = self.oracleProvider.currentVersion();
+            self._currentVersionCache = self
+                .market
+                .oracleProvider()
+                .currentVersion();
         }
 
         return self._currentVersionCache;
@@ -32,14 +34,17 @@ library LpContextLib {
         if (self._currentVersionCache.version == version) {
             return self._currentVersionCache;
         }
-        return self.oracleProvider.atVersion(version);
+        return self.market.oracleProvider().atVersion(version);
     }
 
     function pricePrecision(
         LpContext memory self
     ) internal view returns (uint256) {
         if (self._pricePrecision == 0) {
-            self._pricePrecision = self.oracleProvider.pricePrecision();
+            self._pricePrecision = self
+                .market
+                .oracleProvider()
+                .pricePrecision();
         }
         return self._pricePrecision;
     }

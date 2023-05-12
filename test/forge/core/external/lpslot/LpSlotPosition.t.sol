@@ -7,18 +7,38 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 contract LpSlotPositionTest is Test {
     using LpSlotPositionLib for LpSlotPosition;
 
     IOracleProvider provider;
-    IInterestCalculator calculator;
+    IUSUMVault vault;
+    IUSUMMarket market;
     LpSlotPosition position;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        calculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(2));
+        market = IUSUMMarket(address(3));
+
+        vm.mockCall(
+            address(vault),
+            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encode(0)
+        );
+
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.oracleProvider.selector),
+            abi.encode(provider)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.vault.selector),
+            abi.encode(vault)
+        );
     }
 
     function testClosePosition() public {
@@ -52,8 +72,7 @@ contract LpSlotPositionTest is Test {
     function _newLpContext() private view returns (LpContext memory) {
         return
             LpContext({
-                oracleProvider: provider,
-                interestCalculator: calculator,
+                market: market,
                 tokenPrecision: 10 ** 6,
                 _pricePrecision: 1,
                 _currentVersionCache: OracleVersion(0, 0, 0)

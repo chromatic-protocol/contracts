@@ -5,6 +5,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@usum/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
@@ -171,6 +172,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         uint256 minimumTakerMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
+        uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     ) external override onlyDao {
         _settlementTokenRegistry.register(
@@ -178,13 +180,18 @@ contract USUMMarketFactory is IUSUMMarketFactory {
             minimumTakerMargin,
             interestRate,
             flashLoanFeeRate,
+            earningDistributionThreshold,
             uniswapFeeTier
         );
+
+        createMakerEarningDistributionTask(token);
+
         emit SettlementTokenRegistered(
             token,
             minimumTakerMargin,
             interestRate,
             flashLoanFeeRate,
+            earningDistributionThreshold,
             uniswapFeeTier
         );
     }
@@ -233,6 +240,26 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     ) external onlyDao {
         _settlementTokenRegistry.setFlashLoanFeeRate(token, flashLoanFeeRate);
         emit SetFlashLoanFeeRate(token, flashLoanFeeRate);
+    }
+
+    function getEarningDistributionThreshold(
+        address token
+    ) external view returns (uint256) {
+        return _settlementTokenRegistry.getEarningDistributionThreshold(token);
+    }
+
+    function setEarningDistributionThreshold(
+        address token,
+        uint256 earningDistributionThreshold
+    ) external onlyDao {
+        _settlementTokenRegistry.setEarningDistributionThreshold(
+            token,
+            earningDistributionThreshold
+        );
+        emit SetEarningDistributionThreshold(
+            token,
+            earningDistributionThreshold
+        );
     }
 
     function getUniswapFeeTier(address token) external view returns (uint24) {
@@ -314,5 +341,15 @@ contract USUMMarketFactory is IUSUMMarketFactory {
                 to,
                 rounding
             );
+    }
+
+    // manage vault automate
+
+    function createMakerEarningDistributionTask(address token) public onlyDao {
+        IUSUMVault(vault).createMakerEarningDistributionTask(token);
+    }
+
+    function cancelMakerEarningDistributionTask(address token) public onlyDao {
+        IUSUMVault(vault).cancelMakerEarningDistributionTask(token);
     }
 }

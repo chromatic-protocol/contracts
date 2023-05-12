@@ -36,6 +36,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     parseUnits("10", USDC_ARBITRUM_GOERLI.decimals), // minimumTakerMargin
     BigNumber.from("1000"), // interestRate, 10%
     BigNumber.from("500"), // flashLoanFeeRate, 5%
+    parseUnits("1000", USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
     BigNumber.from("3000"), // uniswapFeeRate, 0.3%
     {
       from: deployer,

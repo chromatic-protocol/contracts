@@ -9,6 +9,7 @@ interface ISettlementTokenRegistry {
         uint256 minimumTakerMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
+        uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     );
 
@@ -18,6 +19,11 @@ interface ISettlementTokenRegistry {
     );
 
     event SetFlashLoanFeeRate(address indexed token, uint256 flashLoanFeeRate);
+
+    event SetEarningDistributionThreshold(
+        address indexed token,
+        uint256 earningDistributionThreshold
+    );
 
     event SetUniswapFeeTier(address indexed token, uint24 uniswapFeeTier);
 
@@ -38,6 +44,7 @@ interface ISettlementTokenRegistry {
         uint256 minimumTakerMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
+        uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     ) external;
 
@@ -64,6 +71,15 @@ interface ISettlementTokenRegistry {
     function setFlashLoanFeeRate(
         address token,
         uint256 flashLoanFeeRate
+    ) external;
+
+    function getEarningDistributionThreshold(
+        address token
+    ) external view returns (uint256);
+
+    function setEarningDistributionThreshold(
+        address token,
+        uint256 earningDistributionThreshold
     ) external;
 
     function getUniswapFeeTier(address token) external view returns (uint24);

@@ -12,7 +12,12 @@ abstract contract Liquidity is LpToken, MarketValue {
     uint256 public constant MINIMUM_LIQUIDITY = 10 ** 3;
     uint256 public constant MINIMUM_MARKET_VALUATION = 10 ** 3;
 
-    // uint256 internal lpReserveRatio;
+    error OnlyAccessableByVault();
+
+    modifier onlyVault() {
+        if (msg.sender != address(vault)) revert OnlyAccessableByVault();
+        _;
+    }
 
     function addLiquidity(
         address recipient,
@@ -85,5 +90,14 @@ abstract contract Liquidity is LpToken, MarketValue {
         _burn(recipient, id, liquidity);
 
         emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
+    }
+
+    function distributeEarningToSlots(
+        uint256 earning,
+        uint256 marketBalance
+    ) external onlyVault {
+        lpSlotSet.distributeEarning(earning, marketBalance);
+
+        emit MarketEarningDistributed(address(this), earning, marketBalance);
     }
 }

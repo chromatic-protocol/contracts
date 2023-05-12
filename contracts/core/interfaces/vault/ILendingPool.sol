@@ -17,4 +17,9 @@ interface ILendingPool {
         address recipient,
         bytes calldata data
     ) external;
+
+    function getPendingSlotShare(
+        address market,
+        uint256 slotBalance
+    ) external view returns (uint256);
 }

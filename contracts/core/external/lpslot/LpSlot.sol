@@ -63,7 +63,15 @@ library LpSlotLib {
         int256 unrealizedPnl = self._position.unrealizedPnl(ctx);
         uint256 absPnl = unrealizedPnl.abs();
 
-        return unrealizedPnl < 0 ? self.total - absPnl : self.total + absPnl;
+        uint256 _value = unrealizedPnl < 0
+            ? self.total - absPnl
+            : self.total + absPnl;
+        return
+            _value +
+            ctx.market.vault().getPendingSlotShare(
+                address(ctx.market),
+                self.total
+            );
     }
 
     function mint(

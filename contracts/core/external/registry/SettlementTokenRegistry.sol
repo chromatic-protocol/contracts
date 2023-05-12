@@ -11,6 +11,7 @@ struct SettlementTokenRegistry {
     mapping(address => InterestRate.Record[]) _interestRateRecords;
     mapping(address => uint256) _minimumTakerMargins;
     mapping(address => uint256) _flashLoanFeeRates;
+    mapping(address => uint256) _earningDistributionThresholds;
     mapping(address => uint24) _uniswapFeeTiers;
 }
 
@@ -32,6 +33,7 @@ library SettlementTokenRegistryLib {
         uint256 minimumTakerMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
+        uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     ) external {
         require(self._tokens.add(token), Errors.ALREADY_REGISTERED_TOKEN);
@@ -39,6 +41,9 @@ library SettlementTokenRegistryLib {
         self._interestRateRecords[token].initialize(interestRate);
         self._minimumTakerMargins[token] = minimumTakerMargin;
         self._flashLoanFeeRates[token] = flashLoanFeeRate;
+        self._earningDistributionThresholds[
+            token
+        ] = earningDistributionThreshold;
         self._uniswapFeeTiers[token] = uniswapFeeTier;
     }
 
@@ -83,6 +88,23 @@ library SettlementTokenRegistryLib {
         uint256 flashLoanFeeRate
     ) external {
         self._flashLoanFeeRates[token] = flashLoanFeeRate;
+    }
+
+    function getEarningDistributionThreshold(
+        SettlementTokenRegistry storage self,
+        address token
+    ) external view returns (uint256) {
+        return self._earningDistributionThresholds[token];
+    }
+
+    function setEarningDistributionThreshold(
+        SettlementTokenRegistry storage self,
+        address token,
+        uint256 earningDistributionThreshold
+    ) external {
+        self._earningDistributionThresholds[
+            token
+        ] = earningDistributionThreshold;
     }
 
     function getUniswapFeeTier(

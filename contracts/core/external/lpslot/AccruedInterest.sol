@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/market/IInterestCalculator.sol";
 
 struct AccruedInterest {
     uint256 accumulatedAt;

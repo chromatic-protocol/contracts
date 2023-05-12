@@ -6,7 +6,8 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 contract LpSlotTest is Test {
     using SafeCast for uint256;
@@ -15,12 +16,31 @@ contract LpSlotTest is Test {
     uint256 private constant PRICE_PRECISION = 10 ** 8;
 
     IOracleProvider provider;
-    IInterestCalculator calculator;
+    IUSUMVault vault;
+    IUSUMMarket market;
     LpSlot slot;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        calculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(2));
+        market = IUSUMMarket(address(3));
+
+        vm.mockCall(
+            address(vault),
+            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encode(0)
+        );
+
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.oracleProvider.selector),
+            abi.encode(provider)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.vault.selector),
+            abi.encode(vault)
+        );
 
         slot.total = 20000 ether;
     }
@@ -89,12 +109,12 @@ contract LpSlotTest is Test {
             )
         );
         vm.mockCall(
-            address(calculator),
+            address(market),
             abi.encodeWithSelector(0x05e1bd8c, 15000 ether, 1, 3),
             abi.encode(0.01 ether)
         );
         vm.mockCall(
-            address(calculator),
+            address(market),
             abi.encodeWithSelector(0x05e1bd8c, 1000 ether, 1, 3),
             abi.encode(0.001 ether)
         );
@@ -106,8 +126,7 @@ contract LpSlotTest is Test {
     function _newLpContext() private view returns (LpContext memory) {
         return
             LpContext({
-                oracleProvider: provider,
-                interestCalculator: calculator,
+                market: market,
                 tokenPrecision: 10 ** 18,
                 _pricePrecision: PRICE_PRECISION,
                 _currentVersionCache: OracleVersion(0, 0, 0)

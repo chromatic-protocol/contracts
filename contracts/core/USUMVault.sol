@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
@@ -8,23 +9,42 @@ import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 import {IUSUMFlashLoanCallback} from "@usum/core/interfaces/callback/IUSUMFlashLoanCallback.sol";
+import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
+import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
 import {Constants} from "@usum/core/libraries/Constants.sol";
 
-contract USUMVault is IUSUMVault {
+contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     using Math for uint256;
+
+    event MakerEarningDistributed(address indexed token, uint256 earning);
+    event MarketEarningAccumulated(address indexed market, uint256 earning);
+
+    uint256 private constant DISTRIBUTION_INTERVAL = 1 hours;
 
     IUSUMMarketFactory factory;
     IKeeperFeePayer keeperFeePayer;
 
-    mapping(address => uint256) makerBalance;
-    mapping(address => uint256) takerBalance;
-    mapping(address => uint256) makerBalancePerMarket;
-    mapping(address => uint256) takerBalancePerMarket;
-    mapping(address => uint256) pendingMakerEarns;
+    mapping(address => uint256) public makerBalances; // settlement token => balance
+    mapping(address => uint256) public takerBalances; // settlement token => balance
+    mapping(address => uint256) public makerMarketBalances; // market => balance
+    mapping(address => uint256) public takerMarketBalances; // market => balance
+    mapping(address => uint256) public pendingMakerEarnings; // settlement token => earning
+    mapping(address => uint256) public pendingMarketEarnings; // market => earning
 
+    mapping(address => bytes32) public makerEarningDistributionTaskIds; // settlement token => task id
+    mapping(address => bytes32) public marketEarningDistributionTaskIds; // market => task id
+
+    error OnlyAccessableByFactory();
     error OnlyAccessableByMarket();
     error NotEnoughBalance();
     error NotEnoughFeePaid();
+    error ExistMarketEarningDistributionTask();
+    error ExistSlotEarningDistributionTask();
+
+    modifier onlyFactory() {
+        if (msg.sender != address(factory)) revert OnlyAccessableByFactory();
+        _;
+    }
 
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender))
@@ -32,7 +52,11 @@ contract USUMVault is IUSUMVault {
         _;
     }
 
-    constructor(IUSUMMarketFactory _factory) {
+    constructor(
+        IUSUMMarketFactory _factory,
+        address _automate,
+        address opsProxyFactory
+    ) AutomateReady(_automate, address(this), opsProxyFactory) {
         factory = _factory;
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
     }
@@ -48,11 +72,11 @@ contract USUMVault is IUSUMVault {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
-        takerBalance[settlementToken] += takerMargin;
-        takerBalancePerMarket[address(market)] += takerMargin;
+        takerBalances[settlementToken] += takerMargin;
+        takerMarketBalances[address(market)] += takerMargin;
 
-        makerBalance[settlementToken] += tradingFee;
-        makerBalancePerMarket[address(market)] += tradingFee;
+        makerBalances[settlementToken] += tradingFee;
+        makerMarketBalances[address(market)] += tradingFee;
 
         transferProtocolFee(
             address(market),
@@ -85,21 +109,21 @@ contract USUMVault is IUSUMVault {
             settlmentAmount
         );
 
-        takerBalance[settlementToken] -= takerMargin;
-        takerBalancePerMarket[address(market)] -= takerMargin;
+        takerBalances[settlementToken] -= takerMargin;
+        takerMarketBalances[address(market)] -= takerMargin;
 
         if (settlmentAmount > takerMargin) {
             // maker loss
             uint256 makerLoss = settlmentAmount - takerMargin;
 
-            makerBalance[settlementToken] -= makerLoss;
-            makerBalancePerMarket[address(market)] -= makerLoss;
+            makerBalances[settlementToken] -= makerLoss;
+            makerMarketBalances[address(market)] -= makerLoss;
         } else {
             // maker profit
             uint256 makerProfit = takerMargin - settlmentAmount;
 
-            makerBalance[settlementToken] += makerProfit;
-            makerBalancePerMarket[address(market)] += makerProfit;
+            makerBalances[settlementToken] += makerProfit;
+            makerMarketBalances[address(market)] += makerProfit;
         }
 
         emit OnClosePosition(
@@ -115,8 +139,8 @@ contract USUMVault is IUSUMVault {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
-        makerBalance[settlementToken] += amount;
-        makerBalancePerMarket[address(market)] += amount;
+        makerBalances[settlementToken] += amount;
+        makerMarketBalances[address(market)] += amount;
 
         emit OnAddLiquidity(address(market), amount);
     }
@@ -130,8 +154,8 @@ contract USUMVault is IUSUMVault {
 
         SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
 
-        makerBalance[settlementToken] -= amount;
-        makerBalancePerMarket[address(market)] -= amount;
+        makerBalances[settlementToken] -= amount;
+        makerMarketBalances[address(market)] -= amount;
 
         emit OnRemoveLiquidity(address(market), amount, recipient);
     }
@@ -156,8 +180,8 @@ contract USUMVault is IUSUMVault {
             keeper
         );
 
-        takerBalance[settlementToken] -= usedFee;
-        takerBalancePerMarket[address(market)] -= usedFee;
+        takerBalances[settlementToken] -= usedFee;
+        takerMarketBalances[address(market)] -= usedFee;
 
         emit TransferKeeperFee(address(market), fee, usedFee);
     }
@@ -185,7 +209,7 @@ contract USUMVault is IUSUMVault {
         uint256 amount,
         address recipient,
         bytes calldata data
-    ) external {
+    ) external nonReentrant {
         uint256 balance = IERC20(token).balanceOf(address(this));
 
         if (amount > balance) revert NotEnoughBalance();
@@ -206,11 +230,11 @@ contract USUMVault is IUSUMVault {
 
         uint256 paid = balanceAfter - balance;
 
-        uint256 _takerBalance = takerBalance[token];
-        uint256 _makerBalance = makerBalance[token];
+        uint256 takerBalance = takerBalances[token];
+        uint256 makerBalance = makerBalances[token];
         uint256 paidToTakerPool = paid.mulDiv(
-            _takerBalance,
-            _takerBalance + _makerBalance
+            takerBalance,
+            takerBalance + makerBalance
         );
         uint256 paidToMakerPool = paid - paidToTakerPool;
 
@@ -221,7 +245,7 @@ contract USUMVault is IUSUMVault {
                 paidToTakerPool
             );
         }
-        pendingMakerEarns[token] += paidToMakerPool;
+        pendingMakerEarnings[token] += paidToMakerPool;
 
         emit FlashLoan(
             msg.sender,
@@ -231,5 +255,216 @@ contract USUMVault is IUSUMVault {
             paidToTakerPool,
             paidToMakerPool
         );
+    }
+
+    function getPendingSlotShare(
+        address market,
+        uint256 slotBalance
+    ) external view returns (uint256) {
+        address token = address(IUSUMMarket(market).settlementToken());
+        uint256 makerBalance = makerBalances[token];
+        uint256 marketBalance = makerMarketBalances[market];
+
+        return
+            pendingMakerEarnings[token].mulDiv(
+                slotBalance,
+                makerBalance,
+                Math.Rounding.Up
+            ) +
+            pendingMarketEarnings[market].mulDiv(
+                slotBalance,
+                marketBalance,
+                Math.Rounding.Up
+            );
+    }
+
+    // gelato automate - distribute maker earning to each markets
+
+    function resolveMakerEarningDistribution(
+        address token
+    ) external view returns (bool canExec, bytes memory execPayload) {
+        if (_makerEarningDistributable(token)) {
+            return (true, abi.encodeCall(this.distributeMakerEarning, token));
+        }
+
+        return (false, "");
+    }
+
+    function distributeMakerEarning(
+        address token
+    ) external onlyDedicatedMsgSender {
+        if (!_makerEarningDistributable(token)) return;
+
+        address[] memory markets = factory.getMarketsBySettlmentToken(token);
+
+        uint256 earning = pendingMakerEarnings[token];
+        delete pendingMakerEarnings[token];
+
+        uint256 remainBalance = makerBalances[token];
+        uint256 remainEarning = earning;
+        for (uint256 i = 0; i < markets.length; i++) {
+            address market = markets[i];
+            uint256 marketBalance = makerMarketBalances[market];
+            uint256 marketEarning = remainEarning.mulDiv(
+                marketBalance,
+                remainBalance
+            );
+
+            pendingMarketEarnings[market] += marketEarning;
+
+            remainBalance -= marketBalance;
+            remainEarning -= marketEarning;
+
+            emit MarketEarningAccumulated(market, marketEarning);
+        }
+
+        emit MakerEarningDistributed(token, earning);
+    }
+
+    function createMakerEarningDistributionTask(
+        address token
+    ) external override onlyFactory {
+        if (makerEarningDistributionTaskIds[token] != bytes32(0))
+            revert ExistMarketEarningDistributionTask();
+
+        ModuleData memory moduleData = ModuleData({
+            modules: new Module[](3),
+            args: new bytes[](3)
+        });
+
+        moduleData.modules[0] = Module.RESOLVER;
+        moduleData.modules[1] = Module.TIME;
+        moduleData.modules[2] = Module.PROXY;
+        moduleData.args[0] = _resolverModuleArg(
+            abi.encodeCall(this.resolveMakerEarningDistribution, token)
+        );
+        moduleData.args[1] = _timeModuleArg(
+            block.timestamp,
+            DISTRIBUTION_INTERVAL
+        );
+        moduleData.args[2] = _proxyModuleArg();
+
+        makerEarningDistributionTaskIds[token] = automate.createTask(
+            address(this),
+            abi.encode(this.distributeMakerEarning.selector),
+            moduleData,
+            ETH
+        );
+    }
+
+    function cancelMakerEarningDistributionTask(
+        address token
+    ) external override onlyFactory {
+        bytes32 taskId = makerEarningDistributionTaskIds[token];
+        if (taskId != bytes32(0)) {
+            automate.cancelTask(taskId);
+            delete makerEarningDistributionTaskIds[token];
+        }
+    }
+
+    function _makerEarningDistributable(
+        address token
+    ) private view returns (bool) {
+        return
+            pendingMakerEarnings[token] >=
+            factory.getEarningDistributionThreshold(token);
+    }
+
+    // gelato automate - distribute market earning to each slots
+
+    function resolveMarketEarningDistribution(
+        address market
+    ) external view returns (bool canExec, bytes memory execPayload) {
+        address token = address(IUSUMMarket(market).settlementToken());
+        if (_marketEarningDistributable(market, token)) {
+            return (true, abi.encodeCall(this.distributeMarketEarning, market));
+        }
+
+        return (false, "");
+    }
+
+    function distributeMarketEarning(
+        address market
+    ) external onlyDedicatedMsgSender {
+        address token = address(IUSUMMarket(market).settlementToken());
+        if (!_marketEarningDistributable(market, token)) return;
+
+        uint256 earning = pendingMarketEarnings[market];
+        delete pendingMarketEarnings[market];
+
+        IUSUMMarket(market).distributeEarningToSlots(
+            earning,
+            makerMarketBalances[market]
+        );
+
+        makerMarketBalances[market] += earning;
+        makerBalances[token] += earning;
+    }
+
+    function createMarketEarningDistributionTask(
+        address market
+    ) external override onlyFactory {
+        if (marketEarningDistributionTaskIds[market] != bytes32(0))
+            revert ExistMarketEarningDistributionTask();
+
+        ModuleData memory moduleData = ModuleData({
+            modules: new Module[](3),
+            args: new bytes[](3)
+        });
+
+        moduleData.modules[0] = Module.RESOLVER;
+        moduleData.modules[1] = Module.TIME;
+        moduleData.modules[2] = Module.PROXY;
+        moduleData.args[0] = _resolverModuleArg(
+            abi.encodeCall(this.resolveMarketEarningDistribution, market)
+        );
+        moduleData.args[1] = _timeModuleArg(
+            block.timestamp,
+            DISTRIBUTION_INTERVAL
+        );
+        moduleData.args[2] = _proxyModuleArg();
+
+        marketEarningDistributionTaskIds[market] = automate.createTask(
+            address(this),
+            abi.encode(this.distributeMarketEarning.selector),
+            moduleData,
+            ETH
+        );
+    }
+
+    function cancelMarketEarningDistributionTask(
+        address market
+    ) external override onlyFactory {
+        bytes32 taskId = marketEarningDistributionTaskIds[market];
+        if (taskId != bytes32(0)) {
+            automate.cancelTask(taskId);
+            delete marketEarningDistributionTaskIds[market];
+        }
+    }
+
+    function _marketEarningDistributable(
+        address market,
+        address token
+    ) private view returns (bool) {
+        return
+            pendingMarketEarnings[market] >=
+            factory.getEarningDistributionThreshold(token);
+    }
+
+    function _resolverModuleArg(
+        bytes memory _resolverData
+    ) internal view returns (bytes memory) {
+        return abi.encode(address(this), _resolverData);
+    }
+
+    function _timeModuleArg(
+        uint256 _startTime,
+        uint256 _interval
+    ) internal pure returns (bytes memory) {
+        return abi.encode(uint128(_startTime), uint128(_interval));
+    }
+
+    function _proxyModuleArg() internal pure returns (bytes memory) {
+        return bytes("");
     }
 }

@@ -54,4 +54,8 @@ interface IUSUMMarketFactory is
     ) external;
 
     function isRegisteredMarket(address market) external view returns (bool);
+
+    function createMakerEarningDistributionTask(address token) external;
+
+    function cancelMakerEarningDistributionTask(address token) external;
 }

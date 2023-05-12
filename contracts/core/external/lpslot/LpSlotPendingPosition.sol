@@ -36,7 +36,7 @@ library LpSlotPendingPositionLib {
         LpContext memory ctx
     ) internal {
         self.accruedInterest.accumulate(
-            ctx.interestCalculator,
+            ctx.market,
             self.totalMakerMargin,
             block.timestamp
         );
@@ -95,7 +95,7 @@ library LpSlotPendingPositionLib {
         if (self.oracleVersion >= currentVersion.version) return 0;
 
         uint256 _entryPrice = PositionUtil.entryPrice(
-            ctx.oracleProvider,
+            ctx.market.oracleProvider(),
             self.oracleVersion,
             currentVersion
         );
@@ -121,7 +121,7 @@ library LpSlotPendingPositionLib {
     ) internal view returns (uint256) {
         return
             self.accruedInterest.calculateInterest(
-                ctx.interestCalculator,
+                ctx.market,
                 self.totalMakerMargin,
                 block.timestamp
             );
@@ -133,7 +133,7 @@ library LpSlotPendingPositionLib {
     ) internal view returns (uint256) {
         return
             PositionUtil.entryPrice(
-                ctx.oracleProvider,
+                ctx.market.oracleProvider(),
                 self.oracleVersion,
                 ctx.currentOracleVersion()
             );

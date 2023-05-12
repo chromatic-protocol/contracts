@@ -30,7 +30,7 @@ library PositionParamLib {
     ) internal view returns (uint256) {
         return
             PositionUtil.entryPrice(
-                ctx.oracleProvider,
+                ctx.market.oracleProvider(),
                 self.oracleVersion,
                 self.settleOracleVersion(ctx)
             );
@@ -56,7 +56,7 @@ library PositionParamLib {
         uint256 until
     ) internal view returns (uint256) {
         return
-            ctx.interestCalculator.calculateInterest(
+            ctx.market.calculateInterest(
                 self.makerMargin,
                 self.timestamp,
                 until,

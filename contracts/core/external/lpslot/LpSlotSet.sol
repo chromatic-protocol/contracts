@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {IUSUMLiquidity} from "@usum/core/interfaces/market/IUSUMLiquidity.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
@@ -25,6 +26,12 @@ library LpSlotSetLib {
     using SafeCast for uint256;
     using SignedMath for int256;
     using LpSlotLib for LpSlot;
+
+    event LpSlotEarningAccumulated(
+        uint16 indexed feeRate,
+        bytes1 slotType,
+        uint256 earning
+    );
 
     uint256 private constant FEE_RATES_LENGTH = 36;
     uint16 private constant MIN_FEE_RATE = 1;
@@ -435,6 +442,61 @@ library LpSlotSetLib {
             return low - 1;
         } else {
             return low;
+        }
+    }
+
+    function distributeEarning(
+        LpSlotSet storage self,
+        uint256 earning,
+        uint256 marketBalance
+    ) external {
+        uint256 remainEarning = earning;
+        uint256 remainBalance = marketBalance;
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+
+        (remainEarning, remainBalance) = distributeEarning(
+            self._longSlots,
+            remainEarning,
+            remainBalance,
+            _tradingFeeRates,
+            "L"
+        );
+        (remainEarning, remainBalance) = distributeEarning(
+            self._shortSlots,
+            remainEarning,
+            remainBalance,
+            _tradingFeeRates,
+            "S"
+        );
+    }
+
+    function distributeEarning(
+        mapping(uint16 => LpSlot) storage lpSlots,
+        uint256 earning,
+        uint256 marketBalance,
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates,
+        bytes1 slotType
+    ) private returns (uint256 remainEarning, uint256 remainBalance) {
+        remainBalance = marketBalance;
+        remainEarning = earning;
+
+        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+            uint16 feeRate = _tradingFeeRates[i];
+            LpSlot storage slot = lpSlots[feeRate];
+
+            if (slot.total == 0) continue;
+
+            uint256 slotEarning = remainEarning.mulDiv(
+                slot.total,
+                remainBalance
+            );
+
+            slot.total += slotEarning;
+
+            remainBalance -= marketBalance;
+            remainEarning -= slotEarning;
+
+            emit LpSlotEarningAccumulated(feeRate, slotType, slotEarning);
         }
     }
 }

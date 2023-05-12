@@ -6,15 +6,12 @@ import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
 
-abstract contract MarketValue is MarketBase, IInterestCalculator {
+abstract contract MarketValue is MarketBase {
     function newLpContext() internal view returns (LpContext memory) {
         return
             LpContext({
-                oracleProvider: oracleProvider,
-                interestCalculator: this,
+                market: this,
                 tokenPrecision: 10 ** settlementToken.decimals(),
                 _pricePrecision: 0,
                 _currentVersionCache: OracleVersion(0, 0, 0)
@@ -36,7 +33,7 @@ abstract contract MarketValue is MarketBase, IInterestCalculator {
         Math.Rounding rounding // use Rouding.Up to deduct accumulated accrued interest
     ) public view override returns (uint256) {
         return
-            ISettlementTokenRegistry(address(factory)).calculateInterest(
+            factory.calculateInterest(
                 address(settlementToken),
                 amount,
                 from,

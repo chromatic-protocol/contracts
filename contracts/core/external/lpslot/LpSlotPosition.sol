@@ -39,7 +39,7 @@ library LpSlotPositionLib {
         LpContext memory ctx
     ) internal {
         self._accruedInterest.accumulate(
-            ctx.interestCalculator,
+            ctx.market,
             self._totalMakerMargin,
             block.timestamp
         );
@@ -160,7 +160,7 @@ library LpSlotPositionLib {
     ) private view returns (uint256) {
         return
             self._accruedInterest.calculateInterest(
-                ctx.interestCalculator,
+                ctx.market,
                 self._totalMakerMargin,
                 block.timestamp
             );
