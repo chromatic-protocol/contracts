@@ -74,7 +74,7 @@ library LpSlotLib {
             );
     }
 
-    function mint(
+    function addLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount,
@@ -95,7 +95,7 @@ library LpSlotLib {
         self.total += amount;
     }
 
-    function burn(
+    function removeLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 liquidity,

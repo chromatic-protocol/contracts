@@ -24,7 +24,7 @@ abstract contract Liquidity is LpToken, MarketValue {
         int16 tradingFeeRate,
         bytes calldata data
     ) external override nonReentrant returns (uint256 liquidity) {
-        // liquidity = lpSlots.mint()
+        // liquidity = lpSlots.addLiquidity()
         // liquidity 수량만큼 token mint
 
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
@@ -41,7 +41,7 @@ abstract contract Liquidity is LpToken, MarketValue {
 
         uint256 id = encodeId(tradingFeeRate);
 
-        liquidity = lpSlotSet.mint(
+        liquidity = lpSlotSet.addLiquidity(
             newLpContext(),
             tradingFeeRate,
             amount,
@@ -78,7 +78,7 @@ abstract contract Liquidity is LpToken, MarketValue {
         // uint256 amount,
         // uint256 totalLiquidity
 
-        amount = lpSlotSet.burn(
+        amount = lpSlotSet.removeLiquidity(
             newLpContext(),
             tradingFeeRate,
             liquidity,

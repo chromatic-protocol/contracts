@@ -148,7 +148,7 @@ contract LpSlotSetTest is Test {
         assertEq(slotSet._longSlots[2].balance(), 1050.1 ether);
     }
 
-    function testMint() public {
+    function testAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
         ctx._currentVersionCache = OracleVersion({
@@ -157,13 +157,13 @@ contract LpSlotSetTest is Test {
             price: int256(90 * PRICE_PRECISION)
         });
 
-        uint256 liquidity = slotSet.mint(ctx, 1, 100 ether, 1000 ether);
+        uint256 liquidity = slotSet.addLiquidity(ctx, 1, 100 ether, 1000 ether);
 
         assertEq(liquidity, 100 ether);
         assertEq(slotSet._longSlots[1].total, 1100 ether);
     }
 
-    function testBurn() public {
+    function testRemoveLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
         ctx._currentVersionCache = OracleVersion({
@@ -172,7 +172,7 @@ contract LpSlotSetTest is Test {
             price: int256(90 * PRICE_PRECISION)
         });
 
-        uint256 amount = slotSet.burn(ctx, 1, 100 ether, 1000 ether);
+        uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
 
         assertEq(amount, 100 ether);
         assertEq(slotSet._longSlots[1].total, 900 ether);

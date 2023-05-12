@@ -45,7 +45,7 @@ contract LpSlotTest is Test {
         slot.total = 20000 ether;
     }
 
-    function testMint() public {
+    function testAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
         ctx._currentVersionCache = OracleVersion({
@@ -54,13 +54,13 @@ contract LpSlotTest is Test {
             price: int256(90 * PRICE_PRECISION)
         });
 
-        uint256 liquidity = slot.mint(ctx, 100 ether, 20000 ether);
+        uint256 liquidity = slot.addLiquidity(ctx, 100 ether, 20000 ether);
 
         assertEq(liquidity, 100 ether);
         assertEq(slot.total, 20100 ether);
     }
 
-    function testBurn() public {
+    function testRemoveLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
         ctx._currentVersionCache = OracleVersion({
@@ -69,7 +69,7 @@ contract LpSlotTest is Test {
             price: int256(90 * PRICE_PRECISION)
         });
 
-        uint256 amount = slot.burn(ctx, 100 ether, 20000 ether);
+        uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
 
         assertEq(amount, 100 ether);
         assertEq(slot.total, 19900 ether);

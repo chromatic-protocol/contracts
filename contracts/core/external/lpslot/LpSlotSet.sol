@@ -247,7 +247,7 @@ library LpSlotSetLib {
         }
     }
 
-    function mint(
+    function addLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -260,7 +260,7 @@ library LpSlotSetLib {
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        liquidity = slot.mint(ctx, amount, totalLiquidity);
+        liquidity = slot.addLiquidity(ctx, amount, totalLiquidity);
 
         uint16 _feeRate = abs(tradingFeeRate);
         if (_feeRate < minAvailableFeeRate(self, tradingFeeRate)) {
@@ -268,7 +268,7 @@ library LpSlotSetLib {
         }
     }
 
-    function burn(
+    function removeLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -277,7 +277,7 @@ library LpSlotSetLib {
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        amount = slot.burn(ctx, liquidity, totalLiquidity);
+        amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
     }
 
     function targetSlots(
