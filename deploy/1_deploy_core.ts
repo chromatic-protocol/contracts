@@ -90,7 +90,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: vault } = await deploy("USUMVault", {
     from: deployer,
-    args: [factory],
+    args: [factory, GELATO_ADDRESSES[echainId].automate, constants.AddressZero],
   })
   console.log(chalk.yellow(`✨ USUMVault: ${vault}`))
 
