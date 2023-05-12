@@ -87,7 +87,7 @@ abstract contract Liquidity is LpToken, MarketValue {
 
         vault.onRemoveLiquidity(recipient, amount);
 
-        _burn(recipient, id, liquidity);
+        _burn(address(this), id, liquidity);
 
         emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
     }
