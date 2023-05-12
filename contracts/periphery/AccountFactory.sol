@@ -28,6 +28,7 @@ contract AccountFactory is IAccountFactory {
         Account newAccount = Account(Clones.clone(address(cloneBase)));
         newAccount.initialize(msg.sender, router, marketFactory);
         accounts[msg.sender] = address(newAccount);
+        emit AccountCreated(address(newAccount));
     }
 
     function getAccount(

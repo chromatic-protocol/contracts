@@ -64,7 +64,11 @@ contract OracleProvider is IOracleProvider {
                 roundId -
                 lastSyncedPhase.startingRoundId;
         }
-        lastSyncedRoundId = roundId;
+        if (lastSyncedRoundId != roundId) {
+            lastSyncedRoundId = roundId;
+            emit OracleVersionUpdated(newVersion, updatedAt, answer);
+        }
+
         return
             OracleVersion({
                 version: newVersion,
@@ -146,5 +150,4 @@ contract OracleProvider is IOracleProvider {
     function description() external view override returns (string memory) {
         return chainlinkPriceFeed.description();
     }
-
 }

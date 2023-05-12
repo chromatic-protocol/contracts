@@ -14,7 +14,14 @@ struct Phase {
 }
 
 interface IOracleProvider {
+    event OracleVersionUpdated(
+        uint256 newVersion,
+        uint256 timestamp,
+        int256 price
+    );
+
     function description() external view returns (string memory);
+
     function syncVersion() external returns (OracleVersion memory);
 
     function currentVersion() external view returns (OracleVersion memory);
