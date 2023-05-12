@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
@@ -167,7 +167,7 @@ abstract contract Trade is MarketValue {
         );
         return takerMargin;
     }
-    
+
     function getProtocolFee(uint256 margin) public view returns (uint16) {
         // returns (protocolFeeRate)
         // FIXME: TBA

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
@@ -69,7 +69,11 @@ contract USUMVault is IUSUMVault {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
-        SafeERC20.safeTransfer(settlementToken, recipient, settlmentAmount);
+        SafeERC20.safeTransfer(
+            IERC20(settlementToken),
+            recipient,
+            settlmentAmount
+        );
 
         takerBalance[settlementToken] -= takerMargin;
         takerBalancePerMarket[address(market)] -= takerMargin;
@@ -114,7 +118,7 @@ contract USUMVault is IUSUMVault {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
-        SafeERC20.safeTransfer(settlementToken, recipient, amount);
+        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
 
         makerBalance[settlementToken] -= amount;
         makerBalancePerMarket[address(market)] -= amount;
@@ -132,7 +136,7 @@ contract USUMVault is IUSUMVault {
 
         // swap to native token
         SafeERC20.safeTransfer(
-            settlementToken,
+            IERC20(settlementToken),
             address(keeperFeePayer),
             margin
         );
@@ -155,7 +159,11 @@ contract USUMVault is IUSUMVault {
         uint256 amount
     ) internal {
         if (amount > 0) {
-            SafeERC20.safeTransfer(settlementToken, factory.treasury(), amount);
+            SafeERC20.safeTransfer(
+                IERC20(settlementToken),
+                factory.treasury(),
+                amount
+            );
             emit TransferProtocolFee(market, positionId, amount);
         }
     }

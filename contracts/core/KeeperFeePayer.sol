@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IWETH9} from "@usum/core/interfaces/IWETH9.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
 contract KeeperFeePayer is IKeeperFeePayer {
@@ -65,7 +64,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
             Errors.INVALID_SWAP_VALUE
         );
 
-        SafeERC20.safeTransfer(tokenIn, msg.sender, remainedBalance);
+        SafeERC20.safeTransfer(IERC20(tokenIn), msg.sender, remainedBalance);
     }
 
     // real swap execution
