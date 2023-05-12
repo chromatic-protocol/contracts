@@ -9,6 +9,7 @@ interface IUSUMLiquidity {
         uint256 amount,
         uint256 liquidity
     );
+
     event RemoveLiquidity(
         address indexed recipient,
         int16 indexed tradingFeeRate,
@@ -28,4 +29,17 @@ interface IUSUMLiquidity {
         int16 tradingFeeRate,
         bytes calldata data
     ) external returns (uint256 amount);
+
+    function getSlotMarginTotal(
+        int16 tradingFeeRate
+    ) external returns (uint256 amount);
+
+    function getSlotMarginUnused(
+        int16 tradingFeeRate
+    ) external returns (uint256 amount);
+
+    function distributeEarningToSlots(
+        uint256 earning,
+        uint256 marketBalance
+    ) external;
 }

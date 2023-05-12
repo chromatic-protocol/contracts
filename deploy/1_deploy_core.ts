@@ -68,17 +68,38 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ USUMMarketFactory: ${factory}`))
 
+  const MarketFactory = await ethers.getContractFactory("USUMMarketFactory", {
+    libraries,
+  })
+  const marketFactory = MarketFactory.attach(factory)
+
+  // deploy & set KeeperFeePayer
+
   const { address: keeperFeePayer } = await deploy("KeeperFeePayer", {
     from: deployer,
     args: [factory, swapRouterAddress, WETH9[echainId].address],
   })
   console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
+  await marketFactory.setKeeperFeePayer(keeperFeePayer, {
+    from: deployer,
+  })
+  console.log(chalk.yellow("✨ Set KeeperFeePayer"))
+
+  // deploy & set USUMVault
+
   const { address: vault } = await deploy("USUMVault", {
     from: deployer,
-    args: [factory],
+    args: [factory, GELATO_ADDRESSES[echainId].automate, constants.AddressZero],
   })
   console.log(chalk.yellow(`✨ USUMVault: ${vault}`))
+
+  await marketFactory.setVault(vault, {
+    from: deployer,
+  })
+  console.log(chalk.yellow("✨ Set Vault"))
+
+  // deploy & set USUMLiquidator
 
   const { address: liquidator } = await deploy(
     network.name === "anvil" ? "USUMLiquidatorMock" : "USUMLiquidator",
@@ -92,21 +113,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
   )
   console.log(chalk.yellow(`✨ USUMLiquidator: ${liquidator}`))
-
-  const MarketFactory = await ethers.getContractFactory("USUMMarketFactory", {
-    libraries,
-  })
-  const marketFactory = MarketFactory.attach(factory)
-
-  await marketFactory.setKeeperFeePayer(keeperFeePayer, {
-    from: deployer,
-  })
-  console.log(chalk.yellow("✨ Set KeeperFeePayer"))
-
-  await marketFactory.setVault(vault, {
-    from: deployer,
-  })
-  console.log(chalk.yellow("✨ Set Vault"))
 
   await marketFactory.setLiquidator(liquidator, {
     from: deployer,

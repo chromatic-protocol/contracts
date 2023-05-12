@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
+import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@usum/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 contract USUMMarketFactory is IUSUMMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
@@ -18,9 +20,10 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     address public override dao;
 
-    address public override keeperFeePayer;
-    address public override vault;
     address public override liquidator;
+    address public override vault;
+    address public override keeperFeePayer;
+    address public override treasury;
 
     OracleProviderRegistry private _oracleProviderRegistry;
     SettlementTokenRegistry private _settlementTokenRegistry;
@@ -39,18 +42,25 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     error ExistMarket();
 
     modifier onlyDao() {
-        require(msg.sender == dao, "only DAO can access");
+        require(msg.sender == dao, Errors.ONLY_DAO_CAN_ACCESS);
         _;
     }
 
     constructor() {
         dao = msg.sender;
+        treasury = dao;
     }
 
-    // set DAO address 
+    // set DAO address
     /// @param _dao new DAO address to set
-    function updateDao(address _dao) external onlyDao {
+    function updateDao(address _dao) external override onlyDao {
         dao = _dao;
+        emit UpdateDao(dao);
+    }
+
+    function updateTreasury(address _treasury) external override onlyDao {
+        treasury = _treasury;
+        emit UpdateTreasury(treasury);
     }
 
     function setLiquidator(address _liquidator) external override onlyDao {
@@ -110,6 +120,8 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         _marketsBySettlementToken[settlementToken].push(market);
         _markets.add(market);
 
+        IUSUMVault(vault).createMarketEarningDistributionTask(market);
+
         emit MarketCreated(oracleProvider, settlementToken, market);
     }
 
@@ -162,6 +174,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         uint256 minimumTakerMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
+        uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     ) external override onlyDao {
         _settlementTokenRegistry.register(
@@ -169,13 +182,18 @@ contract USUMMarketFactory is IUSUMMarketFactory {
             minimumTakerMargin,
             interestRate,
             flashLoanFeeRate,
+            earningDistributionThreshold,
             uniswapFeeTier
         );
+
+        IUSUMVault(vault).createMakerEarningDistributionTask(token);
+
         emit SettlementTokenRegistered(
             token,
             minimumTakerMargin,
             interestRate,
             flashLoanFeeRate,
+            earningDistributionThreshold,
             uniswapFeeTier
         );
     }
@@ -224,6 +242,26 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     ) external onlyDao {
         _settlementTokenRegistry.setFlashLoanFeeRate(token, flashLoanFeeRate);
         emit SetFlashLoanFeeRate(token, flashLoanFeeRate);
+    }
+
+    function getEarningDistributionThreshold(
+        address token
+    ) external view returns (uint256) {
+        return _settlementTokenRegistry.getEarningDistributionThreshold(token);
+    }
+
+    function setEarningDistributionThreshold(
+        address token,
+        uint256 earningDistributionThreshold
+    ) external onlyDao {
+        _settlementTokenRegistry.setEarningDistributionThreshold(
+            token,
+            earningDistributionThreshold
+        );
+        emit SetEarningDistributionThreshold(
+            token,
+            earningDistributionThreshold
+        );
     }
 
     function getUniswapFeeTier(address token) external view returns (uint24) {
@@ -305,5 +343,31 @@ contract USUMMarketFactory is IUSUMMarketFactory {
                 to,
                 rounding
             );
+    }
+
+    // manage vault automate
+
+    function createMakerEarningDistributionTask(
+        address token
+    ) external override onlyDao {
+        IUSUMVault(vault).createMakerEarningDistributionTask(token);
+    }
+
+    function cancelMakerEarningDistributionTask(
+        address token
+    ) external override onlyDao {
+        IUSUMVault(vault).cancelMakerEarningDistributionTask(token);
+    }
+
+    function createMarketEarningDistributionTask(
+        address market
+    ) external override onlyDao {
+        IUSUMVault(vault).createMarketEarningDistributionTask(market);
+    }
+
+    function cancelMarketEarningDistributionTask(
+        address market
+    ) external override onlyDao {
+        IUSUMVault(vault).cancelMarketEarningDistributionTask(market);
     }
 }

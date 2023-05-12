@@ -15,7 +15,7 @@ contract SettlementTokenRegistryTest is Test {
     SettlementTokenRegistry tokenRegistry;
 
     function setUp() public {
-        tokenRegistry.register(testToken, 0, 0, 0, 0);
+        tokenRegistry.register(testToken, 0, 0, 0, 0, 0);
     }
 
     function testRegisterSettlementToken() public {
@@ -24,12 +24,12 @@ contract SettlementTokenRegistryTest is Test {
 
         // duplicated token address test
         vm.expectRevert(bytes("ART"));
-        tokenRegistry.register(testToken, 0, 0, 0, 0);
+        tokenRegistry.register(testToken, 0, 0, 0, 0, 0);
 
         assertEq(tokenRegistry.isRegistered(newToken), false);
 
         // register new token
-        tokenRegistry.register(newToken, 0, 0, 0, 0);
+        tokenRegistry.register(newToken, 0, 0, 0, 0, 0);
         assertEq(tokenRegistry.getInterestRateRecords(newToken).length, 1);
         assertEq(tokenRegistry.isRegistered(newToken), true);
         assertEq(tokenRegistry.currentInterestRate(newToken), 0);

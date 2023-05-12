@@ -10,7 +10,8 @@ import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
@@ -19,12 +20,31 @@ contract LpSlotSetTest is Test {
     uint256 private constant PRICE_PRECISION = 10 ** 8;
 
     IOracleProvider provider;
-    IInterestCalculator calculator;
+    IUSUMVault vault;
+    IUSUMMarket market;
     LpSlotSet slotSet;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        calculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(2));
+        market = IUSUMMarket(address(3));
+
+        vm.mockCall(
+            address(vault),
+            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encode(0)
+        );
+
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.oracleProvider.selector),
+            abi.encode(provider)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.vault.selector),
+            abi.encode(vault)
+        );
 
         slotSet._longSlots[1].total = 1000 ether;
         slotSet._longSlots[2].total = 1000 ether;
@@ -128,7 +148,7 @@ contract LpSlotSetTest is Test {
         assertEq(slotSet._longSlots[2].balance(), 1050.1 ether);
     }
 
-    function testMint() public {
+    function testAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
         ctx._currentVersionCache = OracleVersion({
@@ -137,13 +157,13 @@ contract LpSlotSetTest is Test {
             price: int256(90 * PRICE_PRECISION)
         });
 
-        uint256 liquidity = slotSet.mint(ctx, 1, 100 ether, 1000 ether);
+        uint256 liquidity = slotSet.addLiquidity(ctx, 1, 100 ether, 1000 ether);
 
         assertEq(liquidity, 100 ether);
         assertEq(slotSet._longSlots[1].total, 1100 ether);
     }
 
-    function testBurn() public {
+    function testRemoveLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
         ctx._currentVersionCache = OracleVersion({
@@ -152,7 +172,7 @@ contract LpSlotSetTest is Test {
             price: int256(90 * PRICE_PRECISION)
         });
 
-        uint256 amount = slotSet.burn(ctx, 1, 100 ether, 1000 ether);
+        uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
 
         assertEq(amount, 100 ether);
         assertEq(slotSet._longSlots[1].total, 900 ether);
@@ -161,8 +181,7 @@ contract LpSlotSetTest is Test {
     function _newLpContext() private view returns (LpContext memory) {
         return
             LpContext({
-                oracleProvider: provider,
-                interestCalculator: calculator,
+                market: market,
                 tokenPrecision: 10 ** 18,
                 _pricePrecision: PRICE_PRECISION,
                 _currentVersionCache: OracleVersion(0, 0, 0)

@@ -12,14 +12,19 @@ abstract contract Liquidity is LpToken, MarketValue {
     uint256 public constant MINIMUM_LIQUIDITY = 10 ** 3;
     uint256 public constant MINIMUM_MARKET_VALUATION = 10 ** 3;
 
-    // uint256 internal lpReserveRatio;
+    error OnlyAccessableByVault();
+
+    modifier onlyVault() {
+        if (msg.sender != address(vault)) revert OnlyAccessableByVault();
+        _;
+    }
 
     function addLiquidity(
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
     ) external override nonReentrant returns (uint256 liquidity) {
-        // liquidity = lpSlots.mint()
+        // liquidity = lpSlots.addLiquidity()
         // liquidity 수량만큼 token mint
 
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
@@ -32,11 +37,11 @@ abstract contract Liquidity is LpToken, MarketValue {
             balanceBefore;
         if (amount == 0) return 0;
 
-        vault.onMint(amount);
+        vault.onAddLiquidity(amount);
 
         uint256 id = encodeId(tradingFeeRate);
 
-        liquidity = lpSlotSet.mint(
+        liquidity = lpSlotSet.addLiquidity(
             newLpContext(),
             tradingFeeRate,
             amount,
@@ -45,7 +50,7 @@ abstract contract Liquidity is LpToken, MarketValue {
 
         _mint(recipient, id, liquidity, data);
 
-         emit AddLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
+        emit AddLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
     }
 
     function removeLiquidity(
@@ -59,9 +64,12 @@ abstract contract Liquidity is LpToken, MarketValue {
         uint256 id = encodeId(tradingFeeRate);
 
         uint256 balanceBefore = balanceOf(address(this), id);
-        
-        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(address(this), data);
-        
+
+        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(
+            address(this),
+            data
+        );
+
         uint256 liquidity = balanceOf(address(this), id) - balanceBefore;
         if (liquidity == 0) return 0;
 
@@ -70,17 +78,36 @@ abstract contract Liquidity is LpToken, MarketValue {
         // uint256 amount,
         // uint256 totalLiquidity
 
-        amount = lpSlotSet.burn(
+        amount = lpSlotSet.removeLiquidity(
             newLpContext(),
             tradingFeeRate,
             liquidity,
             _totalSupply
         );
 
-        vault.onBurn(recipient, amount);
+        vault.onRemoveLiquidity(recipient, amount);
 
-        _burn(recipient, id, liquidity);
+        _burn(address(this), id, liquidity);
 
         emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
+    }
+
+    function getSlotMarginTotal(
+        int16 tradingFeeRate
+    ) external view override returns (uint256 amount) {
+        return lpSlotSet.getSlotMarginTotal(tradingFeeRate);
+    }
+
+    function getSlotMarginUnused(
+        int16 tradingFeeRate
+    ) external view override returns (uint256 amount) {
+        return lpSlotSet.getSlotMarginUnused(tradingFeeRate);
+    }
+
+    function distributeEarningToSlots(
+        uint256 earning,
+        uint256 marketBalance
+    ) external onlyVault {
+        lpSlotSet.distributeEarning(earning, marketBalance);
     }
 }

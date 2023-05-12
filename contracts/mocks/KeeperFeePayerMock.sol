@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 
@@ -31,9 +30,10 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
     ) external returns (uint256 amountIn) {
         uint256 tokenBalance = IERC20(tokenIn).balanceOf(address(this));
 
-        require(tokenBalance > amountOut, "balance of token is not enough");
+        amountIn = amountOut;
+        require(tokenBalance >= amountIn, "balance of token is not enough");
         require(
-            address(this).balance > amountOut,
+            address(this).balance >= amountOut,
             "balance of payer contract is not enough"
         );
 
@@ -41,7 +41,11 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
         (bool success, ) = keeperAddress.call{value: amountOut}("");
         require(success, "_transfer: ETH transfer failed");
 
-        SafeERC20.safeTransfer(tokenIn, msg.sender, tokenBalance - amountOut);
+        SafeERC20.safeTransfer(
+            IERC20(tokenIn),
+            msg.sender,
+            tokenBalance - amountIn
+        );
     }
 
     receive() external payable {}

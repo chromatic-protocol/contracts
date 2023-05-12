@@ -10,6 +10,8 @@ interface IUSUMMarketFactory is
     IOracleProviderRegistry,
     ISettlementTokenRegistry
 {
+    event UpdateDao(address dao);
+    event UpdateTreasury(address treasury);
     event SetLiquidator(address liquidator);
     event SetVault(address vault);
     event SetKeeperFeePayer(address keeperFeePayer);
@@ -22,11 +24,17 @@ interface IUSUMMarketFactory is
 
     function dao() external view returns (address);
 
+    function treasury() external view returns (address);
+
     function liquidator() external view returns (address);
 
     function vault() external view returns (address);
 
     function keeperFeePayer() external view returns (address);
+
+    function updateDao(address dao) external;
+
+    function updateTreasury(address treasury) external;
 
     function setLiquidator(address liquidator) external;
 
@@ -46,4 +54,12 @@ interface IUSUMMarketFactory is
     ) external;
 
     function isRegisteredMarket(address market) external view returns (bool);
+
+    function createMakerEarningDistributionTask(address token) external;
+
+    function cancelMakerEarningDistributionTask(address token) external;
+
+    function createMarketEarningDistributionTask(address market) external;
+
+    function cancelMarketEarningDistributionTask(address market) external;
 }

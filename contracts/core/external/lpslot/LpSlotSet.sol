@@ -4,11 +4,13 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {IUSUMLiquidity} from "@usum/core/interfaces/market/IUSUMLiquidity.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct LpSlotSet {
     uint16 _minAvailableFeeRateLong;
@@ -24,6 +26,12 @@ library LpSlotSetLib {
     using SafeCast for uint256;
     using SignedMath for int256;
     using LpSlotLib for LpSlot;
+
+    event LpSlotEarningAccumulated(
+        uint16 indexed feeRate,
+        bytes1 slotType,
+        uint256 earning
+    );
 
     uint256 private constant FEE_RATES_LENGTH = 36;
     uint16 private constant MIN_FEE_RATE = 1;
@@ -67,7 +75,7 @@ library LpSlotSetLib {
             }
         }
 
-        require(remain == 0, "NESB"); // Not Enough Slot Balance
+        require(remain == 0, Errors.NOT_ENOUGH_SLOT_BALANCE);
 
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
@@ -139,7 +147,7 @@ library LpSlotSetLib {
         require(
             !((realizedPnl > 0 && absRealizedPnl > makerMargin) ||
                 (realizedPnl < 0 && absRealizedPnl > position.takerMargin)),
-            "EMR" // Exceed Margin Range
+            Errors.EXCEED_MARGIN_RANGE
         );
 
         mapping(uint16 => LpSlot) storage _slots = targetSlots(
@@ -230,7 +238,7 @@ library LpSlotSetLib {
                 }
             }
 
-            require(remainRealizedPnl == 0, "EMR"); // Exceed Margin Range
+            require(remainRealizedPnl == 0, Errors.EXCEED_MARGIN_RANGE);
         }
 
         uint16 _feeRate = slotMargins[0].tradingFeeRate;
@@ -239,7 +247,7 @@ library LpSlotSetLib {
         }
     }
 
-    function mint(
+    function addLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -252,7 +260,7 @@ library LpSlotSetLib {
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        liquidity = slot.mint(ctx, amount, totalLiquidity);
+        liquidity = slot.addLiquidity(ctx, amount, totalLiquidity);
 
         uint16 _feeRate = abs(tradingFeeRate);
         if (_feeRate < minAvailableFeeRate(self, tradingFeeRate)) {
@@ -260,7 +268,7 @@ library LpSlotSetLib {
         }
     }
 
-    function burn(
+    function removeLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -269,7 +277,23 @@ library LpSlotSetLib {
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        amount = slot.burn(ctx, liquidity, totalLiquidity);
+        amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
+    }
+
+    function getSlotMarginTotal(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.total;
+    }
+
+    function getSlotMarginUnused(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.balance();
     }
 
     function targetSlots(
@@ -384,7 +408,7 @@ library LpSlotSetLib {
         require(
             idx < _tradingFeeRates.length &&
                 absFeeRate == _tradingFeeRates[idx],
-            "UTFR" // Unsupported Trading Fee Rate
+            Errors.UNSUPPORTED_TRADING_FEE_RATE
         );
     }
 
@@ -434,6 +458,62 @@ library LpSlotSetLib {
             return low - 1;
         } else {
             return low;
+        }
+    }
+
+    function distributeEarning(
+        LpSlotSet storage self,
+        uint256 earning,
+        uint256 marketBalance
+    ) external {
+        uint256 remainEarning = earning;
+        uint256 remainBalance = marketBalance;
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+
+        (remainEarning, remainBalance) = distributeEarning(
+            self._longSlots,
+            remainEarning,
+            remainBalance,
+            _tradingFeeRates,
+            "L"
+        );
+        (remainEarning, remainBalance) = distributeEarning(
+            self._shortSlots,
+            remainEarning,
+            remainBalance,
+            _tradingFeeRates,
+            "S"
+        );
+    }
+
+    function distributeEarning(
+        mapping(uint16 => LpSlot) storage lpSlots,
+        uint256 earning,
+        uint256 marketBalance,
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates,
+        bytes1 slotType
+    ) private returns (uint256 remainEarning, uint256 remainBalance) {
+        remainBalance = marketBalance;
+        remainEarning = earning;
+
+        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+            uint16 feeRate = _tradingFeeRates[i];
+            LpSlot storage slot = lpSlots[feeRate];
+            uint256 slotBalance = slot.total;
+
+            if (slotBalance == 0) continue;
+
+            uint256 slotEarning = remainEarning.mulDiv(
+                slotBalance,
+                remainBalance
+            );
+
+            slot.total += slotEarning;
+
+            remainBalance -= slotBalance;
+            remainEarning -= slotEarning;
+
+            emit LpSlotEarningAccumulated(feeRate, slotType, slotEarning);
         }
     }
 }

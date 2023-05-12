@@ -15,8 +15,6 @@ abstract contract LpToken is ERC1155Supply, IERC1155Receiver {
     using SafeCast for uint256;
     using SignedMath for int256;
 
-    uint256 constant DIRECTION_PRECISION = 10 ** 10;
-
     string private imageUri;
 
     constructor() ERC1155("") {}
@@ -68,7 +66,6 @@ abstract contract LpToken is ERC1155Supply, IERC1155Receiver {
     function decodeId(uint256 id) internal pure returns (int16 tradingFeeRate) {
         tradingFeeRate = LpTokenLib.decodeId(id);
     }
-
 
     // for burnCallBack
     function onERC1155Received(

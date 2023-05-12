@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./Types.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IAutomate, IOpsProxyFactory, ITaskTreasuryUpgradable, ModuleData} from "@usum/core/base/gelato/Types.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
+
 /**
  * @dev Inherit this contract to allow your smart contract to
  * - Make synchronous fee payments.
@@ -23,7 +25,10 @@ abstract contract AutomateReady {
      * the functions with this modifier.
      */
     modifier onlyDedicatedMsgSender() {
-        require(msg.sender == dedicatedMsgSender, "Only dedicated msg.sender");
+        require(
+            msg.sender == dedicatedMsgSender,
+            Errors.ONLY_DEDICATED_MSG_SENDER_CAN_ACCESS
+        );
         _;
     }
 
@@ -31,10 +36,14 @@ abstract contract AutomateReady {
      * @dev
      * _taskCreator is the address which will create tasks for this contract.
      */
-    constructor(address _automate, address _taskCreator, address opsProxyFactory) {
+    constructor(
+        address _automate,
+        address _taskCreator,
+        address opsProxyFactory
+    ) {
         automate = IAutomate(_automate);
         _gelato = IAutomate(_automate).gelato();
-        if(opsProxyFactory == address(0)) opsProxyFactory = OPS_PROXY_FACTORY;
+        if (opsProxyFactory == address(0)) opsProxyFactory = OPS_PROXY_FACTORY;
         (dedicatedMsgSender, ) = IOpsProxyFactory(opsProxyFactory).getProxyOf(
             _taskCreator
         );
@@ -49,7 +58,7 @@ abstract contract AutomateReady {
     function _transfer(uint256 _fee, address _feeToken) internal {
         if (_feeToken == ETH) {
             (bool success, ) = _gelato.call{value: _fee}("");
-            require(success, "_transfer: ETH transfer failed");
+            require(success, Errors.ETH_TRANSFER_FAILED);
         } else {
             SafeERC20.safeTransfer(IERC20(_feeToken), _gelato, _fee);
         }

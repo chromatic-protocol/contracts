@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {SafeERC20} from "@usum/core/libraries/SafeERC20.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
@@ -54,7 +54,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             (MintCallbackData)
         );
         SafeERC20.safeTransferFrom(
-            settlementToken,
+            IERC20(settlementToken),
             callbackData.payer,
             vault,
             callbackData.amount
@@ -112,7 +112,6 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         address recipient,
         uint256 deadline
     ) external ensure(deadline) returns (uint256 liquidity) {
-    
         liquidity = IUSUMMarket(market).addLiquidity(
             recipient,
             feeRate,
@@ -128,7 +127,6 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         address recipient,
         uint256 deadline
     ) external ensure(deadline) returns (uint256 amount) {
-    
         amount = IUSUMMarket(market).removeLiquidity(
             recipient,
             feeRate,
