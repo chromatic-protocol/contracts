@@ -32,7 +32,7 @@ abstract contract Liquidity is LpToken, MarketValue {
             balanceBefore;
         if (amount == 0) return 0;
 
-        vault.onMint(amount);
+        vault.onAddLiquidity(amount);
 
         uint256 id = encodeId(tradingFeeRate);
 
@@ -45,7 +45,7 @@ abstract contract Liquidity is LpToken, MarketValue {
 
         _mint(recipient, id, liquidity, data);
 
-         emit AddLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
+        emit AddLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
     }
 
     function removeLiquidity(
@@ -59,9 +59,12 @@ abstract contract Liquidity is LpToken, MarketValue {
         uint256 id = encodeId(tradingFeeRate);
 
         uint256 balanceBefore = balanceOf(address(this), id);
-        
-        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(address(this), data);
-        
+
+        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(
+            address(this),
+            data
+        );
+
         uint256 liquidity = balanceOf(address(this), id) - balanceBefore;
         if (liquidity == 0) return 0;
 
@@ -77,7 +80,7 @@ abstract contract Liquidity is LpToken, MarketValue {
             _totalSupply
         );
 
-        vault.onBurn(recipient, amount);
+        vault.onRemoveLiquidity(recipient, amount);
 
         _burn(recipient, id, liquidity);
 

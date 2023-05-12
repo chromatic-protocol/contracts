@@ -71,21 +71,18 @@ contract USUMVault is IUSUMVault {
 
         SafeERC20.safeTransfer(settlementToken, recipient, settlmentAmount);
 
+        takerBalance[settlementToken] -= takerMargin;
+        takerBalancePerMarket[address(market)] -= takerMargin;
+
         if (settlmentAmount > takerMargin) {
             // maker loss
             uint256 makerLoss = settlmentAmount - takerMargin;
-
-            takerBalance[settlementToken] -= takerMargin;
-            takerBalancePerMarket[address(market)] -= takerMargin;
 
             makerBalance[settlementToken] -= makerLoss;
             makerBalancePerMarket[address(market)] -= makerLoss;
         } else {
             // maker profit
             uint256 makerProfit = takerMargin - settlmentAmount;
-
-            takerBalance[settlementToken] -= takerMargin;
-            takerBalancePerMarket[address(market)] -= takerMargin;
 
             makerBalance[settlementToken] += makerProfit;
             makerBalancePerMarket[address(market)] += makerProfit;
@@ -100,17 +97,17 @@ contract USUMVault is IUSUMVault {
         );
     }
 
-    function onMint(uint256 amount) external override onlyMarket {
+    function onAddLiquidity(uint256 amount) external override onlyMarket {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         makerBalance[settlementToken] += amount;
         makerBalancePerMarket[address(market)] += amount;
 
-        emit OnMint(address(market), amount);
+        emit OnAddLiquidity(address(market), amount);
     }
 
-    function onBurn(
+    function onRemoveLiquidity(
         address recipient,
         uint256 amount
     ) external override onlyMarket {
@@ -122,7 +119,7 @@ contract USUMVault is IUSUMVault {
         makerBalance[settlementToken] -= amount;
         makerBalancePerMarket[address(market)] -= amount;
 
-        emit OnBurn(address(market), amount, recipient);
+        emit OnRemoveLiquidity(address(market), amount, recipient);
     }
 
     function transferKeeperFee(

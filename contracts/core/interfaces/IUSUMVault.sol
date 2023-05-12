@@ -18,9 +18,13 @@ interface IUSUMVault {
         uint256 settlmentAmount
     );
 
-    event OnMint(address indexed market, uint256 amount);
+    event OnAddLiquidity(address indexed market, uint256 amount);
 
-    event OnBurn(address indexed market, uint256 amount, address recipient);
+    event OnRemoveLiquidity(
+        address indexed market,
+        uint256 amount,
+        address recipient
+    );
 
     event TransferKeeperFee(
         address indexed market,
@@ -42,15 +46,15 @@ interface IUSUMVault {
     ) external;
 
     function onClosePosition(
-      uint256 positionId,
-      address recipient,
-      uint256 takerMargin,
-      uint256 settlmentAmount
+        uint256 positionId,
+        address recipient,
+        uint256 takerMargin,
+        uint256 settlmentAmount
     ) external;
 
-    function onMint(uint256 amount) external;
+    function onAddLiquidity(uint256 amount) external;
 
-    function onBurn(address recipient, uint256 amount) external;
+    function onRemoveLiquidity(address recipient, uint256 amount) external;
 
     function transferKeeperFee(
         address keeper,
