@@ -26,6 +26,8 @@ interface IVault {
         address recipient
     );
 
+    event TransferKeeperFee(uint256 fee, uint256 amount);
+
     event TransferKeeperFee(
         address indexed market,
         uint256 fee,

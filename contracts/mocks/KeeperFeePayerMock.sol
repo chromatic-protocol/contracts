@@ -31,9 +31,9 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
         uint256 tokenBalance = IERC20(tokenIn).balanceOf(address(this));
 
         amountIn = amountOut;
-        require(tokenBalance > amountIn, "balance of token is not enough");
+        require(tokenBalance >= amountIn, "balance of token is not enough");
         require(
-            address(this).balance > amountOut,
+            address(this).balance >= amountOut,
             "balance of payer contract is not enough"
         );
 

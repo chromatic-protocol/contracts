@@ -92,6 +92,18 @@ abstract contract Liquidity is LpToken, MarketValue {
         emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
     }
 
+    function getSlotMarginTotal(
+        int16 tradingFeeRate
+    ) external view override returns (uint256 amount) {
+        return lpSlotSet.getSlotMarginTotal(tradingFeeRate);
+    }
+
+    function getSlotMarginUnused(
+        int16 tradingFeeRate
+    ) external view override returns (uint256 amount) {
+        return lpSlotSet.getSlotMarginUnused(tradingFeeRate);
+    }
+
     function distributeEarningToSlots(
         uint256 earning,
         uint256 marketBalance

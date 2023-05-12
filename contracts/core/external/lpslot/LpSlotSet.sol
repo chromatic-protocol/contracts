@@ -280,6 +280,22 @@ library LpSlotSetLib {
         amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
     }
 
+    function getSlotMarginTotal(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.total;
+    }
+
+    function getSlotMarginUnused(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.balance();
+    }
+
     function targetSlots(
         LpSlotSet storage self,
         int256 sign
@@ -483,17 +499,18 @@ library LpSlotSetLib {
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
             LpSlot storage slot = lpSlots[feeRate];
+            uint256 slotBalance = slot.total;
 
-            if (slot.total == 0) continue;
+            if (slotBalance == 0) continue;
 
             uint256 slotEarning = remainEarning.mulDiv(
-                slot.total,
+                slotBalance,
                 remainBalance
             );
 
             slot.total += slotEarning;
 
-            remainBalance -= marketBalance;
+            remainBalance -= slotBalance;
             remainEarning -= slotEarning;
 
             emit LpSlotEarningAccumulated(feeRate, slotType, slotEarning);

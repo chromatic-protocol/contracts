@@ -22,4 +22,17 @@ contract USUMVaultMock is USUMVault {
     ) external {
         _distributeMarketEarning(market, keeperFee);
     }
+
+    function setPendingMarketEarnings(
+        address market,
+        uint256 earning
+    ) external {
+        pendingMarketEarnings[market] = earning;
+    }
+
+    function createMakerEarningDistributionTask(
+        address token
+    ) external override {
+        // dummy
+    }
 }
