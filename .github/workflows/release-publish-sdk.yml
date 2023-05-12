@@ -11,6 +11,7 @@ on:
       - contracts/**
       - deploy/**
       - package.sdk.json
+      - hardhat.config.ts
 permissions:
   contents: write
 
