@@ -329,7 +329,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
 
     function cancelMakerEarningDistributionTask(
         address token
-    ) external override onlyFactory {
+    ) external virtual override onlyFactory {
         bytes32 taskId = makerEarningDistributionTaskIds[token];
         if (taskId != bytes32(0)) {
             automate.cancelTask(taskId);
@@ -404,7 +404,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
 
     function createMarketEarningDistributionTask(
         address market
-    ) external override onlyFactory {
+    ) external virtual override onlyFactory {
         if (marketEarningDistributionTaskIds[market] != bytes32(0))
             revert ExistMarketEarningDistributionTask();
 
@@ -435,7 +435,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
 
     function cancelMarketEarningDistributionTask(
         address market
-    ) external override onlyFactory {
+    ) external virtual override onlyFactory {
         bytes32 taskId = marketEarningDistributionTaskIds[market];
         if (taskId != bytes32(0)) {
             automate.cancelTask(taskId);

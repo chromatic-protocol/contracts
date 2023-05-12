@@ -35,4 +35,10 @@ contract USUMVaultMock is USUMVault {
     ) external override {
         // dummy
     }
+
+    function createMarketEarningDistributionTask(
+        address market
+    ) external override {
+        // dummy
+    }
 }

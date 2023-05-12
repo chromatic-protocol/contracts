@@ -58,4 +58,8 @@ interface IUSUMMarketFactory is
     function createMakerEarningDistributionTask(address token) external;
 
     function cancelMakerEarningDistributionTask(address token) external;
+
+    function createMarketEarningDistributionTask(address market) external;
+
+    function cancelMarketEarningDistributionTask(address market) external;
 }

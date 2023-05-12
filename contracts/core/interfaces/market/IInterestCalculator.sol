@@ -14,6 +14,6 @@ interface IInterestCalculator {
         uint256 amount,
         uint256 from,
         uint256 to,
-        Math.Rounding rounding // use Rouding.Up to deduct accumulated accrued interest
+        Math.Rounding rounding // use Rounding.Up to deduct accumulated accrued interest
     ) external view returns (uint256);
 }

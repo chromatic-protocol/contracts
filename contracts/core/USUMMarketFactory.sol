@@ -51,7 +51,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         treasury = dao;
     }
 
-    // set DAO address 
+    // set DAO address
     /// @param _dao new DAO address to set
     function updateDao(address _dao) external override onlyDao {
         dao = _dao;
@@ -120,6 +120,8 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         _marketsBySettlementToken[settlementToken].push(market);
         _markets.add(market);
 
+        IUSUMVault(vault).createMarketEarningDistributionTask(market);
+
         emit MarketCreated(oracleProvider, settlementToken, market);
     }
 
@@ -184,7 +186,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
             uniswapFeeTier
         );
 
-        createMakerEarningDistributionTask(token);
+        IUSUMVault(vault).createMakerEarningDistributionTask(token);
 
         emit SettlementTokenRegistered(
             token,
@@ -345,11 +347,27 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     // manage vault automate
 
-    function createMakerEarningDistributionTask(address token) public onlyDao {
+    function createMakerEarningDistributionTask(
+        address token
+    ) external override onlyDao {
         IUSUMVault(vault).createMakerEarningDistributionTask(token);
     }
 
-    function cancelMakerEarningDistributionTask(address token) public onlyDao {
+    function cancelMakerEarningDistributionTask(
+        address token
+    ) external override onlyDao {
         IUSUMVault(vault).cancelMakerEarningDistributionTask(token);
+    }
+
+    function createMarketEarningDistributionTask(
+        address market
+    ) external override onlyDao {
+        IUSUMVault(vault).createMarketEarningDistributionTask(market);
+    }
+
+    function cancelMarketEarningDistributionTask(
+        address market
+    ) external override onlyDao {
+        IUSUMVault(vault).cancelMarketEarningDistributionTask(market);
     }
 }
