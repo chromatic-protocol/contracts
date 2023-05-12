@@ -30,7 +30,8 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
     ) external returns (uint256 amountIn) {
         uint256 tokenBalance = IERC20(tokenIn).balanceOf(address(this));
 
-        require(tokenBalance > amountOut, "balance of token is not enough");
+        amountIn = amountOut;
+        require(tokenBalance > amountIn, "balance of token is not enough");
         require(
             address(this).balance > amountOut,
             "balance of payer contract is not enough"
@@ -43,7 +44,7 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
         SafeERC20.safeTransfer(
             IERC20(tokenIn),
             msg.sender,
-            tokenBalance - amountOut
+            tokenBalance - amountIn
         );
     }
 

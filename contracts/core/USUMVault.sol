@@ -16,9 +16,6 @@ import {Constants} from "@usum/core/libraries/Constants.sol";
 contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     using Math for uint256;
 
-    event MakerEarningDistributed(address indexed token, uint256 earning);
-    event MarketEarningAccumulated(address indexed market, uint256 earning);
-
     uint256 private constant DISTRIBUTION_INTERVAL = 1 hours;
 
     IUSUMMarketFactory factory;
@@ -165,6 +162,14 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         uint256 fee,
         uint256 margin
     ) external override onlyMarket returns (uint256 usedFee) {
+        return _transferKeeperFee(keeper, fee, margin);
+    }
+
+    function _transferKeeperFee(
+        address keeper,
+        uint256 fee,
+        uint256 margin
+    ) internal returns (uint256 usedFee) {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
@@ -293,32 +298,8 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     function distributeMakerEarning(
         address token
     ) external onlyDedicatedMsgSender {
-        if (!_makerEarningDistributable(token)) return;
-
-        address[] memory markets = factory.getMarketsBySettlmentToken(token);
-
-        uint256 earning = pendingMakerEarnings[token];
-        delete pendingMakerEarnings[token];
-
-        uint256 remainBalance = makerBalances[token];
-        uint256 remainEarning = earning;
-        for (uint256 i = 0; i < markets.length; i++) {
-            address market = markets[i];
-            uint256 marketBalance = makerMarketBalances[market];
-            uint256 marketEarning = remainEarning.mulDiv(
-                marketBalance,
-                remainBalance
-            );
-
-            pendingMarketEarnings[market] += marketEarning;
-
-            remainBalance -= marketBalance;
-            remainEarning -= marketEarning;
-
-            emit MarketEarningAccumulated(market, marketEarning);
-        }
-
-        emit MakerEarningDistributed(token, earning);
+        (uint256 fee, ) = _getFeeDetails();
+        _distributeMakerEarning(token, fee);
     }
 
     function createMakerEarningDistributionTask(
@@ -360,6 +341,44 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
             automate.cancelTask(taskId);
             delete makerEarningDistributionTaskIds[token];
         }
+    }
+
+    function _distributeMakerEarning(
+        address token,
+        uint256 keeperFee
+    ) internal {
+        if (!_makerEarningDistributable(token)) return;
+
+        address[] memory markets = factory.getMarketsBySettlmentToken(token);
+
+        uint256 earning = pendingMakerEarnings[token];
+        delete pendingMakerEarnings[token];
+
+        uint256 usedKeeperFee = _transferKeeperFee(
+            automate.gelato(),
+            keeperFee,
+            earning
+        );
+
+        uint256 remainBalance = makerBalances[token];
+        uint256 remainEarning = earning - usedKeeperFee;
+        for (uint256 i = 0; i < markets.length; i++) {
+            address market = markets[i];
+            uint256 marketBalance = makerMarketBalances[market];
+            uint256 marketEarning = remainEarning.mulDiv(
+                marketBalance,
+                remainBalance
+            );
+
+            pendingMarketEarnings[market] += marketEarning;
+
+            remainBalance -= marketBalance;
+            remainEarning -= marketEarning;
+
+            emit MarketEarningAccumulated(market, marketEarning);
+        }
+
+        emit MakerEarningDistributed(token, earning, usedKeeperFee);
     }
 
     function _makerEarningDistributable(
@@ -440,6 +459,32 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
             automate.cancelTask(taskId);
             delete marketEarningDistributionTaskIds[market];
         }
+    }
+
+    function _distributeMarketEarning(
+        address market,
+        uint256 keeperFee
+    ) internal {
+        address token = address(IUSUMMarket(market).settlementToken());
+        if (!_marketEarningDistributable(market, token)) return;
+
+        uint256 balance = makerMarketBalances[market];
+        uint256 earning = pendingMarketEarnings[market];
+        delete pendingMarketEarnings[market];
+
+        uint256 usedKeeperFee = _transferKeeperFee(
+            automate.gelato(),
+            keeperFee,
+            earning
+        );
+
+        uint256 remainEarning = earning - usedKeeperFee;
+        IUSUMMarket(market).distributeEarningToSlots(remainEarning, balance);
+
+        makerMarketBalances[market] += remainEarning;
+        makerBalances[token] += remainEarning;
+
+        emit MarketEarningDistributed(market, earning, usedKeeperFee, balance);
     }
 
     function _marketEarningDistributable(

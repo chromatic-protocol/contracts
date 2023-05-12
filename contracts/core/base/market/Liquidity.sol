@@ -97,7 +97,5 @@ abstract contract Liquidity is LpToken, MarketValue {
         uint256 marketBalance
     ) external onlyVault {
         lpSlotSet.distributeEarning(earning, marketBalance);
-
-        emit MarketEarningDistributed(address(this), earning, marketBalance);
     }
 }

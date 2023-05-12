@@ -18,12 +18,6 @@ interface IUSUMLiquidity {
         uint256 liquidity
     );
 
-    event MarketEarningDistributed(
-        address indexed market,
-        uint256 earning,
-        uint256 marketBalance
-    );
-
     function addLiquidity(
         address recipient,
         int16 tradingFeeRate,
