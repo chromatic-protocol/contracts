@@ -160,6 +160,6 @@ async function prepareWallet(wallet: ReplWallet) {
       ethers.utils.parseUnits("100", await wallet.USDC.decimals())
     )
   ) {
-    await wallet.swapEth(100)
+    await wallet.swapEth(1)
   }
 }
