@@ -134,6 +134,17 @@ library LpSlotLib {
     ) internal returns (uint256 liquidity) {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
+        liquidity = self.calcLiquidity(ctx, amount, totalLiquidity);
+
+        self.total += amount;
+    }
+
+    function calcLiquidity(
+        LpSlot storage self,
+        LpContext memory ctx,
+        uint256 amount,
+        uint256 totalLiquidity
+    ) internal view returns (uint256 liquidity) {
         if (totalLiquidity == 0) {
             liquidity = amount;
         } else {
@@ -143,8 +154,6 @@ library LpSlotLib {
                 slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue
             );
         }
-
-        self.total += amount;
     }
 
     /**
@@ -166,9 +175,18 @@ library LpSlotLib {
         uint256 liquidity,
         uint256 totalLiquidity
     ) internal returns (uint256 amount) {
-        amount = liquidity.mulDiv(self.value(ctx), totalLiquidity);
+        amount = self.calcAmount(ctx, liquidity, totalLiquidity);
         require(amount <= self.balance(), Errors.NOT_ENOUGH_SLOT_BALANCE);
 
         self.total -= amount;
+    }
+
+    function calcAmount(
+        LpSlot storage self,
+        LpContext memory ctx,
+        uint256 liquidity,
+        uint256 totalLiquidity
+    ) internal view returns (uint256 amount) {
+        amount = liquidity.mulDiv(self.value(ctx), totalLiquidity);
     }
 }
