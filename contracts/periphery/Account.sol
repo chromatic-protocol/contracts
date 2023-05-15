@@ -64,21 +64,6 @@ contract Account is IAccount, VerifyCallback {
         SafeERC20.safeTransfer(IERC20(quote), owner, amount);
     }
 
-    function transferMargin(
-        uint256 marginRequired,
-        address marketAddress,
-        address settlementToken
-    ) external onlyRouter {
-        if (balance(settlementToken) < marginRequired)
-            revert NotEnoughBalance();
-
-        SafeERC20.safeTransfer(
-            IERC20(settlementToken),
-            marketAddress,
-            marginRequired
-        );
-    }
-
     function addPositionId(address market, uint256 positionId) internal {
         positionIds[market].add(positionId);
     }

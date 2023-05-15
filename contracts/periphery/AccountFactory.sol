@@ -23,12 +23,17 @@ contract AccountFactory is IAccountFactory {
         _;
     }
 
-    function createAccount() external {
-        require(accounts[msg.sender] == address(0));
+    function createAccount(address owner) public returns (address) {
+        require(accounts[owner] == address(0));
         Account newAccount = Account(Clones.clone(address(cloneBase)));
-        newAccount.initialize(msg.sender, router, marketFactory);
-        accounts[msg.sender] = address(newAccount);
+        newAccount.initialize(owner, router, marketFactory);
+        accounts[owner] = address(newAccount);
         emit AccountCreated(address(newAccount));
+        return address(newAccount);
+    }
+
+    function createAccount() external returns (address) {
+        return createAccount(msg.sender);
     }
 
     function getAccount(

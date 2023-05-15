@@ -29,7 +29,7 @@ export const prepareMarketTest = async () => {
   await faucet(tester)
   await faucet(trader)
 
-  const createAccountTx = await accountFactory.connect(trader).createAccount()
+  const createAccountTx = await accountFactory.connect(trader)['createAccount()']();
   await createAccountTx.wait()
 
   const traderAccountAddr = await usumRouter.connect(trader).getAccount()

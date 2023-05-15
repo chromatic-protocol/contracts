@@ -38,5 +38,9 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint256 deadline
     ) external returns (uint256 amount);
 
+    function deposit(uint256 amount, address settlementToken) external;
+
+    function withdraw(uint256 margin, address settlementToken) external;
+
     function getAccount() external returns (address);
 }

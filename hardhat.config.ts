@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-foundry"
 import "@nomicfoundation/hardhat-toolbox"
 import "@nomiclabs/hardhat-ethers"
 import * as dotenv from "dotenv"
+import "@nomicfoundation/hardhat-chai-matchers";
 import "hardhat-contract-sizer"
 import "hardhat-deploy"
 import { HardhatUserConfig } from "hardhat/config"

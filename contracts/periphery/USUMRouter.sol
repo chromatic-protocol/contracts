@@ -14,6 +14,7 @@ import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
 import {Account} from "@usum/periphery/Account.sol";
 import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
+import {IAccount} from "./interfaces/IAccount.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -76,6 +77,30 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             callbackData.liquidity,
             bytes("")
         );
+    }
+
+    function getOrCreateAccount() public returns (IAccount) {
+        IAccount account = IAccount(accountFactory.getAccount());
+        if (address(account) == address(0)) {
+            address accountAddress = accountFactory.createAccount(msg.sender);
+            account = IAccount(accountAddress);
+        }
+        return account;
+    }
+
+    function deposit(uint256 amount, address settlementToken) external {
+        IAccount account = getOrCreateAccount();
+        SafeERC20.safeTransferFrom(
+            IERC20(settlementToken),
+            msg.sender,
+            address(account),
+            amount
+        );
+    }
+
+    function withdraw(uint256 margin, address settlementToken) external {
+        IAccount account = getOrCreateAccount();
+        account.withdraw(settlementToken, margin);
     }
 
     function openPosition(

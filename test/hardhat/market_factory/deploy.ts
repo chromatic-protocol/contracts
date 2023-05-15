@@ -52,7 +52,7 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
   ).wait()
 
   const vault = await deployContract<USUMVault>("USUMVault", {
-    args: [marketFactory.address],
+    args: [marketFactory.address, opsAddress, opsProxyFactory],
   })
   await (await marketFactory.setVault(vault.address)).wait()
 
