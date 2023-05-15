@@ -12,6 +12,7 @@ import {
   USUMLiquidatorMock__factory,
 } from "../typechain-types"
 import { ReplWallet } from "./ReplWallet"
+import "./type-extensions"
 
 const SIGNERS = [
   "alice",
@@ -115,9 +116,10 @@ extendEnvironment((hre) => {
       marketFactoryAddress,
       deployer
     )
-    const [marketAddress] = await marketFactory.getMarket(
+
+    const marketAddress = await marketFactory.getMarket(
       oracleProvider.address,
-      USDC_ARBITRUM_GOERLI.address
+      USDC_ARBITRUM_GOERLI.address,
     )
     const { address: liquidatorAddress } = await deployments.get(
       "USUMLiquidatorMock"
@@ -126,6 +128,7 @@ extendEnvironment((hre) => {
       liquidatorAddress,
       gelato
     )
+    
     for (const signer of SIGNERS) {
       const w: ReplWallet = hre.w[signer]
       const positionIds = await w.Account.getPositionIds(marketAddress)

@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
@@ -94,6 +95,21 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         address settlementToken
     ) external view override returns (address[] memory) {
         return _marketsBySettlementToken[settlementToken];
+    }
+
+    function getMarket(
+        address oracleProvider,
+        address settlementToken
+    ) external view override returns (address) {
+        if(!_registered[oracleProvider][settlementToken]) return address(0);
+
+        address[] memory markets = _marketsBySettlementToken[settlementToken];
+        for (uint i=0; i < markets.length; i++) {
+            if (address(IUSUMMarket(markets[i]).oracleProvider()) == oracleProvider) {
+                return markets[i];
+            }
+        }
+        return address(0);
     }
 
     function isRegisteredMarket(

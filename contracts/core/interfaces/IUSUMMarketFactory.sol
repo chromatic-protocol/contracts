@@ -48,6 +48,9 @@ interface IUSUMMarketFactory is
         address settlementToken
     ) external view returns (address[] memory);
 
+    function getMarket(address oracleProvider,
+        address settlementToken) external view returns (address);
+
     function createMarket(
         address oracleProvider,
         address settlementToken

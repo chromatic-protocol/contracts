@@ -50,6 +50,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     { from: deployer }
   )
   console.log(chalk.yellow("✨ Create Market"))
+  console.log(chalk.yellow("✨ Done!"))
 }
 
 export default func
