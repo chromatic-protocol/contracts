@@ -141,7 +141,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         require(amount >= amountMin, "TradeRouter: insufficient amount");
     }
 
-    function getAccount() external view returns (address) {
+    function getAccount() external view override returns (address) {
         return accountFactory.getAccount(msg.sender);
     }
 
