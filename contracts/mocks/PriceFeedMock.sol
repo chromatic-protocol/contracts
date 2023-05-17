@@ -18,14 +18,12 @@ contract PriceFeedMock is AggregatorV2V3Interface {
     uint16 private currentPhaseId = 1;
 
     constructor() {
-        latestRoundId =
-            ChainlinkRoundLib.getStartingRoundId(currentPhaseId) -
-            1;
+        latestRoundId = getStartingRoundId(currentPhaseId) - 1;
     }
 
     function increasePhase(int256 _answer) external {
         currentPhaseId += 1;
-        latestRoundId = ChainlinkRoundLib.getStartingRoundId(currentPhaseId);
+        latestRoundId = getStartingRoundId(currentPhaseId);
         roundDatas[latestRoundId] = RoundData({
             roundId: latestRoundId,
             answer: _answer,
@@ -103,5 +101,9 @@ contract PriceFeedMock is AggregatorV2V3Interface {
         )
     {
         return this.getRoundData(latestRoundId);
+    }
+
+    function getStartingRoundId(uint16 phaseId) internal pure returns (uint80) {
+        return uint80(uint256(phaseId) << ChainlinkRoundLib.PHASE_OFFSET) + 1;
     }
 }
