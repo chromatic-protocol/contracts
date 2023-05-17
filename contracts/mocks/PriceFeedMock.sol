@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
-import {LibChainlinkRound} from "../core/libraries/LibChainlinkRound.sol";
+import {ChainlinkRoundLib} from "../core/libraries/ChainlinkRoundLib.sol";
 
 contract PriceFeedMock is AggregatorV2V3Interface {
     struct RoundData {
@@ -18,14 +18,12 @@ contract PriceFeedMock is AggregatorV2V3Interface {
     uint16 private currentPhaseId = 1;
 
     constructor() {
-        latestRoundId =
-            LibChainlinkRound.getStartingRoundId(currentPhaseId) -
-            1;
+        latestRoundId = getStartingRoundId(currentPhaseId) - 1;
     }
 
     function increasePhase(int256 _answer) external {
         currentPhaseId += 1;
-        latestRoundId = LibChainlinkRound.getStartingRoundId(currentPhaseId);
+        latestRoundId = getStartingRoundId(currentPhaseId);
         roundDatas[latestRoundId] = RoundData({
             roundId: latestRoundId,
             answer: _answer,
@@ -103,5 +101,9 @@ contract PriceFeedMock is AggregatorV2V3Interface {
         )
     {
         return this.getRoundData(latestRoundId);
+    }
+
+    function getStartingRoundId(uint16 phaseId) internal pure returns (uint80) {
+        return uint80(uint256(phaseId) << ChainlinkRoundLib.PHASE_OFFSET) + 1;
     }
 }

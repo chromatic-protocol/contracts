@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IOracleProvider, OracleVersion, Phase} from "@usum/core/interfaces/IOracleProvider.sol";
 import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
-import {LibChainlinkRound} from "@usum/core/libraries/LibChainlinkRound.sol";
+import {ChainlinkRoundLib} from "@usum/core/libraries/ChainlinkRoundLib.sol";
 
 contract OracleProvider is IOracleProvider {
     Phase[] private phases;
@@ -23,7 +23,7 @@ contract OracleProvider is IOracleProvider {
         lastSyncedRoundId = roundId;
         phases.push(
             Phase({
-                phaseId: LibChainlinkRound.getPhaseId(roundId),
+                phaseId: ChainlinkRoundLib.getPhaseId(roundId),
                 startingRoundId: roundId,
                 startingVersion: 1
             })
@@ -40,7 +40,7 @@ contract OracleProvider is IOracleProvider {
         ) = chainlinkPriceFeed.latestRoundData();
 
         // sync
-        uint16 currentPhaseId = LibChainlinkRound.getPhaseId(roundId);
+        uint16 currentPhaseId = ChainlinkRoundLib.getPhaseId(roundId);
         uint256 syncedPhaseIndex = phases.length - 1;
         Phase storage lastSyncedPhase = phases[syncedPhaseIndex];
         uint256 newVersion;

@@ -1,19 +1,37 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
+/// @dev LpContext type
 struct LpContext {
+    /// @dev The address of market contract
     IUSUMMarket market;
+    /// @dev The precision of the settlement token used in the market
     uint256 tokenPrecision;
+    /// @dev The precision of the price in the market, provided by `IOracleProvider`
     uint256 _pricePrecision;
+    /// @dev Cached instance of `OracleVersion` struct, which represents the current oracle version
     OracleVersion _currentVersionCache;
 }
 
 using LpContextLib for LpContext global;
 
+/**
+ * @title LpContextLib
+ * @notice Provides functions that operate on the `LpContext` struct
+ */
 library LpContextLib {
+    /**
+     * @notice Retrieves the current oracle version used by the market
+     * @dev If the `_currentVersionCache` has been initialized, then returns it.
+     *      If not, it calls the `currentVersion` function on the `oracleProvider of the market
+     *      to fetch the current version and stores it in the cache,
+     *      and then returns the current version.
+     * @param self The memory instance of `LpContext` struct
+     * @return OracleVersion The current oracle version
+     */
     function currentOracleVersion(
         LpContext memory self
     ) internal view returns (OracleVersion memory) {
@@ -27,6 +45,15 @@ library LpContextLib {
         return self._currentVersionCache;
     }
 
+    /**
+     * @notice Retrieves the oracle version at a specific version number
+     * @dev If the `_currentVersionCache` matches the requested version, then returns it.
+     *      Otherwise, it calls the `atVersion` function on the `oracleProvider` of the market
+     *      to fetch the desired version.
+     * @param self The memory instance of `LpContext` struct
+     * @param version The requested version number
+     * @return OracleVersion The oracle version at the requested version number
+     */
     function oracleVersionAt(
         LpContext memory self,
         uint256 version
@@ -37,6 +64,15 @@ library LpContextLib {
         return self.market.oracleProvider().atVersion(version);
     }
 
+    /**
+     * @notice Retrieves the price precision used by the market
+     * @dev If the `_pricePrecision` has been initialized, then returns it.
+     *      If not, it calls the `pricePrecision` function on the `oracleProvider of the market
+     *      fetch the price precision and stores it in `_pricePrecision`,
+     *      and then returns the price precision.
+     * @param self The memory instance of `LpContext` struct
+     * @return uint256 The price precision
+     */
     function pricePrecision(
         LpContext memory self
     ) internal view returns (uint256) {

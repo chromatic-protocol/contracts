@@ -56,9 +56,13 @@ contract SettlementTokenRegistryTest is Test {
         vm.warp(block.timestamp + 1);
         assertEq(tokenRegistry.currentInterestRate(testToken), 100);
 
-        // remove interest test
+        vm.expectRevert(bytes("IRAA"));
         tokenRegistry.removeLastInterestRateRecord(testToken);
-        assertEq(tokenRegistry.getInterestRateRecords(testToken).length, 1);
+        
+        // remove interest test
+        appendInterestRate(200, 10);
+        tokenRegistry.removeLastInterestRateRecord(testToken);
+        assertEq(tokenRegistry.getInterestRateRecords(testToken).length, 2);
     }
 
     function testCalculateInterest() public {
