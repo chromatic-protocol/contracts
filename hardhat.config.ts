@@ -103,6 +103,8 @@ const config: HardhatUserConfig = {
       "AccountFactory",
       "USUMRouter",
       "AggregatorV3Interface",
+      "**/IERC20.sol/*",
+      "**/IERC1155.sol/*",
     ],
     excludes: ["**/*Lib", "**/*Mock"],
     includeDeployed: true,
