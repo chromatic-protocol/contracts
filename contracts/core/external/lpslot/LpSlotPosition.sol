@@ -11,15 +11,26 @@ import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/extern
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 
+/// @dev LpSlotPosition type
 struct LpSlotPosition {
+    /// @dev The total leveraged quantity of the `LpSlot`
     int256 totalLeveragedQty;
+    /// @dev The total entry amount of the `LpSlot`
     uint256 totalEntryAmount;
+    /// @dev The total maker margin of the `LpSlot`
     uint256 _totalMakerMargin;
+    /// @dev The total taker margin of the `LpSlot`
     uint256 _totalTakerMargin;
+    /// @dev The pending position of the `LpSlot`
     LpSlotPendingPosition _pending;
+    /// @dev The accumulated interest of the `LpSlot`
     AccruedInterest _accruedInterest;
 }
 
+/**
+ * @title LpSlotPositionLib
+ * @dev Library for managing positions in the `LpSlot`
+ */
 library LpSlotPositionLib {
     using Math for uint256;
     using SafeCast for uint256;
@@ -27,6 +38,11 @@ library LpSlotPositionLib {
     using AccruedInterestLib for AccruedInterest;
     using LpSlotPendingPositionLib for LpSlotPendingPosition;
 
+    /**
+     * @notice Modifier to settle accrued interest and pending positions before executing a function.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     */
     modifier _settle(LpSlotPosition storage self, LpContext memory ctx) {
         settleAccruedInterest(self, ctx);
         settlePendingPosition(self, ctx);
@@ -34,6 +50,11 @@ library LpSlotPositionLib {
         _;
     }
 
+    /**
+     * @notice Settles accrued interest for a liquidity slot position.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     */
     function settleAccruedInterest(
         LpSlotPosition storage self,
         LpContext memory ctx
@@ -45,6 +66,11 @@ library LpSlotPositionLib {
         );
     }
 
+    /**
+     * @notice Settles pending positions for a liquidity slot position.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     */
     function settlePendingPosition(
         LpSlotPosition storage self,
         LpContext memory ctx
@@ -73,6 +99,12 @@ library LpSlotPositionLib {
         delete self._pending;
     }
 
+    /**
+     * @notice Opens a new position for a liquidity slot.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @param param The PositionParam data struct containing the position parameters.
+     */
     function openPosition(
         LpSlotPosition storage self,
         LpContext memory ctx,
@@ -81,6 +113,12 @@ library LpSlotPositionLib {
         self._pending.openPosition(ctx, param);
     }
 
+    /**
+     * @notice Closes a position for a liquidity slot.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @param param The PositionParam data struct containing the position parameters.
+     */
     function closePosition(
         LpSlotPosition storage self,
         LpContext memory ctx,
@@ -106,18 +144,34 @@ library LpSlotPositionLib {
         }
     }
 
+    /**
+     * @notice Returns the total maker margin for a liquidity slot position.
+     * @param self The LpSlotPosition storage struct.
+     * @return uint256 The total maker margin.
+     */
     function totalMakerMargin(
         LpSlotPosition storage self
     ) internal view returns (uint256) {
         return self._totalMakerMargin + self._pending.totalMakerMargin;
     }
 
+    /**
+     * @notice Returns the total taker margin for a liquidity slot position.
+     * @param self The LpSlotPosition storage struct.
+     * @return uint256 The total taker margin.
+     */
     function totalTakerMargin(
         LpSlotPosition storage self
     ) internal view returns (uint256) {
         return self._totalTakerMargin + self._pending.totalTakerMargin;
     }
 
+    /**
+     * @notice Calculates the unrealized profit or loss for a liquidity slot position.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @return int256 The unrealized profit or loss.
+     */
     function unrealizedPnl(
         LpSlotPosition storage self,
         LpContext memory ctx
@@ -147,6 +201,12 @@ library LpSlotPositionLib {
         }
     }
 
+    /**
+     * @dev Calculates the current interest for a liquidity slot position.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @return uint256 The current interest.
+     */
     function currentInterest(
         LpSlotPosition storage self,
         LpContext memory ctx
@@ -154,6 +214,12 @@ library LpSlotPositionLib {
         return _currentInterest(self, ctx) + self._pending.currentInterest(ctx);
     }
 
+    /**
+     * @dev Calculates the current interest for a liquidity slot position without pending position.
+     * @param self The LpSlotPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @return uint256 The current interest.
+     */
     function _currentInterest(
         LpSlotPosition storage self,
         LpContext memory ctx

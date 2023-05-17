@@ -27,7 +27,7 @@ struct LpSlotPendingPosition {
 
 /**
  * @title LpSlotPendingPositionLib
- * @dev Library for managing pending positions in the LpSlot.
+ * @dev Library for managing pending positions in the `LpSlot`
  */
 library LpSlotPendingPositionLib {
     using Math for uint256;
