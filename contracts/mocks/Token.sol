@@ -9,6 +9,6 @@ contract Token is ERC20 {
     }
 
     function faucet(uint256 amount) public {
-        _transfer(address(this), msg.sender, amount);
+        _mint(msg.sender, amount);
     }
 }
