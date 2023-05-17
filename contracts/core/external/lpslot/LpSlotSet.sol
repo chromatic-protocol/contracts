@@ -353,20 +353,22 @@ library LpSlotSetLib {
         }
     }
 
-    /**
-     * @notice Removes liquidity from the liquidity pool.
-     * @dev This function removes liquidity from the liquidity pool by performing the following steps:
-     *      1. Retrieves the target slot based on the trading fee rate.
-     *      2. Calls the removeLiquidity function on the target slot,
-     *         passing the LpContext, liquidity, and totalLiquidity.
-     *      3. Returns the amount of liquidity that was removed.
-     * @param self The storage reference to the LpSlotSet.
-     * @param ctx The LpContext memory containing the context information for the liquidity operation.
-     * @param tradingFeeRate The trading fee rate associated with the liquidity being removed.
-     * @param liquidity The amount of LP token to be burned.
-     * @param totalLiquidity The total supplied LP token.
-     * @return amount The amount of liquidity that was removed.
-     */
+    function calcLiquidity(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 amount,
+        uint256 totalLiquidity
+    )
+        external
+        view
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 liquidity)
+    {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        liquidity = slot.calcLiquidity(ctx, amount, totalLiquidity);
+    }
+
     function removeLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
@@ -379,14 +381,17 @@ library LpSlotSetLib {
         amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
     }
 
-    /**
-     * @notice Retrieves the total slot margin amount for a given trading fee rate.
-     * @dev This function retrieves the total slot margin amount for the specified trading fee rate
-     *      by retrieving the target slot and returning its total balance.
-     * @param self The storage reference to the LpSlotSet.
-     * @param tradingFeeRate The trading fee rate associated with the slot.
-     * @return amount The total slot margin amount for the given trading fee rate.
-     */
+    function calcAmount(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 liquidity,
+        uint256 totalLiquidity
+    ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        amount = slot.calcAmount(ctx, liquidity, totalLiquidity);
+    }
+
     function getSlotMarginTotal(
         LpSlotSet storage self,
         int16 tradingFeeRate

@@ -92,16 +92,22 @@ abstract contract Liquidity is LpToken, MarketValue {
         emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
     }
 
-    function getSlotMarginTotal(
-        int16 tradingFeeRate
-    ) external view override returns (uint256 amount) {
-        return lpSlotSet.getSlotMarginTotal(tradingFeeRate);
+    function getSlotMarginsTotal(
+        int16[] calldata tradingFeeRates
+    ) external view override returns (uint256[] memory amounts) {
+        amounts = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            amounts[i] = lpSlotSet.getSlotMarginTotal(tradingFeeRates[i]);
+        }
     }
 
-    function getSlotMarginUnused(
-        int16 tradingFeeRate
-    ) external view override returns (uint256 amount) {
-        return lpSlotSet.getSlotMarginUnused(tradingFeeRate);
+    function getSlotMarginsUnused(
+        int16[] calldata tradingFeeRates
+    ) external view override returns (uint256[] memory amounts) {
+        amounts = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            amounts[i] = lpSlotSet.getSlotMarginUnused(tradingFeeRates[i]);
+        }
     }
 
     function distributeEarningToSlots(
@@ -111,11 +117,11 @@ abstract contract Liquidity is LpToken, MarketValue {
         lpSlotSet.distributeEarning(earning, marketBalance);
     }
 
-    function calcLiquidity(
+    function estimatedLiquidity(
         int16 tradingFeeRate,
         uint256 amount
     ) external view returns (uint256 liquidity) {
-        liquidity = lpSlotSet.calcLiquidity(
+        liquidity = lpSlotSet.estimatedLiquidity(
             newLpContext(),
             tradingFeeRate,
             amount,
@@ -123,11 +129,11 @@ abstract contract Liquidity is LpToken, MarketValue {
         );
     }
 
-    function calcAmount(
+    function estimatedAmount(
         int16 tradingFeeRate,
         uint256 liquidity
     ) external view returns (uint256 amount) {
-        amount = lpSlotSet.calcAmount(
+        amount = lpSlotSet.estimatedAmount(
             newLpContext(),
             tradingFeeRate,
             liquidity,

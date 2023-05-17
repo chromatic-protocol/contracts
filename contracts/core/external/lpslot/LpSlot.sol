@@ -134,12 +134,12 @@ library LpSlotLib {
     ) internal returns (uint256 liquidity) {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
-        liquidity = self.calcLiquidity(ctx, amount, totalLiquidity);
+        liquidity = self.estimatedLiquidity(ctx, amount, totalLiquidity);
 
         self.total += amount;
     }
 
-    function calcLiquidity(
+    function estimatedLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount,
@@ -175,13 +175,13 @@ library LpSlotLib {
         uint256 liquidity,
         uint256 totalLiquidity
     ) internal returns (uint256 amount) {
-        amount = self.calcAmount(ctx, liquidity, totalLiquidity);
+        amount = self.estimatedAmount(ctx, liquidity, totalLiquidity);
         require(amount <= self.balance(), Errors.NOT_ENOUGH_SLOT_BALANCE);
 
         self.total -= amount;
     }
 
-    function calcAmount(
+    function estimatedAmount(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 liquidity,
