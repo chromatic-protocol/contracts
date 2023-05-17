@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -11,26 +11,46 @@ import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
+/// @dev LpSlotPendingPosition type
 struct LpSlotPendingPosition {
+    /// @dev The oracle version of the pending position.
     uint256 oracleVersion;
+    /// @dev The total leveraged quantity of the pending position.
     int256 totalLeveragedQty;
+    /// @dev The total maker margin of the pending position.
     uint256 totalMakerMargin;
+    /// @dev The total taker margin of the pending position.
     uint256 totalTakerMargin;
+    /// @dev The accumulated interest of the pending position.
     AccruedInterest accruedInterest;
 }
 
+/**
+ * @title LpSlotPendingPositionLib
+ * @dev Library for managing pending positions in the LpSlot.
+ */
 library LpSlotPendingPositionLib {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
     using AccruedInterestLib for AccruedInterest;
 
+    /**
+     * @notice Settles the accumulated interest of the pending position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     */
     modifier _settle(LpSlotPendingPosition storage self, LpContext memory ctx) {
         settleAccruedInterest(self, ctx);
 
         _;
     }
 
+    /**
+     * @notice Settles the accumulated interest of the pending position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     */
     function settleAccruedInterest(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
@@ -42,6 +62,12 @@ library LpSlotPendingPositionLib {
         );
     }
 
+    /**
+     * @notice Opens a new position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     * @param param The position parameters.
+     */
     function openPosition(
         LpSlotPendingPosition storage self,
         LpContext memory ctx,
@@ -63,6 +89,12 @@ library LpSlotPendingPositionLib {
         self.totalTakerMargin += param.takerMargin;
     }
 
+    /**
+     * @notice Closes an existing position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     * @param param The position parameters.
+     */
     function closePosition(
         LpSlotPendingPosition storage self,
         LpContext memory ctx,
@@ -85,6 +117,12 @@ library LpSlotPendingPositionLib {
         );
     }
 
+    /**
+     * @notice Calculates the unrealized profit or loss (PnL) of the pending position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     * @return uint256 The unrealized PnL.
+     */
     function unrealizedPnl(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
@@ -115,6 +153,12 @@ library LpSlotPendingPositionLib {
         }
     }
 
+    /**
+     * @notice Calculates the current accrued interest of the pending position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     * @return uint256 The current accrued interest.
+     */
     function currentInterest(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
@@ -127,6 +171,12 @@ library LpSlotPendingPositionLib {
             );
     }
 
+    /**
+     * @notice Calculates the entry price of the pending position.
+     * @param self The LpSlotPendingPosition storage.
+     * @param ctx The LpContext.
+     * @return uint256 The entry price.
+     */
     function entryPrice(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
