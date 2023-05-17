@@ -4,31 +4,40 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Constants} from "@usum/core/libraries/Constants.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
-/// @title InterestRate
-/// @notice Provides functions for managing interest rates.
-/// @dev The library allows for the initialization, appending, and removal of interest rate records,
-/// as well as calculating interest based on these records.
+/**
+ * @title InterestRate
+ * @notice Provides functions for managing interest rates.
+ * @dev The library allows for the initialization, appending, and removal of interest rate records,
+ *      as well as calculating interest based on these records.
+ */
 library InterestRate {
     using Math for uint256;
 
+    /// @dev Record type
     struct Record {
+        /// @dev Annual interest rate in BPS
         uint256 annualRateBPS;
+        /// @dev Timestamp when the interest rate becomes effective
         uint256 beginTimestamp;
     }
 
     uint256 private constant MAX_RATE_BPS = Constants.BPS; // max interest rate is 100%
     uint256 private constant YEAR = 365 * 24 * 3600;
 
-    /// @dev Ensure that the interest rate records have been initialized before certain functions can be called.
-    /// It checks whether the length of the Record array is greater than 0.
+    /**
+     * @dev Ensure that the interest rate records have been initialized before certain functions can be called.
+     *      It checks whether the length of the Record array is greater than 0.
+     */
     modifier initialized(Record[] storage self) {
         require(self.length > 0, Errors.INTEREST_RATE_NOT_INITIALIZED);
         _;
     }
 
-    /// @notice Initialize the interest rate records.
-    /// @param self The stored record array
-    /// @param initialInterestRate The initial interest rate
+    /**
+     * @notice Initialize the interest rate records.
+     * @param self The stored record array
+     * @param initialInterestRate The initial interest rate
+     */
     function initialize(
         Record[] storage self,
         uint256 initialInterestRate
@@ -38,12 +47,14 @@ library InterestRate {
         );
     }
 
-    /// @notice Add a new interest rate record to the array.
-    /// @dev Annual rate is not greater than the maximum rate and that the begin timestamp is in the future,
-    /// and the new record's begin timestamp is greater than the previous record's timestamp.
-    /// @param self The stored record array
-    /// @param annualRateBPS The annual interest rate in BPS
-    /// @param beginTimestamp Begin timestamp of this record
+    /**
+     * @notice Add a new interest rate record to the array.
+     * @dev Annual rate is not greater than the maximum rate and that the begin timestamp is in the future,
+     *      and the new record's begin timestamp is greater than the previous record's timestamp.
+     * @param self The stored record array
+     * @param annualRateBPS The annual interest rate in BPS
+     * @param beginTimestamp Begin timestamp of this record
+     */
     function appendRecord(
         Record[] storage self,
         uint256 annualRateBPS,
@@ -69,13 +80,15 @@ library InterestRate {
         );
     }
 
-    /// @notice Remove the last interest rate record from the array.
-    /// @dev The current time must be less than the begin timestamp of the last record.
-    /// If the array has only one record, it returns false along with an empty record.
-    /// Otherwise, it removes the last record from the array and returns true along with the removed record.
-    /// @param self The stored record array
-    /// @return removed Whether the last record is removed
-    /// @return record The removed record
+    /**
+     * @notice Remove the last interest rate record from the array.
+     * @dev The current time must be less than the begin timestamp of the last record.
+     *      If the array has only one record, it returns false along with an empty record.
+     *      Otherwise, it removes the last record from the array and returns true along with the removed record.
+     * @param self The stored record array
+     * @return removed Whether the last record is removed
+     * @return record The removed record
+     */
     function removeLastRecord(
         Record[] storage self
     ) internal initialized(self) returns (bool removed, Record memory record) {
@@ -95,13 +108,15 @@ library InterestRate {
         return (true, lastRecord);
     }
 
-    /// @notice Find the interest rate record that applies to a given timestamp.
-    /// @dev It iterates through the array from the end to the beginning
-    /// and returns the first record with a begin timestamp less than or equal to the provided timestamp.
-    /// @param self The stored record array
-    /// @param timestamp Given timestamp
-    /// @return interestRate The record which is found
-    /// @return index The index of record
+    /**
+     * @notice Find the interest rate record that applies to a given timestamp.
+     * @dev It iterates through the array from the end to the beginning
+     *      and returns the first record with a begin timestamp less than or equal to the provided timestamp.
+     * @param self The stored record array
+     * @param timestamp Given timestamp
+     * @return interestRate The record which is found
+     * @return index The index of record
+     */
     function findRecordAt(
         Record[] storage self,
         uint256 timestamp
@@ -123,11 +138,13 @@ library InterestRate {
         return (self[0], 0); // empty result (this line is not reachable)
     }
 
-    /// @notice Calculate the interest
-    /// @param self The stored record array
-    /// @param amount Token amount
-    /// @param from Begin timestamp (inclusive)
-    /// @param to End timestamp (exclusive)
+    /**
+     * @notice Calculate the interest
+     * @param self The stored record array
+     * @param amount Token amount
+     * @param from Begin timestamp (inclusive)
+     * @param to End timestamp (exclusive)
+     */
     function calculateInterest(
         Record[] storage self,
         uint256 amount,
@@ -137,12 +154,14 @@ library InterestRate {
         return calculateInterest(self, amount, from, to, Math.Rounding.Down);
     }
 
-    /// @notice Calculate the interest
-    /// @param self The stored record array
-    /// @param amount Token amount
-    /// @param from Begin timestamp (inclusive)
-    /// @param to End timestamp (exclusive)
-    /// @param rounding Rounding mode
+    /**
+     * @notice Calculate the interest
+     * @param self The stored record array
+     * @param amount Token amount
+     * @param from Begin timestamp (inclusive)
+     * @param to End timestamp (exclusive)
+     * @param rounding Rounding mode
+     */
     function calculateInterest(
         Record[] storage self,
         uint256 amount,
