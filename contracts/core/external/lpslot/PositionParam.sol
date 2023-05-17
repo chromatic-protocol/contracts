@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -17,13 +17,28 @@ struct PositionParam {
 
 using PositionParamLib for PositionParam global;
 
+/**
+ * @title PositionParamLib
+ * @notice Library for manipulating PositionParam struct.
+ */
 library PositionParamLib {
+    /**
+     * @notice Returns the settle version for a PositionParam.
+     * @param self The PositionParam data struct.
+     * @return uint256 The settle version.
+     */
     function settleVersion(
         PositionParam memory self
     ) internal pure returns (uint256) {
         return PositionUtil.settleVersion(self.oracleVersion);
     }
 
+    /**
+     * @notice Calculates the entry price for a PositionParam.
+     * @param self The PositionParam data struct.
+     * @param ctx The LpContext data struct.
+     * @return uint256 The entry price.
+     */
     function entryPrice(
         PositionParam memory self,
         LpContext memory ctx
@@ -36,6 +51,12 @@ library PositionParamLib {
             );
     }
 
+    /**
+     * @notice Retrieves the settle oracle version for a PositionParam.
+     * @param self The PositionParam data struct.
+     * @param ctx The LpContext data struct.
+     * @return OracleVersion The settle oracle version.
+     */
     function settleOracleVersion(
         PositionParam memory self,
         LpContext memory ctx
@@ -49,7 +70,14 @@ library PositionParamLib {
         return self._settleVersionCache;
     }
 
-    // use only to deduct accumulated accrued interest when close position
+    /**
+     * @dev Calculates the interest for a PositionParam until a specified timestamp.
+     * @dev It is used only to deduct accumulated accrued interest when close position
+     * @param self The PositionParam data struct.
+     * @param ctx The LpContext data struct.
+     * @param until The timestamp until which to calculate the interest.
+     * @return uint256 The calculated interest.
+     */
     function calculateInterest(
         PositionParam memory self,
         LpContext memory ctx,
@@ -64,6 +92,11 @@ library PositionParamLib {
             );
     }
 
+    /**
+     * @notice Creates a clone of a PositionParam.
+     * @param self The PositionParam data struct.
+     * @return PositionParam The cloned PositionParam.
+     */
     function clone(
         PositionParam memory self
     ) internal pure returns (PositionParam memory) {
@@ -78,6 +111,11 @@ library PositionParamLib {
             });
     }
 
+    /**
+     * @notice Creates the inverse of a PositionParam by negating the leveragedQty.
+     * @param self The PositionParam data struct.
+     * @return PositionParam The inverted PositionParam.
+     */
     function inverse(
         PositionParam memory self
     ) internal pure returns (PositionParam memory) {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -29,7 +29,7 @@ struct LpSlotPosition {
 
 /**
  * @title LpSlotPositionLib
- * @dev Library for managing positions in the `LpSlot`
+ * @notice Library for managing positions in the `LpSlot`
  */
 library LpSlotPositionLib {
     using Math for uint256;
