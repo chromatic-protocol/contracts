@@ -104,6 +104,7 @@ const config: HardhatUserConfig = {
       "USUMRouter",
       "AggregatorV3Interface",
       "**/IERC20.sol/*",
+      "**/IERC20Metadata.sol/*",
       "**/IERC1155.sol/*",
     ],
     excludes: ["**/*Lib", "**/*Mock"],
