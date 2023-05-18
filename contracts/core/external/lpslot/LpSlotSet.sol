@@ -353,7 +353,7 @@ library LpSlotSetLib {
         }
     }
 
-    function calcLiquidity(
+    function estimatedLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -366,7 +366,7 @@ library LpSlotSetLib {
         returns (uint256 liquidity)
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        liquidity = slot.calcLiquidity(ctx, amount, totalLiquidity);
+        liquidity = slot.estimatedLiquidity(ctx, amount, totalLiquidity);
     }
 
     function removeLiquidity(
@@ -381,7 +381,7 @@ library LpSlotSetLib {
         amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
     }
 
-    function calcAmount(
+    function estimatedAmount(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -389,7 +389,7 @@ library LpSlotSetLib {
         uint256 totalLiquidity
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        amount = slot.calcAmount(ctx, liquidity, totalLiquidity);
+        amount = slot.estimatedAmount(ctx, liquidity, totalLiquidity);
     }
 
     function getSlotMarginTotal(
