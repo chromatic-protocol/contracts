@@ -1,25 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 
 contract OracleProviderMock is IOracleProvider {
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
-    uint256 public immutable override pricePrecision = 10 ** 8; // 8 : ETH / USD decimals
 
     error InvalidVersion();
 
-    function increaseVersion(int256 price) public {
+    function increaseVersion(Fixed18 price) public {
         latestVersion++;
-        oracleVersions[latestVersion] = OracleVersion({
-            version:latestVersion,
-            timestamp:block.timestamp,
-            price:price
-        });
+
+        IOracleProvider.OracleVersion memory oracleVersion;
+        oracleVersion.version = latestVersion;
+        oracleVersion.timestamp = block.timestamp;
+        oracleVersion.price = price;
+        oracleVersions[latestVersion] = oracleVersion;
     }
 
-    function syncVersion() external override returns (OracleVersion memory) {
+    function sync() external override returns (OracleVersion memory) {
         return oracleVersions[latestVersion];
     }
 

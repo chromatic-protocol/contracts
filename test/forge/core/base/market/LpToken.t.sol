@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {LpToken} from "@usum/core/base/market/LpToken.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 
 contract OracleProviderMock is IOracleProvider {
     // add this to be excluded from coverage report
@@ -13,20 +13,22 @@ contract OracleProviderMock is IOracleProvider {
         return "ETH / USD";
     }
 
-    function syncVersion() external override returns (OracleVersion memory) {}
+    function sync()
+        external
+        override
+        returns (IOracleProvider.OracleVersion memory)
+    {}
 
     function currentVersion()
         external
         view
         override
-        returns (OracleVersion memory)
+        returns (IOracleProvider.OracleVersion memory)
     {}
 
     function atVersion(
         uint256 oracleVersion
-    ) external view override returns (OracleVersion memory) {}
-
-    function pricePrecision() external view override returns (uint256) {}
+    ) external view override returns (IOracleProvider.OracleVersion memory) {}
 }
 
 contract LpTokenTest is Test, LpToken {

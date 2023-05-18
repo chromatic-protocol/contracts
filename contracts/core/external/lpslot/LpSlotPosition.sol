@@ -4,12 +4,13 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {AccruedInterest, AccruedInterestLib} from "@usum/core/external/lpslot/AccruedInterest.sol";
 import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/external/lpslot/LpSlotPendingPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 
 /// @dev LpSlotPosition type
 struct LpSlotPosition {
@@ -78,14 +79,15 @@ library LpSlotPositionLib {
         uint256 pendingOracleVersion = self._pending.oracleVersion;
         if (pendingOracleVersion == 0) return;
 
-        OracleVersion memory currentVersion = ctx.currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx
+            .currentOracleVersion();
         if (pendingOracleVersion >= currentVersion.version) return;
 
         int256 pendingQty = self._pending.totalLeveragedQty;
         self.totalLeveragedQty += pendingQty;
         self.totalEntryAmount += pendingQty.abs().mulDiv(
-            self._pending.entryPrice(ctx),
-            ctx.pricePrecision()
+            UFixed18.unwrap(self._pending.entryPrice(ctx)),
+            UFixed18.unwrap(UFixed18Lib.ONE)
         );
         self._totalMakerMargin += self._pending.totalMakerMargin;
         self._totalTakerMargin += self._pending.totalTakerMargin;
@@ -133,8 +135,8 @@ library LpSlotPositionLib {
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
             self.totalEntryAmount -= leveragedQty.abs().mulDiv(
-                param.entryPrice(ctx),
-                ctx.pricePrecision()
+                UFixed18.unwrap(param.entryPrice(ctx)),
+                UFixed18.unwrap(UFixed18Lib.ONE)
             );
             self._totalMakerMargin -= param.makerMargin;
             self._totalTakerMargin -= param.takerMargin;
@@ -176,16 +178,20 @@ library LpSlotPositionLib {
         LpSlotPosition storage self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        OracleVersion memory currentVersion = ctx.currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx
+            .currentOracleVersion();
 
         int256 leveragedQty = self.totalLeveragedQty;
         int256 sign = leveragedQty < 0 ? int256(-1) : int256(1);
-        uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
+        UFixed18 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
         int256 exitAmount = leveragedQty
             .abs()
-            .mulDiv(exitPrice, ctx.pricePrecision())
+            .mulDiv(
+                UFixed18.unwrap(exitPrice),
+                UFixed18.unwrap(UFixed18Lib.ONE)
+            )
             .toInt256() * sign;
 
         int256 rawPnl = exitAmount - entryAmount;

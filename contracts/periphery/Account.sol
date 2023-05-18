@@ -108,7 +108,7 @@ contract Account is IAccount, VerifyCallback {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
     ) external onlyRouter returns (Position memory position) {
-        Position memory position = IUSUMMarket(marketAddress).openPosition(
+        position = IUSUMMarket(marketAddress).openPosition(
             qty,
             leverage,
             takerMargin,

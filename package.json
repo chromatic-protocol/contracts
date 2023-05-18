@@ -1,6 +1,7 @@
 {
   "name": "usum-protocol",
   "scripts": {
+    "postinstall": "patch-package",
     "test": "forge test -vvv",
     "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
     "coverage": "forge coverage --report lcov",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
     "@chromatic-finance/hardhat-package": "^0.0.1-dev.11",
+    "@equilibria/perennial-oracle": "^1.2.0",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
     "@gelatonetwork/automate-sdk": "^2.1.1",
@@ -47,6 +49,7 @@
     "hardhat-deploy": "^0.11.26",
     "hardhat-gas-reporter": "^1.0.8",
     "mocha": "^10.2.0",
+    "patch-package": "^7.0.0",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
     "tsconfig-paths": "^4.2.0",

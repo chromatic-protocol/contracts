@@ -4,7 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {AccruedInterest, AccruedInterestLib} from "@usum/core/external/lpslot/AccruedInterest.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
@@ -129,15 +130,16 @@ library LpSlotPendingPositionLib {
     ) internal view returns (int256) {
         if (self.oracleVersion == 0) return 0;
 
-        OracleVersion memory currentVersion = ctx.currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx
+            .currentOracleVersion();
         if (self.oracleVersion >= currentVersion.version) return 0;
 
-        uint256 _entryPrice = PositionUtil.entryPrice(
+        UFixed18 _entryPrice = PositionUtil.entryPrice(
             ctx.market.oracleProvider(),
             self.oracleVersion,
             currentVersion
         );
-        uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
+        UFixed18 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 pnl = PositionUtil.pnl(
             self.totalLeveragedQty,
@@ -175,12 +177,12 @@ library LpSlotPendingPositionLib {
      * @notice Calculates the entry price of the pending position.
      * @param self The LpSlotPendingPosition storage.
      * @param ctx The LpContext.
-     * @return uint256 The entry price.
+     * @return UFixed18 The entry price.
      */
     function entryPrice(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
-    ) internal view returns (uint256) {
+    ) internal view returns (UFixed18) {
         return
             PositionUtil.entryPrice(
                 ctx.market.oracleProvider(),

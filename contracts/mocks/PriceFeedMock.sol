@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
-import {ChainlinkRoundLib} from "../core/libraries/ChainlinkRoundLib.sol";
+import {AggregatorProxyInterface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorProxyInterface.sol";
 
-contract PriceFeedMock is AggregatorV2V3Interface {
+contract PriceFeedMock is AggregatorProxyInterface {
+    uint256 private constant PHASE_OFFSET = 64;
     struct RoundData {
         uint80 roundId;
         int256 answer;
@@ -58,7 +58,9 @@ contract PriceFeedMock is AggregatorV2V3Interface {
         uint256 roundId
     ) external view override returns (uint256) {}
 
-    function decimals() external view override returns (uint8) {}
+    function decimals() external view override returns (uint8) {
+        return 18;
+    }
 
     function description() external view override returns (string memory) {}
 
@@ -104,6 +106,48 @@ contract PriceFeedMock is AggregatorV2V3Interface {
     }
 
     function getStartingRoundId(uint16 phaseId) internal pure returns (uint80) {
-        return uint80(uint256(phaseId) << ChainlinkRoundLib.PHASE_OFFSET) + 1;
+        return uint80(uint256(phaseId) << PHASE_OFFSET) + 1;
+    }
+
+    function phaseAggregators(
+        uint16 phaseId
+    ) external view override returns (address) {
+        return address(this);
+    }
+
+    function phaseId() external view override returns (uint16) {}
+
+    function proposedAggregator() external view override returns (address) {}
+
+    function proposedGetRoundData(
+        uint80 roundId
+    )
+        external
+        view
+        override
+        returns (
+            uint80 id,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {}
+
+    function proposedLatestRoundData()
+        external
+        view
+        override
+        returns (
+            uint80 id,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {}
+
+    function aggregator() external view override returns (address) {
+        return address(this);
     }
 }

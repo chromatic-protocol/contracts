@@ -10,7 +10,6 @@ import {Position} from "@usum/core/libraries/Position.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 import {ITrade} from "@usum/core/interfaces/market/ITrade.sol";
 

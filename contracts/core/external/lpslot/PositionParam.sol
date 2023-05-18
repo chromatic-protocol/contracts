@@ -2,7 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
@@ -12,7 +13,7 @@ struct PositionParam {
     uint256 takerMargin;
     uint256 makerMargin;
     uint256 timestamp;
-    OracleVersion _settleVersionCache;
+    IOracleProvider.OracleVersion _settleVersionCache;
 }
 
 using PositionParamLib for PositionParam global;
@@ -37,12 +38,12 @@ library PositionParamLib {
      * @notice Calculates the entry price for a PositionParam.
      * @param self The PositionParam data struct.
      * @param ctx The LpContext data struct.
-     * @return uint256 The entry price.
+     * @return UFixed18 The entry price.
      */
     function entryPrice(
         PositionParam memory self,
         LpContext memory ctx
-    ) internal view returns (uint256) {
+    ) internal view returns (UFixed18) {
         return
             PositionUtil.entryPrice(
                 ctx.market.oracleProvider(),
@@ -60,7 +61,7 @@ library PositionParamLib {
     function settleOracleVersion(
         PositionParam memory self,
         LpContext memory ctx
-    ) internal view returns (OracleVersion memory) {
+    ) internal view returns (IOracleProvider.OracleVersion memory) {
         if (self._settleVersionCache.version == 0) {
             self._settleVersionCache = ctx.oracleVersionAt(
                 self.settleVersion()

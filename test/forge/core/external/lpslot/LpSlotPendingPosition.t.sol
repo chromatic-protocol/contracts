@@ -3,11 +3,13 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
+import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/external/lpslot/LpSlotPendingPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
@@ -148,46 +150,39 @@ contract LpSlotPendingPositionTest is Test {
         pending.totalLeveragedQty = 10;
 
         LpContext memory ctx = _newLpContext();
-        ctx._currentVersionCache = OracleVersion({
-            version: 10,
-            timestamp: 10,
-            price: 1200
-        });
+        ctx._currentVersionCache.version = 10;
+        ctx._currentVersionCache.timestamp = 10;
+        ctx._currentVersionCache.price = Fixed18.wrap(1200);
 
+        IOracleProvider.OracleVersion memory _ov;
+        _ov.version = 2;
+        _ov.timestamp = 2;
+        _ov.price = Fixed18.wrap(1100);
         vm.mockCall(
             address(provider),
-            abi.encodeWithSelector(IOracleProvider.atVersion.selector, 2),
-            abi.encode(OracleVersion({version: 2, timestamp: 2, price: 1100}))
+            abi.encodeWithSelector(provider.atVersion.selector, 2),
+            abi.encode(_ov)
         );
 
         vm.expectCall(
             address(provider),
-            abi.encodeWithSelector(IOracleProvider.atVersion.selector, 2)
+            abi.encodeWithSelector(provider.atVersion.selector, 2)
         );
-        uint256 entryPrice = pending.entryPrice(ctx);
+        UFixed18 entryPrice = pending.entryPrice(ctx);
 
-        assertEq(entryPrice, 1100);
+        assertEq(UFixed18.unwrap(entryPrice), 1100);
     }
 
-    function _newLpContext() private view returns (LpContext memory) {
-        return
-            LpContext({
-                market: market,
-                tokenPrecision: 10 ** 6,
-                _pricePrecision: 1,
-                _currentVersionCache: OracleVersion(0, 0, 0)
-            });
+    function _newLpContext() private view returns (LpContext memory ctx) {
+        ctx.market = market;
+        ctx.tokenPrecision = 10 ** 6;
     }
 
-    function _newPositionParam() private pure returns (PositionParam memory) {
-        return
-            PositionParam({
-                oracleVersion: 1,
-                leveragedQty: 50,
-                takerMargin: 10,
-                makerMargin: 50,
-                timestamp: 1,
-                _settleVersionCache: OracleVersion(0, 0, 0)
-            });
+    function _newPositionParam() private pure returns (PositionParam memory p) {
+        p.oracleVersion = 1;
+        p.leveragedQty = 50;
+        p.takerMargin = 10;
+        p.makerMargin = 50;
+        p.timestamp = 1;
     }
 }

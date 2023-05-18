@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Constants} from "@usum/core/libraries/Constants.sol";
+import {BPS} from "@usum/core/libraries/Constants.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
 /**
@@ -21,7 +21,7 @@ library InterestRate {
         uint256 beginTimestamp;
     }
 
-    uint256 private constant MAX_RATE_BPS = Constants.BPS; // max interest rate is 100%
+    uint256 private constant MAX_RATE_BPS = BPS; // max interest rate is 100%
     uint256 private constant YEAR = 365 * 24 * 3600;
 
     /**
@@ -200,6 +200,6 @@ library InterestRate {
         uint256 period, // in seconds
         Math.Rounding rounding
     ) private pure returns (uint256) {
-        return amount.mulDiv(rateBPS * period, Constants.BPS * YEAR, rounding);
+        return amount.mulDiv(rateBPS * period, BPS * YEAR, rounding);
     }
 }

@@ -3,10 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
@@ -48,18 +49,14 @@ contract LpSlotPositionTest is Test {
         position._totalTakerMargin = 100;
 
         LpContext memory ctx = _newLpContext();
-        ctx._currentVersionCache = OracleVersion({
-            version: 3,
-            timestamp: 3,
-            price: 2100
-        });
+        ctx._currentVersionCache.version = 3;
+        ctx._currentVersionCache.timestamp = 3;
+        ctx._currentVersionCache.price = Fixed18Lib.from(2100);
 
         PositionParam memory param = _newPositionParam();
-        param._settleVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: 2000
-        });
+        param._settleVersionCache.version = 2;
+        param._settleVersionCache.timestamp = 2;
+        param._settleVersionCache.price = Fixed18Lib.from(2000);
 
         position.closePosition(ctx, param);
 
@@ -69,25 +66,16 @@ contract LpSlotPositionTest is Test {
         assertEq(position._totalTakerMargin, 90);
     }
 
-    function _newLpContext() private view returns (LpContext memory) {
-        return
-            LpContext({
-                market: market,
-                tokenPrecision: 10 ** 6,
-                _pricePrecision: 1,
-                _currentVersionCache: OracleVersion(0, 0, 0)
-            });
+    function _newLpContext() private view returns (LpContext memory ctx) {
+        ctx.market = market;
+        ctx.tokenPrecision = 10 ** 6;
     }
 
-    function _newPositionParam() private pure returns (PositionParam memory) {
-        return
-            PositionParam({
-                oracleVersion: 1,
-                leveragedQty: 50,
-                takerMargin: 10,
-                makerMargin: 50,
-                timestamp: 1,
-                _settleVersionCache: OracleVersion(0, 0, 0)
-            });
+    function _newPositionParam() private pure returns (PositionParam memory p) {
+        p.oracleVersion = 1;
+        p.leveragedQty = 50;
+        p.takerMargin = 10;
+        p.makerMargin = 50;
+        p.timestamp = 1;
     }
 }

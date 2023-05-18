@@ -3,17 +3,16 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 contract LpSlotTest is Test {
     using SafeCast for uint256;
     using LpSlotLib for LpSlot;
-
-    uint256 private constant PRICE_PRECISION = 10 ** 8;
 
     IOracleProvider provider;
     IUSUMVault vault;
@@ -48,11 +47,9 @@ contract LpSlotTest is Test {
     function testAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
-        ctx._currentVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: int256(90 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
         uint256 liquidity = slot.addLiquidity(ctx, 100 ether, 20000 ether);
 
@@ -63,11 +60,9 @@ contract LpSlotTest is Test {
     function testRemoveLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
-        ctx._currentVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: int256(90 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
         uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
 
@@ -91,22 +86,18 @@ contract LpSlotTest is Test {
         slot._position._pending.accruedInterest.accumulatedAt = 1;
 
         vm.warp(3);
-        ctx._currentVersionCache = OracleVersion({
-            version: 3,
-            timestamp: 3,
-            price: int256(90 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 3;
+        ctx._currentVersionCache.timestamp = 3;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
+        IOracleProvider.OracleVersion memory _ov;
+        _ov.version = 2;
+        _ov.timestamp = 2;
+        _ov.price = Fixed18Lib.from(100);
         vm.mockCall(
             address(provider),
-            abi.encodeWithSelector(IOracleProvider.atVersion.selector, 2),
-            abi.encode(
-                OracleVersion({
-                    version: 2,
-                    timestamp: 2,
-                    price: int256(100 * PRICE_PRECISION)
-                })
-            )
+            abi.encodeWithSelector(provider.atVersion.selector, 2),
+            abi.encode(_ov)
         );
         vm.mockCall(
             address(market),
@@ -123,13 +114,8 @@ contract LpSlotTest is Test {
         assertEq(value, 21501.111 ether);
     }
 
-    function _newLpContext() private view returns (LpContext memory) {
-        return
-            LpContext({
-                market: market,
-                tokenPrecision: 10 ** 18,
-                _pricePrecision: PRICE_PRECISION,
-                _currentVersionCache: OracleVersion(0, 0, 0)
-            });
+    function _newLpContext() private view returns (LpContext memory ctx) {
+        ctx.market = market;
+        ctx.tokenPrecision = 10 ** 18;
     }
 }

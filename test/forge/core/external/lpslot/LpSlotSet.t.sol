@@ -3,21 +3,20 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {QTY_PRECISION, LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
     using LpSlotLib for LpSlot;
-
-    uint256 private constant PRICE_PRECISION = 10 ** 8;
 
     IOracleProvider provider;
     IUSUMVault vault;
@@ -110,11 +109,9 @@ contract LpSlotSetTest is Test {
         );
         slotSet.acceptOpenPosition(ctx, position);
 
-        ctx._currentVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: int256(110 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(110);
 
         slotSet.acceptClosePosition(ctx, position, 150 ether);
 
@@ -133,11 +130,9 @@ contract LpSlotSetTest is Test {
         );
         slotSet.acceptOpenPosition(ctx, position);
 
-        ctx._currentVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: int256(90 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
         slotSet.acceptClosePosition(ctx, position, -150 ether);
 
@@ -150,12 +145,9 @@ contract LpSlotSetTest is Test {
 
     function testAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
-
-        ctx._currentVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: int256(90 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
         uint256 liquidity = slotSet.addLiquidity(ctx, 1, 100 ether, 1000 ether);
 
@@ -165,12 +157,9 @@ contract LpSlotSetTest is Test {
 
     function testRemoveLiquidity() public {
         LpContext memory ctx = _newLpContext();
-
-        ctx._currentVersionCache = OracleVersion({
-            version: 2,
-            timestamp: 2,
-            price: int256(90 * PRICE_PRECISION)
-        });
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
         uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
 
@@ -178,14 +167,9 @@ contract LpSlotSetTest is Test {
         assertEq(slotSet._longSlots[1].total, 900 ether);
     }
 
-    function _newLpContext() private view returns (LpContext memory) {
-        return
-            LpContext({
-                market: market,
-                tokenPrecision: 10 ** 18,
-                _pricePrecision: PRICE_PRECISION,
-                _currentVersionCache: OracleVersion(0, 0, 0)
-            });
+    function _newLpContext() private view returns (LpContext memory ctx) {
+        ctx.market = market;
+        ctx.tokenPrecision = 10 ** 18;
     }
 
     function _newPosition() private pure returns (Position memory) {
