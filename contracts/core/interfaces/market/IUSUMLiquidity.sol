@@ -43,12 +43,12 @@ interface IUSUMLiquidity {
         uint256 marketBalance
     ) external;
 
-    function estimatedLiquidity(
+    function calculateLiquidity(
         int16 tradingFeeRate,
         uint256 amount
     ) external view returns (uint256);
 
-    function estimatedAmount(
+    function calculateAmount(
         int16 tradingFeeRate,
         uint256 liquidity
     ) external view returns (uint256);

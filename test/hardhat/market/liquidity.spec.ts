@@ -46,7 +46,7 @@ describe("market test", async function () {
     const amount = ethers.utils.parseEther("100");
     const feeSlotKey = 1;
 
-    const expectedLiquidity = await market.estimatedLiquidity(
+    const expectedLiquidity = await market.calculateLiquidity(
       feeSlotKey,
       amount
     );
@@ -60,7 +60,7 @@ describe("market test", async function () {
 
     const removeLiqAmount = amount.div(2);
 
-    const expectedAmount = await market.estimatedAmount(
+    const expectedAmount = await market.calculateAmount(
       feeSlotKey,
       removeLiqAmount
     );
