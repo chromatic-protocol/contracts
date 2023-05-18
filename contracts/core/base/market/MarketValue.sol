@@ -5,17 +5,11 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
 
 abstract contract MarketValue is MarketBase {
-    function newLpContext() internal view returns (LpContext memory) {
-        return
-            LpContext({
-                market: this,
-                tokenPrecision: 10 ** settlementToken.decimals(),
-                _pricePrecision: 0,
-                _currentVersionCache: OracleVersion(0, 0, 0)
-            });
+    function newLpContext() internal view returns (LpContext memory ctx) {
+        ctx.market = this;
+        ctx.tokenPrecision = 10 ** settlementToken.decimals();
     }
 
     function calculateInterest(
@@ -40,9 +34,5 @@ abstract contract MarketValue is MarketBase {
                 to,
                 rounding
             );
-    }
-
-    function _indexPrice() internal view returns (int256) {
-        return oracleProvider.currentVersion().price;
     }
 }

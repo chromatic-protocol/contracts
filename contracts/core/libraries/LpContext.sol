@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 
 /// @dev LpContext type
@@ -10,10 +10,8 @@ struct LpContext {
     IUSUMMarket market;
     /// @dev The precision of the settlement token used in the market
     uint256 tokenPrecision;
-    /// @dev The precision of the price in the market, provided by `IOracleProvider`
-    uint256 _pricePrecision;
     /// @dev Cached instance of `OracleVersion` struct, which represents the current oracle version
-    OracleVersion _currentVersionCache;
+    IOracleProvider.OracleVersion _currentVersionCache;
 }
 
 using LpContextLib for LpContext global;
@@ -34,7 +32,7 @@ library LpContextLib {
      */
     function currentOracleVersion(
         LpContext memory self
-    ) internal view returns (OracleVersion memory) {
+    ) internal view returns (IOracleProvider.OracleVersion memory) {
         if (self._currentVersionCache.version == 0) {
             self._currentVersionCache = self
                 .market
@@ -57,31 +55,10 @@ library LpContextLib {
     function oracleVersionAt(
         LpContext memory self,
         uint256 version
-    ) internal view returns (OracleVersion memory) {
+    ) internal view returns (IOracleProvider.OracleVersion memory) {
         if (self._currentVersionCache.version == version) {
             return self._currentVersionCache;
         }
         return self.market.oracleProvider().atVersion(version);
-    }
-
-    /**
-     * @notice Retrieves the price precision used by the market
-     * @dev If the `_pricePrecision` has been initialized, then returns it.
-     *      If not, it calls the `pricePrecision` function on the `oracleProvider of the market
-     *      fetch the price precision and stores it in `_pricePrecision`,
-     *      and then returns the price precision.
-     * @param self The memory instance of `LpContext` struct
-     * @return uint256 The price precision
-     */
-    function pricePrecision(
-        LpContext memory self
-    ) internal view returns (uint256) {
-        if (self._pricePrecision == 0) {
-            self._pricePrecision = self
-                .market
-                .oracleProvider()
-                .pricePrecision();
-        }
-        return self._pricePrecision;
     }
 }

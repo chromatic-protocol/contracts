@@ -2,10 +2,11 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {OracleVersion} from "contracts/core/interfaces/IOracleProvider.sol";
+import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
+import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
+import {IOracleProvider} from "contracts/core/interfaces/IOracleProvider.sol";
 import {OracleProvider} from "contracts/core/OracleProvider.sol";
 import {PriceFeedMock} from "contracts/mocks/PriceFeedMock.sol";
-import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 
 // forge test --fork-url https://eth.llamarpc.com --fork-block-number 10000000 -vv
 contract OracleProviderTest is Test {
@@ -32,25 +33,26 @@ contract OracleProviderTest is Test {
     }
 
     function syncVersion() internal returns (uint256) {
-        OracleVersion memory ov = oracleProvider.syncVersion();
+        IOracleProvider.OracleVersion memory ov = oracleProvider.sync();
         emit log_named_uint("version", ov.version);
-        OracleVersion memory ovByVersion = oracleProvider.atVersion(ov.version);
-        assertEq(ov.price, ovByVersion.price);
+        IOracleProvider.OracleVersion memory ovByVersion = oracleProvider
+            .atVersion(ov.version);
+        assertTrue(ov.price.eq(ovByVersion.price));
         (uint80 roundId, int256 feedPrice, , , ) = priceFeedMock
             .latestRoundData();
-        assertEq(feedPrice, ovByVersion.price);
+        assertEq(feedPrice, Fixed18.unwrap(ovByVersion.price));
         emit log_named_uint("roundId", roundId);
-        emit log_named_int("ov.price", ov.price);
-        emit log_named_int("ovByVersion", ovByVersion.price);
+        emit log_named_int("ov.price", Fixed18.unwrap(ov.price));
+        emit log_named_int("ovByVersion", Fixed18.unwrap(ovByVersion.price));
         emit log_named_int("feedPrice", feedPrice);
         return ov.version;
     }
 
     function printOracleVersion() internal {
-        OracleVersion memory ov = oracleProvider.syncVersion();
+        IOracleProvider.OracleVersion memory ov = oracleProvider.sync();
         emit log_named_uint("version", ov.version);
         emit log_named_uint("timestamp", ov.version);
-        emit log_named_int("price", ov.price);
+        emit log_named_int("price", Fixed18.unwrap(ov.price));
     }
 
     function setUp() public {
@@ -75,12 +77,12 @@ contract OracleProviderTest is Test {
 
     function testVersionUpdateEvent() public {
         priceFeedMock.setRoundData(77777);
-        
+
         uint256 latestVersion = oracleProvider.currentVersion().version;
 
         vm.expectEmit(false, false, false, true);
         emit OracleVersionUpdated(latestVersion + 1, block.timestamp, 77777);
 
-        oracleProvider.syncVersion();
+        oracleProvider.sync();
     }
 }

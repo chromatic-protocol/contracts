@@ -4,7 +4,9 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
+import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
 uint256 constant QTY_DECIMALS = 4;
@@ -45,12 +47,12 @@ library PositionUtil {
      *      passing the `currentVersion` obtained from the `provider`
      * @param provider The oracle provider
      * @param oracleVersion The oracle version of position
-     * @return uint256 The calculated entry price
+     * @return UFixed18 The calculated entry price
      */
     function entryPrice(
         IOracleProvider provider,
         uint256 oracleVersion
-    ) internal view returns (uint256) {
+    ) internal view returns (UFixed18) {
         return entryPrice(provider, oracleVersion, provider.currentVersion());
     }
 
@@ -65,20 +67,20 @@ library PositionUtil {
      * @param provider The oracle provider
      * @param oracleVersion The oracle version of position
      * @param currentVersion The current oracle version
-     * @return uint256 The calculated entry price
+     * @return UFixed18 The calculated entry price
      */
     function entryPrice(
         IOracleProvider provider,
         uint256 oracleVersion,
-        OracleVersion memory currentVersion
-    ) internal view returns (uint256) {
+        IOracleProvider.OracleVersion memory currentVersion
+    ) internal view returns (UFixed18) {
         uint256 _settleVersion = settleVersion(oracleVersion);
         require(
             _settleVersion <= currentVersion.version,
             Errors.UNSETTLED_POSITION
         );
 
-        OracleVersion memory _oracleVersion = _settleVersion ==
+        IOracleProvider.OracleVersion memory _oracleVersion = _settleVersion ==
             currentVersion.version
             ? currentVersion
             : provider.atVersion(_settleVersion);
@@ -89,12 +91,15 @@ library PositionUtil {
      * @notice Extracts the price value from an `OracleVersion` struct
      * @dev If the price is less than 0, it returns 0
      * @param oracleVersion The memory instance of `OracleVersion` struct
-     * @return uint256 The price value of `oracleVersion`
+     * @return UFixed18 The price value of `oracleVersion`
      */
     function oraclePrice(
-        OracleVersion memory oracleVersion
-    ) internal pure returns (uint256) {
-        return oracleVersion.price < 0 ? 0 : uint256(oracleVersion.price);
+        IOracleProvider.OracleVersion memory oracleVersion
+    ) internal pure returns (UFixed18) {
+        return
+            oracleVersion.price.sign() < 0
+                ? UFixed18Lib.ZERO
+                : UFixed18Lib.from(oracleVersion.price);
     }
 
     /**
@@ -115,17 +120,17 @@ library PositionUtil {
      */
     function pnl(
         int256 leveragedQty, // as token precision
-        uint256 _entryPrice,
-        uint256 _exitPrice
+        UFixed18 _entryPrice,
+        UFixed18 _exitPrice
     ) internal pure returns (int256) {
-        int256 delta = _exitPrice > _entryPrice
-            ? (_exitPrice - _entryPrice).toInt256()
-            : -(_entryPrice - _exitPrice).toInt256();
+        int256 delta = _exitPrice.gt(_entryPrice)
+            ? UFixed18.unwrap(_exitPrice.sub(_entryPrice)).toInt256()
+            : -UFixed18.unwrap(_entryPrice.sub(_exitPrice)).toInt256();
         if (leveragedQty < 0) delta *= -1;
 
         int256 absPnl = leveragedQty
             .abs()
-            .mulDiv(delta.abs(), _entryPrice)
+            .mulDiv(delta.abs(), UFixed18.unwrap(_entryPrice))
             .toInt256();
 
         return delta < 0 ? -absPnl : absPnl;

@@ -11,7 +11,7 @@ import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 import {IUSUMFlashLoanCallback} from "@usum/core/interfaces/callback/IUSUMFlashLoanCallback.sol";
 import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
 import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
-import {Constants} from "@usum/core/libraries/Constants.sol";
+import {BPS} from "@usum/core/libraries/Constants.sol";
 
 contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     using Math for uint256;
@@ -215,7 +215,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
 
         uint256 fee = amount.mulDiv(
             factory.getFlashLoanFeeRate(token),
-            Constants.BPS,
+            BPS,
             Math.Rounding.Up
         );
 

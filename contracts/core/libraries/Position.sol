@@ -4,7 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IOracleProvider, OracleVersion} from "@usum/core/interfaces/IOracleProvider.sol";
+import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
@@ -73,15 +74,15 @@ library PositionLib {
     /**
      * @notice Calculates the entry price of the position based on the position's oracle version
      * @dev It fetches oracle price from `IOracleProvider`
-     *      at the settle version calculated based on the position's oracle version 
+     *      at the settle version calculated based on the position's oracle version
      * @param self The memory instance of `Position` struct
      * @param provider The oracle provider
-     * @return uint256 The entry price
+     * @return UFixed18 The entry price
      */
     function entryPrice(
         Position memory self,
         IOracleProvider provider
-    ) internal view returns (uint256) {
+    ) internal view returns (UFixed18) {
         return PositionUtil.entryPrice(provider, self.oracleVersion);
     }
 
@@ -96,14 +97,17 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        OracleVersion memory currentVersion = ctx.currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx
+            .currentOracleVersion();
         return
             self.oracleVersion >= currentVersion.version
                 ? int256(0)
                 : PositionUtil.pnl(
                     self.leveragedQty(ctx),
-                    uint256(ctx.oracleVersionAt(self.settleVersion()).price),
-                    uint256(currentVersion.price)
+                    UFixed18Lib.from(
+                        ctx.oracleVersionAt(self.settleVersion()).price
+                    ),
+                    UFixed18Lib.from(currentVersion.price)
                 );
     }
 
