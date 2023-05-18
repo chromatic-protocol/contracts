@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -13,14 +13,29 @@ struct LpSlot {
     LpSlotPosition _position;
 }
 
+/**
+ * @title LpSlotLib
+ * @notice Library for managing liquidity slot
+ */
 library LpSlotLib {
     using Math for uint256;
     using SignedMath for int256;
     using LpSlotLib for LpSlot;
     using LpSlotPositionLib for LpSlotPosition;
 
-    uint256 private constant MIN_AMOUNT = 1000; // almost zero, prevent divide by zero
+    /// @dev Minimum amount constant to prevent division by zero.
+    uint256 private constant MIN_AMOUNT = 1000;
 
+    /**
+     * @notice Opens a new liquidity position in the slot.
+     * @dev This function validates the maker margin against the available balance in the slot
+     *      and opens the position using the specified parameters.
+     *      Additionally, it increments the total by the trading fee amount.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param param The PositionParam memory.
+     * @param tradingFee The trading fee amount.
+     */
     function openPosition(
         LpSlot storage self,
         LpContext memory ctx,
@@ -36,6 +51,16 @@ library LpSlotLib {
         self.total += tradingFee;
     }
 
+    /**
+     * @notice Closes an existing liquidity position in the slot.
+     * @dev This function closes the position using the specified parameters
+     *      and updates the total by subtracting the absolute value
+     *      of the taker's profit or loss (takerPnl) from it.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param param The PositionParam memory.
+     * @param takerPnl The taker's profit/loss.
+     */
     function closePosition(
         LpSlot storage self,
         LpContext memory ctx,
@@ -52,10 +77,25 @@ library LpSlotLib {
         }
     }
 
+    /**
+     * @notice Calculates the balance of the slot.
+     * @dev This function subtracts the total maker margin held in the slot position from the total balance.
+     * @param self The LpSlot storage.
+     * @return uint256 The balance of the slot.
+     */
     function balance(LpSlot storage self) internal view returns (uint256) {
         return self.total - self._position.totalMakerMargin();
     }
 
+    /**
+     * @notice Calculates the value of the slot.
+     * @dev This function considers the unrealized profit or loss of the position
+     *      and adds it to the total value.
+     *      Additionally, it includes the pending slot share from the market's vault.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @return uint256 The value of the slot.
+     */
     function value(
         LpSlot storage self,
         LpContext memory ctx
@@ -74,6 +114,18 @@ library LpSlotLib {
             );
     }
 
+    /**
+     * @notice Adds liquidity to the slot.
+     * @dev If there is no existing liquidity in the pool, the entire amount is considered as liquidity.
+     *      Otherwise, the LP token amount is calculated based on the current slot value
+     *      and the total supplied LP token.
+     *      The total amount is then incremented by the added liquidity.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param amount The amount of liquidity to add.
+     * @param totalLiquidity The total supplied LP token.
+     * @return liquidity The amount of LP token to be minted.
+     */
     function addLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
@@ -95,6 +147,19 @@ library LpSlotLib {
         self.total += amount;
     }
 
+    /**
+     * @notice Removes liquidity from the slot.
+     * @dev The liquidity amount is calculated based on the current slot value
+     *      and the total supplied LP token.
+     *      The amount of liquidity removed is returned,
+     *      and the total amount is decremented by the removed liquidity.
+     *      It also checks if the resulting balance is sufficient.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param liquidity The amount of LP token to be burned.
+     * @param totalLiquidity The total supplied LP token.
+     * @return amount The amount of liquidity removed.
+     */
     function removeLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
