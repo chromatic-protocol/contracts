@@ -1,4 +1,4 @@
-@@equilibria/=node_modules/@@equilibria/
+@equilibria/=node_modules/@equilibria/
 @openzeppelin/=node_modules/@openzeppelin/
 ds-test/=lib/forge-std/lib/ds-test/src/
 forge-std/=lib/forge-std/src/

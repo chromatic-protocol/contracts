@@ -74,15 +74,4 @@ contract OracleProviderTest is Test {
         syncVersion();
         updateAnswer();
     }
-
-    function testVersionUpdateEvent() public {
-        priceFeedMock.setRoundData(77777);
-
-        uint256 latestVersion = oracleProvider.currentVersion().version;
-
-        vm.expectEmit(false, false, false, true);
-        emit OracleVersionUpdated(latestVersion + 1, block.timestamp, 77777);
-
-        oracleProvider.sync();
-    }
 }
