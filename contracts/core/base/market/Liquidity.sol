@@ -93,7 +93,7 @@ abstract contract Liquidity is LpToken, MarketValue {
     }
 
     function getSlotMarginsTotal(
-        int16[] calldata tradingFeeRates
+        int16[] memory tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
@@ -102,7 +102,7 @@ abstract contract Liquidity is LpToken, MarketValue {
     }
 
     function getSlotMarginsUnused(
-        int16[] calldata tradingFeeRates
+        int16[] memory tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {

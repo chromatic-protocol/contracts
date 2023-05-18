@@ -7,6 +7,11 @@ import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquid
 import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
+    function getKeyList(int16 key) internal returns (int16[] memory keys) {
+        keys = new int16[](1);
+        keys[0] = key;
+    }
+
     function setUp() public override {
         super.setUp();
     }
@@ -22,7 +27,8 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addLongAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
-        assertEq(addLongAmount, market.getSlotMarginTotal(1));
+
+        assertEq(addLongAmount, market.getSlotMarginsTotal(getKeyList(1))[0]);
 
         // add liquidity $20 to 0.1% short slot
         market.addLiquidity(address(this), -10, abi.encode(addShortAmount));
@@ -38,7 +44,11 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
             addLongAmount + addShortAmount,
             vault.makerMarketBalances(address(market))
         );
-        assertEq(addShortAmount, market.getSlotMarginTotal(-10));
+
+        assertEq(
+            addShortAmount,
+            market.getSlotMarginsTotal(getKeyList(-10))[0]
+        );
 
         // remove liquidity $7 from 0.01% long slot
         market.removeLiquidity(
@@ -60,7 +70,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         );
         assertEq(
             addLongAmount - removeLongAmount,
-            market.getSlotMarginTotal(1)
+            market.getSlotMarginsTotal(getKeyList(1))[0]
         );
 
         // remove liquidity $5 from 0.1% short slot
@@ -92,7 +102,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         );
         assertEq(
             addShortAmount - removeShortAmount,
-            market.getSlotMarginTotal(-10)
+            market.getSlotMarginsTotal(getKeyList(-10))[0]
         );
     }
 
@@ -130,8 +140,14 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
             addLongAmount + addShortAmount + earning - keeperFee,
             vault.makerMarketBalances(address(market))
         );
-        assertEq(addLongAmount + 3 ether, market.getSlotMarginTotal(1));
-        assertEq(addShortAmount + 6 ether, market.getSlotMarginTotal(-10));
+        assertEq(
+            addLongAmount + 3 ether,
+            market.getSlotMarginsTotal(getKeyList(1))[0]
+        );
+        assertEq(
+            addShortAmount + 6 ether,
+            market.getSlotMarginsTotal(getKeyList(-10))[0]
+        );
     }
 
     // implement IUSUMLiquidityCallback
