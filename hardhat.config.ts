@@ -9,7 +9,8 @@ import { HardhatUserConfig } from "hardhat/config"
 import "tsconfig-paths/register"
 dotenv.config()
 
-const MNEMONIC_JUNK = "test test test test test test test test test test test junk"
+const MNEMONIC_JUNK =
+  "test test test test test test test test test test test junk"
 
 const common = {
   accounts: {
@@ -20,13 +21,26 @@ const common = {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.17",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.15",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
-    },
+      {
+        version: "0.8.17",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
   },
   defaultNetwork: "hardhat",
   networks: {
