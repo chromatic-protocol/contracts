@@ -30,16 +30,26 @@ interface IUSUMLiquidity {
         bytes calldata data
     ) external returns (uint256 amount);
 
-    function getSlotMarginTotal(
-        int16 tradingFeeRate
-    ) external returns (uint256 amount);
+    function getSlotMarginsTotal(
+        int16[] memory tradingFeeRate
+    ) external returns (uint256[] memory amounts);
 
-    function getSlotMarginUnused(
-        int16 tradingFeeRate
-    ) external returns (uint256 amount);
+    function getSlotMarginsUnused(
+        int16[] memory tradingFeeRate
+    ) external returns (uint256[] memory amounts);
 
     function distributeEarningToSlots(
         uint256 earning,
         uint256 marketBalance
     ) external;
+
+    function calculateLiquidity(
+        int16 tradingFeeRate,
+        uint256 amount
+    ) external view returns (uint256);
+
+    function calculateAmount(
+        int16 tradingFeeRate,
+        uint256 liquidity
+    ) external view returns (uint256);
 }

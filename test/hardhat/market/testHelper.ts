@@ -9,7 +9,7 @@ export const prepareMarketTest = async () => {
   async function faucet(account: SignerWithAddress) {
     const faucetTx = await settlementToken
       .connect(account)
-      .faucet(ethers.utils.parseEther("1000000"))
+      .faucet(ethers.utils.parseEther("1000000000"))
     await faucetTx.wait()
   }
   const {
@@ -90,6 +90,22 @@ export const helpers = function (
     ).wait()
   }
 
+  async function addLiquidityTx(amount: BigNumber, feeSlotKey: number) {
+    const approveTx = await settlementToken
+      .connect(tester)
+      .approve(usumRouter.address, ethers.constants.MaxUint256)
+    await approveTx.wait()
+
+
+    return usumRouter.connect(tester).addLiquidity(
+      market.address,
+      feeSlotKey,
+      amount,
+      tester.address,
+      ethers.constants.MaxUint256 // deadline
+    )
+  }
+
   async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
     const approveTx = await settlementToken
       .connect(tester)
@@ -99,13 +115,7 @@ export const helpers = function (
     const amount = _amount ?? ethers.utils.parseEther("100")
     const feeSlotKey = _feeSlotKey ?? 1
 
-    const addLiqTx = await usumRouter.connect(tester).addLiquidity(
-      market.address,
-      feeSlotKey,
-      amount,
-      tester.address,
-      ethers.constants.MaxUint256 // deadline
-    )
+    const addLiqTx = await addLiquidityTx(amount, feeSlotKey)
     await addLiqTx.wait()
     return {
       amount,
@@ -120,6 +130,7 @@ export const helpers = function (
 
   return {
     updatePrice,
+    addLiquidityTx,
     addLiquidity,
     awaitTx,
   }

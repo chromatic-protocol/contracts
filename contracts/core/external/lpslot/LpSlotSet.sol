@@ -353,6 +353,22 @@ library LpSlotSetLib {
         }
     }
 
+    function calculateLiquidity(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 amount,
+        uint256 totalLiquidity
+    )
+        external
+        view
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 liquidity)
+    {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        liquidity = slot.calculateLiquidity(ctx, amount, totalLiquidity);
+    }
+
     /**
      * @notice Removes liquidity from the liquidity pool.
      * @dev This function removes liquidity from the liquidity pool by performing the following steps:
@@ -377,6 +393,22 @@ library LpSlotSetLib {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
         amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
+    }
+
+    function calculateAmount(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 liquidity,
+        uint256 totalLiquidity
+    )
+        external
+        view
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 amount)
+    {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        amount = slot.calculateAmount(ctx, liquidity, totalLiquidity);
     }
 
     /**
