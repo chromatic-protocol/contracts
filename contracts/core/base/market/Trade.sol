@@ -37,6 +37,8 @@ abstract contract Trade is MarketValue {
         //TODO get slotmargin by using makerMargin
 
         LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 
         position.setSlotMargins(
@@ -104,8 +106,8 @@ abstract contract Trade is MarketValue {
         address recipient,
         bytes memory data
     ) internal returns (uint256 marginTransferred) {
-        //TODO close position
         LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
 
         uint256 makerMargin = position.makerMargin();
         uint256 takerMargin = position.takerMargin - usedKeeperFee;

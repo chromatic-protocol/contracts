@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpToken} from "@usum/core/base/market/LpToken.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 
@@ -41,8 +42,11 @@ abstract contract Liquidity is LpToken, MarketValue {
 
         uint256 id = encodeId(tradingFeeRate);
 
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
         liquidity = lpSlotSet.addLiquidity(
-            newLpContext(),
+            ctx,
             tradingFeeRate,
             amount,
             totalSupply(id)
@@ -78,8 +82,11 @@ abstract contract Liquidity is LpToken, MarketValue {
         // uint256 amount,
         // uint256 totalLiquidity
 
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
         amount = lpSlotSet.removeLiquidity(
-            newLpContext(),
+            ctx,
             tradingFeeRate,
             liquidity,
             _totalSupply
