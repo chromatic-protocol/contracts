@@ -12,15 +12,6 @@ import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
 contract Account is IAccount, VerifyCallback {
     using EnumerableSet for EnumerableSet.UintSet;
 
-    struct OpenPositionCallbackData {
-        address trader;
-    }
-
-    struct ClosePositionCallbackData {
-        address marketAddress;
-        uint256 positionId;
-    }
-
     address owner;
     address private router;
     bool isInitialized;
@@ -114,7 +105,7 @@ contract Account is IAccount, VerifyCallback {
             takerMargin,
             makerMargin,
             maxAllowableTradingFee,
-            abi.encode(OpenPositionCallbackData({trader: address(this)}))
+            bytes("")
         );
         addPositionId(marketAddress, position.id);
     }
@@ -126,7 +117,17 @@ contract Account is IAccount, VerifyCallback {
         if (!hasPositionId(marketAddress, positionId))
             revert NotExistPosition();
 
-        IUSUMMarket(marketAddress).closePosition(
+        IUSUMMarket(marketAddress).closePosition(positionId);
+    }
+
+    function claimPosition(
+        address marketAddress,
+        uint256 positionId
+    ) external override onlyRouter {
+        if (!hasPositionId(marketAddress, positionId))
+            revert NotExistPosition();
+
+        IUSUMMarket(marketAddress).claimPosition(
             positionId,
             address(this),
             bytes("")
@@ -139,18 +140,13 @@ contract Account is IAccount, VerifyCallback {
         uint256 marginRequired,
         bytes calldata data
     ) external override verifyCallback {
-        OpenPositionCallbackData memory callbackData = abi.decode(
-            data,
-            (OpenPositionCallbackData)
-        );
-
         if (balance(settlementToken) < marginRequired)
             revert NotEnoughBalance();
 
         SafeERC20.safeTransfer(IERC20(settlementToken), vault, marginRequired);
     }
 
-    function closePositionCallback(
+    function claimPositionCallback(
         uint256 positionId,
         bytes calldata data
     ) external override verifyCallback {

@@ -8,15 +8,20 @@ interface ITrade {
     error NotEnoughMarginTransfered();
     error NotExistPosition();
     error NotPermitted();
+    error NotClosedPosition();
+    error AlreadyClosedPosition();
     error ExceedMaxAllowableTradingFee();
     error ClosePositionCallbackError();
 
     event OpenPosition(address indexed account, Position position);
 
-    event ClosePosition(
+    event ClosePosition(address indexed account, Position position);
+
+    event ClaimPosition(
         address indexed account,
         Position position,
-        int256 realizedPnl
+        int256 pnl,
+        uint256 interest
     );
 
     event TransferProtocolFee(uint256 positionId, uint256 amount);
@@ -36,7 +41,9 @@ interface ITrade {
         bytes calldata data
     ) external returns (Position memory);
 
-    function closePosition(
+    function closePosition(uint256 positionId) external;
+
+    function claimPosition(
         uint256 positionId,
         address recipient, // EOA or account contract
         bytes calldata data

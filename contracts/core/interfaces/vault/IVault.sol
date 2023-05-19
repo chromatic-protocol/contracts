@@ -10,7 +10,7 @@ interface IVault {
         uint256 protocolFee
     );
 
-    event OnClosePosition(
+    event OnClaimPosition(
         address indexed market,
         uint256 positionId,
         address recipient,
@@ -47,7 +47,7 @@ interface IVault {
         uint256 protocolFee
     ) external;
 
-    function onClosePosition(
+    function onClaimPosition(
         uint256 positionId,
         address recipient,
         uint256 takerMargin,

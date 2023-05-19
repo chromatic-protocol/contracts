@@ -91,7 +91,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         );
     }
 
-    function onClosePosition(
+    function onClaimPosition(
         uint256 positionId,
         address recipient,
         uint256 takerMargin,
@@ -123,7 +123,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
             makerMarketBalances[address(market)] += makerProfit;
         }
 
-        emit OnClosePosition(
+        emit OnClaimPosition(
             address(market),
             positionId,
             recipient,
