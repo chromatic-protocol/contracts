@@ -176,11 +176,13 @@ contract LpSlotSetTest is Test {
         return
             Position({
                 id: 1,
-                oracleVersion: 1,
+                openVersion: 1,
+                closeVersion: 0,
                 qty: int224(150 * QTY_PRECISION.toInt256()),
                 leverage: uint32(10 * LEVERAGE_PRECISION),
                 takerMargin: 150 ether,
-                timestamp: 1,
+                openTimestamp: 1,
+                closeTimestamp: 0,
                 owner: address(0),
                 _slotMargins: new LpSlotMargin[](0)
             });

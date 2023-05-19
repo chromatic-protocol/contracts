@@ -77,8 +77,7 @@ abstract contract Trade is MarketValue {
         // create keeper task
         liquidator.createLiquidationTask(position.id);
 
-        emit OpenPosition(position.owner, position.settleVersion(), position);
-        // emit OpenPosition(msg.sender, position.id, position.settleVersion(), qty, leverage);
+        emit OpenPosition(position.owner, position);
         return position;
     }
 
@@ -115,7 +114,7 @@ abstract contract Trade is MarketValue {
 
         uint256 interestFee = calculateInterest(
             makerMargin,
-            position.timestamp,
+            position.openTimestamp,
             block.timestamp
         );
         int256 realizedPnl = position.pnl(ctx) - interestFee.toInt256();
@@ -160,12 +159,7 @@ abstract contract Trade is MarketValue {
         delete positions[position.id];
 
         liquidator.cancelLiquidationTask(position.id);
-        emit ClosePosition(
-            position.owner,
-            position.oracleVersion,
-            position,
-            realizedPnl
-        );
+        emit ClosePosition(position.owner, position, realizedPnl);
         return takerMargin;
     }
 
@@ -184,10 +178,12 @@ abstract contract Trade is MarketValue {
         return
             Position({
                 id: ++_positionId,
-                oracleVersion: ctx.currentOracleVersion().version,
+                openVersion: ctx.currentOracleVersion().version,
+                closeVersion: 0,
                 qty: qty, //
                 leverage: leverage,
-                timestamp: block.timestamp,
+                openTimestamp: block.timestamp,
+                closeTimestamp: 0,
                 takerMargin: takerMargin,
                 owner: msg.sender,
                 _slotMargins: new LpSlotMargin[](0)
@@ -209,7 +205,7 @@ abstract contract Trade is MarketValue {
             position.takerMargin
         );
         _closePosition(position, usedKeeperFee, position.owner, bytes(""));
-        emit Liquidate(positionId, usedKeeperFee);
+        emit Liquidate(position.owner, position, usedKeeperFee);
     }
 
     function checkLiquidation(uint256 positionId) public view returns (bool) {
@@ -218,7 +214,7 @@ abstract contract Trade is MarketValue {
 
         uint256 interestFee = calculateInterest(
             position.makerMargin(),
-            position.timestamp,
+            position.openTimestamp,
             block.timestamp
         );
 

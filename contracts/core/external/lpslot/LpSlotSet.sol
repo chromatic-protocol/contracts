@@ -160,8 +160,8 @@ library LpSlotSetLib {
             );
 
         PositionParam memory param = newPositionParam(
-            position.oracleVersion,
-            position.timestamp
+            position.openVersion,
+            position.openTimestamp
         );
         for (uint256 i = 0; i < slotMargins.length; i++) {
             LpSlotMargin memory slotMargin = slotMargins[i];
@@ -236,8 +236,8 @@ library LpSlotSetLib {
             );
 
         PositionParam memory param = newPositionParam(
-            position.oracleVersion,
-            position.timestamp
+            position.openVersion,
+            position.openTimestamp
         );
 
         if (realizedPnl == 0) {

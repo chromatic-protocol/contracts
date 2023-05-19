@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Position} from "@usum/core/libraries/Position.sol";
 
 interface ITrade {
-
     error ZeroTargetAmount();
     error TooSmallTakerMargin();
     error NotEnoughMarginTransfered();
@@ -11,11 +10,22 @@ interface ITrade {
     error NotPermitted();
     error ExceedMaxAllowableTradingFee();
     error ClosePositionCallbackError();
-    
-    event OpenPosition(address indexed account, uint256 oracleVersion, Position position);
-    event ClosePosition(address indexed account, uint256 oracleVersion, Position position, int256 realizedPnl);
+
+    event OpenPosition(address indexed account, Position position);
+
+    event ClosePosition(
+        address indexed account,
+        Position position,
+        int256 realizedPnl
+    );
+
     event TransferProtocolFee(uint256 positionId, uint256 amount);
-    event Liquidate(uint256 positionId, uint256 usedKeeperFee);
+
+    event Liquidate(
+        address indexed account,
+        Position position,
+        uint256 usedKeeperFee
+    );
 
     function openPosition(
         int224 qty,

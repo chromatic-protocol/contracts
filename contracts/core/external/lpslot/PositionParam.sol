@@ -45,7 +45,7 @@ library PositionParamLib {
         LpContext memory ctx
     ) internal view returns (UFixed18) {
         return
-            PositionUtil.entryPrice(
+            PositionUtil.settlePrice(
                 ctx.market.oracleProvider(),
                 self.oracleVersion,
                 self.settleOracleVersion(ctx)

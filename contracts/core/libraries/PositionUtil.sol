@@ -41,35 +41,35 @@ library PositionUtil {
     }
 
     /**
-     * @notice Calculates the entry price of the position based on the `oracleVersion`
-     * @dev It calls another overloaded `entryPrice` function
+     * @notice Calculates the price of the position based on the `oracleVersion` to settle
+     * @dev It calls another overloaded `settlePrice` function
      *      with an additional `OracleVersion` parameter,
      *      passing the `currentVersion` obtained from the `provider`
      * @param provider The oracle provider
      * @param oracleVersion The oracle version of position
-     * @return UFixed18 The calculated entry price
+     * @return UFixed18 The calculated price to settle
      */
-    function entryPrice(
+    function settlePrice(
         IOracleProvider provider,
         uint256 oracleVersion
     ) internal view returns (UFixed18) {
-        return entryPrice(provider, oracleVersion, provider.currentVersion());
+        return settlePrice(provider, oracleVersion, provider.currentVersion());
     }
 
     /**
-     * @notice Calculates the entry price of the position based on the `oracleVersion`
-     * @dev It calculates the entry price by considering the `settleVersion`
+     * @notice Calculates the price of the position based on the `oracleVersion` to settle
+     * @dev It calculates the price by considering the `settleVersion`
      *      and the `currentVersion` obtained from the `IOracleProvider`.
      *      It ensures that the settle version is not greater than the current version;
      *      otherwise, it triggers an error with the message `UNSETTLED_POSITION`.
      *      It retrieves the corresponding `OracleVersion` using `atVersion` from the `IOracleProvider`,
-     *      and then calls `oraclePrice` to obtain the entry price.
+     *      and then calls `oraclePrice` to obtain the price.
      * @param provider The oracle provider
      * @param oracleVersion The oracle version of position
      * @param currentVersion The current oracle version
-     * @return UFixed18 The calculated entry price
+     * @return UFixed18 The calculated entry price to settle
      */
-    function entryPrice(
+    function settlePrice(
         IOracleProvider provider,
         uint256 oracleVersion,
         IOracleProvider.OracleVersion memory currentVersion
