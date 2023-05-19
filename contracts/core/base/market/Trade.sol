@@ -223,14 +223,13 @@ abstract contract Trade is MarketValue {
         int256 realizedPnl = position.pnl(newLpContext()) -
             interestFee.toInt256();
         uint256 absRealizedPnl = realizedPnl.abs();
-        if (realizedPnl > 0 && absRealizedPnl >= position.makerMargin()) {
-            //profit stop (taker side)
-            return true;
-        } else if (absRealizedPnl >= position.takerMargin) {
-            // loss cut (taker side)
-            return true;
+        if (realizedPnl > 0) {
+            // whether profit stop (taker side)
+            return absRealizedPnl >= position.makerMargin();
+        } else {
+            // whether loss cut (taker side)
+            return absRealizedPnl >= position.takerMargin;
         }
-        return false;
     }
 
     function getPosition(
