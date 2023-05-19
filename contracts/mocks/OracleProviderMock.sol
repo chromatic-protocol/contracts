@@ -43,4 +43,8 @@ contract OracleProviderMock is IOracleProvider {
     function description() external pure override returns (string memory) {
         return "ETH / USD";
     }
+
+    function atVersions(
+        uint256[] calldata versions
+    ) external view returns (OracleVersion[] memory) {}
 }

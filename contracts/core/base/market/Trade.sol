@@ -332,7 +332,16 @@ abstract contract Trade is MarketValue {
 
     function getPosition(
         uint256 positionId
-    ) external view override returns (Position memory position) {
+    ) external view returns (Position memory position) {
         position = positions[positionId];
+    }
+
+    function getPositions(
+        uint256[] calldata positionIds
+    ) external view returns ( Position[] memory _positions ){
+        _positions = new Position[](positionIds.length);
+        for (uint i = 0; i < positionIds.length; i++) {
+            _positions[i] = positions[positionIds[i]];
+        }
     }
 }
