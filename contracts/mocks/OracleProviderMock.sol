@@ -35,7 +35,7 @@ contract OracleProviderMock is IOracleProvider {
 
     function atVersion(
         uint256 version
-    ) external view override returns (OracleVersion memory oracleVersion) {
+    ) public view override returns (OracleVersion memory oracleVersion) {
         oracleVersion = oracleVersions[version];
         if (version != oracleVersion.version) revert InvalidVersion();
     }
@@ -46,5 +46,10 @@ contract OracleProviderMock is IOracleProvider {
 
     function atVersions(
         uint256[] calldata versions
-    ) external view returns (OracleVersion[] memory) {}
+    ) external view returns (OracleVersion[] memory results) {
+        results = new OracleVersion[](versions.length);
+        for (uint i = 0; i < versions.length; i++) {
+            results[i] = atVersion(versions[i]);
+        }
+    }
 }
