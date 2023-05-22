@@ -90,32 +90,30 @@ library LpSlotPositionLib {
     }
 
     /**
-     * @notice Opens a new position for a liquidity slot.
+     * @notice Handles the opening of a position for a liquidity slot.
      * @param self The LpSlotPosition storage struct.
-     * @param ctx The LpContext data struct.
      * @param param The PositionParam data struct containing the position parameters.
      */
-    function openPosition(
+    function onOpenPosition(
         LpSlotPosition storage self,
-        LpContext memory ctx,
         PositionParam memory param
     ) internal {
-        self._pending.openPosition(ctx, param);
+        self._pending.onOpenPosition(param);
     }
 
     /**
-     * @notice Closes a position for a liquidity slot.
+     * @notice Handles the closing of a position for a liquidity slot.
      * @param self The LpSlotPosition storage struct.
      * @param ctx The LpContext data struct.
      * @param param The PositionParam data struct containing the position parameters.
      */
-    function closePosition(
+    function onClosePosition(
         LpSlotPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
         if (param.oracleVersion == self._pending.oracleVersion) {
-            self._pending.closePosition(ctx, param);
+            self._pending.onClosePosition(ctx, param);
         } else {
             int256 totalLeveragedQty = self.totalLeveragedQty;
             int256 leveragedQty = param.leveragedQty;

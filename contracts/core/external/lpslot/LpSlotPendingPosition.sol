@@ -53,14 +53,12 @@ library LpSlotPendingPositionLib {
     }
 
     /**
-     * @notice Opens a new position.
+     * @notice Handles the opening of a position.
      * @param self The LpSlotPendingPosition storage.
-     * @param ctx The LpContext.
      * @param param The position parameters.
      */
-    function openPosition(
+    function onOpenPosition(
         LpSlotPendingPosition storage self,
-        LpContext memory ctx,
         PositionParam memory param
     ) internal {
         uint256 pendingVersion = self.oracleVersion;
@@ -80,12 +78,12 @@ library LpSlotPendingPositionLib {
     }
 
     /**
-     * @notice Closes an existing position.
+     * @notice Handles the closing of a position.
      * @param self The LpSlotPendingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.
      */
-    function closePosition(
+    function onClosePosition(
         LpSlotPendingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param

@@ -59,7 +59,7 @@ library LpSlotLib {
             Errors.NOT_ENOUGH_SLOT_BALANCE
         );
 
-        self._position.openPosition(ctx, param);
+        self._position.onOpenPosition(param);
         self.total += tradingFee;
     }
 
@@ -79,7 +79,7 @@ library LpSlotLib {
         PositionParam memory param,
         int256 takerPnl
     ) internal _settle(self, ctx) {
-        self._position.closePosition(ctx, param);
+        self._position.onClosePosition(ctx, param);
 
         uint256 absTakerPnl = takerPnl.abs();
         if (takerPnl < 0) {

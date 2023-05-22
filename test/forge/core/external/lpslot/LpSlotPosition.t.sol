@@ -42,7 +42,7 @@ contract LpSlotPositionTest is Test {
         );
     }
 
-    function testClosePosition() public {
+    function testOnClosePosition() public {
         position.totalLeveragedQty = 100;
         position.totalEntryAmount = 200000;
         position._totalMakerMargin = 100;
@@ -58,7 +58,7 @@ contract LpSlotPositionTest is Test {
         param._settleVersionCache.timestamp = 2;
         param._settleVersionCache.price = Fixed18Lib.from(2000);
 
-        position.closePosition(ctx, param);
+        position.onClosePosition(ctx, param);
 
         assertEq(position.totalLeveragedQty, 50);
         assertEq(position.totalEntryAmount, 100000);
