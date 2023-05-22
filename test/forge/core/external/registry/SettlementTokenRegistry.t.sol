@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
 
@@ -58,7 +57,7 @@ contract SettlementTokenRegistryTest is Test {
 
         vm.expectRevert(bytes("IRAA"));
         tokenRegistry.removeLastInterestRateRecord(testToken);
-        
+
         // remove interest test
         appendInterestRate(200, 10);
         tokenRegistry.removeLastInterestRateRecord(testToken);
@@ -72,8 +71,7 @@ contract SettlementTokenRegistryTest is Test {
                 testToken,
                 1000,
                 block.timestamp,
-                block.timestamp + YEAR,
-                Math.Rounding.Down
+                block.timestamp + YEAR
             ),
             0
         );
@@ -89,8 +87,7 @@ contract SettlementTokenRegistryTest is Test {
                 testToken,
                 1000,
                 block.timestamp,
-                block.timestamp + YEAR,
-                Math.Rounding.Down
+                block.timestamp + YEAR
             ),
             50
         );
@@ -101,8 +98,7 @@ contract SettlementTokenRegistryTest is Test {
                 testToken,
                 1000,
                 block.timestamp + YEAR,
-                block.timestamp + YEAR * 2,
-                Math.Rounding.Down
+                block.timestamp + YEAR * 2
             ),
             100
         );

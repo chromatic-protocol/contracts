@@ -150,24 +150,6 @@ library InterestRate {
         uint256 amount,
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
-    ) internal view returns (uint256) {
-        return calculateInterest(self, amount, from, to, Math.Rounding.Down);
-    }
-
-    /**
-     * @notice Calculate the interest
-     * @param self The stored record array
-     * @param amount Token amount
-     * @param from Begin timestamp (inclusive)
-     * @param to End timestamp (exclusive)
-     * @param rounding Rounding mode
-     */
-    function calculateInterest(
-        Record[] storage self,
-        uint256 amount,
-        uint256 from, // timestamp (inclusive)
-        uint256 to, // timestamp (exclusive)
-        Math.Rounding rounding // use Rouding.Up to deduct accumulated accrued interest
     ) internal view initialized(self) returns (uint256) {
         if (from >= to) {
             return 0;
@@ -186,8 +168,7 @@ library InterestRate {
                 amount,
                 record.annualRateBPS,
                 Math.min(to, endTimestamp) -
-                    Math.max(from, record.beginTimestamp),
-                rounding
+                    Math.max(from, record.beginTimestamp)
             );
             endTimestamp = record.beginTimestamp;
         }
@@ -197,9 +178,8 @@ library InterestRate {
     function _interest(
         uint256 amount,
         uint256 rateBPS, // annual rate
-        uint256 period, // in seconds
-        Math.Rounding rounding
+        uint256 period // in seconds
     ) private pure returns (uint256) {
-        return amount.mulDiv(rateBPS * period, BPS * YEAR, rounding);
+        return amount.mulDiv(rateBPS * period, BPS * YEAR, Math.Rounding.Up);
     }
 }
