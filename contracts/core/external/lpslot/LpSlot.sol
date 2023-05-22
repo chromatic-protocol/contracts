@@ -123,18 +123,22 @@ library LpSlotLib {
      * @param self The LpSlot storage.
      * @param ctx The LpContext memory.
      * @param amount The amount of liquidity to add.
-     * @param totalLiquidity The total supplied LP token.
-     * @return liquidity The amount of LP token to be minted.
+     * @param lpTokenTotalSupply The total supplied LP token.
+     * @return lpTokenAmount The amount of LP token to be minted.
      */
     function addLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount,
-        uint256 totalLiquidity
-    ) internal returns (uint256 liquidity) {
+        uint256 lpTokenTotalSupply
+    ) internal returns (uint256 lpTokenAmount) {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
-        liquidity = self.calculateLiquidity(ctx, amount, totalLiquidity);
+        lpTokenAmount = self.calculateLiquidity(
+            ctx,
+            amount,
+            lpTokenTotalSupply
+        );
 
         self.total += amount;
     }
@@ -143,14 +147,14 @@ library LpSlotLib {
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount,
-        uint256 totalLiquidity
-    ) internal view returns (uint256 liquidity) {
-        if (totalLiquidity == 0) {
-            liquidity = amount;
+        uint256 lpTokenTotalSupply
+    ) internal view returns (uint256 lpTokenAmount) {
+        if (lpTokenTotalSupply == 0) {
+            lpTokenAmount = amount;
         } else {
             uint256 slotValue = self.value(ctx);
-            liquidity = amount.mulDiv(
-                totalLiquidity,
+            lpTokenAmount = amount.mulDiv(
+                lpTokenTotalSupply,
                 slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue
             );
         }
@@ -165,17 +169,17 @@ library LpSlotLib {
      *      It also checks if the resulting balance is sufficient.
      * @param self The LpSlot storage.
      * @param ctx The LpContext memory.
-     * @param liquidity The amount of LP token to be burned.
-     * @param totalLiquidity The total supplied LP token.
+     * @param lpTokenAmount The amount of LP token to be burned.
+     * @param lpTokenTotalSupply The total supplied LP token.
      * @return amount The amount of liquidity removed.
      */
     function removeLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
-        uint256 liquidity,
-        uint256 totalLiquidity
+        uint256 lpTokenAmount,
+        uint256 lpTokenTotalSupply
     ) internal returns (uint256 amount) {
-        amount = self.calculateAmount(ctx, liquidity, totalLiquidity);
+        amount = self.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
         require(amount <= self.balance(), Errors.NOT_ENOUGH_SLOT_BALANCE);
 
         self.total -= amount;
@@ -184,9 +188,9 @@ library LpSlotLib {
     function calculateAmount(
         LpSlot storage self,
         LpContext memory ctx,
-        uint256 liquidity,
-        uint256 totalLiquidity
+        uint256 lpTokenAmount,
+        uint256 lpTokenTotalSupply
     ) internal view returns (uint256 amount) {
-        amount = liquidity.mulDiv(self.value(ctx), totalLiquidity);
+        amount = lpTokenAmount.mulDiv(self.value(ctx), lpTokenTotalSupply);
     }
 }

@@ -323,13 +323,13 @@ library LpSlotSetLib {
      * @dev This function adds liquidity to the liquidity pool by performing the following steps:
      *      1. Retrieves the target slot based on the trading fee rate.
      *      2. Calls the addLiquidity function on the target slot,
-     *         passing the LpContext, amount, and totalLiquidity.
+     *         passing the LpContext, amount, and lpTokenTotalSupply.
      *      3. Updates the minimum available fee rate if the trading fee rate is lower than the current minimum.
      * @param self The storage reference to the LpSlotSet.
      * @param ctx The LpContext memory containing the context information for the liquidity operation.
      * @param tradingFeeRate The trading fee rate associated with the liquidity being added.
      * @param amount The amount of liquidity being added.
-     * @param totalLiquidity The total supplied LP token.
+     * @param lpTokenTotalSupply The total supplied LP token.
      * @return liquidity The amount of LP token to be minted.
      */
     function addLiquidity(
@@ -337,7 +337,7 @@ library LpSlotSetLib {
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount,
-        uint256 totalLiquidity
+        uint256 lpTokenTotalSupply
     )
         external
         _validTradingFeeRate(tradingFeeRate)
@@ -345,7 +345,7 @@ library LpSlotSetLib {
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        liquidity = slot.addLiquidity(ctx, amount, totalLiquidity);
+        liquidity = slot.addLiquidity(ctx, amount, lpTokenTotalSupply);
 
         uint16 _feeRate = abs(tradingFeeRate);
         if (_feeRate < minAvailableFeeRate(self, tradingFeeRate)) {
@@ -358,15 +358,19 @@ library LpSlotSetLib {
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount,
-        uint256 totalLiquidity
+        uint256 lpTokenTotalSupply
     )
         external
         view
         _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 liquidity)
+        returns (uint256 lpTokenAmount)
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        liquidity = slot.calculateLiquidity(ctx, amount, totalLiquidity);
+        lpTokenAmount = slot.calculateLiquidity(
+            ctx,
+            amount,
+            lpTokenTotalSupply
+        );
     }
 
     /**
@@ -374,33 +378,33 @@ library LpSlotSetLib {
      * @dev This function removes liquidity from the liquidity pool by performing the following steps:
      *      1. Retrieves the target slot based on the trading fee rate.
      *      2. Calls the removeLiquidity function on the target slot,
-     *         passing the LpContext, liquidity, and totalLiquidity.
+     *         passing the LpContext, liquidity, and lpTokenTotalSupply.
      *      3. Returns the amount of liquidity that was removed.
      * @param self The storage reference to the LpSlotSet.
      * @param ctx The LpContext memory containing the context information for the liquidity operation.
      * @param tradingFeeRate The trading fee rate associated with the liquidity being removed.
-     * @param liquidity The amount of LP token to be burned.
-     * @param totalLiquidity The total supplied LP token.
+     * @param lpTokenAmount The amount of LP token to be burned.
+     * @param lpTokenTotalSupply The total supplied LP token.
      * @return amount The amount of liquidity that was removed.
      */
     function removeLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 liquidity,
-        uint256 totalLiquidity
+        uint256 lpTokenAmount,
+        uint256 lpTokenTotalSupply
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        amount = slot.removeLiquidity(ctx, liquidity, totalLiquidity);
+        amount = slot.removeLiquidity(ctx, lpTokenAmount, lpTokenTotalSupply);
     }
 
     function calculateAmount(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 liquidity,
-        uint256 totalLiquidity
+        uint256 lpTokenAmount,
+        uint256 lpTokenTotalSupply
     )
         external
         view
@@ -408,7 +412,7 @@ library LpSlotSetLib {
         returns (uint256 amount)
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        amount = slot.calculateAmount(ctx, liquidity, totalLiquidity);
+        amount = slot.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
     }
 
     /**

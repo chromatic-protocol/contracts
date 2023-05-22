@@ -30,10 +30,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ LpSlotSetLib: ${lpSlotSet}`))
 
+  const { address: lpTokenDeployer } = await deploy("LpTokenDeployerLib", {
+    from: deployer,
+  })
+  console.log(chalk.yellow(`✨ LpTokenDeployerLib: ${lpTokenDeployer}`))
+
   const { address: marketDeployer } = await deploy("MarketDeployerLib", {
     from: deployer,
     libraries: {
       LpSlotSetLib: lpSlotSet,
+      LpTokenDeployerLib: lpTokenDeployer,
     },
   })
   console.log(chalk.yellow(`✨ MarketDeployerLib: ${marketDeployer}`))
