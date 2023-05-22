@@ -41,17 +41,6 @@ library LpSlotPendingPositionLib {
      * @param self The LpSlotPendingPosition storage.
      * @param ctx The LpContext.
      */
-    modifier _settle(LpSlotPendingPosition storage self, LpContext memory ctx) {
-        settleAccruedInterest(self, ctx);
-
-        _;
-    }
-
-    /**
-     * @notice Settles the accumulated interest of the pending position.
-     * @param self The LpSlotPendingPosition storage.
-     * @param ctx The LpContext.
-     */
     function settleAccruedInterest(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
@@ -73,7 +62,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
+    ) internal {
         uint256 pendingVersion = self.oracleVersion;
         require(
             pendingVersion == 0 || pendingVersion == param.oracleVersion,
@@ -100,7 +89,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
+    ) internal {
         require(
             self.oracleVersion == param.oracleVersion,
             Errors.INVALID_ORACLE_VERSION

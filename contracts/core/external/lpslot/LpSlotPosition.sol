@@ -40,18 +40,6 @@ library LpSlotPositionLib {
     using LpSlotPendingPositionLib for LpSlotPendingPosition;
 
     /**
-     * @notice Modifier to settle accrued interest and pending positions before executing a function.
-     * @param self The LpSlotPosition storage struct.
-     * @param ctx The LpContext data struct.
-     */
-    modifier _settle(LpSlotPosition storage self, LpContext memory ctx) {
-        settleAccruedInterest(self, ctx);
-        settlePendingPosition(self, ctx);
-
-        _;
-    }
-
-    /**
      * @notice Settles accrued interest for a liquidity slot position.
      * @param self The LpSlotPosition storage struct.
      * @param ctx The LpContext data struct.
@@ -111,7 +99,7 @@ library LpSlotPositionLib {
         LpSlotPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
+    ) internal {
         self._pending.openPosition(ctx, param);
     }
 
@@ -125,7 +113,7 @@ library LpSlotPositionLib {
         LpSlotPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
+    ) internal {
         if (param.oracleVersion == self._pending.oracleVersion) {
             self._pending.closePosition(ctx, param);
         } else {

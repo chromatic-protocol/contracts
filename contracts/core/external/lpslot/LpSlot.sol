@@ -27,6 +27,18 @@ library LpSlotLib {
     uint256 private constant MIN_AMOUNT = 1000;
 
     /**
+     * @notice Modifier to settle accrued interest and pending positions before executing a function.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext data struct.
+     */
+    modifier _settle(LpSlot storage self, LpContext memory ctx) {
+        self._position.settleAccruedInterest(ctx);
+        self._position.settlePendingPosition(ctx);
+
+        _;
+    }
+
+    /**
      * @notice Opens a new liquidity position in the slot.
      * @dev This function validates the maker margin against the available balance in the slot
      *      and opens the position using the specified parameters.
@@ -41,7 +53,7 @@ library LpSlotLib {
         LpContext memory ctx,
         PositionParam memory param,
         uint256 tradingFee
-    ) internal {
+    ) internal _settle(self, ctx) {
         require(
             param.makerMargin <= self.balance(),
             Errors.NOT_ENOUGH_SLOT_BALANCE
@@ -66,7 +78,7 @@ library LpSlotLib {
         LpContext memory ctx,
         PositionParam memory param,
         int256 takerPnl
-    ) internal {
+    ) internal _settle(self, ctx) {
         self._position.closePosition(ctx, param);
 
         uint256 absTakerPnl = takerPnl.abs();
@@ -131,7 +143,7 @@ library LpSlotLib {
         LpContext memory ctx,
         uint256 amount,
         uint256 lpTokenTotalSupply
-    ) internal returns (uint256 lpTokenAmount) {
+    ) internal _settle(self, ctx) returns (uint256 lpTokenAmount) {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
         lpTokenAmount = self.calculateLiquidity(
@@ -178,7 +190,7 @@ library LpSlotLib {
         LpContext memory ctx,
         uint256 lpTokenAmount,
         uint256 lpTokenTotalSupply
-    ) internal returns (uint256 amount) {
+    ) internal _settle(self, ctx) returns (uint256 amount) {
         amount = self.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
         require(amount <= self.balance(), Errors.NOT_ENOUGH_SLOT_BALANCE);
 
