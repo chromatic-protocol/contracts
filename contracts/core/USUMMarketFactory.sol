@@ -324,6 +324,12 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         }
     }
 
+    function getInterestRateRecords(
+        address token
+    ) external view returns (InterestRate.Record[] memory) {
+        return _settlementTokenRegistry.getInterestRateRecords(token);
+    }
+
     function currentInterestRate(
         address token
     ) external view override returns (uint256 annualRateBPS) {

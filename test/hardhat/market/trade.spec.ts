@@ -12,6 +12,8 @@ import {
 import { PositionStructOutput } from "@usum/typechain-types/contracts/core/USUMMarket";
 import { inspect } from "util";
 import bluebird from "bluebird";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+
 describe("position & account test", async function () {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>;
   const base = ethers.utils.parseEther("10000000");
@@ -114,7 +116,7 @@ describe("position & account test", async function () {
         entryPrice
       )} , exitPrice : ${ethers.utils.formatEther(exitPrice)}`
     );
-    const delta = exitPrice.sub(entryPrice)
+    const delta = exitPrice.sub(entryPrice);
     return lvQty.mul(delta).div(entryPrice);
   }
 
@@ -130,8 +132,16 @@ describe("position & account test", async function () {
       marketFactory,
     } = testData;
 
-    const { updatePrice, openPosition } = helpers(testData);
+    const { updatePrice, openPosition, awaitTx } = helpers(testData);
+    await awaitTx(
+      marketFactory.appendInterestRateRecord(
+        settlementToken.address,
+        1500,
+        (await time.latest()) + 100
+      )
+    );
 
+    await time.increase(101);
     // prevent IOV
     await updatePrice(0);
     const oraclePrices = [1000, 1100, 1300, 1200];
@@ -165,11 +175,15 @@ describe("position & account test", async function () {
           .mul(settlementTokenDecimal.mul(curr.leverage))
           .div(QTY_LEVERAGE_PRECISION);
         const leveragedQty = curr.qty.lt(0) ? leveraged.mul(-1) : leveraged;
+        const makerMargin = curr._slotMargins
+          .map((m) => m.amount)
+          .reduce((a, b) => a.add(b));
         const pnl = acc.push({
           ...curr,
           pnl: getPnl(leveragedQty, entryPrice, currentPrice),
           leveragedQty: leveragedQty,
           entryPrice: entryPrice,
+          makerMargin: makerMargin,
         });
         return acc;
       },
@@ -182,7 +196,6 @@ describe("position & account test", async function () {
       )
     );
 
-
     results.map((r, index) => {
       const oraclePriceDiff =
         index != results.length
@@ -193,21 +206,71 @@ describe("position & account test", async function () {
       expect(r.pnl).to.equal(
         r.leveragedQty.mul(oraclePriceDiff).div(r.entryPrice)
       );
-      expect(parseFloat(r.pnl.toString()) / parseFloat(r.leveragedQty)).to.equal(oraclePriceDiff.toNumber() / r.entryPrice.toNumber())
-      console.log(`pnl ${parseFloat(r.pnl.toString()) / parseFloat(r.leveragedQty) * 100}%`)
+      expect(
+        parseFloat(r.pnl.toString()) / parseFloat(r.leveragedQty)
+      ).to.equal(oraclePriceDiff.toNumber() / r.entryPrice.toNumber());
+      console.log(
+        `pnl ${
+          (parseFloat(r.pnl.toString()) / parseFloat(r.leveragedQty)) * 100
+        }%`
+      );
     });
-    // pnl / qty // 내 진짜 이득률 ( 레버리지 적용된))
-    // 10% 5x 50%
-    //
-    // takerMargin
 
-    // oracle 증가량 대비
+    // update interest fee to 20%
+    await awaitTx(
+      marketFactory.appendInterestRateRecord(
+        settlementToken.address,
+        2000,
+        (await time.latest()) + 3600 * 24 * 36.5 // 36.5 day
+      )
+    );
 
-    // console.log(inspect(result, { depth: 5 }));
+    const currentTime = await time.increase(3600 * 24 * 36.5 - 1);
 
-    // TODO interest Rate
-    const interestRate = await marketFactory.currentInterestRate(
+    const yearSecond = 3600 * 24 * 365;
+
+    let txCnt = 0;
+
+    const interestRates = await marketFactory.getInterestRateRecords(
       settlementToken.address
     );
+    // console.log("fees", interestRates);
+
+    await bluebird.each(results, async (r) => {
+      const txTimestamp = currentTime + ++txCnt;
+      const timeDiff = txTimestamp - r.timestamp;
+      const tx = traderRouter.closePosition(
+        market.address,
+        r.id,
+        ethers.constants.MaxUint256
+      );
+
+      const filteredFees = interestRates
+        .filter((fee) => fee.beginTimestamp.lte(BigNumber.from(txTimestamp)))
+        .sort((a, b) => b.beginTimestamp.sub(a.beginTimestamp).toNumber());
+
+      let calculatedTime = txTimestamp;
+      let interestFee = BigNumber.from(0);
+
+      // get total interestFee 
+      for (let fee of filteredFees) {
+        const period =
+          calculatedTime - Math.max(fee.beginTimestamp.toNumber(), r.timestamp);
+        calculatedTime = fee.beginTimestamp.toNumber();
+
+        interestFee = interestFee.add(
+          r.makerMargin
+            .mul(fee.annualRateBPS.mul(period))
+            .div(yearSecond * 10000)
+        );
+        if (fee.beginTimestamp.lte(r.timestamp)) break;
+      }
+
+      console.log("expected interest", interestFee);
+
+      await expect(tx)
+        .to.emit(market, "ClosePosition")
+        .withArgs(anyValue, anyValue, anyValue, r.pnl.sub(interestFee));
+    });
   });
 });

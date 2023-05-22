@@ -300,7 +300,7 @@ library SettlementTokenRegistryLib {
     function getInterestRateRecords(
         SettlementTokenRegistry storage self,
         address token
-    ) internal view returns (InterestRate.Record[] storage) {
+    ) public view returns (InterestRate.Record[] storage) {
         return self._interestRateRecords[token];
     }
 }
