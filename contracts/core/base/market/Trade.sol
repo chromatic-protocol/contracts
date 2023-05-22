@@ -106,10 +106,11 @@ abstract contract Trade is MarketValue {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
         if (position.owner != msg.sender) revert NotPermitted();
-        if (!_checkClaimPosition(position)) revert NotClosedPosition();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
+
+        if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
 
         _claimPosition(ctx, position, 0, recipient, data);
 
@@ -123,10 +124,11 @@ abstract contract Trade is MarketValue {
     ) external nonReentrant onlyLiquidator {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
-        if (!_checkClaimPosition(position)) revert NotClosedPosition();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
+
+        if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
 
         uint256 usedKeeperFee = vault.transferKeeperFee(
             keeper,
@@ -258,13 +260,16 @@ abstract contract Trade is MarketValue {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
 
-        return _checkClaimPosition(position);
+        return _checkClaimPosition(position, newLpContext());
     }
 
     function _checkClaimPosition(
-        Position memory position
-    ) internal pure returns (bool) {
-        return position.closeVersion > 0;
+        Position memory position,
+        LpContext memory ctx
+    ) internal view returns (bool) {
+        return
+            position.closeVersion > 0 &&
+            position.closeVersion < ctx.currentOracleVersion().version;
     }
 
     function getProtocolFee(uint256 margin) public view returns (uint16) {

@@ -8,8 +8,8 @@ interface ITrade {
     error NotEnoughMarginTransfered();
     error NotExistPosition();
     error NotPermitted();
-    error NotClosedPosition();
     error AlreadyClosedPosition();
+    error NotClaimablePosition();
     error ExceedMaxAllowableTradingFee();
     error ClosePositionCallbackError();
 
