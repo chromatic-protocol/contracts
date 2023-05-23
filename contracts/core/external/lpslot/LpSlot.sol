@@ -95,7 +95,12 @@ library LpSlotLib {
         PositionParam memory param,
         int256 takerPnl
     ) internal _settle(self, ctx) {
-        if (param.closeVersion > param.openVersion) {
+        if (param.closeVersion == 0) {
+            // called when liquidate
+            self._position.onClosePosition(ctx, param);
+        } else if (
+            param.closeVersion > param.openVersion
+        ) {
             self._closedPosition.onClaimPosition(ctx, param);
         }
 

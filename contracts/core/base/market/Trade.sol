@@ -151,8 +151,11 @@ abstract contract Trade is MarketValue {
         address keeper,
         uint256 keeperFee // native token amount
     ) external nonReentrant onlyLiquidator {
+        liquidator.cancelLiquidationTask(positionId);
+
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
+        if (position.closeVersion != 0) revert AlreadyClosedPosition();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
@@ -165,8 +168,6 @@ abstract contract Trade is MarketValue {
             position.takerMargin
         );
         _claimPosition(ctx, position, usedKeeperFee, position.owner, bytes(""));
-
-        liquidator.cancelLiquidationTask(position.id);
 
         emit Liquidate(position.owner, position, usedKeeperFee);
     }
