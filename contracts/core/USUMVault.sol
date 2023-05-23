@@ -91,11 +91,11 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         );
     }
 
-    function onClosePosition(
+    function onClaimPosition(
         uint256 positionId,
         address recipient,
         uint256 takerMargin,
-        uint256 settlmentAmount
+        uint256 settlementAmount
     ) external override onlyMarket {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
@@ -103,32 +103,32 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         SafeERC20.safeTransfer(
             IERC20(settlementToken),
             recipient,
-            settlmentAmount
+            settlementAmount
         );
 
         takerBalances[settlementToken] -= takerMargin;
         takerMarketBalances[address(market)] -= takerMargin;
 
-        if (settlmentAmount > takerMargin) {
+        if (settlementAmount > takerMargin) {
             // maker loss
-            uint256 makerLoss = settlmentAmount - takerMargin;
+            uint256 makerLoss = settlementAmount - takerMargin;
 
             makerBalances[settlementToken] -= makerLoss;
             makerMarketBalances[address(market)] -= makerLoss;
         } else {
             // maker profit
-            uint256 makerProfit = takerMargin - settlmentAmount;
+            uint256 makerProfit = takerMargin - settlementAmount;
 
             makerBalances[settlementToken] += makerProfit;
             makerMarketBalances[address(market)] += makerProfit;
         }
 
-        emit OnClosePosition(
+        emit OnClaimPosition(
             address(market),
             positionId,
             recipient,
             takerMargin,
-            settlmentAmount
+            settlementAmount
         );
     }
 

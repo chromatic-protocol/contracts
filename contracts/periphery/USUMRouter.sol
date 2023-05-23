@@ -26,7 +26,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     struct BurnCallbackData {
         address payer;
         uint256 tokenId;
-        uint256 liquidity;
+        uint256 lpTokenAmount;
     }
 
     AccountFactory accountFactory;
@@ -71,9 +71,9 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         );
         IERC1155(lpToken).safeTransferFrom(
             callbackData.payer,
-            msg.sender,
+            lpToken,
             callbackData.tokenId,
-            callbackData.liquidity,
+            callbackData.lpTokenAmount,
             bytes("")
         );
     }
@@ -111,8 +111,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 amount,
         address recipient,
         uint256 deadline
-    ) external ensure(deadline) returns (uint256 liquidity) {
-        liquidity = IUSUMMarket(market).addLiquidity(
+    ) external ensure(deadline) returns (uint256 lpTokenAmount) {
+        lpTokenAmount = IUSUMMarket(market).addLiquidity(
             recipient,
             feeRate,
             abi.encode(MintCallbackData({payer: msg.sender, amount: amount}))
@@ -122,7 +122,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     function removeLiquidity(
         address market,
         int16 feeRate,
-        uint256 liquidity,
+        uint256 lpTokenAmount,
         uint256 amountMin,
         address recipient,
         uint256 deadline
@@ -134,7 +134,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
                 BurnCallbackData({
                     payer: msg.sender,
                     tokenId: LpTokenLib.encodeId(feeRate),
-                    liquidity: liquidity
+                    lpTokenAmount: lpTokenAmount
                 })
             )
         );

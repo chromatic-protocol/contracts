@@ -14,8 +14,8 @@ import {Errors} from "@usum/core/libraries/Errors.sol";
 
 /// @dev LpSlotPendingPosition type
 struct LpSlotPendingPosition {
-    /// @dev The oracle version of the pending position.
-    uint256 oracleVersion;
+    /// @dev The oracle version when the position was opened.
+    uint256 openVersion;
     /// @dev The total leveraged quantity of the pending position.
     int256 totalLeveragedQty;
     /// @dev The total maker margin of the pending position.
@@ -41,17 +41,6 @@ library LpSlotPendingPositionLib {
      * @param self The LpSlotPendingPosition storage.
      * @param ctx The LpContext.
      */
-    modifier _settle(LpSlotPendingPosition storage self, LpContext memory ctx) {
-        settleAccruedInterest(self, ctx);
-
-        _;
-    }
-
-    /**
-     * @notice Settles the accumulated interest of the pending position.
-     * @param self The LpSlotPendingPosition storage.
-     * @param ctx The LpContext.
-     */
     function settleAccruedInterest(
         LpSlotPendingPosition storage self,
         LpContext memory ctx
@@ -64,51 +53,49 @@ library LpSlotPendingPositionLib {
     }
 
     /**
-     * @notice Opens a new position.
+     * @notice Handles the opening of a position.
      * @param self The LpSlotPendingPosition storage.
-     * @param ctx The LpContext.
      * @param param The position parameters.
      */
-    function openPosition(
+    function onOpenPosition(
         LpSlotPendingPosition storage self,
-        LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
-        uint256 pendingVersion = self.oracleVersion;
+    ) internal {
+        uint256 openVersion = self.openVersion;
         require(
-            pendingVersion == 0 || pendingVersion == param.oracleVersion,
+            openVersion == 0 || openVersion == param.openVersion,
             Errors.INVALID_ORACLE_VERSION
         );
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkOpenPositionQty(totalLeveragedQty, leveragedQty);
+        PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
 
-        self.oracleVersion = param.oracleVersion;
+        self.openVersion = param.openVersion;
         self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
         self.totalMakerMargin += param.makerMargin;
         self.totalTakerMargin += param.takerMargin;
     }
 
     /**
-     * @notice Closes an existing position.
+     * @notice Handles the closing of a position.
      * @param self The LpSlotPendingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.
      */
-    function closePosition(
+    function onClosePosition(
         LpSlotPendingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
+    ) internal {
         require(
-            self.oracleVersion == param.oracleVersion,
+            self.openVersion == param.openVersion,
             Errors.INVALID_ORACLE_VERSION
         );
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkClosePositionQty(totalLeveragedQty, leveragedQty);
+        PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
 
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalMakerMargin -= param.makerMargin;
@@ -128,15 +115,15 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        if (self.oracleVersion == 0) return 0;
+        if (self.openVersion == 0) return 0;
 
         IOracleProvider.OracleVersion memory currentVersion = ctx
             .currentOracleVersion();
-        if (self.oracleVersion >= currentVersion.version) return 0;
+        if (self.openVersion >= currentVersion.version) return 0;
 
-        UFixed18 _entryPrice = PositionUtil.entryPrice(
+        UFixed18 _entryPrice = PositionUtil.settlePrice(
             ctx.market.oracleProvider(),
-            self.oracleVersion,
+            self.openVersion,
             currentVersion
         );
         UFixed18 _exitPrice = PositionUtil.oraclePrice(currentVersion);
@@ -184,9 +171,9 @@ library LpSlotPendingPositionLib {
         LpContext memory ctx
     ) internal view returns (UFixed18) {
         return
-            PositionUtil.entryPrice(
+            PositionUtil.settlePrice(
                 ctx.market.oracleProvider(),
-                self.oracleVersion,
+                self.openVersion,
                 ctx.currentOracleVersion()
             );
     }

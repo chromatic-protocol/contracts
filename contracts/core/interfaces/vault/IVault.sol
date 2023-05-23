@@ -10,12 +10,12 @@ interface IVault {
         uint256 protocolFee
     );
 
-    event OnClosePosition(
+    event OnClaimPosition(
         address indexed market,
         uint256 positionId,
         address recipient,
         uint256 takerMargin,
-        uint256 settlmentAmount
+        uint256 settlementAmount
     );
 
     event OnAddLiquidity(address indexed market, uint256 amount);
@@ -47,11 +47,11 @@ interface IVault {
         uint256 protocolFee
     ) external;
 
-    function onClosePosition(
+    function onClaimPosition(
         uint256 positionId,
         address recipient,
         uint256 takerMargin,
-        uint256 settlmentAmount
+        uint256 settlementAmount
     ) external;
 
     function onAddLiquidity(uint256 amount) external;

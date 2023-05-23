@@ -9,4 +9,14 @@ interface IUSUMMarketLiquidate {
         address keeper,
         uint256 keeperFee
     ) external;
+
+    function checkClaimPosition(
+        uint256 positionId
+    ) external view returns (bool);
+
+    function claimPosition(
+        uint256 positionId,
+        address keeper,
+        uint256 keeperFee
+    ) external;
 }

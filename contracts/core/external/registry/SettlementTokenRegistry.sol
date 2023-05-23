@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
@@ -73,7 +72,7 @@ library SettlementTokenRegistryLib {
      * @param self The SettlementTokenRegistry storage.
      * @return An array of addresses representing the registered settlement tokens.
      */
-    function settlmentTokens(
+    function settlementTokens(
         SettlementTokenRegistry storage self
     ) external view returns (address[] memory) {
         return self._tokens.values();
@@ -275,7 +274,6 @@ library SettlementTokenRegistryLib {
      * @param amount The amount of settlement tokens to calculate interest for.
      * @param from The starting timestamp of the interest calculation (inclusive).
      * @param to The ending timestamp of the interest calculation (exclusive).
-     * @param rounding The rounding mode to use for the interest calculation.
      * @return uint256 The calculated interest amount.
      */
     function calculateInterest(
@@ -283,15 +281,13 @@ library SettlementTokenRegistryLib {
         address token,
         uint256 amount,
         uint256 from, // timestamp (inclusive)
-        uint256 to, // timestamp (exclusive)
-        Math.Rounding rounding
+        uint256 to // timestamp (exclusive)
     ) external view registeredOnly(self, token) returns (uint256) {
         return
             getInterestRateRecords(self, token).calculateInterest(
                 amount,
                 from,
-                to,
-                rounding
+                to
             );
     }
 

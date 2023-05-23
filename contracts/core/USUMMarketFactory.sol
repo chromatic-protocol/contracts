@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
@@ -101,11 +100,14 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         address oracleProvider,
         address settlementToken
     ) external view override returns (address) {
-        if(!_registered[oracleProvider][settlementToken]) return address(0);
+        if (!_registered[oracleProvider][settlementToken]) return address(0);
 
         address[] memory markets = _marketsBySettlementToken[settlementToken];
-        for (uint i=0; i < markets.length; i++) {
-            if (address(IUSUMMarket(markets[i]).oracleProvider()) == oracleProvider) {
+        for (uint i = 0; i < markets.length; i++) {
+            if (
+                address(IUSUMMarket(markets[i]).oracleProvider()) ==
+                oracleProvider
+            ) {
                 return markets[i];
             }
         }
@@ -220,7 +222,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         override
         returns (address[] memory)
     {
-        return _settlementTokenRegistry.settlmentTokens();
+        return _settlementTokenRegistry.settlementTokens();
     }
 
     function isRegisteredSettlementToken(
@@ -335,30 +337,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         uint256 to // timestamp (exclusive)
     ) external view override returns (uint256) {
         return
-            _settlementTokenRegistry.calculateInterest(
-                token,
-                amount,
-                from,
-                to,
-                Math.Rounding.Down
-            );
-    }
-
-    function calculateInterest(
-        address token,
-        uint256 amount,
-        uint256 from, // timestamp (inclusive)
-        uint256 to, // timestamp (exclusive)
-        Math.Rounding rounding
-    ) external view override returns (uint256) {
-        return
-            _settlementTokenRegistry.calculateInterest(
-                token,
-                amount,
-                from,
-                to,
-                rounding
-            );
+            _settlementTokenRegistry.calculateInterest(token, amount, from, to);
     }
 
     // manage vault automate

@@ -91,8 +91,12 @@ contract LpSlotSetTest is Test {
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 1;
+        ctx._currentVersionCache.timestamp = 1;
+        position.closeVersion = ctx._currentVersionCache.version;
+        position.closeTimestamp = ctx._currentVersionCache.timestamp;
 
-        slotSet.acceptClosePosition(ctx, position, 0);
+        slotSet.acceptClosePosition(ctx, position);
+        slotSet.acceptClaimPosition(ctx, position, 0);
 
         assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 1000.1 ether);
@@ -112,8 +116,11 @@ contract LpSlotSetTest is Test {
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(110);
+        position.closeVersion = ctx._currentVersionCache.version;
+        position.closeTimestamp = ctx._currentVersionCache.timestamp;
 
-        slotSet.acceptClosePosition(ctx, position, 150 ether);
+        slotSet.acceptClosePosition(ctx, position);
+        slotSet.acceptClaimPosition(ctx, position, 150 ether);
 
         assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 900.1 ether);
@@ -133,8 +140,11 @@ contract LpSlotSetTest is Test {
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        position.closeVersion = ctx._currentVersionCache.version;
+        position.closeTimestamp = ctx._currentVersionCache.timestamp;
 
-        slotSet.acceptClosePosition(ctx, position, -150 ether);
+        slotSet.acceptClosePosition(ctx, position);
+        slotSet.acceptClaimPosition(ctx, position, -150 ether);
 
         assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 1100.1 ether);
@@ -176,11 +186,13 @@ contract LpSlotSetTest is Test {
         return
             Position({
                 id: 1,
-                oracleVersion: 1,
+                openVersion: 1,
+                closeVersion: 0,
                 qty: int224(150 * QTY_PRECISION.toInt256()),
                 leverage: uint32(10 * LEVERAGE_PRECISION),
                 takerMargin: 150 ether,
-                timestamp: 1,
+                openTimestamp: 1,
+                closeTimestamp: 0,
                 owner: address(0),
                 _slotMargins: new LpSlotMargin[](0)
             });

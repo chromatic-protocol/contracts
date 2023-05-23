@@ -28,7 +28,7 @@ abstract contract Trade is MarketValue {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
         bytes calldata data
-    ) external nonReentrant returns (Position memory) {
+    ) external override nonReentrant returns (Position memory) {
         if (qty == 0) revert ZeroTargetAmount();
         if (
             takerMargin <
@@ -37,6 +37,8 @@ abstract contract Trade is MarketValue {
         //TODO get slotmargin by using makerMargin
 
         LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 
         position.setSlotMargins(
@@ -75,96 +77,205 @@ abstract contract Trade is MarketValue {
         // create keeper task
         liquidator.createLiquidationTask(position.id);
 
-        emit OpenPosition(position.owner, position.settleVersion(), position);
-        // emit OpenPosition(msg.sender, position.id, position.settleVersion(), qty, leverage);
+        emit OpenPosition(position.owner, position);
         return position;
     }
 
-    // can call keeper or onwer only
-    function closePosition(
+    function closePosition(uint256 positionId) external override {
+        Position storage position = positions[positionId];
+        if (position.id == 0) revert NotExistPosition();
+        if (position.owner != msg.sender) revert NotPermitted();
+        if (position.closeVersion != 0) revert AlreadyClosedPosition();
+
+        LpContext memory ctx = newLpContext();
+
+        position.closeVersion = ctx.currentOracleVersion().version;
+        position.closeTimestamp = block.timestamp;
+
+        lpSlotSet.acceptClosePosition(ctx, position);
+        liquidator.cancelLiquidationTask(position.id);
+        emit ClosePosition(position.owner, position);
+
+        if (position.closeVersion > position.openVersion) {
+            liquidator.createClaimPositionTask(position.id);
+        } else {
+            // process claim if the position is closed in the same oracle version as the open version
+            _claimPosition(ctx, position, 0, position.owner, bytes(""));
+        }
+    }
+
+    function claimPosition(
         uint256 positionId,
         address recipient, // EOA or account contract
         bytes calldata data
-    ) external nonReentrant {
+    ) external override nonReentrant {
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
-        // TODO caller keeper || owner
         if (position.owner != msg.sender) revert NotPermitted();
-        uint256 marginTransferred = _closePosition(
-            position,
-            0,
-            recipient,
-            data
-        );
+
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
+
+        _claimPosition(ctx, position, 0, recipient, data);
+
+        liquidator.cancelClaimPositionTask(position.id);
     }
 
-    function _closePosition(
+    function claimPosition(
+        uint256 positionId,
+        address keeper,
+        uint256 keeperFee // native token amount
+    ) external nonReentrant onlyLiquidator {
+        Position memory position = positions[positionId];
+        if (position.id == 0) revert NotExistPosition();
+
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
+
+        uint256 usedKeeperFee = vault.transferKeeperFee(
+            keeper,
+            keeperFee,
+            position.takerMargin
+        );
+        _claimPosition(ctx, position, usedKeeperFee, position.owner, bytes(""));
+
+        liquidator.cancelClaimPositionTask(position.id);
+    }
+
+    function liquidate(
+        uint256 positionId,
+        address keeper,
+        uint256 keeperFee // native token amount
+    ) external nonReentrant onlyLiquidator {
+        Position memory position = positions[positionId];
+        if (position.id == 0) revert NotExistPosition();
+
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        if (!_checkLiquidation(ctx, position)) return;
+
+        uint256 usedKeeperFee = vault.transferKeeperFee(
+            keeper,
+            keeperFee,
+            position.takerMargin
+        );
+        _claimPosition(ctx, position, usedKeeperFee, position.owner, bytes(""));
+
+        liquidator.cancelLiquidationTask(position.id);
+
+        emit Liquidate(position.owner, position, usedKeeperFee);
+    }
+
+    function _claimPosition(
+        LpContext memory ctx,
         Position memory position,
-        uint256 usedKeeperFee, // TODO
+        uint256 usedKeeperFee,
         address recipient,
         bytes memory data
-    ) internal returns (uint256 marginTransferred) {
-        //TODO close position
-        LpContext memory ctx = newLpContext();
-
+    ) internal {
         uint256 makerMargin = position.makerMargin();
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
-        uint256 settlmentAmount = takerMargin;
+        uint256 settlementAmount = takerMargin;
 
-        uint256 interestFee = calculateInterest(
+        int256 pnl = position.pnl(ctx);
+        uint256 interest = calculateInterest(
             makerMargin,
-            position.timestamp,
+            position.openTimestamp,
             block.timestamp
         );
-        int256 realizedPnl = position.pnl(ctx) - interestFee.toInt256();
+        int256 realizedPnl = pnl - interest.toInt256();
 
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0) {
             if (absRealizedPnl > makerMargin) {
                 realizedPnl = makerMargin.toInt256();
-                settlmentAmount += makerMargin;
+                settlementAmount += makerMargin;
             } else {
-                settlmentAmount += absRealizedPnl;
+                settlementAmount += absRealizedPnl;
             }
         } else {
             if (absRealizedPnl > takerMargin) {
                 realizedPnl = -(takerMargin.toInt256());
-                settlmentAmount = 0;
+                settlementAmount = 0;
             } else {
-                settlmentAmount -= absRealizedPnl;
+                settlementAmount -= absRealizedPnl;
             }
         }
 
-        lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
+        lpSlotSet.acceptClaimPosition(ctx, position, realizedPnl);
 
-        vault.onClosePosition(
+        vault.onClaimPosition(
             position.id,
             recipient,
             takerMargin,
-            settlmentAmount
+            settlementAmount
         );
 
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
         try
-            IUSUMTradeCallback(position.owner).closePositionCallback(
+            IUSUMTradeCallback(position.owner).claimPositionCallback(
                 position.id,
                 data
             )
         {} catch (bytes memory e /*lowLevelData*/) {
             if (msg.sender != address(liquidator)) {
-                revert ClosePositionCallbackError();
+                revert ClaimPositionCallbackError();
             }
         }
         delete positions[position.id];
 
-        liquidator.cancelLiquidationTask(position.id);
-        emit ClosePosition(
-            position.owner,
-            position.oracleVersion,
-            position,
-            realizedPnl
+        emit ClaimPosition(position.owner, position, pnl, interest);
+    }
+
+    function checkLiquidation(uint256 positionId) external view returns (bool) {
+        Position memory position = positions[positionId];
+        if (position.id == 0) return false;
+
+        return _checkLiquidation(newLpContext(), position);
+    }
+
+    function _checkLiquidation(
+        LpContext memory ctx,
+        Position memory position
+    ) internal view returns (bool) {
+        uint256 interest = calculateInterest(
+            position.makerMargin(),
+            position.openTimestamp,
+            block.timestamp
         );
-        return takerMargin;
+
+        int256 realizedPnl = position.pnl(ctx) - interest.toInt256();
+        uint256 absRealizedPnl = realizedPnl.abs();
+        if (realizedPnl > 0) {
+            // whether profit stop (taker side)
+            return absRealizedPnl >= position.makerMargin();
+        } else {
+            // whether loss cut (taker side)
+            return absRealizedPnl >= position.takerMargin;
+        }
+    }
+
+    function checkClaimPosition(
+        uint256 positionId
+    ) external view returns (bool) {
+        Position memory position = positions[positionId];
+        if (position.id == 0) return false;
+
+        return _checkClaimPosition(position, newLpContext());
+    }
+
+    function _checkClaimPosition(
+        Position memory position,
+        LpContext memory ctx
+    ) internal view returns (bool) {
+        return
+            position.closeVersion > 0 &&
+            position.closeVersion < ctx.currentOracleVersion().version;
     }
 
     function getProtocolFee(uint256 margin) public view returns (uint16) {
@@ -182,55 +293,16 @@ abstract contract Trade is MarketValue {
         return
             Position({
                 id: ++_positionId,
-                oracleVersion: ctx.currentOracleVersion().version,
+                openVersion: ctx.currentOracleVersion().version,
+                closeVersion: 0,
                 qty: qty, //
                 leverage: leverage,
-                timestamp: block.timestamp,
+                openTimestamp: block.timestamp,
+                closeTimestamp: 0,
                 takerMargin: takerMargin,
                 owner: msg.sender,
                 _slotMargins: new LpSlotMargin[](0)
             });
-    }
-
-    function liquidate(
-        uint256 positionId,
-        address keeper,
-        uint256 keeperFee // native token amount
-    ) external nonReentrant onlyLiquidator {
-        Position memory position = positions[positionId];
-        if (position.id == 0) revert NotExistPosition();
-        if (!checkLiquidation(positionId)) return;
-
-        uint256 usedKeeperFee = vault.transferKeeperFee(
-            keeper,
-            keeperFee,
-            position.takerMargin
-        );
-        _closePosition(position, usedKeeperFee, position.owner, bytes(""));
-        emit Liquidate(positionId, usedKeeperFee);
-    }
-
-    function checkLiquidation(uint256 positionId) public view returns (bool) {
-        Position memory position = positions[positionId];
-        if (position.id == 0) return false;
-
-        uint256 interestFee = calculateInterest(
-            position.makerMargin(),
-            position.timestamp,
-            block.timestamp
-        );
-
-        int256 realizedPnl = position.pnl(newLpContext()) -
-            interestFee.toInt256();
-        uint256 absRealizedPnl = realizedPnl.abs();
-        if (realizedPnl > 0 && absRealizedPnl >= position.makerMargin()) {
-            //profit stop (taker side)
-            return true;
-        } else if (absRealizedPnl >= position.takerMargin) {
-            // loss cut (taker side)
-            return true;
-        }
-        return false;
     }
 
     function getPosition(

@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
+import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {AccruedInterest, AccruedInterestLib} from "@usum/core/external/lpslot/AccruedInterest.sol";
@@ -40,18 +40,6 @@ library LpSlotPositionLib {
     using LpSlotPendingPositionLib for LpSlotPendingPosition;
 
     /**
-     * @notice Modifier to settle accrued interest and pending positions before executing a function.
-     * @param self The LpSlotPosition storage struct.
-     * @param ctx The LpContext data struct.
-     */
-    modifier _settle(LpSlotPosition storage self, LpContext memory ctx) {
-        settleAccruedInterest(self, ctx);
-        settlePendingPosition(self, ctx);
-
-        _;
-    }
-
-    /**
      * @notice Settles accrued interest for a liquidity slot position.
      * @param self The LpSlotPosition storage struct.
      * @param ctx The LpContext data struct.
@@ -76,18 +64,18 @@ library LpSlotPositionLib {
         LpSlotPosition storage self,
         LpContext memory ctx
     ) internal {
-        uint256 pendingOracleVersion = self._pending.oracleVersion;
-        if (pendingOracleVersion == 0) return;
+        uint256 openVersion = self._pending.openVersion;
+        if (openVersion == 0) return;
 
         IOracleProvider.OracleVersion memory currentVersion = ctx
             .currentOracleVersion();
-        if (pendingOracleVersion >= currentVersion.version) return;
+        if (openVersion >= currentVersion.version) return;
 
         int256 pendingQty = self._pending.totalLeveragedQty;
         self.totalLeveragedQty += pendingQty;
-        self.totalEntryAmount += pendingQty.abs().mulDiv(
-            UFixed18.unwrap(self._pending.entryPrice(ctx)),
-            UFixed18.unwrap(UFixed18Lib.ONE)
+        self.totalEntryAmount += PositionUtil.transactionAmount(
+            pendingQty,
+            self._pending.entryPrice(ctx)
         );
         self._totalMakerMargin += self._pending.totalMakerMargin;
         self._totalTakerMargin += self._pending.totalTakerMargin;
@@ -102,42 +90,40 @@ library LpSlotPositionLib {
     }
 
     /**
-     * @notice Opens a new position for a liquidity slot.
+     * @notice Handles the opening of a position for a liquidity slot.
      * @param self The LpSlotPosition storage struct.
-     * @param ctx The LpContext data struct.
      * @param param The PositionParam data struct containing the position parameters.
      */
-    function openPosition(
+    function onOpenPosition(
         LpSlotPosition storage self,
-        LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
-        self._pending.openPosition(ctx, param);
+    ) internal {
+        self._pending.onOpenPosition(param);
     }
 
     /**
-     * @notice Closes a position for a liquidity slot.
+     * @notice Handles the closing of a position for a liquidity slot.
      * @param self The LpSlotPosition storage struct.
      * @param ctx The LpContext data struct.
      * @param param The PositionParam data struct containing the position parameters.
      */
-    function closePosition(
+    function onClosePosition(
         LpSlotPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
-        if (param.oracleVersion == self._pending.oracleVersion) {
-            self._pending.closePosition(ctx, param);
+    ) internal {
+        if (param.openVersion == self._pending.openVersion) {
+            self._pending.onClosePosition(ctx, param);
         } else {
             int256 totalLeveragedQty = self.totalLeveragedQty;
             int256 leveragedQty = param.leveragedQty;
-            PositionUtil.checkClosePositionQty(totalLeveragedQty, leveragedQty);
+            PositionUtil.checkRemovePositionQty(
+                totalLeveragedQty,
+                leveragedQty
+            );
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
-            self.totalEntryAmount -= leveragedQty.abs().mulDiv(
-                UFixed18.unwrap(param.entryPrice(ctx)),
-                UFixed18.unwrap(UFixed18Lib.ONE)
-            );
+            self.totalEntryAmount -= param.entryAmount(ctx);
             self._totalMakerMargin -= param.makerMargin;
             self._totalTakerMargin -= param.takerMargin;
             self._accruedInterest.deduct(
@@ -186,12 +172,8 @@ library LpSlotPositionLib {
         UFixed18 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
-        int256 exitAmount = leveragedQty
-            .abs()
-            .mulDiv(
-                UFixed18.unwrap(exitPrice),
-                UFixed18.unwrap(UFixed18Lib.ONE)
-            )
+        int256 exitAmount = PositionUtil
+            .transactionAmount(leveragedQty, exitPrice)
             .toInt256() * sign;
 
         int256 rawPnl = exitAmount - entryAmount;

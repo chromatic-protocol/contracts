@@ -79,7 +79,7 @@ contract LpSlotTest is Test {
         slot._position._totalTakerMargin = 15000 ether;
         slot._position._accruedInterest.accumulatedAt = 1;
         slot._position._accruedInterest.accumulatedAmount = 0.1 ether;
-        slot._position._pending.oracleVersion = 1;
+        slot._position._pending.openVersion = 1;
         slot._position._pending.totalLeveragedQty = -10 ether;
         slot._position._pending.totalMakerMargin = 1000 ether;
         slot._position._pending.totalTakerMargin = 1000 ether;

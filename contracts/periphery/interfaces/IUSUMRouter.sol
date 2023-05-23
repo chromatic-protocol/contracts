@@ -27,12 +27,12 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint256 amount,
         address recipient,
         uint256 deadline
-    ) external returns (uint256 liquidity);
+    ) external returns (uint256 lpTokenAmount);
 
     function removeLiquidity(
         address market,
         int16 feeRate,
-        uint256 liquidity,
+        uint256 lpTokenAmount,
         uint256 amountMin,
         address recipient,
         uint256 deadline

@@ -9,10 +9,13 @@ import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
 abstract contract Liquidator is IUSUMLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 private constant LIQUIDATION_INTERVAL = 30 seconds;
+    uint256 private constant CLAIM_INTERVAL = 10 minutes;
 
     IUSUMMarketFactory factory;
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
+    mapping(address => mapping(uint256 => bytes32))
+        private _claimPositionTaskIds;
 
     error OnlyAccessableByMarket();
 
@@ -31,38 +34,18 @@ abstract contract Liquidator is IUSUMLiquidator {
     function createLiquidationTask(
         uint256 positionId
     ) external override onlyMarket {
-        address market = msg.sender;
-        if (_liquidationTaskIds[market][positionId] != bytes32(0)) {
-            return;
-        }
-        ModuleData memory moduleData = ModuleData({
-            modules: new Module[](3),
-            args: new bytes[](3)
-        });
-
-        moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = _resolverModuleArg(
-            abi.encodeCall(this.resolveLiquidation, (market, positionId))
-        );
-        moduleData.args[1] = _timeModuleArg(
-            block.timestamp,
+        _createTask(
+            _liquidationTaskIds,
+            positionId,
+            this.resolveLiquidation,
             LIQUIDATION_INTERVAL
-        );
-        moduleData.args[2] = _proxyModuleArg();
-        _liquidationTaskIds[market][positionId] = getAutomate().createTask(
-            address(this),
-            abi.encode(this.liquidate.selector),
-            moduleData,
-            ETH
         );
     }
 
     function cancelLiquidationTask(
         uint256 positionId
     ) external override onlyMarket {
-        _cancelLiquidationTask(msg.sender, positionId);
+        _cancelTask(_liquidationTaskIds, positionId);
     }
 
     function resolveLiquidation(
@@ -88,31 +71,95 @@ abstract contract Liquidator is IUSUMLiquidator {
         market.liquidate(positionId, getAutomate().gelato(), fee);
     }
 
-    function _cancelLiquidationTask(
-        address market,
+    function createClaimPositionTask(
+        uint256 positionId
+    ) external override onlyMarket {
+        _createTask(
+            _claimPositionTaskIds,
+            positionId,
+            this.resolveClaimPosition,
+            CLAIM_INTERVAL
+        );
+    }
+
+    function cancelClaimPositionTask(
+        uint256 positionId
+    ) external override onlyMarket {
+        _cancelTask(_claimPositionTaskIds, positionId);
+    }
+
+    function resolveClaimPosition(
+        address _market,
+        uint256 positionId
+    ) external view override returns (bool canExec, bytes memory execPayload) {
+        if (IUSUMMarketLiquidate(_market).checkClaimPosition(positionId)) {
+            return (
+                true,
+                abi.encodeCall(this.claimPosition, (_market, positionId))
+            );
+        }
+
+        return (false, "");
+    }
+
+    function _claimPosition(
+        address _market,
+        uint256 positionId,
+        uint256 fee
+    ) internal {
+        IUSUMMarketLiquidate market = IUSUMMarketLiquidate(_market);
+        market.claimPosition(positionId, getAutomate().gelato(), fee);
+    }
+
+    function _createTask(
+        mapping(address => mapping(uint256 => bytes32)) storage registry,
+        uint256 positionId,
+        function(address, uint256)
+            external
+            view
+            returns (bool, bytes memory) resolve,
+        uint256 interval
+    ) internal {
+        address market = msg.sender;
+        if (registry[market][positionId] != bytes32(0)) {
+            return;
+        }
+
+        ModuleData memory moduleData = ModuleData({
+            modules: new Module[](3),
+            args: new bytes[](3)
+        });
+
+        moduleData.modules[0] = Module.RESOLVER;
+        moduleData.modules[1] = Module.TIME;
+        moduleData.modules[2] = Module.PROXY;
+        moduleData.args[0] = abi.encode(
+            address(this),
+            abi.encodeCall(resolve, (market, positionId))
+        );
+        moduleData.args[1] = abi.encode(
+            uint128(block.timestamp),
+            uint128(interval)
+        );
+        moduleData.args[2] = bytes("");
+
+        registry[market][positionId] = getAutomate().createTask(
+            address(this),
+            abi.encode(this.liquidate.selector),
+            moduleData,
+            ETH
+        );
+    }
+
+    function _cancelTask(
+        mapping(address => mapping(uint256 => bytes32)) storage registry,
         uint256 positionId
     ) internal {
-        bytes32 taskId = _liquidationTaskIds[market][positionId];
+        address market = msg.sender;
+        bytes32 taskId = registry[market][positionId];
         if (taskId != bytes32(0)) {
             getAutomate().cancelTask(taskId);
-            delete _liquidationTaskIds[market][positionId];
+            delete registry[market][positionId];
         }
-    }
-
-    function _resolverModuleArg(
-        bytes memory _resolverData
-    ) internal view returns (bytes memory) {
-        return abi.encode(address(this), _resolverData);
-    }
-
-    function _timeModuleArg(
-        uint256 _startTime,
-        uint256 _interval
-    ) internal pure returns (bytes memory) {
-        return abi.encode(uint128(_startTime), uint128(_interval));
-    }
-
-    function _proxyModuleArg() internal pure returns (bytes memory) {
-        return bytes("");
     }
 }

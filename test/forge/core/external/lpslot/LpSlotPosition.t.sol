@@ -42,7 +42,7 @@ contract LpSlotPositionTest is Test {
         );
     }
 
-    function testClosePosition() public {
+    function testOnClosePosition() public {
         position.totalLeveragedQty = 100;
         position.totalEntryAmount = 200000;
         position._totalMakerMargin = 100;
@@ -54,11 +54,11 @@ contract LpSlotPositionTest is Test {
         ctx._currentVersionCache.price = Fixed18Lib.from(2100);
 
         PositionParam memory param = _newPositionParam();
-        param._settleVersionCache.version = 2;
-        param._settleVersionCache.timestamp = 2;
-        param._settleVersionCache.price = Fixed18Lib.from(2000);
+        param._entryVersionCache.version = 2;
+        param._entryVersionCache.timestamp = 2;
+        param._entryVersionCache.price = Fixed18Lib.from(2000);
 
-        position.closePosition(ctx, param);
+        position.onClosePosition(ctx, param);
 
         assertEq(position.totalLeveragedQty, 50);
         assertEq(position.totalEntryAmount, 100000);
@@ -72,10 +72,10 @@ contract LpSlotPositionTest is Test {
     }
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
-        p.oracleVersion = 1;
+        p.openVersion = 1;
         p.leveragedQty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
-        p.timestamp = 1;
+        p.openTimestamp = 1;
     }
 }

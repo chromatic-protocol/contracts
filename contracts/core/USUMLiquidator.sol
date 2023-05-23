@@ -30,7 +30,16 @@ contract USUMLiquidator is Liquidator, AutomateReady {
         // feeToken is the native token because ETH is set as a fee token when creating task
         // TODO: need test in goerli
         (uint256 fee, ) = _getFeeDetails();
-
         _liquidate(market, positionId, fee);
+    }
+
+    ///@inheritdoc IUSUMLiquidator
+    function claimPosition(
+        address market,
+        uint256 positionId
+    ) external override onlyDedicatedMsgSender {
+        // feeToken is the native token because ETH is set as a fee token when creating task
+        (uint256 fee, ) = _getFeeDetails();
+        _claimPosition(market, positionId, fee);
     }
 }

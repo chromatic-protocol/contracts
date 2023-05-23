@@ -45,68 +45,64 @@ contract LpSlotPendingPositionTest is Test {
         );
     }
 
-    function testOpenPosition_WhenEmpty() public {
-        LpContext memory ctx = _newLpContext();
+    function testOnOpenPosition_WhenEmpty() public {
         PositionParam memory param = _newPositionParam();
 
-        pending.openPosition(ctx, param);
+        pending.onOpenPosition(param);
 
-        assertEq(pending.oracleVersion, param.oracleVersion);
+        assertEq(pending.openVersion, param.openVersion);
         assertEq(pending.totalLeveragedQty, param.leveragedQty);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
 
-    function testOpenPosition_Normal() public {
-        pending.oracleVersion = 1;
+    function testOnOpenPosition_Normal() public {
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
-        LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
-        pending.openPosition(ctx, param);
+        pending.onOpenPosition(param);
 
-        assertEq(pending.oracleVersion, param.oracleVersion);
+        assertEq(pending.openVersion, param.openVersion);
         assertEq(pending.totalLeveragedQty, param.leveragedQty + 10);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
 
-    function testOpenPosition_InvalidOracleVersion() public {
-        pending.oracleVersion = 1;
+    function testOnOpenPosition_InvalidOracleVersion() public {
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
-        LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
-        param.oracleVersion = 2;
+        param.openVersion = 2;
 
         vm.expectRevert(bytes("IOV"));
-        pending.openPosition(ctx, param);
+        pending.onOpenPosition(param);
     }
 
-    function testOpenPosition_InvalidOpenPositionQty() public {
-        pending.oracleVersion = 1;
+    function testOnOpenPosition_InvalidOpenPositionQty() public {
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
-        LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam().inverse();
 
         vm.expectRevert(bytes("IPQ"));
-        pending.openPosition(ctx, param);
+        pending.onOpenPosition(param);
     }
 
-    function testClosePosition_WhenEmpty() public {
-        pending.oracleVersion = 1;
+    function testOnClosePosition_WhenEmpty() public {
+        pending.openVersion = 1;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
         vm.expectRevert(bytes("IPQ"));
-        pending.closePosition(ctx, param);
+        pending.onClosePosition(ctx, param);
     }
 
-    function testClosePosition_Normal() public {
-        pending.oracleVersion = 1;
+    function testOnClosePosition_Normal() public {
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 50;
         pending.totalMakerMargin = 50;
         pending.totalTakerMargin = 10;
@@ -114,39 +110,39 @@ contract LpSlotPendingPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
-        pending.closePosition(ctx, param);
+        pending.onClosePosition(ctx, param);
 
-        assertEq(pending.oracleVersion, param.oracleVersion);
+        assertEq(pending.openVersion, param.openVersion);
         assertEq(pending.totalLeveragedQty, 0);
         assertEq(pending.totalMakerMargin, 0);
         assertEq(pending.totalTakerMargin, 0);
     }
 
-    function testClosePosition_InvalidOracleVersion() public {
-        pending.oracleVersion = 1;
+    function testOnClosePosition_InvalidOracleVersion() public {
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 50;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
-        param.oracleVersion = 2;
+        param.openVersion = 2;
 
         vm.expectRevert(bytes("IOV"));
-        pending.closePosition(ctx, param);
+        pending.onClosePosition(ctx, param);
     }
 
-    function testClosePosition_InvalidClosePositionQty() public {
-        pending.oracleVersion = 1;
+    function testOnClosePosition_InvalidClosePositionQty() public {
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
         vm.expectRevert(bytes("IPQ"));
-        pending.closePosition(ctx, param);
+        pending.onClosePosition(ctx, param);
     }
 
     function testEntryPrice_UsingProviderCall() public {
-        pending.oracleVersion = 1;
+        pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
         LpContext memory ctx = _newLpContext();
@@ -179,10 +175,10 @@ contract LpSlotPendingPositionTest is Test {
     }
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
-        p.oracleVersion = 1;
+        p.openVersion = 1;
         p.leveragedQty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
-        p.timestamp = 1;
+        p.openTimestamp = 1;
     }
 }

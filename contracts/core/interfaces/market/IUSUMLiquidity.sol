@@ -7,7 +7,7 @@ interface IUSUMLiquidity {
         int16 indexed tradingFeeRate,
         uint256 tokenId,
         uint256 amount,
-        uint256 liquidity
+        uint256 lpTokenAmount
     );
 
     event RemoveLiquidity(
@@ -15,14 +15,14 @@ interface IUSUMLiquidity {
         int16 indexed tradingFeeRate,
         uint256 tokenId,
         uint256 amount,
-        uint256 liquidity
+        uint256 lpTokenAmount
     );
 
     function addLiquidity(
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external returns (uint256 liquidity);
+    ) external returns (uint256 lpTokenAmount);
 
     function removeLiquidity(
         address recipient,
@@ -50,6 +50,6 @@ interface IUSUMLiquidity {
 
     function calculateAmount(
         int16 tradingFeeRate,
-        uint256 liquidity
+        uint256 lpTokenAmount
     ) external view returns (uint256);
 }

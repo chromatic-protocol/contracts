@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
+import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
@@ -14,14 +14,18 @@ import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 struct Position {
     /// @dev The position identifier
     uint256 id;
-    /// @dev The version of the oracle when the position was created
-    uint256 oracleVersion;
+    /// @dev The version of the oracle when the position was opened
+    uint256 openVersion;
+    /// @dev The version of the oracle when the position was closed
+    uint256 closeVersion;
     /// @dev The quantity of the position
     int224 qty;
     /// @dev The leverage applied to the position
     uint32 leverage;
-    /// @dev The timestamp when the position was created
-    uint256 timestamp;
+    /// @dev The timestamp when the position was opened
+    uint256 openTimestamp;
+    /// @dev The timestamp when the position was closed
+    uint256 closeTimestamp;
     /// @dev The amount of collateral that a trader must provide
     uint256 takerMargin;
     /// @dev The owner of the position, usually it is the account address of trader
@@ -42,20 +46,29 @@ library PositionLib {
     using SignedMath for int256;
 
     /**
-     * @notice Returns the oracle version to settle based on the oracle version of the position
-     * @param self The memory instance of `Position` struct
-     * @return uint256 Next oracle version to settle
+     * @notice Calculates the settle version for the position's entry
+     * @param self The memory instance of the `Position` struct
+     * @return utin256 The settle version for the position's entry
      */
-    function settleVersion(
+    function entryVersion(
         Position memory self
     ) internal pure returns (uint256) {
-        return PositionUtil.settleVersion(self.oracleVersion);
+        return PositionUtil.settleVersion(self.openVersion);
+    }
+
+    /**
+     * @notice Calculates the settle version for the position's exit
+     * @param self The memory instance of the `Position` struct
+     * @return utin256 The settle version for the position's exit
+     */
+    function exitVersion(Position memory self) internal pure returns (uint256) {
+        return PositionUtil.settleVersion(self.closeVersion);
     }
 
     /**
      * @notice Calculates the leveraged quantity of the position
      *         based on the position's quantity and leverage
-     * @param self The memory instance of `Position` struct
+     * @param self The memory instance of the `Position` struct
      * @param ctx The context object for this transaction
      * @return uint256 The leveraged quantity
      */
@@ -72,24 +85,47 @@ library PositionLib {
     }
 
     /**
-     * @notice Calculates the entry price of the position based on the position's oracle version
+     * @notice Calculates the entry price of the position based on the position's open oracle version
      * @dev It fetches oracle price from `IOracleProvider`
-     *      at the settle version calculated based on the position's oracle version
-     * @param self The memory instance of `Position` struct
-     * @param provider The oracle provider
+     *      at the settle version calculated based on the position's open oracle version
+     * @param self The memory instance of the `Position` struct
+     * @param ctx The context object for this transaction
      * @return UFixed18 The entry price
      */
     function entryPrice(
         Position memory self,
-        IOracleProvider provider
+        LpContext memory ctx
     ) internal view returns (UFixed18) {
-        return PositionUtil.entryPrice(provider, self.oracleVersion);
+        return
+            PositionUtil.settlePrice(
+                ctx.market.oracleProvider(),
+                self.openVersion
+            );
+    }
+
+    /**
+     * @notice Calculates the exit price of the position based on the position's close oracle version
+     * @dev It fetches oracle price from `IOracleProvider`
+     *      at the settle version calculated based on the position's close oracle version
+     * @param self The memory instance of the `Position` struct
+     * @param ctx The context object for this transaction
+     * @return UFixed18 The exit price
+     */
+    function exitPrice(
+        Position memory self,
+        LpContext memory ctx
+    ) internal view returns (UFixed18) {
+        return
+            PositionUtil.settlePrice(
+                ctx.market.oracleProvider(),
+                self.closeVersion
+            );
     }
 
     /**
      * @notice Calculates the profit or loss of the position
-     *         based on the current oracle version and the leveraged quantity
-     * @param self The memory instance of `Position` struct
+     *         based on the close oracle version and the leveraged quantity
+     * @param self The memory instance of the `Position` struct
      * @param ctx The context object for this transaction
      * @return int256 The profit or loss
      */
@@ -97,25 +133,21 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        IOracleProvider.OracleVersion memory currentVersion = ctx
-            .currentOracleVersion();
         return
-            self.oracleVersion >= currentVersion.version
-                ? int256(0)
-                : PositionUtil.pnl(
+            self.closeVersion > self.openVersion
+                ? PositionUtil.pnl(
                     self.leveragedQty(ctx),
-                    UFixed18Lib.from(
-                        ctx.oracleVersionAt(self.settleVersion()).price
-                    ),
-                    UFixed18Lib.from(currentVersion.price)
-                );
+                    self.entryPrice(ctx),
+                    self.exitPrice(ctx)
+                )
+                : int256(0);
     }
 
     /**
      * @notice Calculates the total margin required for the makers of the position
      * @dev The maker margin is calculated by summing up the amounts of all slot margins
      *      in the `_slotMargins` array
-     * @param self The memory instance of `Position` struct
+     * @param self The memory instance of the `Position` struct
      * @return margin The maker margin
      */
     function makerMargin(
@@ -130,7 +162,7 @@ library PositionLib {
      * @notice Calculates the total trading fee for the position
      * @dev The trading fee is calculated by summing up the trading fees of all slot margins
      *      in the `_slotMargins` array
-     * @param self The memory instance of `Position` struct
+     * @param self The memory instance of the `Position` struct
      * @return fee The trading fee
      */
     function tradingFee(
@@ -144,7 +176,7 @@ library PositionLib {
     /**
      * @notice Returns an array of LpSlotMargin instances
      *         representing the slot margins for the position
-     * @param self The memory instance of `Position` struct
+     * @param self The memory instance of the `Position` struct
      * @return margins The slot margins for the position
      */
     function slotMargins(
@@ -155,7 +187,7 @@ library PositionLib {
 
     /**
      * @notice Sets the `_slotMargins` array for the position
-     * @param self The memory instance of `Position` struct
+     * @param self The memory instance of the `Position` struct
      * @param margins The slot margins for the position
      */
     function setSlotMargins(
@@ -167,7 +199,7 @@ library PositionLib {
 
     /**
      * @notice Stores the memory values of the `Position` struct to the storage
-     * @param self The memory instance of `Position` struct
+     * @param self The memory instance of the `Position` struct
      * @param storedPosition The target storage
      */
     function storeTo(
@@ -175,9 +207,11 @@ library PositionLib {
         Position storage storedPosition
     ) internal {
         storedPosition.id = self.id;
-        storedPosition.oracleVersion = self.oracleVersion;
+        storedPosition.openVersion = self.openVersion;
+        storedPosition.closeVersion = self.closeVersion;
         storedPosition.qty = self.qty;
-        storedPosition.timestamp = self.timestamp;
+        storedPosition.openTimestamp = self.openTimestamp;
+        storedPosition.closeTimestamp = self.closeTimestamp;
         storedPosition.leverage = self.leverage;
         storedPosition.takerMargin = self.takerMargin;
         storedPosition.owner = self.owner;

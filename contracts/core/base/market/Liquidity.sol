@@ -3,10 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
-import {LpToken} from "@usum/core/base/market/LpToken.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 
-abstract contract Liquidity is LpToken, MarketValue {
+abstract contract Liquidity is MarketValue {
     using Math for uint256;
 
     uint256 public constant MINIMUM_LIQUIDITY = 10 ** 3;
@@ -23,10 +24,7 @@ abstract contract Liquidity is LpToken, MarketValue {
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external override nonReentrant returns (uint256 liquidity) {
-        // liquidity = lpSlots.addLiquidity()
-        // liquidity 수량만큼 token mint
-
+    ) external override nonReentrant returns (uint256 lpTokenAmount) {
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         IUSUMLiquidityCallback(msg.sender).addLiquidityCallback(
             address(settlementToken),
@@ -39,18 +37,21 @@ abstract contract Liquidity is LpToken, MarketValue {
 
         vault.onAddLiquidity(amount);
 
-        uint256 id = encodeId(tradingFeeRate);
+        uint256 id = LpTokenLib.encodeId(tradingFeeRate);
 
-        liquidity = lpSlotSet.addLiquidity(
-            newLpContext(),
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        lpTokenAmount = lpSlotSet.addLiquidity(
+            ctx,
             tradingFeeRate,
             amount,
-            totalSupply(id)
+            lpToken.totalSupply(id)
         );
 
-        _mint(recipient, id, liquidity, data);
+        lpToken.mint(recipient, id, lpTokenAmount, data);
 
-        emit AddLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
+        emit AddLiquidity(recipient, tradingFeeRate, id, amount, lpTokenAmount);
     }
 
     function removeLiquidity(
@@ -58,38 +59,41 @@ abstract contract Liquidity is LpToken, MarketValue {
         int16 tradingFeeRate,
         bytes calldata data
     ) external override nonReentrant returns (uint256 amount) {
-        // amount = lpSlots.burn()
-        // amount 만큼 settlement token transfer
-
-        uint256 id = encodeId(tradingFeeRate);
-
-        uint256 balanceBefore = balanceOf(address(this), id);
+        uint256 id = LpTokenLib.encodeId(tradingFeeRate);
+        uint256 balanceBefore = lpToken.balanceOf(address(lpToken), id);
 
         IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(
-            address(this),
+            address(lpToken),
             data
         );
 
-        uint256 liquidity = balanceOf(address(this), id) - balanceBefore;
-        if (liquidity == 0) return 0;
+        uint256 lpTokenAmount = lpToken.balanceOf(address(lpToken), id) -
+            balanceBefore;
+        if (lpTokenAmount == 0) return 0;
 
-        uint256 _totalSupply = totalSupply(id);
-        // int256 tradingFeeRate,
-        // uint256 amount,
-        // uint256 totalLiquidity
+        uint256 _totalSupply = lpToken.totalSupply(id);
+
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
 
         amount = lpSlotSet.removeLiquidity(
-            newLpContext(),
+            ctx,
             tradingFeeRate,
-            liquidity,
+            lpTokenAmount,
             _totalSupply
         );
 
         vault.onRemoveLiquidity(recipient, amount);
 
-        _burn(address(this), id, liquidity);
+        lpToken.burn(address(lpToken), id, lpTokenAmount);
 
-        emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, liquidity);
+        emit RemoveLiquidity(
+            recipient,
+            tradingFeeRate,
+            id,
+            amount,
+            lpTokenAmount
+        );
     }
 
     function getSlotMarginsTotal(
@@ -120,24 +124,24 @@ abstract contract Liquidity is LpToken, MarketValue {
     function calculateLiquidity(
         int16 tradingFeeRate,
         uint256 amount
-    ) external view returns (uint256 liquidity) {
-        liquidity = lpSlotSet.calculateLiquidity(
+    ) external view returns (uint256 lpTokenAmount) {
+        lpTokenAmount = lpSlotSet.calculateLiquidity(
             newLpContext(),
             tradingFeeRate,
             amount,
-            totalSupply(encodeId(tradingFeeRate))
+            lpToken.totalSupply(LpTokenLib.encodeId(tradingFeeRate))
         );
     }
 
     function calculateAmount(
         int16 tradingFeeRate,
-        uint256 liquidity
+        uint256 lpTokenAmount
     ) external view returns (uint256 amount) {
         amount = lpSlotSet.calculateAmount(
             newLpContext(),
             tradingFeeRate,
-            liquidity,
-            totalSupply(encodeId(tradingFeeRate))
+            lpTokenAmount,
+            lpToken.totalSupply(LpTokenLib.encodeId(tradingFeeRate))
         );
     }
 }
