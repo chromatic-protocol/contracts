@@ -11,7 +11,7 @@ interface ITrade {
     error AlreadyClosedPosition();
     error NotClaimablePosition();
     error ExceedMaxAllowableTradingFee();
-    error ClosePositionCallbackError();
+    error ClaimPositionCallbackError();
 
     event OpenPosition(address indexed account, Position position);
 

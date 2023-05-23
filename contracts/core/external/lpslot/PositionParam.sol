@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
 struct PositionParam {
-    uint256 oracleVersion;
+    uint256 openVersion;
+    uint256 closeVersion;
     int256 leveragedQty;
     uint256 takerMargin;
     uint256 makerMargin;
-    uint256 timestamp;
-    IOracleProvider.OracleVersion _settleVersionCache;
+    uint256 openTimestamp;
+    uint256 closeTimestamp;
+    IOracleProvider.OracleVersion _entryVersionCache;
+    IOracleProvider.OracleVersion _exitVersionCache;
 }
 
 using PositionParamLib for PositionParam global;
@@ -22,15 +27,18 @@ using PositionParamLib for PositionParam global;
  * @notice Library for manipulating PositionParam struct.
  */
 library PositionParamLib {
+    using Math for uint256;
+    using SignedMath for int256;
+
     /**
-     * @notice Returns the settle version for a PositionParam.
+     * @notice Returns the settle version for the position's entry.
      * @param self The PositionParam data struct.
-     * @return uint256 The settle version.
+     * @return uint256 The settle version for the position's entry.
      */
-    function settleVersion(
+    function entryVersion(
         PositionParam memory self
     ) internal pure returns (uint256) {
-        return PositionUtil.settleVersion(self.oracleVersion);
+        return PositionUtil.settleVersion(self.openVersion);
     }
 
     /**
@@ -46,28 +54,36 @@ library PositionParamLib {
         return
             PositionUtil.settlePrice(
                 ctx.market.oracleProvider(),
-                self.oracleVersion,
-                self.settleOracleVersion(ctx)
+                self.openVersion,
+                self.entryOracleVersion(ctx)
+            );
+    }
+
+    function entryAmount(
+        PositionParam memory self,
+        LpContext memory ctx
+    ) internal view returns (uint256) {
+        return
+            PositionUtil.transactionAmount(
+                self.leveragedQty,
+                self.entryPrice(ctx)
             );
     }
 
     /**
-     * @notice Retrieves the settle oracle version for a PositionParam.
+     * @notice Retrieves the settle oracle version for the position's entry.
      * @param self The PositionParam data struct.
      * @param ctx The LpContext data struct.
-     * @return OracleVersion The settle oracle version.
+     * @return OracleVersion The settle oracle version for the position's entry.
      */
-    function settleOracleVersion(
+    function entryOracleVersion(
         PositionParam memory self,
         LpContext memory ctx
     ) internal view returns (IOracleProvider.OracleVersion memory) {
-        if (self._settleVersionCache.version == 0) {
-            self._settleVersionCache = ctx.oracleVersionAt(
-                self.settleVersion()
-            );
+        if (self._entryVersionCache.version == 0) {
+            self._entryVersionCache = ctx.oracleVersionAt(self.entryVersion());
         }
-
-        return self._settleVersionCache;
+        return self._entryVersionCache;
     }
 
     /**
@@ -86,7 +102,7 @@ library PositionParamLib {
         return
             ctx.market.calculateInterest(
                 self.makerMargin,
-                self.timestamp,
+                self.openTimestamp,
                 until
             );
     }
@@ -101,12 +117,15 @@ library PositionParamLib {
     ) internal pure returns (PositionParam memory) {
         return
             PositionParam({
-                oracleVersion: self.oracleVersion,
+                openVersion: self.openVersion,
+                closeVersion: self.closeVersion,
                 leveragedQty: self.leveragedQty,
                 takerMargin: self.takerMargin,
                 makerMargin: self.makerMargin,
-                timestamp: self.timestamp,
-                _settleVersionCache: self._settleVersionCache
+                openTimestamp: self.openTimestamp,
+                closeTimestamp: self.closeTimestamp,
+                _entryVersionCache: self._entryVersionCache,
+                _exitVersionCache: self._exitVersionCache
             });
     }
 

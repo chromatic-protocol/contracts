@@ -186,28 +186,69 @@ library LpSlotSetLib {
         );
     }
 
+    function acceptClosePosition(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        Position memory position
+    ) external {
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(
+            self,
+            position.qty
+        );
+
+        uint256 makerMargin = position.makerMargin();
+        LpSlotMargin[] memory slotMargins = position.slotMargins();
+
+        _proportionalPositionParamValue[]
+            memory paramValues = divideToPositionParamValue(
+                position.leveragedQty(ctx),
+                makerMargin,
+                position.takerMargin,
+                slotMargins
+            );
+
+        PositionParam memory param = newPositionParam(
+            position.openVersion,
+            position.closeVersion,
+            position.openTimestamp,
+            position.closeTimestamp
+        );
+
+        for (uint256 i = 0; i < slotMargins.length; i++) {
+            if (slotMargins[i].amount > 0) {
+                LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
+
+                param.leveragedQty = paramValues[i].leveragedQty;
+                param.takerMargin = paramValues[i].takerMargin;
+                param.makerMargin = slotMargins[i].amount;
+
+                _slot.closePosition(ctx, param);
+            }
+        }
+    }
+
     /**
-     * @notice Accepts a close position request and performs necessary operations.
-     * @dev This function accepts a close position by performing the following steps:
+     * @notice Accepts a claim position request and performs necessary operations.
+     * @dev This function accepts a claim position by performing the following steps:
      *      1. Validates the provided realizedPnl against the position's maker and taker margins.
      *      2. Calculates the position parameter values for each slot
      *         based on the leveraged quantity, maker margin, taker margin, and slot margins.
-     *      3. Calls the closePosition function on each slot
-     *         with the calculated parameters to close the position.
-     *         - If the realizedPnl is zero, it closes all slots with non-zero amounts.
+     *      3. Calls the claimPosition function on each slot
+     *         with the calculated parameters to claim the position.
+     *         - If the realizedPnl is zero, it claims all slots with non-zero amounts.
      *         - If the realizedPnl is positive and equal to the maker margin,
-     *           it closes all slots with non-zero amounts and sets the taker profit as the pnl for each slot.
+     *           it claims all slots with non-zero amounts and sets the taker profit as the pnl for each slot.
      *         - Otherwise, it iterates through each slot and calculates the appropriate taker pnl
-     *           based on the remaining realizedPnl and maker margin. This function then closes each slot
+     *           based on the remaining realizedPnl and maker margin. This function then claims each slot
      *           with the calculated taker pnl.
      *      4. Updates the minimum available fee rate based on the slotMargins.
      * @dev This function throws an error if the realizedPnl exceeds the margin range.
      * @param self The storage reference to the LpSlotSet.
      * @param ctx The LpContext structure containing contextual information.
-     * @param position The Position structure representing the position to be closed.
+     * @param position The Position structure representing the position to be claimed.
      * @param realizedPnl The realized position profit/loss (taker side).
      */
-    function acceptClosePosition(
+    function acceptClaimPosition(
         LpSlotSet storage self,
         LpContext memory ctx,
         Position memory position,
@@ -237,7 +278,9 @@ library LpSlotSetLib {
 
         PositionParam memory param = newPositionParam(
             position.openVersion,
-            position.openTimestamp
+            position.closeVersion,
+            position.openTimestamp,
+            position.closeTimestamp
         );
 
         if (realizedPnl == 0) {
@@ -251,7 +294,7 @@ library LpSlotSetLib {
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = slotMargins[i].amount;
 
-                    _slot.closePosition(ctx, param, 0);
+                    _slot.claimPosition(ctx, param, 0);
                 }
             }
         } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
@@ -265,7 +308,7 @@ library LpSlotSetLib {
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = slotMargins[i].amount;
 
-                    _slot.closePosition(
+                    _slot.claimPosition(
                         ctx,
                         param,
                         param.makerMargin.toInt256()
@@ -302,7 +345,7 @@ library LpSlotSetLib {
                         ? -(absTakerPnl.toInt256())
                         : absTakerPnl.toInt256();
 
-                    _slot.closePosition(ctx, param, takerPnl);
+                    _slot.claimPosition(ctx, param, takerPnl);
 
                     remainMakerMargin -= param.makerMargin;
                     remainRealizedPnl -= absTakerPnl;
@@ -597,16 +640,36 @@ library LpSlotSetLib {
 
     /**
      * @notice Creates a new PositionParam struct with the given oracle version and timestamp.
-     * @param oracleVersion The version of the oracle.
-     * @param timestamp The timestamp.
+     * @param openVersion The version of the oracle when the position was opened
+     * @param openTimestamp The timestamp when the position was opened
      * @return param The new PositionParam struct.
      */
     function newPositionParam(
-        uint256 oracleVersion,
-        uint256 timestamp
+        uint256 openVersion,
+        uint256 openTimestamp
     ) private pure returns (PositionParam memory param) {
-        param.oracleVersion = oracleVersion;
-        param.timestamp = timestamp;
+        param.openVersion = openVersion;
+        param.openTimestamp = openTimestamp;
+    }
+
+    /**
+     * @notice Creates a new PositionParam struct with the given oracle version and timestamp.
+     * @param openVersion The version of the oracle when the position was opened
+     * @param closeVersion The version of the oracle when the position was closed
+     * @param openTimestamp The timestamp when the position was opened
+     * @param closeTimestamp The timestamp when the position was closed
+     * @return param The new PositionParam struct.
+     */
+    function newPositionParam(
+        uint256 openVersion,
+        uint256 closeVersion,
+        uint256 openTimestamp,
+        uint256 closeTimestamp
+    ) private pure returns (PositionParam memory param) {
+        param.openVersion = openVersion;
+        param.closeVersion = closeVersion;
+        param.openTimestamp = openTimestamp;
+        param.closeTimestamp = closeTimestamp;
     }
 
     /**

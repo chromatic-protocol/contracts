@@ -72,7 +72,7 @@ library SettlementTokenRegistryLib {
      * @param self The SettlementTokenRegistry storage.
      * @return An array of addresses representing the registered settlement tokens.
      */
-    function settlmentTokens(
+    function settlementTokens(
         SettlementTokenRegistry storage self
     ) external view returns (address[] memory) {
         return self._tokens.values();

@@ -54,9 +54,9 @@ contract LpSlotPositionTest is Test {
         ctx._currentVersionCache.price = Fixed18Lib.from(2100);
 
         PositionParam memory param = _newPositionParam();
-        param._settleVersionCache.version = 2;
-        param._settleVersionCache.timestamp = 2;
-        param._settleVersionCache.price = Fixed18Lib.from(2000);
+        param._entryVersionCache.version = 2;
+        param._entryVersionCache.timestamp = 2;
+        param._entryVersionCache.price = Fixed18Lib.from(2000);
 
         position.onClosePosition(ctx, param);
 
@@ -72,10 +72,10 @@ contract LpSlotPositionTest is Test {
     }
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
-        p.oracleVersion = 1;
+        p.openVersion = 1;
         p.leveragedQty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
-        p.timestamp = 1;
+        p.openTimestamp = 1;
     }
 }

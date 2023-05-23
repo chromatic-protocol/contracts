@@ -118,13 +118,13 @@ library PositionLib {
         return
             PositionUtil.settlePrice(
                 ctx.market.oracleProvider(),
-                self.openVersion
+                self.closeVersion
             );
     }
 
     /**
      * @notice Calculates the profit or loss of the position
-     *         based on the current oracle version and the leveraged quantity
+     *         based on the close oracle version and the leveraged quantity
      * @param self The memory instance of the `Position` struct
      * @param ctx The context object for this transaction
      * @return int256 The profit or loss
@@ -133,16 +133,14 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        IOracleProvider.OracleVersion memory currentVersion = ctx
-            .currentOracleVersion();
         return
-            self.openVersion >= currentVersion.version
-                ? int256(0)
-                : PositionUtil.pnl(
+            self.closeVersion > self.openVersion
+                ? PositionUtil.pnl(
                     self.leveragedQty(ctx),
                     self.entryPrice(ctx),
                     self.exitPrice(ctx)
-                );
+                )
+                : int256(0);
     }
 
     /**

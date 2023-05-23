@@ -222,7 +222,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         override
         returns (address[] memory)
     {
-        return _settlementTokenRegistry.settlmentTokens();
+        return _settlementTokenRegistry.settlementTokens();
     }
 
     function isRegisteredSettlementToken(

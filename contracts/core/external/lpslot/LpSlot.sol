@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
+import {LpSlotClosedPosition, LpSlotClosedPositionLib} from "@usum/core/external/lpslot/LpSlotClosedPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
@@ -11,6 +12,7 @@ import {Errors} from "@usum/core/libraries/Errors.sol";
 struct LpSlot {
     uint256 total;
     LpSlotPosition _position;
+    LpSlotClosedPosition _closedPosition;
 }
 
 /**
@@ -22,6 +24,7 @@ library LpSlotLib {
     using SignedMath for int256;
     using LpSlotLib for LpSlot;
     using LpSlotPositionLib for LpSlotPosition;
+    using LpSlotClosedPositionLib for LpSlotClosedPosition;
 
     /// @dev Minimum amount constant to prevent division by zero.
     uint256 private constant MIN_AMOUNT = 1000;
@@ -32,6 +35,8 @@ library LpSlotLib {
      * @param ctx The LpContext data struct.
      */
     modifier _settle(LpSlot storage self, LpContext memory ctx) {
+        self._closedPosition.settleAccruedInterest(ctx);
+        self._closedPosition.settleClosingPosition(ctx);
         self._position.settleAccruedInterest(ctx);
         self._position.settlePendingPosition(ctx);
 
@@ -63,9 +68,20 @@ library LpSlotLib {
         self.total += tradingFee;
     }
 
+    function closePosition(
+        LpSlot storage self,
+        LpContext memory ctx,
+        PositionParam memory param
+    ) internal _settle(self, ctx) {
+        self._position.onClosePosition(ctx, param);
+        if (param.closeVersion > param.openVersion) {
+            self._closedPosition.onClosePosition(ctx, param);
+        }
+    }
+
     /**
-     * @notice Closes an existing liquidity position in the slot.
-     * @dev This function closes the position using the specified parameters
+     * @notice Claims an existing liquidity position in the slot.
+     * @dev This function claims the position using the specified parameters
      *      and updates the total by subtracting the absolute value
      *      of the taker's profit or loss (takerPnl) from it.
      * @param self The LpSlot storage.
@@ -73,13 +89,15 @@ library LpSlotLib {
      * @param param The PositionParam memory.
      * @param takerPnl The taker's profit/loss.
      */
-    function closePosition(
+    function claimPosition(
         LpSlot storage self,
         LpContext memory ctx,
         PositionParam memory param,
         int256 takerPnl
     ) internal _settle(self, ctx) {
-        self._position.onClosePosition(ctx, param);
+        if (param.closeVersion > param.openVersion) {
+            self._closedPosition.onClaimPosition(ctx, param);
+        }
 
         uint256 absTakerPnl = takerPnl.abs();
         if (takerPnl < 0) {

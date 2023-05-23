@@ -92,10 +92,16 @@ abstract contract Trade is MarketValue {
         position.closeVersion = ctx.currentOracleVersion().version;
         position.closeTimestamp = block.timestamp;
 
+        lpSlotSet.acceptClosePosition(ctx, position);
         liquidator.cancelLiquidationTask(position.id);
-        liquidator.createClaimPositionTask(position.id);
-
         emit ClosePosition(position.owner, position);
+
+        if (position.closeVersion > position.openVersion) {
+            liquidator.createClaimPositionTask(position.id);
+        } else {
+            // process claim if the position is closed in the same oracle version as the open version
+            _claimPosition(ctx, position, 0, position.owner, bytes(""));
+        }
     }
 
     function claimPosition(
@@ -174,7 +180,7 @@ abstract contract Trade is MarketValue {
     ) internal {
         uint256 makerMargin = position.makerMargin();
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
-        uint256 settlmentAmount = takerMargin;
+        uint256 settlementAmount = takerMargin;
 
         int256 pnl = position.pnl(ctx);
         uint256 interest = calculateInterest(
@@ -188,26 +194,26 @@ abstract contract Trade is MarketValue {
         if (realizedPnl > 0) {
             if (absRealizedPnl > makerMargin) {
                 realizedPnl = makerMargin.toInt256();
-                settlmentAmount += makerMargin;
+                settlementAmount += makerMargin;
             } else {
-                settlmentAmount += absRealizedPnl;
+                settlementAmount += absRealizedPnl;
             }
         } else {
             if (absRealizedPnl > takerMargin) {
                 realizedPnl = -(takerMargin.toInt256());
-                settlmentAmount = 0;
+                settlementAmount = 0;
             } else {
-                settlmentAmount -= absRealizedPnl;
+                settlementAmount -= absRealizedPnl;
             }
         }
 
-        lpSlotSet.acceptClosePosition(ctx, position, realizedPnl);
+        lpSlotSet.acceptClaimPosition(ctx, position, realizedPnl);
 
         vault.onClaimPosition(
             position.id,
             recipient,
             takerMargin,
-            settlmentAmount
+            settlementAmount
         );
 
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
@@ -218,7 +224,7 @@ abstract contract Trade is MarketValue {
             )
         {} catch (bytes memory e /*lowLevelData*/) {
             if (msg.sender != address(liquidator)) {
-                revert ClosePositionCallbackError();
+                revert ClaimPositionCallbackError();
             }
         }
         delete positions[position.id];

@@ -137,43 +137,54 @@ library PositionUtil {
     }
 
     /**
-     * @notice Verifies the validity of an open position quantity
-     * @dev It ensures that the sign of the current quantity of the slot's pending position
-     *      and the open quantity are same or zero.
+     * @notice Verifies the validity of a position quantity added to the slot
+     * @dev It ensures that the sign of the current quantity of the slot's position
+     *      and the added quantity are same or zero.
      *      If the condition is not met, it triggers an error with the message `INVALID_POSITION_QTY`.
      * @param currentQty The current quantity of the slot's pending position
-     * @param openQty The open position quantity
+     * @param addedQty The position quantity added
      */
-    function checkOpenPositionQty(
+    function checkAddPositionQty(
         int256 currentQty,
-        int256 openQty
+        int256 addedQty
     ) internal pure {
         require(
-            !((currentQty > 0 && openQty <= 0) ||
-                (currentQty < 0 && openQty >= 0)),
+            !((currentQty > 0 && addedQty <= 0) ||
+                (currentQty < 0 && addedQty >= 0)),
             Errors.INVALID_POSITION_QTY
         );
     }
 
     /**
-     * @notice Verifies the validity of an close position quantity
-     * @dev It ensures that the sign of the current quantity of the slot's position is not zero,
-     *      the close quantity is not zero,
-     *      and the absolute close quantity is not greater than the absolute current quantity.
+     * @notice Verifies the validity of a position quantity removed from the slot
+     * @dev It ensures that the sign of the current quantity of the slot's position
+     *      and the removed quantity are same or zero,
+     *      and the absolute removed quantity is not greater than the absolute current quantity.
      *      If the condition is not met, it triggers an error with the message `INVALID_POSITION_QTY`.
      * @param currentQty The current quantity of the slot's position
-     * @param closeQty The close position quantity
+     * @param removeQty The position quantity removed
      */
-    function checkClosePositionQty(
+    function checkRemovePositionQty(
         int256 currentQty,
-        int256 closeQty
+        int256 removeQty
     ) internal pure {
         require(
             !((currentQty == 0) ||
-                (closeQty == 0) ||
-                (currentQty > 0 && closeQty > currentQty) ||
-                (currentQty < 0 && closeQty < currentQty)),
+                (removeQty == 0) ||
+                (currentQty > 0 && removeQty > currentQty) ||
+                (currentQty < 0 && removeQty < currentQty)),
             Errors.INVALID_POSITION_QTY
         );
+    }
+
+    function transactionAmount(
+        int256 leveragedQty,
+        UFixed18 price
+    ) internal pure returns (uint256) {
+        return
+            leveragedQty.abs().mulDiv(
+                UFixed18.unwrap(price),
+                UFixed18.unwrap(UFixed18Lib.ONE)
+            );
     }
 }
