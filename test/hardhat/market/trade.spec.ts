@@ -11,7 +11,7 @@ import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 
 describe('position & account test', async function () {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
-  const base = ethers.utils.parseEther('10000000')
+  const base = ethers.utils.parseEther('1000')
   async function initialize() {
     testData = await prepareMarketTest()
     const { addLiquidity } = helpers(testData)
@@ -21,7 +21,7 @@ describe('position & account test', async function () {
     await addLiquidity(base.mul(5), -10)
   }
 
-  before(async () => {
+  beforeEach(async () => {
     // market deploy
     await initialize()
   })
@@ -32,47 +32,58 @@ describe('position & account test', async function () {
     expect(await traderAccount.getPositionIds(market.address)).to.deep.equal([])
 
     await updatePrice(1000)
-
-    const { makerMargin, receipt } = await openPosition()
+    const takerMargin = ethers.utils.parseEther('2000')
+    const leverage = 200
+    const makerMargin = takerMargin.mul(leverage / 100)
+    const { receipt } = await openPosition({
+      qty: 10 ** 4 * Number(ethers.utils.formatEther(base)),
+      leverage,
+      takerMargin,
+      makerMargin,
+    })
 
     const positionIds = await traderAccount.getPositionIds(market.address)
     console.log(positionIds)
 
-    expect(positionIds.length).to.equal(1)
+    expect(positionIds.length, 'invalid position length').to.equal(1)
     const position = await market.getPosition(positionIds[0])
     const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
-    expect(slot0?.amount).to.equal(base)
+    expect(slot0?.amount, 'not matched slot amount').to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
-    expect(slot2?.amount).to.equal(base.mul(4))
+    expect(slot2?.amount, 'not matched slot2 amount').to.equal(base.mul(3))
     const totalSlotMargin = position._slotMargins.reduce((acc, curr) => acc.add(curr.amount), BigNumber.from(0))
-    expect(makerMargin).to.equal(totalSlotMargin)
+    expect(makerMargin, 'not matched marker margin ').to.equal(totalSlotMargin)
   })
 
   it('open short position ', async () => {
     const { traderAccount, market, traderRouter, oracleProvider, settlementToken } = testData
     const { updatePrice, openPosition } = helpers(testData)
     await updatePrice(1000)
-    const { makerMargin, receipt } = await openPosition({
-      qty: -10,
+    const takerMargin = ethers.utils.parseEther('2000')
+    const leverage = 200
+    const makerMargin = takerMargin.mul(leverage / 100)
+
+    const { receipt } = await openPosition({
+      qty: -(10 ** 4) * Number(ethers.utils.formatEther(base)),
+      leverage,
+      takerMargin,
+      makerMargin,
     })
+
     console.log(receipt)
     //TODO assert result
 
     const positionIds = await traderAccount.getPositionIds(market.address)
     console.log(positionIds)
 
-    expect(positionIds.length).to.equal(2)
-    const position = await market.getPosition(positionIds[1])
-
-    console.log('position', position)
-    console.log('slot0 amount', position._slotMargins[0].amount)
-    const slot0 = position._slotMargins.find((p) => p.tradingFeeRate === 1)
-    console.log('slot0', slot0)
-    expect(slot0?.amount).to.equal(base)
+    expect(positionIds.length, 'invalid position length').to.equal(1)
+    const position = await market.getPosition(positionIds[0])
+    const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
+    expect(slot0?.amount, 'not matched slot amount').to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
-    expect(slot2?.amount).to.equal(base.mul(4))
+    expect(slot2?.amount, 'not matched slot2 amount').to.equal(base.mul(3))
     const totalSlotMargin = position._slotMargins.reduce((acc, curr) => acc.add(curr.amount), BigNumber.from(0))
-    expect(makerMargin).to.equal(totalSlotMargin)
+    expect(makerMargin, 'not matched marker margin ').to.equal(totalSlotMargin)
   })
 
   function getPnl(lvQty: BigNumber, entryPrice: BigNumber, exitPrice: BigNumber) {
