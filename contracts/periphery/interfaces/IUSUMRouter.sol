@@ -21,6 +21,8 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint256 deadline
     ) external;
 
+    function claimPosition(address market, uint256 positionId) external;
+
     function addLiquidity(
         address market,
         int16 feeRate,
