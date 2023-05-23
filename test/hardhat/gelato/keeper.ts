@@ -49,6 +49,7 @@ export class Keeper {
 
   private onTaskCreated(contract: LibEvents) {
     contract.on(contract.filters.TaskCreated(), (_0, _1, _2, _3, _4, _5, event) => {
+      console.log('task create event', event)
       const task: Task = event.args
       this.tasks.push(task)
     })
@@ -56,7 +57,7 @@ export class Keeper {
 
   private onTaskCanceled(contract: LibEvents) {
     contract.on(contract.filters.TaskCancelled(), (_0, _1, event) => {
-
+      
       const taskId = event.args.taskId
       this.tasks = this.tasks.filter((t) => t.taskId != taskId)
     })
@@ -87,7 +88,7 @@ export class Keeper {
             data: resolverData
           })
         )
-
+        console.log('keeper resolver exec reesult ', result);
         if (!result.canExec) return
 
         execDataOrSelector = result.execPayload

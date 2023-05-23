@@ -32,6 +32,7 @@ export const decodeResolverArgs = (
 export const decodeResolverResponse = (
   data: string
 ): { canExec: boolean; execPayload: string } => {
+  console.log('decode resolver Response' , data)
   const result = ethers.utils.defaultAbiCoder.decode(['bool', 'bytes'], data)
   return { canExec: result[0], execPayload: result[1] }
 }
