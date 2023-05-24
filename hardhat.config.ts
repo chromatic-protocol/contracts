@@ -116,7 +116,7 @@ const config: HardhatUserConfig = {
       "Account",
       "AccountFactory",
       "USUMRouter",
-      "USUMLpToken",
+      'USUMLpToken',
       "AggregatorV3Interface",
       "**/IERC20.sol/*",
       "**/IERC20Metadata.sol/*",
