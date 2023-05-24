@@ -46,7 +46,7 @@ describe('position & account test', async function () {
     console.log(positionIds)
 
     expect(positionIds.length, 'invalid position length').to.equal(1)
-    const position = await market.getPosition(positionIds[0])
+    const position = (await market.getPositions(positionIds))[0]
     const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
     expect(slot0?.amount, 'not matched slot amount').to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
@@ -76,7 +76,7 @@ describe('position & account test', async function () {
     console.log(positionIds)
 
     expect(positionIds.length, 'invalid position length').to.equal(1)
-    const position = await market.getPosition(positionIds[0])
+    const position = (await market.getPositions(positionIds))[0]
     const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
     expect(slot0?.amount, 'not matched slot amount').to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)

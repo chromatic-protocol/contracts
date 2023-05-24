@@ -271,7 +271,6 @@ abstract contract Trade is MarketValue {
         }
     }
 
-    //TODO only liquidator can execute this method 
     function checkClaimPosition(uint256 positionId) external view returns (bool) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
@@ -309,10 +308,6 @@ abstract contract Trade is MarketValue {
                 owner: msg.sender,
                 _slotMargins: new LpSlotMargin[](0)
             });
-    }
-
-    function getPosition(uint256 positionId) external view returns (Position memory position) {
-        position = positions[positionId];
     }
 
     function getPositions(uint256[] calldata positionIds) external view returns (Position[] memory _positions) {
