@@ -100,7 +100,7 @@ abstract contract Trade is MarketValue {
             liquidator.createClaimPositionTask(position.id);
         } else {
             // process claim if the position is closed in the same oracle version as the open version
-            _claimPosition(ctx, position, 0, position.owner, bytes(""));
+            _claimPosition(ctx, position, 0, 0, position.owner, bytes(""));
         }
     }
 
@@ -118,7 +118,7 @@ abstract contract Trade is MarketValue {
 
         if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
 
-        _claimPosition(ctx, position, 0, recipient, data);
+        _claimPosition(ctx, position, position.pnl(ctx), 0, recipient, data);
 
         liquidator.cancelClaimPositionTask(position.id);
     }
@@ -141,7 +141,14 @@ abstract contract Trade is MarketValue {
             keeperFee,
             position.takerMargin
         );
-        _claimPosition(ctx, position, usedKeeperFee, position.owner, bytes(""));
+        _claimPosition(
+            ctx,
+            position,
+            position.pnl(ctx),
+            usedKeeperFee,
+            position.owner,
+            bytes("")
+        );
 
         liquidator.cancelClaimPositionTask(position.id);
     }
@@ -160,14 +167,22 @@ abstract contract Trade is MarketValue {
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        if (!_checkLiquidation(ctx, position)) return;
+        (bool _liquidate, int256 _pnl) = _checkLiquidation(ctx, position);
+        if (!_liquidate) return;
 
         uint256 usedKeeperFee = vault.transferKeeperFee(
             keeper,
             keeperFee,
             position.takerMargin
         );
-        _claimPosition(ctx, position, usedKeeperFee, position.owner, bytes(""));
+        _claimPosition(
+            ctx,
+            position,
+            _pnl,
+            usedKeeperFee,
+            position.owner,
+            bytes("")
+        );
 
         emit Liquidate(position.owner, position, usedKeeperFee);
     }
@@ -175,6 +190,7 @@ abstract contract Trade is MarketValue {
     function _claimPosition(
         LpContext memory ctx,
         Position memory position,
+        int256 pnl,
         uint256 usedKeeperFee,
         address recipient,
         bytes memory data
@@ -183,7 +199,6 @@ abstract contract Trade is MarketValue {
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
         uint256 settlementAmount = takerMargin;
 
-        int256 pnl = position.pnl(ctx);
         uint256 interest = calculateInterest(
             makerMargin,
             position.openTimestamp,
@@ -233,35 +248,40 @@ abstract contract Trade is MarketValue {
         emit ClaimPosition(position.owner, position, pnl, interest);
     }
 
-    function checkLiquidation(uint256 positionId) external view returns (bool) {
+    function checkLiquidation(
+        uint256 positionId
+    ) external view returns (bool _liquidate) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
 
-        return _checkLiquidation(newLpContext(), position);
+        (_liquidate, ) = _checkLiquidation(newLpContext(), position);
     }
 
     function _checkLiquidation(
         LpContext memory ctx,
         Position memory position
-    ) internal view returns (bool) {
+    ) internal view returns (bool _liquidate, int256 _pnl) {
         uint256 interest = calculateInterest(
             position.makerMargin(),
             position.openTimestamp,
             block.timestamp
         );
 
-        int256 pnl = PositionUtil.pnl(
-            position.leveragedQty(ctx),
-            position.entryPrice(ctx),
-            PositionUtil.oraclePrice(ctx.currentOracleVersion())
-        ) - interest.toInt256();
-        uint256 absPnl = pnl.abs();
-        if (pnl > 0) {
+        _pnl =
+            PositionUtil.pnl(
+                position.leveragedQty(ctx),
+                position.entryPrice(ctx),
+                PositionUtil.oraclePrice(ctx.currentOracleVersion())
+            ) -
+            interest.toInt256();
+
+        uint256 absPnl = _pnl.abs();
+        if (_pnl > 0) {
             // whether profit stop (taker side)
-            return absPnl >= position.makerMargin();
+            _liquidate = absPnl >= position.makerMargin();
         } else {
             // whether loss cut (taker side)
-            return absPnl >= position.takerMargin;
+            _liquidate = absPnl >= position.takerMargin;
         }
     }
 
