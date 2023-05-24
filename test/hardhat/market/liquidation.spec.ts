@@ -42,12 +42,16 @@ describe('liquidation test', async () => {
 
   describe('long position', async () => {
     it('profit stop', async () => {
+      // TODO here after lunch
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('100') // 100 usd
-      const makerMargin = ethers.utils.parseEther('120') // 120 usd 20% profit stop
+      // 100
+      // 20
+      // 120
+      const makerMargin = ethers.utils.parseEther('190') // 19%
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.address,
-        10 ** 4 * 500, //price precision  (4 decimals)
+        10 ** 4 * 1000, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
@@ -60,11 +64,11 @@ describe('liquidation test', async () => {
 
     it('loss cut', async () => {
       await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther('100') // 100 usd
+      const takerMargin = ethers.utils.parseEther('200') // 200 usd 20% loss
       const makerMargin = ethers.utils.parseEther('500') // 500 usd
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.address,
-        10 ** 4 * 500, //price precision  (4 decimals)
+        10 ** 4 * 1000, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
@@ -79,10 +83,10 @@ describe('liquidation test', async () => {
     it('profit stop', async () => {
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('100') // 100 usd
-      const makerMargin = ethers.utils.parseEther('500') // 500 usd
+      const makerMargin = ethers.utils.parseEther('190') // 19%
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.address,
-        10 ** 4 * 500 * -1, //price precision  (4 decimals)
+        10 ** 4 * 1000 * -1, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
@@ -94,11 +98,11 @@ describe('liquidation test', async () => {
 
     it('loss cut', async () => {
       await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther('100') // 100 usd
+      const takerMargin = ethers.utils.parseEther('200') // 20%
       const makerMargin = ethers.utils.parseEther('120') // 120 usd 20% profit stop
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.address,
-        10 ** 4 * 500 * -1, //price precision  (4 decimals)
+        10 ** 4 * 1000 * -1, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
@@ -131,6 +135,7 @@ describe('liquidation test', async () => {
     if (isProfitStopCase) {
       expect(traderBalance.lt(afterTraderBalance)).to.be.true
     } else {
+      console.log("balance", afterTraderBalance,traderBalance)
       expect(afterTraderBalance.eq(traderBalance)).to.be.true
     }
   }
