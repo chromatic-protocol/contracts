@@ -12,7 +12,6 @@ import {LpSlotMargin} from '@usum/core/libraries/LpSlotMargin.sol';
 import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
 import {IUSUMTradeCallback} from '@usum/core/interfaces/callback/IUSUMTradeCallback.sol';
 import {ITrade} from '@usum/core/interfaces/market/ITrade.sol';
-import 'hardhat/console.sol';
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
@@ -190,7 +189,6 @@ abstract contract Trade is MarketValue {
         address recipient,
         bytes memory data
     ) internal {
-        console.log('_claimPosition called');
         uint256 makerMargin = position.makerMargin();
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
         uint256 settlementAmount = takerMargin;
@@ -241,7 +239,6 @@ abstract contract Trade is MarketValue {
     ) external view returns (bool _liquidate) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
-        console.log('trade.sol checkLiquidation called');
 
         (_liquidate, ) = _checkLiquidation(newLpContext(), position);
     }

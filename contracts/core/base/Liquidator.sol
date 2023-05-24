@@ -5,7 +5,6 @@ import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMMarketLiquidate} from "@usum/core/interfaces/market/IUSUMMarketLiquidate.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
-import 'hardhat/console.sol';
 abstract contract Liquidator is IUSUMLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 private constant LIQUIDATION_INTERVAL = 30 seconds;
@@ -53,7 +52,6 @@ abstract contract Liquidator is IUSUMLiquidator {
         uint256 positionId
     ) external view override returns (bool canExec, bytes memory execPayload) {
         if (IUSUMMarketLiquidate(_market).checkLiquidation(positionId)) {
-            console.log('call liquidate');
             return (
                 true,
                 abi.encodeCall(this.liquidate, (_market, positionId))
