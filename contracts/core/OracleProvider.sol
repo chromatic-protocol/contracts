@@ -16,4 +16,13 @@ contract OracleProvider is ChainlinkFeedOracle, IOracleProvider {
             AggregatorV2V3Interface(ChainlinkAggregator.unwrap(aggregator))
                 .description();
     }
+
+    function atVersions(
+        uint256[] calldata versions
+    ) external view returns (OracleVersion[] memory oracleVersions) {
+        oracleVersions = new OracleVersion[](versions.length);
+        for (uint i = 0; i < versions.length; i++) {
+            oracleVersions[i] = atVersion(versions[i]);
+        }
+    }
 }

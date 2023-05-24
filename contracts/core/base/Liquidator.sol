@@ -5,7 +5,6 @@ import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMMarketLiquidate} from "@usum/core/interfaces/market/IUSUMMarketLiquidate.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
-
 abstract contract Liquidator is IUSUMLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 private constant LIQUIDATION_INTERVAL = 30 seconds;
@@ -59,7 +58,7 @@ abstract contract Liquidator is IUSUMLiquidator {
             );
         }
 
-        return (false, "");
+        return (false, bytes(""));
     }
 
     function _liquidate(

@@ -105,6 +105,13 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         _getAccount(msg.sender).closePosition(market, positionId);
     }
 
+    function claimPosition(
+        address market,
+        uint256 positionId
+    ) external {
+        _getAccount(msg.sender).claimPosition(market, positionId);
+    }
+
     function addLiquidity(
         address market,
         int16 feeRate,

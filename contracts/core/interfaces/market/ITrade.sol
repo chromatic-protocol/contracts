@@ -49,7 +49,7 @@ interface ITrade {
         bytes calldata data
     ) external;
 
-    function getPosition(
-        uint256 positionId
-    ) external view returns (Position memory position);
+    function getPositions(
+        uint256[] calldata positionIds
+    ) external view  returns (Position[] memory positions);
 }

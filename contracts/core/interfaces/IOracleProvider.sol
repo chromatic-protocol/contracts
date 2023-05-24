@@ -5,4 +5,8 @@ import {IOracleProvider as IPerennialOracleProvider} from "@equilibria/perennial
 
 interface IOracleProvider is IPerennialOracleProvider {
     function description() external view returns (string memory);
+
+    function atVersions(
+        uint256[] calldata versions
+    ) external view returns (OracleVersion[] memory);
 }
