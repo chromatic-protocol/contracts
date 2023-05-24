@@ -249,14 +249,18 @@ abstract contract Trade is MarketValue {
             block.timestamp
         );
 
-        int256 realizedPnl = position.pnl(ctx) - interest.toInt256();
-        uint256 absRealizedPnl = realizedPnl.abs();
-        if (realizedPnl > 0) {
+        int256 pnl = PositionUtil.pnl(
+            position.leveragedQty(ctx),
+            position.entryPrice(ctx),
+            PositionUtil.oraclePrice(ctx.currentOracleVersion())
+        ) - interest.toInt256();
+        uint256 absPnl = pnl.abs();
+        if (pnl > 0) {
             // whether profit stop (taker side)
-            return absRealizedPnl >= position.makerMargin();
+            return absPnl >= position.makerMargin();
         } else {
             // whether loss cut (taker side)
-            return absRealizedPnl >= position.takerMargin;
+            return absPnl >= position.takerMargin;
         }
     }
 
