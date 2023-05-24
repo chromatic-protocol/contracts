@@ -21,7 +21,7 @@ interface Task {
 export class Keeper {
   private automate: Automate
   private provider: providers.JsonRpcProvider
-  private tasks: Array<Task> = []
+  tasks: Array<Task> = []
   private onStop: () => void = () => {}
 
   constructor(
@@ -39,8 +39,10 @@ export class Keeper {
     this.provider.pollingInterval = 100
 
     const opsEvents = await ethers.getContractAt('LibEvents', this.automate.address)
+    
     this.onTaskCreated(opsEvents)
     this.onTaskCanceled(opsEvents)
+    console.log('listening automate task event ....')
 
     this.onStop = () => {
       opsEvents.removeAllListeners()
@@ -49,7 +51,6 @@ export class Keeper {
 
   private onTaskCreated(contract: LibEvents) {
     contract.on(contract.filters.TaskCreated(), (_0, _1, _2, _3, _4, _5, event) => {
-      console.log('task create event', event)
       const task: Task = event.args
       this.tasks.push(task)
     })
@@ -68,8 +69,8 @@ export class Keeper {
   }
 
   async execute() {
-    await new Promise((resolve) => setTimeout(resolve, this.provider.pollingInterval * 2))
-
+    await new Promise((resolve) => setTimeout(resolve, this.provider.pollingInterval * 10))
+    const opsEvents = await ethers.getContractAt('LibEvents', this.automate.address)
     for (const task of this.tasks) {
       await this.executeTask(task)
     }
@@ -88,7 +89,7 @@ export class Keeper {
             data: resolverData
           })
         )
-        console.log('keeper resolver exec reesult ', result);
+
         if (!result.canExec) return
 
         execDataOrSelector = result.execPayload

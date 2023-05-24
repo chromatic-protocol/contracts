@@ -70,7 +70,6 @@ describe('position & account test', async function () {
       makerMargin,
     })
 
-    console.log(receipt)
     //TODO assert result
 
     const positionIds = await traderAccount.getPositionIds(market.address)

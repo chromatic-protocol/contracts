@@ -3,13 +3,22 @@ import { ethers } from 'hardhat'
 import { Keeper } from '../gelato/keeper'
 import { prepareMarketTest, helpers } from './testHelper'
 import { expect } from 'chai'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 describe('liquidation test', async () => {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
   const eth100 = ethers.utils.parseEther('100')
   let keeper: Keeper
 
-  before(async () => {
+  let cnt = 1
+
+  async function init() {
     testData = await prepareMarketTest()
+    console.log('='.repeat(50))
+    console.log(
+      `${cnt++} beforeEach getPositionIds`,
+      await testData.traderAccount.getPositionIds(testData.market.address)
+    )
+    console.log('='.repeat(50))
 
     const { addLiquidity } = helpers(testData)
     // add 10000 usdc liquidity to 0.01% long /short  slot
@@ -30,7 +39,11 @@ describe('liquidation test', async () => {
       BigNumber.from('0'),
       await ethers.getContractAt('ERC20', '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
     )
-    keeper.start()
+    await keeper.start()
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+  beforeEach(async () => {
+    await init()
   })
 
   // ETH / USD price feed
@@ -43,6 +56,7 @@ describe('liquidation test', async () => {
   describe('long position', async () => {
     it('profit stop', async () => {
       // TODO here after lunch
+      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('100') // 100 usd
       // 100
@@ -63,6 +77,7 @@ describe('liquidation test', async () => {
     })
 
     it('loss cut', async () => {
+      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('200') // 200 usd 20% loss
       const makerMargin = ethers.utils.parseEther('500') // 500 usd
@@ -81,6 +96,7 @@ describe('liquidation test', async () => {
 
   describe('short position', async () => {
     it('profit stop', async () => {
+      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('100') // 100 usd
       const makerMargin = ethers.utils.parseEther('190') // 19%
@@ -97,6 +113,7 @@ describe('liquidation test', async () => {
     })
 
     it('loss cut', async () => {
+      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('200') // 20%
       const makerMargin = ethers.utils.parseEther('120') // 120 usd 20% profit stop
@@ -125,8 +142,15 @@ describe('liquidation test', async () => {
     await priceChanges.reduce(async (prev, curr, index) => {
       await prev
       await updatePrice(curr)
+      console.log('keeper tasks', keeper.tasks)
       await keeper.execute()
       let positionIds = await testData.traderAccount.getPositionIds(testData.market.address)
+
+      const v = await testData.oracleProvider.currentVersion()
+
+      console.log('='.repeat(50))
+      console.log('simulate positionIds', positionIds, v.price)
+      console.log('='.repeat(50))
       const traderBalance = await settlementToken.balanceOf(traderAccount.address)
       console.log(`oracle price ${curr}, account balance : ${traderBalance}`)
       expect(positionIds.length).to.equal(expectedPreservedPositionLength[index])
@@ -135,7 +159,7 @@ describe('liquidation test', async () => {
     if (isProfitStopCase) {
       expect(traderBalance.lt(afterTraderBalance)).to.be.true
     } else {
-      console.log("balance", afterTraderBalance,traderBalance)
+      console.log('balance', afterTraderBalance, traderBalance)
       expect(afterTraderBalance.eq(traderBalance)).to.be.true
     }
   }

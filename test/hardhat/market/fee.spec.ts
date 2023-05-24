@@ -10,8 +10,12 @@ interface LiquidityConfig {
 describe('interest fee test', async function () {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
   const base = ethers.utils.parseEther('10')
-  async function initialize(liquidityMap: LiquidityConfig[]) {
+
+  beforeEach(async () => {
     testData = await prepareMarketTest()
+  })
+
+  async function initialize(liquidityMap: LiquidityConfig[]) {
     const { addLiquidity } = helpers(testData)
     for (const conf of liquidityMap) {
       await addLiquidity(conf.amount, conf.tradingFee)
@@ -81,17 +85,17 @@ describe('interest fee test', async function () {
       )
       await updatePrice(1000)
       const positionIds = await traderAccount.getPositionIds(market.address)
-      
+
       console.log('after open position timestamp ', timestamp)
-      timestamp = await time.latest() 
-      let wantedTimestamp = timestamp + 60 * 60 * 24 * 365 * year 
+      timestamp = await time.latest()
+      let wantedTimestamp = timestamp + 60 * 60 * 24 * 365 * year
       await time.setNextBlockTimestamp(wantedTimestamp - 3)
       // timestamp = await time.latest()
- 
+
       await awaitTx(traderRouter.closePosition(market.address, positionIds[0], ethers.constants.MaxUint256))
       await updatePrice(1000)
       await awaitTx(traderRouter.claimPosition(market.address, positionIds[0]))
-      
+
       console.log('wantedTimestamp ', wantedTimestamp)
       console.log('updated timestamp', timestamp)
       console.log('positions', positionIds)
