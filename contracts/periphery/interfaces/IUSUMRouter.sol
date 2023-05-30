@@ -12,11 +12,10 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin,
-        uint256 maxAllowableTradingFee,
-        uint256 deadline
+        uint256 maxAllowableTradingFee
     ) external returns (Position memory);
 
-    function closePosition(address market, uint256 positionId, uint256 deadline) external;
+    function closePosition(address market, uint256 positionId) external;
 
     function claimPosition(address market, uint256 positionId) external;
 
@@ -24,8 +23,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         address market,
         int16 feeRate,
         uint256 amount,
-        address recipient,
-        uint256 deadline
+        address recipient
     ) external returns (LpReceipt memory);
 
     function removeLiquidity(
@@ -33,8 +31,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         int16 feeRate,
         uint256 lpTokenAmount,
         uint256 amountMin,
-        address recipient,
-        uint256 deadline
+        address recipient
     ) external returns (uint256 amount);
 
     function getAccount() external view returns (address);

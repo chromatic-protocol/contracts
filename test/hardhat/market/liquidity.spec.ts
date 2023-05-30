@@ -69,8 +69,7 @@ describe('market test', async function () {
         feeSlotKey,
         removeLiqAmount,
         0, // amountMin
-        tester.address,
-        ethers.constants.MaxUint256 // deadline
+        tester.address
       )
     ).to.changeTokenBalance(settlementToken, tester, expectedAmount)
 
@@ -95,7 +94,6 @@ describe('market test', async function () {
       // uint256 takerMargin,
       // uint256 makerMargin,
       // uint256 maxAllowableTradingFee,
-      // uint256 deadline
     }
 
     await Promise.all(txs)

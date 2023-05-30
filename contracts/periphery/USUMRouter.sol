@@ -32,11 +32,6 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     AccountFactory accountFactory;
 
-    modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'TradeRouter: EXPIRED');
-        _;
-    }
-
     function initialize(AccountFactory _accountFactory, address _marketFactory) external onlyOwner {
         accountFactory = _accountFactory;
         marketFactory = _marketFactory;
@@ -64,9 +59,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin,
-        uint256 maxAllowableTradingFee,
-        uint256 deadline
-    ) external ensure(deadline) returns (Position memory) {
+        uint256 maxAllowableTradingFee
+    ) external returns (Position memory) {
         return
             _getAccount(msg.sender).openPosition(
                 market,
@@ -78,7 +72,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             );
     }
 
-    function closePosition(address market, uint256 positionId, uint256 deadline) external ensure(deadline) {
+    function closePosition(address market, uint256 positionId) external {
         _getAccount(msg.sender).closePosition(market, positionId);
     }
 
@@ -90,9 +84,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         address market,
         int16 feeRate,
         uint256 amount,
-        address recipient,
-        uint256 deadline
-    ) external ensure(deadline) returns (LpReceipt memory) {
+        address recipient
+    ) external returns (LpReceipt memory) {
         return
             IUSUMMarket(market).addLiquidity(
                 recipient,
@@ -106,9 +99,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         int16 feeRate,
         uint256 lpTokenAmount,
         uint256 amountMin,
-        address recipient,
-        uint256 deadline
-    ) external ensure(deadline) returns (uint256 amount) {
+        address recipient
+    ) external returns (uint256 amount) {
         amount = IUSUMMarket(market).removeLiquidity(
             recipient,
             feeRate,

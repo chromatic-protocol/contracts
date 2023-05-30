@@ -1,6 +1,6 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
-import { BigNumber, ethers } from "ethers"
-import { parseEther, parseUnits } from "ethers/lib/utils"
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { BigNumber, ethers } from 'ethers'
+import { parseEther, parseUnits } from 'ethers/lib/utils'
 import {
   IAccount,
   IAccountFactory,
@@ -20,8 +20,8 @@ import {
   IUSUMRouter__factory,
   IWETH9,
   IWETH9__factory,
-} from "../typechain-types"
-import { PositionStructOutput } from "./../typechain-types/contracts/core/interfaces/IUSUMMarket"
+} from '../typechain-types'
+import { PositionStructOutput } from './../typechain-types/contracts/core/interfaces/IUSUMMarket'
 
 const QTY_DECIMALS = 4
 const LEVERAGE_DECIMALS = 2
@@ -46,26 +46,13 @@ export class ReplWallet {
   ): Promise<ReplWallet> {
     const weth = IWETH9__factory.connect(addresses.weth, signer)
     const usdc = IERC20Metadata__factory.connect(addresses.usdc, signer)
-    const swapRouter = ISwapRouter__factory.connect(
-      addresses.swapRouter,
-      signer
-    )
-    const oracleProvider = IOracleProvider__factory.connect(
-      addresses.oracleProvider,
-      signer
-    )
-    const marketFactory = IUSUMMarketFactory__factory.connect(
-      addresses.marketFactory,
-      signer
-    )
-    const accountFactory = IAccountFactory__factory.connect(
-      addresses.accountFactory,
-      signer
-    )
+    const swapRouter = ISwapRouter__factory.connect(addresses.swapRouter, signer)
+    const oracleProvider = IOracleProvider__factory.connect(addresses.oracleProvider, signer)
+    const marketFactory = IUSUMMarketFactory__factory.connect(addresses.marketFactory, signer)
+    const accountFactory = IAccountFactory__factory.connect(addresses.accountFactory, signer)
     const router = IUSUMRouter__factory.connect(addresses.router, signer)
 
     const marketAddress = await marketFactory.getMarkets()
-      
 
     const market = IUSUMMarket__factory.connect(marketAddress[0], signer)
 
@@ -103,10 +90,10 @@ export class ReplWallet {
   }
 
   async createAccount() {
-    let accountAddress = await this.AccountFactory["getAccount()"]()
+    let accountAddress = await this.AccountFactory['getAccount()']()
     if (accountAddress === ethers.constants.AddressZero) {
       await this.AccountFactory.createAccount()
-      accountAddress = await this.AccountFactory["getAccount()"]()
+      accountAddress = await this.AccountFactory['getAccount()']()
     }
     console.log(`crete Account, signer: ${accountAddress}, ${this.signer.address}`)
     this.Account = IAccount__factory.connect(accountAddress, this.signer)
@@ -117,10 +104,7 @@ export class ReplWallet {
   }
 
   async swapEth(eth: number) {
-    await this.WETH9.approve(
-      this.SwapRouter.address,
-      ethers.constants.MaxUint256
-    )
+    await this.WETH9.approve(this.SwapRouter.address, ethers.constants.MaxUint256)
 
     await this.SwapRouter.exactInputSingle({
       tokenIn: this.WETH9.address,
@@ -129,7 +113,6 @@ export class ReplWallet {
       fee: 3000,
       // fee: 500,
       recipient: this.address,
-      deadline: deadline(),
       amountIn: parseEther(eth.toString()),
       amountOutMinimum: 0,
       sqrtPriceLimitX96: 0,
@@ -139,22 +122,11 @@ export class ReplWallet {
   }
 
   async positions(): Promise<PositionStructOutput[]> {
-    const positionIds = await this.Account.getPositionIds(
-      this.USUMMarket.address
-    )
-    return Promise.all(
-      positionIds.map(
-        async (positionId) => await this.USUMMarket.getPosition(positionId)
-      )
-    )
+    const positionIds = await this.Account.getPositionIds(this.USUMMarket.address)
+    return Promise.all(positionIds.map(async (positionId) => await this.USUMMarket.getPosition(positionId)))
   }
 
-  async openPosition(
-    qty: number,
-    leverage: number,
-    takerMargin: number,
-    makerMargin: number
-  ) {
+  async openPosition(qty: number, leverage: number, takerMargin: number, makerMargin: number) {
     const decimals = await this.USDC.decimals()
     const _takerMargin = parseUnits(takerMargin.toString(), decimals)
     const _makerMargin = parseUnits(makerMargin.toString(), decimals)
@@ -165,17 +137,12 @@ export class ReplWallet {
       parseUnits(leverage.toString(), LEVERAGE_DECIMALS),
       _takerMargin,
       _makerMargin,
-      _makerMargin, // no limit trading fee
-      deadline()
+      _makerMargin // no limit trading fee
     )
   }
 
   async closePosition(positionId: number) {
-    await this.USUMRouter.closePosition(
-      this.USUMMarket.address,
-      BigNumber.from(positionId),
-      deadline()
-    )
+    await this.USUMRouter.closePosition(this.USUMMarket.address, BigNumber.from(positionId))
   }
 
   async addLiquidity(feeRate: number, amount: number) {
@@ -184,8 +151,7 @@ export class ReplWallet {
       this.USUMMarket.address,
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(amount.toString(), decimals),
-      this.address,
-      deadline()
+      this.address
     )
   }
 
@@ -196,12 +162,7 @@ export class ReplWallet {
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(liquidity.toString(), decimals),
       parseUnits(amountMin.toString(), decimals),
-      this.address,
-      deadline()
+      this.address
     )
   }
-}
-
-function deadline(): number {
-  return Math.ceil(Date.now() / 1000) + 30
 }
