@@ -1,26 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
-import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
-import {IOracleProviderRegistry} from "@usum/core/interfaces/factory/IOracleProviderRegistry.sol";
+import {IMarketDeployer} from '@usum/core/interfaces/factory/IMarketDeployer.sol';
+import {ISettlementTokenRegistry} from '@usum/core/interfaces/factory/ISettlementTokenRegistry.sol';
+import {IOracleProviderRegistry} from '@usum/core/interfaces/factory/IOracleProviderRegistry.sol';
 
-interface IUSUMMarketFactory is
-    IMarketDeployer,
-    IOracleProviderRegistry,
-    ISettlementTokenRegistry
-{
-    event UpdateDao(address dao);
-    event UpdateTreasury(address treasury);
-    event SetLiquidator(address liquidator);
-    event SetVault(address vault);
-    event SetKeeperFeePayer(address keeperFeePayer);
+interface IUSUMMarketFactory is IMarketDeployer, IOracleProviderRegistry, ISettlementTokenRegistry {
+    event UpdateDao(address indexed dao);
+    event UpdateTreasury(address indexed treasury);
+    event SetLiquidator(address indexed liquidator);
+    event SetVault(address indexed vault);
+    event SetKeeperFeePayer(address indexed keeperFeePayer);
 
-    event MarketCreated(
-        address oracleProvider,
-        address settlementToken,
-        address market
-    );
+    event MarketCreated(address indexed oracleProvider, address indexed settlementToken, address indexed market);
 
     function dao() external view returns (address);
 
@@ -44,17 +36,11 @@ interface IUSUMMarketFactory is
 
     function getMarkets() external view returns (address[] memory market);
 
-    function getMarketsBySettlmentToken(
-        address settlementToken
-    ) external view returns (address[] memory);
+    function getMarketsBySettlmentToken(address settlementToken) external view returns (address[] memory);
 
-    function getMarket(address oracleProvider,
-        address settlementToken) external view returns (address);
+    function getMarket(address oracleProvider, address settlementToken) external view returns (address);
 
-    function createMarket(
-        address oracleProvider,
-        address settlementToken
-    ) external;
+    function createMarket(address oracleProvider, address settlementToken) external;
 
     function isRegisteredMarket(address market) external view returns (bool);
 

@@ -178,7 +178,7 @@ abstract contract Trade is MarketValue {
         );
         liquidator.cancelLiquidationTask(positionId);
 
-        emit Liquidate(position.owner, position, usedKeeperFee);
+        emit Liquidate(position.owner, usedKeeperFee, position);
     }
 
     function _claimPosition(
@@ -231,7 +231,7 @@ abstract contract Trade is MarketValue {
         }
         delete positions[position.id];
 
-        emit ClaimPosition(position.owner, position, pnl, interest);
+        emit ClaimPosition(position.owner, pnl, interest, position);
     }
 
     function checkLiquidation(
