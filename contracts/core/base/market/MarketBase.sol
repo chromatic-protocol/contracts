@@ -11,6 +11,7 @@ import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
 import {IKeeperFeePayer} from '@usum/core/interfaces/IKeeperFeePayer.sol';
 import {LpTokenDeployerLib} from '@usum/core/external/deployer/LpTokenDeployer.sol';
 import {LpSlotSet} from '@usum/core/external/lpslot/LpSlotSet.sol';
+import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
 import {Position} from '@usum/core/libraries/Position.sol';
 import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
 import {Errors} from '@usum/core/libraries/Errors.sol';
@@ -28,6 +29,7 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     LpSlotSet internal lpSlotSet;
 
     mapping(uint256 => Position) internal positions;
+    mapping(uint256 => LpReceipt) internal lpReceipts;
 
     modifier onlyLiquidator() {
         require(msg.sender == address(liquidator), Errors.ONLY_LIQUIDATOR_CAN_ACCESS);

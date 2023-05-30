@@ -6,13 +6,15 @@ import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Re
 import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
 import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
-import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
+import {LpReceipt, LpAction} from '@usum/core/libraries/LpReceipt.sol';
 import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
 
 abstract contract Liquidity is MarketValue, IERC1155Receiver {
     using Math for uint256;
 
-    uint256 public constant MINIMUM_LIQUIDITY = 10 ** 3;
+    uint256 constant MINIMUM_LIQUIDITY = 10 ** 3;
+
+    uint256 internal _lpReceiptId;
 
     modifier onlyVault() {
         if (msg.sender != address(vault)) revert OnlyAccessableByVault();
@@ -36,7 +38,11 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         vault.onAddLiquidity(amount);
         lpSlotSet.addLiquidity(ctx, tradingFeeRate, amount);
 
+        LpReceipt memory receipt = newLpReceipt(ctx, LpAction.ADD_LIQUIDITY, amount, recipient);
+        lpReceipts[receipt.id] = receipt;
+
         emit AddLiquidity(recipient, tradingFeeRate, amount);
+        return receipt;
     }
 
     function removeLiquidity(
@@ -92,6 +98,22 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
 
     function calculateLpTokenValue(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256 amount) {
         amount = lpSlotSet.calculateLpTokenValue(newLpContext(), tradingFeeRate, lpTokenAmount);
+    }
+
+    function newLpReceipt(
+        LpContext memory ctx,
+        LpAction action,
+        uint256 amount,
+        address recipient
+    ) private returns (LpReceipt memory) {
+        return
+            LpReceipt({
+                id: ++_lpReceiptId,
+                oracleVersion: ctx.currentOracleVersion().version,
+                action: action,
+                amount: amount,
+                recipient: recipient
+            });
     }
 
     // implement IERC1155Receiver
