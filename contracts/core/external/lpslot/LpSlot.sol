@@ -7,9 +7,11 @@ import {LpSlotPosition, LpSlotPositionLib} from '@usum/core/external/lpslot/LpSl
 import {LpSlotClosedPosition, LpSlotClosedPositionLib} from '@usum/core/external/lpslot/LpSlotClosedPosition.sol';
 import {PositionParam} from '@usum/core/external/lpslot/PositionParam.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
+import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
 import {Errors} from '@usum/core/libraries/Errors.sol';
 
 struct LpSlot {
+    uint256 lpTokenId;
     uint256 total;
     LpSlotPosition _position;
     LpSlotClosedPosition _closedPosition;
@@ -41,6 +43,10 @@ library LpSlotLib {
         self._position.settlePendingPosition(ctx);
 
         _;
+    }
+
+    function initialize(LpSlot storage self, int16 tradingFeeRate) internal {
+        self.lpTokenId = LpTokenLib.encodeId(tradingFeeRate);
     }
 
     /**

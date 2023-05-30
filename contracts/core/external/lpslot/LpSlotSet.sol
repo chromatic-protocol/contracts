@@ -57,6 +57,15 @@ library LpSlotSetLib {
         _;
     }
 
+    function initialize(LpSlotSet storage self) internal {
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+            uint16 feeRate = _tradingFeeRates[i];
+            self._longSlots[feeRate].initialize(int16(feeRate));
+            self._shortSlots[feeRate].initialize(-int16(feeRate));
+        }
+    }
+
     /**
      * @notice Prepares slot margins based on the given quantity and maker margin.
      * @dev This function prepares slot margins by performing the following steps:
