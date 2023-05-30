@@ -56,32 +56,29 @@ library LpSlotLiquidityLib {
         USUMLpToken lpToken = ctx.market.lpToken();
         uint256 totalSupply = lpToken.totalSupply(lpTokenId);
 
-        uint256 mintingAmount;
         uint256 pendingDeposit = self._pending.tokenAmount;
-        if (pendingDeposit > 0) {
-            mintingAmount = _settleMinting(self, pendingDeposit, slotValue, totalSupply, oracleVersion);
-            totalSupply += mintingAmount;
-            freeLiquidity += pendingDeposit;
-        }
-
-        uint256 burningAmount;
-        uint256 pendingWithdrawal;
         uint256 pendingLpTokenAmount = self._pending.lpTokenAmount;
-        if (pendingLpTokenAmount > 0) {
-            (burningAmount, pendingWithdrawal) = _settleBurning(
-                self,
-                pendingLpTokenAmount,
-                freeLiquidity,
-                slotValue,
-                totalSupply,
-                oracleVersion
-            );
-        }
+
+        uint256 mintingAmount = _settlePending(
+            self,
+            pendingDeposit,
+            pendingLpTokenAmount,
+            slotValue,
+            totalSupply,
+            oracleVersion
+        );
+
+        (uint256 burningAmount, uint256 pendingWithdrawal) = _settleBurning(
+            self,
+            freeLiquidity + pendingDeposit,
+            slotValue,
+            totalSupply
+        );
 
         if (mintingAmount > burningAmount) {
-            ctx.market.lpToken().mint(address(ctx.market), lpTokenId, mintingAmount - burningAmount, bytes(''));
+            lpToken.mint(address(ctx.market), lpTokenId, mintingAmount - burningAmount, bytes(''));
         } else if (mintingAmount < burningAmount) {
-            ctx.market.lpToken().burn(address(ctx.market), lpTokenId, burningAmount - mintingAmount);
+            lpToken.burn(address(ctx.market), lpTokenId, burningAmount - mintingAmount);
         }
 
         ctx.market.vault().onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
@@ -117,42 +114,80 @@ library LpSlotLiquidityLib {
         return lpTokenAmount.mulDiv(slotValue, lpTokenTotalSupply);
     }
 
-    function _settleMinting(
+    function _settlePending(
         LpSlotLiquidity storage self,
         uint256 pendingDeposit,
+        uint256 pendingLpTokenAmount,
         uint256 slotValue,
         uint256 totalSupply,
         uint256 oracleVersion
     ) private returns (uint256 mintingAmount) {
-        mintingAmount = calculateLpTokenMinting(pendingDeposit, slotValue, totalSupply);
+        if (pendingDeposit > 0) {
+            mintingAmount = calculateLpTokenMinting(pendingDeposit, slotValue, totalSupply);
 
-        self.total += pendingDeposit;
-        self._claimMintings[oracleVersion] = _ClaimMinting({tokenAmount: pendingDeposit, mintingAmount: mintingAmount});
+            self.total += pendingDeposit;
+            self._claimMintings[oracleVersion] = _ClaimMinting({
+                tokenAmount: pendingDeposit,
+                mintingAmount: mintingAmount
+            });
+        }
+
+        if (pendingLpTokenAmount > 0) {
+            self._burningVersions.pushBack(bytes32(oracleVersion));
+            self._claimBurnings[oracleVersion] = _ClaimBurning({
+                lpTokenAmount: pendingLpTokenAmount,
+                burningAmount: 0,
+                tokenAmount: 0
+            });
+        }
     }
 
     function _settleBurning(
         LpSlotLiquidity storage self,
-        uint256 pendingLpTokenAmount,
         uint256 freeLiquidity,
         uint256 slotValue,
-        uint256 totalSupply,
-        uint256 oracleVersion
+        uint256 totalSupply
     ) private returns (uint256 burningAmount, uint256 pendingWithdrawal) {
-        pendingWithdrawal = calculateLpTokenValue(pendingLpTokenAmount, slotValue, totalSupply);
-        if (freeLiquidity >= pendingWithdrawal) {
-            burningAmount = pendingLpTokenAmount;
-        } else {
-            burningAmount = calculateLpTokenMinting(freeLiquidity, slotValue, totalSupply);
-            require(burningAmount < pendingLpTokenAmount);
-            pendingWithdrawal = freeLiquidity;
+        // trim all claim completed burning versions
+        while (!self._burningVersions.empty()) {
+            uint256 _ov = uint256(self._burningVersions.front());
+            _ClaimBurning memory _cb = self._claimBurnings[_ov];
+            if (_cb.lpTokenAmount == 0) {
+                delete self._claimBurnings[_ov];
+                self._burningVersions.popFront();
+            } else if (_cb.burningAmount >= _cb.lpTokenAmount) {
+                self._burningVersions.popFront();
+            } else {
+                break;
+            }
+        }
+
+        uint256 length = self._burningVersions.length();
+        for (uint256 i = 0; i < length && freeLiquidity > 0; i++) {
+            uint256 _ov = uint256(self._burningVersions.at(i));
+            _ClaimBurning storage _cb = self._claimBurnings[_ov];
+
+            uint256 _pendingLpTokenAmount = _cb.lpTokenAmount - _cb.burningAmount;
+            if (_pendingLpTokenAmount > 0) {
+                uint256 _burningAmount;
+                uint256 _pendingWithdrawal = calculateLpTokenValue(_pendingLpTokenAmount, slotValue, totalSupply);
+                if (freeLiquidity >= _pendingWithdrawal) {
+                    _burningAmount = _pendingLpTokenAmount;
+                } else {
+                    _burningAmount = calculateLpTokenMinting(freeLiquidity, slotValue, totalSupply);
+                    require(_burningAmount < _pendingLpTokenAmount);
+                    _pendingWithdrawal = freeLiquidity;
+                }
+
+                _cb.burningAmount += _burningAmount;
+                _cb.tokenAmount += _pendingWithdrawal;
+
+                burningAmount += _burningAmount;
+                pendingWithdrawal += _pendingWithdrawal;
+                freeLiquidity -= _pendingWithdrawal;
+            }
         }
 
         self.total -= pendingWithdrawal;
-        self._burningVersions.pushBack(bytes32(oracleVersion));
-        self._claimBurnings[oracleVersion] = _ClaimBurning({
-            lpTokenAmount: pendingLpTokenAmount,
-            burningAmount: burningAmount,
-            tokenAmount: pendingWithdrawal
-        });
     }
 }
