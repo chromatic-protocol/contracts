@@ -40,6 +40,7 @@ library LpSlotLib {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settleAccruedInterest(ctx);
         self._position.settlePendingPosition(ctx);
+        self._liquidity.settlePendingLiquidity(ctx, self.value(ctx), self.freeLiquidity(), self.lpTokenId);
 
         _;
     }
