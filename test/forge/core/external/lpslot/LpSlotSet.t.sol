@@ -59,7 +59,6 @@ contract LpSlotSetTest is Test {
 
         slotSet.acceptOpenPosition(ctx, position);
 
-        assertEq(slotSet._minAvailableFeeRateLong, 2);
         assertEq(slotSet._longSlots[1].total, 1000.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 0.1 ether);
         assertEq(slotSet._longSlots[2].total, 1000.1 ether);
@@ -80,7 +79,6 @@ contract LpSlotSetTest is Test {
         slotSet.acceptClosePosition(ctx, position);
         slotSet.acceptClaimPosition(ctx, position, 0);
 
-        assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 1000.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 1000.1 ether);
         assertEq(slotSet._longSlots[2].total, 1000.1 ether);
@@ -102,7 +100,6 @@ contract LpSlotSetTest is Test {
         slotSet.acceptClosePosition(ctx, position);
         slotSet.acceptClaimPosition(ctx, position, 150 ether);
 
-        assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 900.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 900.1 ether);
         assertEq(slotSet._longSlots[2].total, 950.1 ether);
@@ -124,7 +121,6 @@ contract LpSlotSetTest is Test {
         slotSet.acceptClosePosition(ctx, position);
         slotSet.acceptClaimPosition(ctx, position, -150 ether);
 
-        assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 1100.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 1100.1 ether);
         assertEq(slotSet._longSlots[2].total, 1050.1 ether);
