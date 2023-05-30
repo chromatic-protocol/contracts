@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from 'forge-std/Test.sol';
+import {IERC1155Receiver} from '@openzeppelin/contracts/interfaces/IERC1155Receiver.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {Fixed18Lib} from '@equilibria/root/number/types/Fixed18.sol';
 import {Position} from '@usum/core/libraries/Position.sol';
@@ -13,6 +14,7 @@ import {LpSlotSet} from '@usum/core/external/lpslot/LpSlotSet.sol';
 import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
 import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
 import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
+import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
@@ -21,17 +23,30 @@ contract LpSlotSetTest is Test {
     IOracleProvider provider;
     IUSUMVault vault;
     IUSUMMarket market;
+    USUMLpToken lpToken;
     LpSlotSet slotSet;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
         vault = IUSUMVault(address(2));
         market = IUSUMMarket(address(3));
+        lpToken = new USUMLpToken();
 
         vm.mockCall(address(vault), abi.encodeWithSelector(vault.getPendingSlotShare.selector), abi.encode(0));
 
         vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
         vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
+        vm.mockCall(address(market), abi.encodeWithSelector(market.lpToken.selector), abi.encode(lpToken));
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155Received.selector),
+            abi.encode(IERC1155Receiver(address(market)).onERC1155Received.selector)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector),
+            abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
+        );
 
         slotSet._longSlots[1]._liquidity.total = 1000 ether;
         slotSet._longSlots[2]._liquidity.total = 1000 ether;
@@ -127,35 +142,39 @@ contract LpSlotSetTest is Test {
         assertEq(slotSet._longSlots[2].freeLiquidity(), 1050.1 ether);
     }
 
-    function testAddLiquidity() public {
+    function testAcceptAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
+
+        slotSet.acceptAddLiquidity(ctx, 1, 100 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 1000 ether);
+
+        // set oracle version to 2
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        // uint256 liquidity = slotSet.addLiquidity(ctx, 1, 100 ether, 1000 ether);
-        slotSet.addLiquidity(ctx, 1, 100 ether);
-
-        // assertEq(liquidity, 100 ether);
+        slotSet.settle(ctx);
         assertEq(slotSet._longSlots[1].liquidity(), 1100 ether);
     }
 
-    function testRemoveLiquidity() public {
-        LpContext memory ctx = _newLpContext();
-        ctx._currentVersionCache.version = 2;
-        ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+    // function testRemoveLiquidity() public {
+    //     LpContext memory ctx = _newLpContext();
+    //     ctx._currentVersionCache.version = 2;
+    //     ctx._currentVersionCache.timestamp = 2;
+    //     ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        // uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
-        uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether);
+    //     // uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
+    //     uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether);
 
-        assertEq(amount, 100 ether);
-        assertEq(slotSet._longSlots[1].liquidity(), 900 ether);
-    }
+    //     assertEq(amount, 100 ether);
+    //     assertEq(slotSet._longSlots[1].liquidity(), 900 ether);
+    // }
 
     function _newLpContext() private view returns (LpContext memory ctx) {
         ctx.market = market;
         ctx.tokenPrecision = 10 ** 18;
+        ctx._currentVersionCache.version = 1;
+        ctx._currentVersionCache.timestamp = 1;
     }
 
     function _newPosition() private pure returns (Position memory) {

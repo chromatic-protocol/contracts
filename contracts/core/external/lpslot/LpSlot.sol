@@ -36,13 +36,16 @@ library LpSlotLib {
      * @param ctx The LpContext data struct.
      */
     modifier _settle(LpSlot storage self, LpContext memory ctx) {
+        self.settle(ctx);
+        _;
+    }
+
+    function settle(LpSlot storage self, LpContext memory ctx) internal {
         self._closedPosition.settleAccruedInterest(ctx);
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settleAccruedInterest(ctx);
         self._position.settlePendingPosition(ctx);
         self._liquidity.settlePendingLiquidity(ctx, self.value(ctx), self.freeLiquidity(), self.lpTokenId);
-
-        _;
     }
 
     function initialize(LpSlot storage self, int16 tradingFeeRate) internal {
@@ -132,8 +135,17 @@ library LpSlotLib {
         return _value + ctx.market.vault().getPendingSlotShare(address(ctx.market), self.liquidity());
     }
 
-    function addLiquidity(LpSlot storage self, LpContext memory ctx, uint256 amount) internal _settle(self, ctx) {
+    function acceptAddLiquidity(LpSlot storage self, LpContext memory ctx, uint256 amount) internal _settle(self, ctx) {
         self._liquidity.onAddLiquidity(amount, ctx.currentOracleVersion().version);
+    }
+
+    function acceptClaimLpToken(
+        LpSlot storage self,
+        LpContext memory ctx,
+        uint256 amount,
+        uint256 oracleVersion
+    ) internal _settle(self, ctx) returns (uint256) {
+        return self._liquidity.onClaimLpToken(amount, oracleVersion);
     }
 
     function calculateLpTokenMinting(

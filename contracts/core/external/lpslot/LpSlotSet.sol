@@ -35,7 +35,7 @@ library LpSlotSetLib {
      * @param slotType The type of the slot ("L" for long, "S" for short).
      * @param earning The accumulated earning.
      */
-    event LpSlotEarningAccumulated(uint16 indexed feeRate, bytes1 slotType, uint256 earning);
+    event LpSlotEarningAccumulated(uint16 indexed feeRate, bytes1 indexed slotType, uint256 indexed earning);
 
     uint256 private constant FEE_RATES_LENGTH = 36;
     uint16 private constant MIN_FEE_RATE = 1;
@@ -55,12 +55,21 @@ library LpSlotSetLib {
         _;
     }
 
-    function initialize(LpSlotSet storage self) internal {
+    function initialize(LpSlotSet storage self) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longSlots[feeRate].initialize(int16(feeRate));
             self._shortSlots[feeRate].initialize(-int16(feeRate));
+        }
+    }
+
+    function settle(LpSlotSet storage self, LpContext calldata ctx) external {
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+            uint16 feeRate = _tradingFeeRates[i];
+            self._longSlots[feeRate].settle(ctx);
+            self._shortSlots[feeRate].settle(ctx);
         }
     }
 
@@ -272,14 +281,25 @@ library LpSlotSetLib {
         }
     }
 
-    function addLiquidity(
+    function acceptAddLiquidity(
         LpSlotSet storage self,
         LpContext calldata ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external _validTradingFeeRate(tradingFeeRate) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        slot.addLiquidity(ctx, amount);
+        slot.acceptAddLiquidity(ctx, amount);
+    }
+
+    function acceptClaimLpToken(
+        LpSlotSet storage self,
+        LpContext calldata ctx,
+        int16 tradingFeeRate,
+        uint256 amount,
+        uint256 oracleVersion
+    ) external _validTradingFeeRate(tradingFeeRate) returns (uint256) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.acceptClaimLpToken(ctx, amount, oracleVersion);
     }
 
     function calculateLpTokenMinting(

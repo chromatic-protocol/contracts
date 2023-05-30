@@ -221,8 +221,12 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         uint256 marketBalance = makerMarketBalances[market];
 
         return
-            pendingMakerEarnings[token].mulDiv(slotBalance, makerBalance, Math.Rounding.Up) +
-            pendingMarketEarnings[market].mulDiv(slotBalance, marketBalance, Math.Rounding.Up);
+            (makerBalance == 0 ? 0 : pendingMakerEarnings[token].mulDiv(slotBalance, makerBalance, Math.Rounding.Up)) +
+            (
+                marketBalance == 0
+                    ? 0
+                    : pendingMarketEarnings[market].mulDiv(slotBalance, marketBalance, Math.Rounding.Up)
+            );
     }
 
     // gelato automate - distribute maker earning to each markets

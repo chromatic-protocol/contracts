@@ -5,7 +5,6 @@ import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
 import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
 import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
 import {LpReceipt, LpAction} from '@usum/core/libraries/LpReceipt.sol';
 import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
 
@@ -36,13 +35,35 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         ctx.syncOracleVersion();
 
         vault.onAddLiquidity(amount);
-        lpSlotSet.addLiquidity(ctx, tradingFeeRate, amount);
+        lpSlotSet.acceptAddLiquidity(ctx, tradingFeeRate, amount);
 
-        LpReceipt memory receipt = newLpReceipt(ctx, LpAction.ADD_LIQUIDITY, amount, recipient);
+        LpReceipt memory receipt = newLpReceipt(ctx, LpAction.ADD_LIQUIDITY, amount, recipient, tradingFeeRate);
         lpReceipts[receipt.id] = receipt;
 
-        emit AddLiquidity(recipient, tradingFeeRate, amount);
+        emit AddLiquidity(recipient, receipt);
         return receipt;
+    }
+
+    function claimLpToken(uint256 receiptId, bytes calldata data) external override nonReentrant {
+        LpReceipt memory receipt = lpReceipts[receiptId];
+        if (receipt.id == 0) revert NotExistLpReceipt();
+        if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
+
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        uint256 lpTokenAmount = lpSlotSet.acceptClaimLpToken(
+            ctx,
+            receipt.tradingFeeRate,
+            receipt.amount,
+            receipt.oracleVersion
+        );
+        lpToken.safeTransferFrom(address(this), receipt.recipient, receipt.lpTokenId(), lpTokenAmount, bytes(''));
+
+        IUSUMLiquidityCallback(msg.sender).claimLpTokenCallback(receipt.id, receipt.recipient, data);
+        delete lpReceipts[receiptId];
+
+        emit ClaimLpToken(receipt.recipient, lpTokenAmount, receipt);
     }
 
     function removeLiquidity(
@@ -50,24 +71,17 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         int16 tradingFeeRate,
         bytes calldata data
     ) external override nonReentrant returns (uint256 amount) {
-        uint256 id = LpTokenLib.encodeId(tradingFeeRate);
-        uint256 balanceBefore = lpToken.balanceOf(address(lpToken), id);
-
-        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(address(lpToken), data);
-
-        uint256 lpTokenAmount = lpToken.balanceOf(address(lpToken), id) - balanceBefore;
-        if (lpTokenAmount == 0) return 0;
-
-        LpContext memory ctx = newLpContext();
-        ctx.syncOracleVersion();
-
-        amount = lpSlotSet.removeLiquidity(ctx, tradingFeeRate, lpTokenAmount);
-
-        vault.onRemoveLiquidity(recipient, amount);
-
-        lpToken.burn(address(lpToken), id, lpTokenAmount);
-
-        emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, lpTokenAmount);
+        // uint256 id = LpTokenLib.encodeId(tradingFeeRate);
+        // uint256 balanceBefore = lpToken.balanceOf(address(lpToken), id);
+        // IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(address(lpToken), data);
+        // uint256 lpTokenAmount = lpToken.balanceOf(address(lpToken), id) - balanceBefore;
+        // if (lpTokenAmount == 0) return 0;
+        // LpContext memory ctx = newLpContext();
+        // ctx.syncOracleVersion();
+        // amount = lpSlotSet.removeLiquidity(ctx, tradingFeeRate, lpTokenAmount);
+        // vault.onRemoveLiquidity(recipient, amount);
+        // lpToken.burn(address(lpToken), id, lpTokenAmount);
+        // emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, lpTokenAmount);
     }
 
     function getSlotLiquidities(
@@ -96,15 +110,16 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         return lpSlotSet.calculateLpTokenMinting(newLpContext(), tradingFeeRate, amount);
     }
 
-    function calculateLpTokenValue(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256 amount) {
-        amount = lpSlotSet.calculateLpTokenValue(newLpContext(), tradingFeeRate, lpTokenAmount);
+    function calculateLpTokenValue(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256) {
+        return lpSlotSet.calculateLpTokenValue(newLpContext(), tradingFeeRate, lpTokenAmount);
     }
 
     function newLpReceipt(
         LpContext memory ctx,
         LpAction action,
         uint256 amount,
-        address recipient
+        address recipient,
+        int16 tradingFeeRate
     ) private returns (LpReceipt memory) {
         return
             LpReceipt({
@@ -112,7 +127,8 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
                 oracleVersion: ctx.currentOracleVersion().version,
                 action: action,
                 amount: amount,
-                recipient: recipient
+                recipient: recipient,
+                tradingFeeRate: tradingFeeRate
             });
     }
 

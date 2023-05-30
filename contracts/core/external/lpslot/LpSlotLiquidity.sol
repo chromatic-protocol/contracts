@@ -8,6 +8,8 @@ import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
 import {Errors} from '@usum/core/libraries/Errors.sol';
 
+import 'forge-std/console.sol';
+
 struct LpSlotLiquidity {
     uint256 total;
     _PendingLiquidity _pending;
@@ -92,7 +94,25 @@ library LpSlotLiquidityLib {
         uint256 pendingOracleVersion = self._pending.oracleVersion;
         require(pendingOracleVersion == 0 || pendingOracleVersion == oracleVersion, Errors.INVALID_ORACLE_VERSION);
 
+        self._pending.oracleVersion = oracleVersion;
         self._pending.tokenAmount += amount;
+    }
+
+    function onClaimLpToken(
+        LpSlotLiquidity storage self,
+        uint256 amount,
+        uint256 oracleVersion
+    ) internal returns (uint256 lpTokenAmount) {
+        _ClaimMinting memory _cm = self._claimMintings[oracleVersion];
+        lpTokenAmount = amount.mulDiv(_cm.mintingAmount, _cm.tokenAmount);
+
+        _cm.mintingAmount -= lpTokenAmount;
+        _cm.tokenAmount -= amount;
+        if (_cm.tokenAmount == 0) {
+            delete self._claimMintings[oracleVersion];
+        } else {
+            self._claimMintings[oracleVersion] = _cm;
+        }
     }
 
     function calculateLpTokenMinting(

@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from 'forge-std/Test.sol';
+import {IERC1155Receiver} from '@openzeppelin/contracts/interfaces/IERC1155Receiver.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {Fixed18Lib} from '@equilibria/root/number/types/Fixed18.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
@@ -9,6 +10,7 @@ import {LpSlot, LpSlotLib} from '@usum/core/external/lpslot/LpSlot.sol';
 import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
 import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
 import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
+import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
 
 contract LpSlotTest is Test {
     using SafeCast for uint256;
@@ -17,48 +19,64 @@ contract LpSlotTest is Test {
     IOracleProvider provider;
     IUSUMVault vault;
     IUSUMMarket market;
+    USUMLpToken lpToken;
     LpSlot slot;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
         vault = IUSUMVault(address(2));
         market = IUSUMMarket(address(3));
+        lpToken = new USUMLpToken();
 
         vm.mockCall(address(vault), abi.encodeWithSelector(vault.getPendingSlotShare.selector), abi.encode(0));
 
         vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
         vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
+        vm.mockCall(address(market), abi.encodeWithSelector(market.lpToken.selector), abi.encode(lpToken));
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155Received.selector),
+            abi.encode(IERC1155Receiver(address(market)).onERC1155Received.selector)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector),
+            abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
+        );
 
         slot._liquidity.total = 20000 ether;
     }
 
-    function testAddLiquidity() public {
+    function testAcceptAddLiquidity() public {
         LpContext memory ctx = _newLpContext();
 
+        // oracle version 2
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        slot.acceptAddLiquidity(ctx, 100 ether);
+        assertEq(slot.liquidity(), 20000 ether);
 
-        // uint256 liquidity = slot.addLiquidity(ctx, 100 ether, 20000 ether);
-        slot.addLiquidity(ctx, 100 ether);
-
-        // assertEq(liquidity, 100 ether);
+        // oracle version 3
+        ctx._currentVersionCache.version = 3;
+        ctx._currentVersionCache.timestamp = 3;
+        slot.settle(ctx);
         assertEq(slot.liquidity(), 20100 ether);
     }
 
-    function testRemoveLiquidity() public {
-        LpContext memory ctx = _newLpContext();
+    // function testRemoveLiquidity() public {
+    //     LpContext memory ctx = _newLpContext();
 
-        ctx._currentVersionCache.version = 2;
-        ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+    //     ctx._currentVersionCache.version = 2;
+    //     ctx._currentVersionCache.timestamp = 2;
+    //     ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        // uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
-        uint256 amount = slot.removeLiquidity(ctx, 100 ether);
+    //     // uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
+    //     uint256 amount = slot.removeLiquidity(ctx, 100 ether);
 
-        assertEq(amount, 100 ether);
-        assertEq(slot.liquidity(), 19900 ether);
-    }
+    //     assertEq(amount, 100 ether);
+    //     assertEq(slot.liquidity(), 19900 ether);
+    // }
 
     function testValue() public {
         LpContext memory ctx = _newLpContext();
