@@ -123,7 +123,7 @@ library LpSlotSetLib {
         return slotMargins;
     }
 
-    function acceptOpenPosition(LpSlotSet storage self, LpContext memory ctx, Position memory position) external {
+    function acceptOpenPosition(LpSlotSet storage self, LpContext calldata ctx, Position memory position) external {
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
@@ -150,7 +150,7 @@ library LpSlotSetLib {
         }
     }
 
-    function acceptClosePosition(LpSlotSet storage self, LpContext memory ctx, Position memory position) external {
+    function acceptClosePosition(LpSlotSet storage self, LpContext calldata ctx, Position memory position) external {
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
@@ -183,30 +183,9 @@ library LpSlotSetLib {
         }
     }
 
-    /**
-     * @notice Accepts a claim position request and performs necessary operations.
-     * @dev This function accepts a claim position by performing the following steps:
-     *      1. Validates the provided realizedPnl against the position's maker and taker margins.
-     *      2. Calculates the position parameter values for each slot
-     *         based on the leveraged quantity, maker margin, taker margin, and slot margins.
-     *      3. Calls the claimPosition function on each slot
-     *         with the calculated parameters to claim the position.
-     *         - If the realizedPnl is zero, it claims all slots with non-zero amounts.
-     *         - If the realizedPnl is positive and equal to the maker margin,
-     *           it claims all slots with non-zero amounts and sets the taker profit as the pnl for each slot.
-     *         - Otherwise, it iterates through each slot and calculates the appropriate taker pnl
-     *           based on the remaining realizedPnl and maker margin. This function then claims each slot
-     *           with the calculated taker pnl.
-     *      4. Updates the minimum available fee rate based on the slotMargins.
-     * @dev This function throws an error if the realizedPnl exceeds the margin range.
-     * @param self The storage reference to the LpSlotSet.
-     * @param ctx The LpContext structure containing contextual information.
-     * @param position The Position structure representing the position to be claimed.
-     * @param realizedPnl The realized position profit/loss (taker side).
-     */
     function acceptClaimPosition(
         LpSlotSet storage self,
-        LpContext memory ctx,
+        LpContext calldata ctx,
         Position memory position,
         int256 realizedPnl // realized position pnl (taker side)
     ) external {
@@ -295,7 +274,7 @@ library LpSlotSetLib {
 
     function addLiquidity(
         LpSlotSet storage self,
-        LpContext memory ctx,
+        LpContext calldata ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external _validTradingFeeRate(tradingFeeRate) {
@@ -305,7 +284,7 @@ library LpSlotSetLib {
 
     function calculateLpTokenMinting(
         LpSlotSet storage self,
-        LpContext memory ctx,
+        LpContext calldata ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
@@ -315,7 +294,7 @@ library LpSlotSetLib {
 
     function removeLiquidity(
         LpSlotSet storage self,
-        LpContext memory ctx,
+        LpContext calldata ctx,
         int16 tradingFeeRate,
         uint256 lpTokenAmount
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
@@ -326,7 +305,7 @@ library LpSlotSetLib {
 
     function calculateLpTokenValue(
         LpSlotSet storage self,
-        LpContext memory ctx,
+        LpContext calldata ctx,
         int16 tradingFeeRate,
         uint256 lpTokenAmount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {

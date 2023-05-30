@@ -29,7 +29,7 @@ contract USUMLpToken is ERC1155Supply {
         market = IUSUMMarket(msg.sender);
     }
 
-    function mint(address to, uint256 id, uint256 amount, bytes memory data) external onlyMarket {
+    function mint(address to, uint256 id, uint256 amount, bytes calldata data) external onlyMarket {
         _mint(to, id, amount, data);
     }
 

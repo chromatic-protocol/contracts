@@ -71,7 +71,7 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
     }
 
     function getSlotLiquidities(
-        int16[] memory tradingFeeRates
+        int16[] calldata tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
@@ -80,7 +80,7 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
     }
 
     function getSlotFreeLiquidities(
-        int16[] memory tradingFeeRates
+        int16[] calldata tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {

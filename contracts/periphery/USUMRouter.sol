@@ -67,7 +67,15 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 maxAllowableTradingFee,
         uint256 deadline
     ) external ensure(deadline) returns (Position memory) {
-        _getAccount(msg.sender).openPosition(market, qty, leverage, takerMargin, makerMargin, maxAllowableTradingFee);
+        return
+            _getAccount(msg.sender).openPosition(
+                market,
+                qty,
+                leverage,
+                takerMargin,
+                makerMargin,
+                maxAllowableTradingFee
+            );
     }
 
     function closePosition(address market, uint256 positionId, uint256 deadline) external ensure(deadline) {
