@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Test} from "forge-std/Test.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {QTY_PRECISION, LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {Test} from 'forge-std/Test.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {Fixed18Lib} from '@equilibria/root/number/types/Fixed18.sol';
+import {Position} from '@usum/core/libraries/Position.sol';
+import {QTY_PRECISION, LEVERAGE_PRECISION} from '@usum/core/libraries/PositionUtil.sol';
+import {LpContext} from '@usum/core/libraries/LpContext.sol';
+import {LpSlotMargin} from '@usum/core/libraries/LpSlotMargin.sol';
+import {LpSlot, LpSlotLib} from '@usum/core/external/lpslot/LpSlot.sol';
+import {LpSlotSet} from '@usum/core/external/lpslot/LpSlotSet.sol';
+import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
+import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
+import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
@@ -28,22 +28,10 @@ contract LpSlotSetTest is Test {
         vault = IUSUMVault(address(2));
         market = IUSUMMarket(address(3));
 
-        vm.mockCall(
-            address(vault),
-            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
-            abi.encode(0)
-        );
+        vm.mockCall(address(vault), abi.encodeWithSelector(vault.getPendingSlotShare.selector), abi.encode(0));
 
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.oracleProvider.selector),
-            abi.encode(provider)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.vault.selector),
-            abi.encode(vault)
-        );
+        vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
+        vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
 
         slotSet._longSlots[1].total = 1000 ether;
         slotSet._longSlots[2].total = 1000 ether;
@@ -53,9 +41,7 @@ contract LpSlotSetTest is Test {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
 
-        position.setSlotMargins(
-            slotSet.prepareSlotMargins(position.qty, 1500 ether)
-        );
+        position.setSlotMargins(slotSet.prepareSlotMargins(position.qty, 1500 ether));
 
         assertEq(position.leveragedQty(ctx), 1500 ether);
         assertEq(position._slotMargins[0].tradingFeeRate, 1);
@@ -69,25 +55,21 @@ contract LpSlotSetTest is Test {
     function testAcceptOpenPosition() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setSlotMargins(
-            slotSet.prepareSlotMargins(position.qty, 1500 ether)
-        );
+        position.setSlotMargins(slotSet.prepareSlotMargins(position.qty, 1500 ether));
 
         slotSet.acceptOpenPosition(ctx, position);
 
         assertEq(slotSet._minAvailableFeeRateLong, 2);
         assertEq(slotSet._longSlots[1].total, 1000.1 ether);
-        assertEq(slotSet._longSlots[1].balance(), 0.1 ether);
+        assertEq(slotSet._longSlots[1].freeLiquidity(), 0.1 ether);
         assertEq(slotSet._longSlots[2].total, 1000.1 ether);
-        assertEq(slotSet._longSlots[2].balance(), 500.1 ether);
+        assertEq(slotSet._longSlots[2].freeLiquidity(), 500.1 ether);
     }
 
     function testCloseOpenPosition_whenSameRound() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setSlotMargins(
-            slotSet.prepareSlotMargins(position.qty, 1500 ether)
-        );
+        position.setSlotMargins(slotSet.prepareSlotMargins(position.qty, 1500 ether));
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 1;
@@ -100,17 +82,15 @@ contract LpSlotSetTest is Test {
 
         assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 1000.1 ether);
-        assertEq(slotSet._longSlots[1].balance(), 1000.1 ether);
+        assertEq(slotSet._longSlots[1].freeLiquidity(), 1000.1 ether);
         assertEq(slotSet._longSlots[2].total, 1000.1 ether);
-        assertEq(slotSet._longSlots[2].balance(), 1000.1 ether);
+        assertEq(slotSet._longSlots[2].freeLiquidity(), 1000.1 ether);
     }
 
     function testCloseOpenPosition_whenNextRoundWithTakerProfit() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setSlotMargins(
-            slotSet.prepareSlotMargins(position.qty, 1500 ether)
-        );
+        position.setSlotMargins(slotSet.prepareSlotMargins(position.qty, 1500 ether));
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 2;
@@ -124,17 +104,15 @@ contract LpSlotSetTest is Test {
 
         assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 900.1 ether);
-        assertEq(slotSet._longSlots[1].balance(), 900.1 ether);
+        assertEq(slotSet._longSlots[1].freeLiquidity(), 900.1 ether);
         assertEq(slotSet._longSlots[2].total, 950.1 ether);
-        assertEq(slotSet._longSlots[2].balance(), 950.1 ether);
+        assertEq(slotSet._longSlots[2].freeLiquidity(), 950.1 ether);
     }
 
     function testCloseOpenPosition_whenNextRoundWithTakerLoss() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setSlotMargins(
-            slotSet.prepareSlotMargins(position.qty, 1500 ether)
-        );
+        position.setSlotMargins(slotSet.prepareSlotMargins(position.qty, 1500 ether));
         slotSet.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 2;
@@ -148,9 +126,9 @@ contract LpSlotSetTest is Test {
 
         assertEq(slotSet._minAvailableFeeRateLong, 1);
         assertEq(slotSet._longSlots[1].total, 1100.1 ether);
-        assertEq(slotSet._longSlots[1].balance(), 1100.1 ether);
+        assertEq(slotSet._longSlots[1].freeLiquidity(), 1100.1 ether);
         assertEq(slotSet._longSlots[2].total, 1050.1 ether);
-        assertEq(slotSet._longSlots[2].balance(), 1050.1 ether);
+        assertEq(slotSet._longSlots[2].freeLiquidity(), 1050.1 ether);
     }
 
     function testAddLiquidity() public {

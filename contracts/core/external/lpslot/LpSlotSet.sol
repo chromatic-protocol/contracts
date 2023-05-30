@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IUSUMLiquidity} from "@usum/core/interfaces/market/IUSUMLiquidity.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {SignedMath} from '@openzeppelin/contracts/utils/math/SignedMath.sol';
+import {IUSUMLiquidity} from '@usum/core/interfaces/market/IUSUMLiquidity.sol';
+import {LpSlot, LpSlotLib} from '@usum/core/external/lpslot/LpSlot.sol';
+import {PositionParam} from '@usum/core/external/lpslot/PositionParam.sol';
+import {Position} from '@usum/core/libraries/Position.sol';
+import {LpContext} from '@usum/core/libraries/LpContext.sol';
+import {LpSlotMargin} from '@usum/core/libraries/LpSlotMargin.sol';
+import {Errors} from '@usum/core/libraries/Errors.sol';
 
 struct LpSlotSet {
     uint16 _minAvailableFeeRateLong;
@@ -37,11 +37,7 @@ library LpSlotSetLib {
      * @param slotType The type of the slot ("L" for long, "S" for short).
      * @param earning The accumulated earning.
      */
-    event LpSlotEarningAccumulated(
-        uint16 indexed feeRate,
-        bytes1 slotType,
-        uint256 earning
-    );
+    event LpSlotEarningAccumulated(uint16 indexed feeRate, bytes1 slotType, uint256 earning);
 
     uint256 private constant FEE_RATES_LENGTH = 36;
     uint16 private constant MIN_FEE_RATE = 1;
@@ -96,24 +92,21 @@ library LpSlotSetLib {
         for (; to < FEE_RATES_LENGTH; to++) {
             if (remain == 0) break;
 
-            uint256 balance = _slots[_tradingFeeRates[to]].balance();
-            if (remain <= balance) {
+            uint256 freeLiquidity = _slots[_tradingFeeRates[to]].freeLiquidity();
+            if (remain <= freeLiquidity) {
                 _slotMargins[to] = remain;
                 remain = 0;
             } else {
-                _slotMargins[to] = balance;
-                remain -= balance;
+                _slotMargins[to] = freeLiquidity;
+                remain -= freeLiquidity;
             }
         }
 
-        require(remain == 0, Errors.NOT_ENOUGH_SLOT_BALANCE);
+        require(remain == 0, Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
 
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](to - from);
         for (uint256 i = from; i < to; i++) {
-            slotMargins[i - from] = LpSlotMargin({
-                tradingFeeRate: _tradingFeeRates[i],
-                amount: _slotMargins[i]
-            });
+            slotMargins[i - from] = LpSlotMargin({tradingFeeRate: _tradingFeeRates[i], amount: _slotMargins[i]});
         }
 
         return slotMargins;
@@ -138,31 +131,20 @@ library LpSlotSetLib {
      * @param ctx The LpContext object.
      * @param position The Position object representing the open position.
      */
-    function acceptOpenPosition(
-        LpSlotSet storage self,
-        LpContext memory ctx,
-        Position memory position
-    ) external {
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(
-            self,
-            position.qty
-        );
+    function acceptOpenPosition(LpSlotSet storage self, LpContext memory ctx, Position memory position) external {
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
-        _proportionalPositionParamValue[]
-            memory paramValues = divideToPositionParamValue(
-                position.leveragedQty(ctx),
-                makerMargin,
-                position.takerMargin,
-                slotMargins
-            );
-
-        PositionParam memory param = newPositionParam(
-            position.openVersion,
-            position.openTimestamp
+        _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
+            position.leveragedQty(ctx),
+            makerMargin,
+            position.takerMargin,
+            slotMargins
         );
+
+        PositionParam memory param = newPositionParam(position.openVersion, position.openTimestamp);
         for (uint256 i = 0; i < slotMargins.length; i++) {
             LpSlotMargin memory slotMargin = slotMargins[i];
 
@@ -171,41 +153,25 @@ library LpSlotSetLib {
                 param.takerMargin = paramValues[i].takerMargin;
                 param.makerMargin = slotMargin.amount;
 
-                _slots[slotMargins[i].tradingFeeRate].openPosition(
-                    ctx,
-                    param,
-                    slotMargin.tradingFee()
-                );
+                _slots[slotMargins[i].tradingFeeRate].openPosition(ctx, param, slotMargin.tradingFee());
             }
         }
 
-        setMinAvailableFeeRate(
-            self,
-            position,
-            slotMargins[slotMargins.length - 1].tradingFeeRate
-        );
+        setMinAvailableFeeRate(self, position, slotMargins[slotMargins.length - 1].tradingFeeRate);
     }
 
-    function acceptClosePosition(
-        LpSlotSet storage self,
-        LpContext memory ctx,
-        Position memory position
-    ) external {
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(
-            self,
-            position.qty
-        );
+    function acceptClosePosition(LpSlotSet storage self, LpContext memory ctx, Position memory position) external {
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
-        _proportionalPositionParamValue[]
-            memory paramValues = divideToPositionParamValue(
-                position.leveragedQty(ctx),
-                makerMargin,
-                position.takerMargin,
-                slotMargins
-            );
+        _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
+            position.leveragedQty(ctx),
+            makerMargin,
+            position.takerMargin,
+            slotMargins
+        );
 
         PositionParam memory param = newPositionParam(
             position.openVersion,
@@ -262,19 +228,15 @@ library LpSlotSetLib {
             Errors.EXCEED_MARGIN_RANGE
         );
 
-        mapping(uint16 => LpSlot) storage _slots = targetSlots(
-            self,
-            position.qty
-        );
+        mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
-        _proportionalPositionParamValue[]
-            memory paramValues = divideToPositionParamValue(
-                position.leveragedQty(ctx),
-                makerMargin,
-                position.takerMargin,
-                slotMargins
-            );
+        _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
+            position.leveragedQty(ctx),
+            makerMargin,
+            position.takerMargin,
+            slotMargins
+        );
 
         PositionParam memory param = newPositionParam(
             position.openVersion,
@@ -286,9 +248,7 @@ library LpSlotSetLib {
         if (realizedPnl == 0) {
             for (uint256 i = 0; i < slotMargins.length; i++) {
                 if (slotMargins[i].amount > 0) {
-                    LpSlot storage _slot = _slots[
-                        slotMargins[i].tradingFeeRate
-                    ];
+                    LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
 
                     param.leveragedQty = paramValues[i].leveragedQty;
                     param.takerMargin = paramValues[i].takerMargin;
@@ -300,19 +260,13 @@ library LpSlotSetLib {
         } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
             for (uint256 i = 0; i < slotMargins.length; i++) {
                 if (slotMargins[i].amount > 0) {
-                    LpSlot storage _slot = _slots[
-                        slotMargins[i].tradingFeeRate
-                    ];
+                    LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
 
                     param.leveragedQty = paramValues[i].leveragedQty;
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = slotMargins[i].amount;
 
-                    _slot.claimPosition(
-                        ctx,
-                        param,
-                        param.makerMargin.toInt256()
-                    );
+                    _slot.claimPosition(ctx, param, param.makerMargin.toInt256());
                 }
             }
         } else {
@@ -321,18 +275,13 @@ library LpSlotSetLib {
 
             for (uint256 i = 0; i < slotMargins.length; i++) {
                 if (slotMargins[i].amount > 0) {
-                    LpSlot storage _slot = _slots[
-                        slotMargins[i].tradingFeeRate
-                    ];
+                    LpSlot storage _slot = _slots[slotMargins[i].tradingFeeRate];
 
                     param.leveragedQty = paramValues[i].leveragedQty;
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = slotMargins[i].amount;
 
-                    uint256 absTakerPnl = remainRealizedPnl.mulDiv(
-                        param.makerMargin,
-                        remainMakerMargin
-                    );
+                    uint256 absTakerPnl = remainRealizedPnl.mulDiv(param.makerMargin, remainMakerMargin);
                     if (realizedPnl < 0) {
                         // maker profit
                         absTakerPnl = Math.min(absTakerPnl, param.takerMargin);
@@ -341,9 +290,7 @@ library LpSlotSetLib {
                         absTakerPnl = Math.min(absTakerPnl, param.makerMargin);
                     }
 
-                    int256 takerPnl = realizedPnl < 0
-                        ? -(absTakerPnl.toInt256())
-                        : absTakerPnl.toInt256();
+                    int256 takerPnl = realizedPnl < 0 ? -(absTakerPnl.toInt256()) : absTakerPnl.toInt256();
 
                     _slot.claimPosition(ctx, param, takerPnl);
 
@@ -381,11 +328,7 @@ library LpSlotSetLib {
         int16 tradingFeeRate,
         uint256 amount,
         uint256 lpTokenTotalSupply
-    )
-        external
-        _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 liquidity)
-    {
+    ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 liquidity) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
         liquidity = slot.addLiquidity(ctx, amount, lpTokenTotalSupply);
@@ -402,18 +345,9 @@ library LpSlotSetLib {
         int16 tradingFeeRate,
         uint256 amount,
         uint256 lpTokenTotalSupply
-    )
-        external
-        view
-        _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 lpTokenAmount)
-    {
+    ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 lpTokenAmount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        lpTokenAmount = slot.calculateLiquidity(
-            ctx,
-            amount,
-            lpTokenTotalSupply
-        );
+        lpTokenAmount = slot.calculateLiquidity(ctx, amount, lpTokenTotalSupply);
     }
 
     /**
@@ -448,46 +382,19 @@ library LpSlotSetLib {
         int16 tradingFeeRate,
         uint256 lpTokenAmount,
         uint256 lpTokenTotalSupply
-    )
-        external
-        view
-        _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 amount)
-    {
+    ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         amount = slot.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
     }
 
-    /**
-     * @notice Retrieves the total slot margin amount for a given trading fee rate.
-     * @dev This function retrieves the total slot margin amount for the specified trading fee rate
-     *      by retrieving the target slot and returning its total balance.
-     * @param self The storage reference to the LpSlotSet.
-     * @param tradingFeeRate The trading fee rate associated with the slot.
-     * @return amount The total slot margin amount for the given trading fee rate.
-     */
-    function getSlotMarginTotal(
-        LpSlotSet storage self,
-        int16 tradingFeeRate
-    ) external view returns (uint256 amount) {
+    function getSlotLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         return slot.total;
     }
 
-    /**
-     * @notice Retrieves the unused slot margin amount for a given trading fee rate.
-     * @dev This function retrieves the unused slot margin amount for the specified trading fee rate
-     *      by retrieving the target slot and returning its balance.
-     * @param self The storage reference to the LpSlotSet.
-     * @param tradingFeeRate The trading fee rate associated with the slot.
-     * @return amount The unused slot margin amount for the given trading fee rate.
-     */
-    function getSlotMarginUnused(
-        LpSlotSet storage self,
-        int16 tradingFeeRate
-    ) external view returns (uint256 amount) {
+    function getSlotFreeLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        return slot.balance();
+        return slot.freeLiquidity();
     }
 
     /**
@@ -497,10 +404,7 @@ library LpSlotSetLib {
      * @param sign The sign of the value (-1 for negative, 1 for positive).
      * @return _slots The target slots mapping associated with the sign of the value.
      */
-    function targetSlots(
-        LpSlotSet storage self,
-        int256 sign
-    ) private view returns (mapping(uint16 => LpSlot) storage) {
+    function targetSlots(LpSlotSet storage self, int256 sign) private view returns (mapping(uint16 => LpSlot) storage) {
         return sign < 0 ? self._shortSlots : self._longSlots;
     }
 
@@ -511,14 +415,8 @@ library LpSlotSetLib {
      * @param tradingFeeRate The trading fee rate associated with the slot.
      * @return slot The target slot associated with the trading fee rate.
      */
-    function targetSlot(
-        LpSlotSet storage self,
-        int16 tradingFeeRate
-    ) private view returns (LpSlot storage) {
-        return
-            tradingFeeRate < 0
-                ? self._shortSlots[abs(tradingFeeRate)]
-                : self._longSlots[abs(tradingFeeRate)];
+    function targetSlot(LpSlotSet storage self, int16 tradingFeeRate) private view returns (LpSlot storage) {
+        return tradingFeeRate < 0 ? self._shortSlots[abs(tradingFeeRate)] : self._longSlots[abs(tradingFeeRate)];
     }
 
     /**
@@ -529,13 +427,8 @@ library LpSlotSetLib {
      * @param sign The sign of the value (-1 for negative, 1 for positive).
      * @return feeRate The minimum available fee rate associated with the sign of the value.
      */
-    function minAvailableFeeRate(
-        LpSlotSet storage self,
-        int256 sign
-    ) private view returns (uint16) {
-        uint16 feeRate = sign < 0
-            ? self._minAvailableFeeRateShort
-            : self._minAvailableFeeRateLong;
+    function minAvailableFeeRate(LpSlotSet storage self, int256 sign) private view returns (uint16) {
+        uint16 feeRate = sign < 0 ? self._minAvailableFeeRateShort : self._minAvailableFeeRateLong;
         return feeRate == 0 ? MIN_FEE_RATE : feeRate;
     }
 
@@ -549,11 +442,7 @@ library LpSlotSetLib {
      * @param position The position information.
      * @param feeRate The fee rate to be set as the minimum available fee rate.
      */
-    function setMinAvailableFeeRate(
-        LpSlotSet storage self,
-        Position memory position,
-        uint16 feeRate
-    ) private {
+    function setMinAvailableFeeRate(LpSlotSet storage self, Position memory position, uint16 feeRate) private {
         if (position.qty < 0) {
             self._minAvailableFeeRateShort = feeRate;
         } else {
@@ -570,10 +459,7 @@ library LpSlotSetLib {
      * @param self The storage reference to the LpSlotSet.
      * @param feeRate The fee rate to be set as the minimum available fee rate.
      */
-    function setMinAvailableFeeRate(
-        LpSlotSet storage self,
-        int16 feeRate
-    ) private {
+    function setMinAvailableFeeRate(LpSlotSet storage self, int16 feeRate) private {
         if (feeRate < 0) {
             self._minAvailableFeeRateShort = abs(feeRate);
         } else {
@@ -602,25 +488,14 @@ library LpSlotSetLib {
         uint256 remainLeveragedQty = leveragedQty.abs();
         uint256 remainTakerMargin = takerMargin;
 
-        _proportionalPositionParamValue[]
-            memory values = new _proportionalPositionParamValue[](
-                slotMargins.length
-            );
+        _proportionalPositionParamValue[] memory values = new _proportionalPositionParamValue[](slotMargins.length);
 
         for (uint256 i = 0; i < slotMargins.length - 1; i++) {
-            uint256 _qty = remainLeveragedQty.mulDiv(
-                slotMargins[i].amount,
-                makerMargin
-            );
-            uint256 _takerMargin = remainTakerMargin.mulDiv(
-                slotMargins[i].amount,
-                makerMargin
-            );
+            uint256 _qty = remainLeveragedQty.mulDiv(slotMargins[i].amount, makerMargin);
+            uint256 _takerMargin = remainTakerMargin.mulDiv(slotMargins[i].amount, makerMargin);
 
             values[i] = _proportionalPositionParamValue({
-                leveragedQty: leveragedQty < 0
-                    ? _qty.toInt256()
-                    : -(_qty.toInt256()), // opposit side
+                leveragedQty: leveragedQty < 0 ? _qty.toInt256() : -(_qty.toInt256()), // opposit side
                 takerMargin: _takerMargin
             });
 
@@ -629,9 +504,7 @@ library LpSlotSetLib {
         }
 
         values[slotMargins.length - 1] = _proportionalPositionParamValue({
-            leveragedQty: leveragedQty < 0
-                ? remainLeveragedQty.toInt256()
-                : -(remainLeveragedQty.toInt256()), // opposit side
+            leveragedQty: leveragedQty < 0 ? remainLeveragedQty.toInt256() : -(remainLeveragedQty.toInt256()), // opposit side
             takerMargin: remainTakerMargin
         });
 
@@ -686,8 +559,7 @@ library LpSlotSetLib {
 
         uint256 idx = findUpperBound(_tradingFeeRates, absFeeRate);
         require(
-            idx < _tradingFeeRates.length &&
-                absFeeRate == _tradingFeeRates[idx],
+            idx < _tradingFeeRates.length && absFeeRate == _tradingFeeRates[idx],
             Errors.UNSUPPORTED_TRADING_FEE_RATE
         );
     }
@@ -707,11 +579,7 @@ library LpSlotSetLib {
      *      ranging from the minimum fee rate to the maximum fee rate with step increments.
      * @return tradingFeeRates The array of supported trading fee rates.
      */
-    function tradingFeeRates()
-        private
-        pure
-        returns (uint16[FEE_RATES_LENGTH] memory)
-    {
+    function tradingFeeRates() private pure returns (uint16[FEE_RATES_LENGTH] memory) {
         // prettier-ignore
         return [
             MIN_FEE_RATE, 2, 3, 4, 5, 6, 7, 8, 9, // 0.01% ~ 0.09%, step 0.01%
@@ -731,10 +599,7 @@ library LpSlotSetLib {
      * @param element The element to find the upper bound for.
      * @return uint256 The index of the upper bound of the element in the array.
      */
-    function findUpperBound(
-        uint16[FEE_RATES_LENGTH] memory array,
-        uint16 element
-    ) private pure returns (uint256) {
+    function findUpperBound(uint16[FEE_RATES_LENGTH] memory array, uint16 element) private pure returns (uint256) {
         if (array.length == 0) {
             return 0;
         }
@@ -773,11 +638,7 @@ library LpSlotSetLib {
      * @param earning The total earnings to be distributed.
      * @param marketBalance The market balance.
      */
-    function distributeEarning(
-        LpSlotSet storage self,
-        uint256 earning,
-        uint256 marketBalance
-    ) external {
+    function distributeEarning(LpSlotSet storage self, uint256 earning, uint256 marketBalance) external {
         uint256 remainEarning = earning;
         uint256 remainBalance = marketBalance;
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
@@ -787,14 +648,14 @@ library LpSlotSetLib {
             remainEarning,
             remainBalance,
             _tradingFeeRates,
-            "L"
+            'L'
         );
         (remainEarning, remainBalance) = distributeEarning(
             self._shortSlots,
             remainEarning,
             remainBalance,
             _tradingFeeRates,
-            "S"
+            'S'
         );
     }
 
@@ -830,10 +691,7 @@ library LpSlotSetLib {
 
             if (slotBalance == 0) continue;
 
-            uint256 slotEarning = remainEarning.mulDiv(
-                slotBalance,
-                remainBalance
-            );
+            uint256 slotEarning = remainEarning.mulDiv(slotBalance, remainBalance);
 
             slot.total += slotEarning;
 

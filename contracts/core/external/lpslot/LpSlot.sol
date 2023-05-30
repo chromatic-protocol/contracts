@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
-import {LpSlotClosedPosition, LpSlotClosedPositionLib} from "@usum/core/external/lpslot/LpSlotClosedPosition.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
+import {SignedMath} from '@openzeppelin/contracts/utils/math/SignedMath.sol';
+import {LpSlotPosition, LpSlotPositionLib} from '@usum/core/external/lpslot/LpSlotPosition.sol';
+import {LpSlotClosedPosition, LpSlotClosedPositionLib} from '@usum/core/external/lpslot/LpSlotClosedPosition.sol';
+import {PositionParam} from '@usum/core/external/lpslot/PositionParam.sol';
+import {LpContext} from '@usum/core/libraries/LpContext.sol';
+import {Errors} from '@usum/core/libraries/Errors.sol';
 
 struct LpSlot {
     uint256 total;
@@ -59,10 +59,7 @@ library LpSlotLib {
         PositionParam memory param,
         uint256 tradingFee
     ) internal _settle(self, ctx) {
-        require(
-            param.makerMargin <= self.balance(),
-            Errors.NOT_ENOUGH_SLOT_BALANCE
-        );
+        require(param.makerMargin <= self.freeLiquidity(), Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
 
         self._position.onOpenPosition(param);
         self.total += tradingFee;
@@ -98,9 +95,7 @@ library LpSlotLib {
         if (param.closeVersion == 0) {
             // called when liquidate
             self._position.onClosePosition(ctx, param);
-        } else if (
-            param.closeVersion > param.openVersion
-        ) {
+        } else if (param.closeVersion > param.openVersion) {
             self._closedPosition.onClaimPosition(ctx, param);
         }
 
@@ -112,13 +107,7 @@ library LpSlotLib {
         }
     }
 
-    /**
-     * @notice Calculates the balance of the slot.
-     * @dev This function subtracts the total maker margin held in the slot position from the total balance.
-     * @param self The LpSlot storage.
-     * @return uint256 The balance of the slot.
-     */
-    function balance(LpSlot storage self) internal view returns (uint256) {
+    function freeLiquidity(LpSlot storage self) internal view returns (uint256) {
         return self.total - self._position.totalMakerMargin();
     }
 
@@ -131,22 +120,12 @@ library LpSlotLib {
      * @param ctx The LpContext memory.
      * @return uint256 The value of the slot.
      */
-    function value(
-        LpSlot storage self,
-        LpContext memory ctx
-    ) internal view returns (uint256) {
+    function value(LpSlot storage self, LpContext memory ctx) internal view returns (uint256) {
         int256 unrealizedPnl = self._position.unrealizedPnl(ctx);
         uint256 absPnl = unrealizedPnl.abs();
 
-        uint256 _value = unrealizedPnl < 0
-            ? self.total - absPnl
-            : self.total + absPnl;
-        return
-            _value +
-            ctx.market.vault().getPendingSlotShare(
-                address(ctx.market),
-                self.total
-            );
+        uint256 _value = unrealizedPnl < 0 ? self.total - absPnl : self.total + absPnl;
+        return _value + ctx.market.vault().getPendingSlotShare(address(ctx.market), self.total);
     }
 
     /**
@@ -169,11 +148,7 @@ library LpSlotLib {
     ) internal _settle(self, ctx) returns (uint256 lpTokenAmount) {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
-        lpTokenAmount = self.calculateLiquidity(
-            ctx,
-            amount,
-            lpTokenTotalSupply
-        );
+        lpTokenAmount = self.calculateLiquidity(ctx, amount, lpTokenTotalSupply);
 
         self.total += amount;
     }
@@ -188,26 +163,10 @@ library LpSlotLib {
             lpTokenAmount = amount;
         } else {
             uint256 slotValue = self.value(ctx);
-            lpTokenAmount = amount.mulDiv(
-                lpTokenTotalSupply,
-                slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue
-            );
+            lpTokenAmount = amount.mulDiv(lpTokenTotalSupply, slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue);
         }
     }
 
-    /**
-     * @notice Removes liquidity from the slot.
-     * @dev The liquidity amount is calculated based on the current slot value
-     *      and the total supplied LP token.
-     *      The amount of liquidity removed is returned,
-     *      and the total amount is decremented by the removed liquidity.
-     *      It also checks if the resulting balance is sufficient.
-     * @param self The LpSlot storage.
-     * @param ctx The LpContext memory.
-     * @param lpTokenAmount The amount of LP token to be burned.
-     * @param lpTokenTotalSupply The total supplied LP token.
-     * @return amount The amount of liquidity removed.
-     */
     function removeLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
@@ -215,7 +174,7 @@ library LpSlotLib {
         uint256 lpTokenTotalSupply
     ) internal _settle(self, ctx) returns (uint256 amount) {
         amount = self.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
-        require(amount <= self.balance(), Errors.NOT_ENOUGH_SLOT_BALANCE);
+        require(amount <= self.freeLiquidity(), Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
 
         self.total -= amount;
     }

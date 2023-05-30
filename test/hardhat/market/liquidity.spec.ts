@@ -147,8 +147,8 @@ describe("market test", async function () {
     // }
     // logLiquidity(totals, unuseds);
 
-    const totalMargins = await testData.market.getSlotMarginsTotal(totalFees)
-    const unusedMargins = await testData.market.getSlotMarginsTotal(totalFees)
+    const totalMargins = await testData.market.getSlotLiquidities(totalFees)
+    const unusedMargins = await testData.market.getSlotFreeLiquidities(totalFees)
 
     logLiquidity(totalMargins, unusedMargins)
   })
