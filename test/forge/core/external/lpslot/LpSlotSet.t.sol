@@ -33,8 +33,8 @@ contract LpSlotSetTest is Test {
         vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
         vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
 
-        slotSet._longSlots[1].total = 1000 ether;
-        slotSet._longSlots[2].total = 1000 ether;
+        slotSet._longSlots[1]._liquidity.total = 1000 ether;
+        slotSet._longSlots[2]._liquidity.total = 1000 ether;
     }
 
     function testPrepareSlotMargins() public {
@@ -59,9 +59,9 @@ contract LpSlotSetTest is Test {
 
         slotSet.acceptOpenPosition(ctx, position);
 
-        assertEq(slotSet._longSlots[1].total, 1000.1 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 1000.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 0.1 ether);
-        assertEq(slotSet._longSlots[2].total, 1000.1 ether);
+        assertEq(slotSet._longSlots[2].liquidity(), 1000.1 ether);
         assertEq(slotSet._longSlots[2].freeLiquidity(), 500.1 ether);
     }
 
@@ -79,9 +79,9 @@ contract LpSlotSetTest is Test {
         slotSet.acceptClosePosition(ctx, position);
         slotSet.acceptClaimPosition(ctx, position, 0);
 
-        assertEq(slotSet._longSlots[1].total, 1000.1 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 1000.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 1000.1 ether);
-        assertEq(slotSet._longSlots[2].total, 1000.1 ether);
+        assertEq(slotSet._longSlots[2].liquidity(), 1000.1 ether);
         assertEq(slotSet._longSlots[2].freeLiquidity(), 1000.1 ether);
     }
 
@@ -100,9 +100,9 @@ contract LpSlotSetTest is Test {
         slotSet.acceptClosePosition(ctx, position);
         slotSet.acceptClaimPosition(ctx, position, 150 ether);
 
-        assertEq(slotSet._longSlots[1].total, 900.1 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 900.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 900.1 ether);
-        assertEq(slotSet._longSlots[2].total, 950.1 ether);
+        assertEq(slotSet._longSlots[2].liquidity(), 950.1 ether);
         assertEq(slotSet._longSlots[2].freeLiquidity(), 950.1 ether);
     }
 
@@ -121,9 +121,9 @@ contract LpSlotSetTest is Test {
         slotSet.acceptClosePosition(ctx, position);
         slotSet.acceptClaimPosition(ctx, position, -150 ether);
 
-        assertEq(slotSet._longSlots[1].total, 1100.1 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 1100.1 ether);
         assertEq(slotSet._longSlots[1].freeLiquidity(), 1100.1 ether);
-        assertEq(slotSet._longSlots[2].total, 1050.1 ether);
+        assertEq(slotSet._longSlots[2].liquidity(), 1050.1 ether);
         assertEq(slotSet._longSlots[2].freeLiquidity(), 1050.1 ether);
     }
 
@@ -133,10 +133,11 @@ contract LpSlotSetTest is Test {
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        uint256 liquidity = slotSet.addLiquidity(ctx, 1, 100 ether, 1000 ether);
+        // uint256 liquidity = slotSet.addLiquidity(ctx, 1, 100 ether, 1000 ether);
+        slotSet.addLiquidity(ctx, 1, 100 ether);
 
-        assertEq(liquidity, 100 ether);
-        assertEq(slotSet._longSlots[1].total, 1100 ether);
+        // assertEq(liquidity, 100 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 1100 ether);
     }
 
     function testRemoveLiquidity() public {
@@ -145,10 +146,11 @@ contract LpSlotSetTest is Test {
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
+        // uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
+        uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether);
 
         assertEq(amount, 100 ether);
-        assertEq(slotSet._longSlots[1].total, 900 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 900 ether);
     }
 
     function _newLpContext() private view returns (LpContext memory ctx) {

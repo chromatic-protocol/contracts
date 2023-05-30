@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
+import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
+import {Position} from '@usum/core/libraries/Position.sol';
+import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
 
 interface IUSUMRouter is IUSUMLiquidityCallback {
     function openPosition(
@@ -15,11 +16,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint256 deadline
     ) external returns (Position memory);
 
-    function closePosition(
-        address market,
-        uint256 positionId,
-        uint256 deadline
-    ) external;
+    function closePosition(address market, uint256 positionId, uint256 deadline) external;
 
     function claimPosition(address market, uint256 positionId) external;
 
@@ -29,7 +26,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         uint256 amount,
         address recipient,
         uint256 deadline
-    ) external returns (uint256 lpTokenAmount);
+    ) external returns (LpReceipt memory);
 
     function removeLiquidity(
         address market,

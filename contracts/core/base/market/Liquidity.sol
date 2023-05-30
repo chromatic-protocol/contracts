@@ -6,15 +6,13 @@ import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Re
 import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
 import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
+import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
 import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
 
 abstract contract Liquidity is MarketValue, IERC1155Receiver {
     using Math for uint256;
 
     uint256 public constant MINIMUM_LIQUIDITY = 10 ** 3;
-    uint256 public constant MINIMUM_MARKET_VALUATION = 10 ** 3;
-
-    error OnlyAccessableByVault();
 
     modifier onlyVault() {
         if (msg.sender != address(vault)) revert OnlyAccessableByVault();
@@ -25,24 +23,20 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external override nonReentrant returns (uint256 lpTokenAmount) {
+    ) external override nonReentrant returns (LpReceipt memory) {
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         IUSUMLiquidityCallback(msg.sender).addLiquidityCallback(address(settlementToken), address(vault), data);
+
         uint256 amount = settlementToken.balanceOf(address(vault)) - balanceBefore;
-        if (amount == 0) return 0;
-
-        vault.onAddLiquidity(amount);
-
-        uint256 id = LpTokenLib.encodeId(tradingFeeRate);
+        if (amount <= MINIMUM_LIQUIDITY) revert TooSmallAmount();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        lpTokenAmount = lpSlotSet.addLiquidity(ctx, tradingFeeRate, amount, lpToken.totalSupply(id));
+        vault.onAddLiquidity(amount);
+        lpSlotSet.addLiquidity(ctx, tradingFeeRate, amount);
 
-        lpToken.mint(recipient, id, lpTokenAmount, data);
-
-        emit AddLiquidity(recipient, tradingFeeRate, id, amount, lpTokenAmount);
+        emit AddLiquidity(recipient, tradingFeeRate, amount);
     }
 
     function removeLiquidity(
@@ -58,12 +52,10 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         uint256 lpTokenAmount = lpToken.balanceOf(address(lpToken), id) - balanceBefore;
         if (lpTokenAmount == 0) return 0;
 
-        uint256 _totalSupply = lpToken.totalSupply(id);
-
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        amount = lpSlotSet.removeLiquidity(ctx, tradingFeeRate, lpTokenAmount, _totalSupply);
+        amount = lpSlotSet.removeLiquidity(ctx, tradingFeeRate, lpTokenAmount);
 
         vault.onRemoveLiquidity(recipient, amount);
 
@@ -94,25 +86,12 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         lpSlotSet.distributeEarning(earning, marketBalance);
     }
 
-    function calculateLpTokenMinting(
-        int16 tradingFeeRate,
-        uint256 amount
-    ) external view returns (uint256 lpTokenAmount) {
-        lpTokenAmount = lpSlotSet.calculateLpTokenMinting(
-            newLpContext(),
-            tradingFeeRate,
-            amount,
-            lpToken.totalSupply(LpTokenLib.encodeId(tradingFeeRate))
-        );
+    function calculateLpTokenMinting(int16 tradingFeeRate, uint256 amount) external view returns (uint256) {
+        return lpSlotSet.calculateLpTokenMinting(newLpContext(), tradingFeeRate, amount);
     }
 
     function calculateLpTokenValue(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256 amount) {
-        amount = lpSlotSet.calculateLpTokenValue(
-            newLpContext(),
-            tradingFeeRate,
-            lpTokenAmount,
-            lpToken.totalSupply(LpTokenLib.encodeId(tradingFeeRate))
-        );
+        amount = lpSlotSet.calculateLpTokenValue(newLpContext(), tradingFeeRate, lpTokenAmount);
     }
 
     // implement IERC1155Receiver

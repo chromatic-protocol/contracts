@@ -297,64 +297,46 @@ library LpSlotSetLib {
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 amount,
-        uint256 lpTokenTotalSupply
-    ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 liquidity) {
+        uint256 amount
+    ) external _validTradingFeeRate(tradingFeeRate) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        liquidity = slot.addLiquidity(ctx, amount, lpTokenTotalSupply);
+        slot.addLiquidity(ctx, amount);
     }
 
     function calculateLpTokenMinting(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 amount,
-        uint256 lpTokenTotalSupply
-    ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 lpTokenAmount) {
+        uint256 amount
+    ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        lpTokenAmount = slot.calculateLpTokenMinting(ctx, amount, lpTokenTotalSupply);
+        return slot.calculateLpTokenMinting(ctx, amount);
     }
 
-    /**
-     * @notice Removes liquidity from the liquidity pool.
-     * @dev This function removes liquidity from the liquidity pool by performing the following steps:
-     *      1. Retrieves the target slot based on the trading fee rate.
-     *      2. Calls the removeLiquidity function on the target slot,
-     *         passing the LpContext, liquidity, and lpTokenTotalSupply.
-     *      3. Returns the amount of liquidity that was removed.
-     * @param self The storage reference to the LpSlotSet.
-     * @param ctx The LpContext memory containing the context information for the liquidity operation.
-     * @param tradingFeeRate The trading fee rate associated with the liquidity being removed.
-     * @param lpTokenAmount The amount of LP token to be burned.
-     * @param lpTokenTotalSupply The total supplied LP token.
-     * @return amount The amount of liquidity that was removed.
-     */
     function removeLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 lpTokenAmount,
-        uint256 lpTokenTotalSupply
+        uint256 lpTokenAmount
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
 
-        amount = slot.removeLiquidity(ctx, lpTokenAmount, lpTokenTotalSupply);
+        amount = slot.removeLiquidity(ctx, lpTokenAmount);
     }
 
     function calculateLpTokenValue(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 lpTokenAmount,
-        uint256 lpTokenTotalSupply
+        uint256 lpTokenAmount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        amount = slot.calculateLpTokenValue(ctx, lpTokenAmount, lpTokenTotalSupply);
+        amount = slot.calculateLpTokenValue(ctx, lpTokenAmount);
     }
 
     function getSlotLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        return slot.total;
+        return slot.liquidity();
     }
 
     function getSlotFreeLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {
@@ -604,13 +586,13 @@ library LpSlotSetLib {
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
             LpSlot storage slot = lpSlots[feeRate];
-            uint256 slotLiquidity = slot.total;
+            uint256 slotLiquidity = slot.liquidity();
 
             if (slotLiquidity == 0) continue;
 
             uint256 slotEarning = remainEarning.mulDiv(slotLiquidity, remainBalance);
 
-            slot.total += slotEarning;
+            slot.applyEarning(slotEarning);
 
             remainBalance -= slotLiquidity;
             remainEarning -= slotEarning;

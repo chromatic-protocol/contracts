@@ -29,7 +29,7 @@ contract LpSlotTest is Test {
         vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
         vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
 
-        slot.total = 20000 ether;
+        slot._liquidity.total = 20000 ether;
     }
 
     function testAddLiquidity() public {
@@ -39,10 +39,11 @@ contract LpSlotTest is Test {
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        uint256 liquidity = slot.addLiquidity(ctx, 100 ether, 20000 ether);
+        // uint256 liquidity = slot.addLiquidity(ctx, 100 ether, 20000 ether);
+        slot.addLiquidity(ctx, 100 ether);
 
-        assertEq(liquidity, 100 ether);
-        assertEq(slot.total, 20100 ether);
+        // assertEq(liquidity, 100 ether);
+        assertEq(slot.liquidity(), 20100 ether);
     }
 
     function testRemoveLiquidity() public {
@@ -52,10 +53,11 @@ contract LpSlotTest is Test {
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
 
-        uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
+        // uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
+        uint256 amount = slot.removeLiquidity(ctx, 100 ether);
 
         assertEq(amount, 100 ether);
-        assertEq(slot.total, 19900 ether);
+        assertEq(slot.liquidity(), 19900 ether);
     }
 
     function testValue() public {

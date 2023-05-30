@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
+import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
+
 interface IUSUMLiquidity {
-    event AddLiquidity(
-        address indexed recipient,
-        int16 indexed tradingFeeRate,
-        uint256 tokenId,
-        uint256 amount,
-        uint256 lpTokenAmount
-    );
+    error TooSmallAmount();
+    error OnlyAccessableByVault();
+
+    event AddLiquidity(address indexed recipient, int16 indexed tradingFeeRate, uint256 amount);
 
     event RemoveLiquidity(
         address indexed recipient,
@@ -22,7 +21,7 @@ interface IUSUMLiquidity {
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external returns (uint256 lpTokenAmount);
+    ) external returns (LpReceipt memory);
 
     function removeLiquidity(
         address recipient,

@@ -7,6 +7,7 @@ import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {SignedMath} from '@openzeppelin/contracts/utils/math/SignedMath.sol';
 import {Position} from '@usum/core/libraries/Position.sol';
+import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
 import {IERC1155} from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
 
 import {IUSUMRouter} from '@usum/periphery/interfaces/IUSUMRouter.sol';
@@ -83,12 +84,13 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 amount,
         address recipient,
         uint256 deadline
-    ) external ensure(deadline) returns (uint256 lpTokenAmount) {
-        lpTokenAmount = IUSUMMarket(market).addLiquidity(
-            recipient,
-            feeRate,
-            abi.encode(MintCallbackData({payer: msg.sender, amount: amount}))
-        );
+    ) external ensure(deadline) returns (LpReceipt memory) {
+        return
+            IUSUMMarket(market).addLiquidity(
+                recipient,
+                feeRate,
+                abi.encode(MintCallbackData({payer: msg.sender, amount: amount}))
+            );
     }
 
     function removeLiquidity(
