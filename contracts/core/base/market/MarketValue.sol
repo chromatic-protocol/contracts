@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 
 abstract contract MarketValue is MarketBase {
     function newLpContext() internal view returns (LpContext memory ctx) {

@@ -1,16 +1,14 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber } from "ethers";
-import { ethers } from "hardhat";
-import { deploy as marketDeploy } from "../deployMarket";
-import { logYellow } from "../log-utils";
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { BigNumber } from 'ethers'
+import { ethers } from 'hardhat'
+import { deploy as marketDeploy } from '../deployMarket'
+import { logYellow } from '../log-utils'
 
 export const prepareMarketTest = async () => {
   async function faucet(account: SignerWithAddress) {
-    const faucetTx = await settlementToken
-      .connect(account)
-      .faucet(ethers.utils.parseEther("1000000000"));
-    await faucetTx.wait();
+    const faucetTx = await settlementToken.connect(account).faucet(ethers.utils.parseEther('1000000000'))
+    await faucetTx.wait()
   }
   const {
     marketFactory,
@@ -22,42 +20,31 @@ export const prepareMarketTest = async () => {
     accountFactory,
     settlementToken,
     gelato,
-  } = await loadFixture(marketDeploy);
-  const [owner, tester, trader] = await ethers.getSigners();
-  console.log("owner", owner.address);
+  } = await loadFixture(marketDeploy)
+  const [owner, tester, trader] = await ethers.getSigners()
+  console.log('owner', owner.address)
 
-  await faucet(tester);
-  await faucet(trader);
+  await faucet(tester)
+  await faucet(trader)
 
-  const createAccountTx = await accountFactory.connect(trader).createAccount();
-  await createAccountTx.wait();
+  const createAccountTx = await accountFactory.connect(trader).createAccount()
+  await createAccountTx.wait()
 
-  const traderAccountAddr = await usumRouter.connect(trader).getAccount();
-  const traderAccount = await ethers.getContractAt(
-    "Account",
-    traderAccountAddr
-  );
+  const traderAccountAddr = await usumRouter.connect(trader).getAccount()
+  const traderAccount = await ethers.getContractAt('Account', traderAccountAddr)
 
-  logYellow(`\ttraderAccount: ${traderAccount}`);
+  logYellow(`\ttraderAccount: ${traderAccount}`)
 
   const transferTx = await settlementToken
     .connect(trader)
-    .transfer(traderAccountAddr, ethers.utils.parseEther("1000000"));
-  await transferTx.wait();
+    .transfer(traderAccountAddr, ethers.utils.parseEther('1000000'))
+  await transferTx.wait()
 
-  const traderRouter = usumRouter.connect(trader);
-  await (
-    await settlementToken
-      .connect(trader)
-      .approve(traderRouter.address, ethers.constants.MaxUint256)
-  ).wait();
+  const traderRouter = usumRouter.connect(trader)
+  await (await settlementToken.connect(trader).approve(traderRouter.address, ethers.constants.MaxUint256)).wait()
 
   async function updatePrice(price: number) {
-    await (
-      await oracleProvider.increaseVersion(
-        BigNumber.from(price.toString()).mul(10 ** 8)
-      )
-    ).wait();
+    await (await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))).wait()
   }
 
   return {
@@ -77,26 +64,13 @@ export const prepareMarketTest = async () => {
     gelato,
     // addLiquidity,
     // updatePrice,
-  };
-};
+  }
+}
 
-export const helpers = function (
-  testData: Awaited<ReturnType<typeof prepareMarketTest>>
-) {
-  const {
-    oracleProvider,
-    settlementToken,
-    tester,
-    usumRouter,
-    market,
-    traderRouter,
-  } = testData;
+export const helpers = function (testData: Awaited<ReturnType<typeof prepareMarketTest>>) {
+  const { oracleProvider, settlementToken, tester, usumRouter, market, traderRouter } = testData
   async function updatePrice(price: number) {
-    await (
-      await oracleProvider.increaseVersion(
-        BigNumber.from(price.toString()).mul(10 ** 8)
-      )
-    ).wait();
+    await (await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))).wait()
   }
 
   async function openPosition({
@@ -106,11 +80,11 @@ export const helpers = function (
     leverage = 500, // 5 x
     maxAllowFeeRate = 1,
   }: {
-    takerMargin?: BigNumber;
-    makerMargin?: BigNumber;
-    qty?: number;
-    leverage?: number;
-    maxAllowFeeRate?: number;
+    takerMargin?: BigNumber
+    makerMargin?: BigNumber
+    qty?: number
+    leverage?: number
+    maxAllowFeeRate?: number
   } = {}) {
     const openPositionTx = await traderRouter.openPosition(
       market.address,
@@ -120,53 +94,43 @@ export const helpers = function (
       makerMargin, // profit stop 10 token,
       makerMargin.mul(maxAllowFeeRate.toString()).div(100), // maxAllowFee (1% * makerMargin)
       ethers.constants.MaxUint256
-    );
+    )
     return {
       receipt: await openPositionTx.wait(),
       makerMargin,
       takerMargin,
       qty,
       leverage,
-    };
+    }
   }
 
   async function closePosition({}) {}
 
   async function addLiquidityTx(amount: BigNumber, feeSlotKey: number) {
-    const approveTx = await settlementToken
-      .connect(tester)
-      .approve(usumRouter.address, ethers.constants.MaxUint256);
-    await approveTx.wait();
+    const approveTx = await settlementToken.connect(tester).approve(usumRouter.address, ethers.constants.MaxUint256)
+    await approveTx.wait()
 
-    return usumRouter.connect(tester).addLiquidity(
-      market.address,
-      feeSlotKey,
-      amount,
-      tester.address,
-      ethers.constants.MaxUint256 // deadline
-    );
+    return usumRouter.connect(tester).addLiquidity(market.address, feeSlotKey, amount, tester.address)
   }
 
   async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
-    const approveTx = await settlementToken
-      .connect(tester)
-      .approve(usumRouter.address, ethers.constants.MaxUint256);
-    await approveTx.wait();
+    const approveTx = await settlementToken.connect(tester).approve(usumRouter.address, ethers.constants.MaxUint256)
+    await approveTx.wait()
 
-    const amount = _amount ?? ethers.utils.parseEther("100");
-    const feeSlotKey = _feeSlotKey ?? 1;
+    const amount = _amount ?? ethers.utils.parseEther('100')
+    const feeSlotKey = _feeSlotKey ?? 1
 
-    const addLiqTx = await addLiquidityTx(amount, feeSlotKey);
-    await addLiqTx.wait();
+    const addLiqTx = await addLiquidityTx(amount, feeSlotKey)
+    await addLiqTx.wait()
     return {
       amount,
       feeSlotKey,
-    };
+    }
   }
   async function awaitTx(response: any) {
-    response = await response;
-    if (typeof response.wait === "function") return await response.wait();
-    return response;
+    response = await response
+    if (typeof response.wait === 'function') return await response.wait()
+    return response
   }
 
   return {
@@ -176,5 +140,5 @@ export const helpers = function (
     awaitTx,
     openPosition,
     closePosition,
-  };
-};
+  }
+}

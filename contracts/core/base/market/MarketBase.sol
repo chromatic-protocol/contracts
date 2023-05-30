@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {LpTokenDeployerLib} from "@usum/core/external/deployer/LpTokenDeployer.sol";
-import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {ReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/interfaces/IERC20Metadata.sol';
+import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
+import {IUSUMMarketFactory} from '@usum/core/interfaces/IUSUMMarketFactory.sol';
+import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
+import {IUSUMLiquidator} from '@usum/core/interfaces/IUSUMLiquidator.sol';
+import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
+import {IKeeperFeePayer} from '@usum/core/interfaces/IKeeperFeePayer.sol';
+import {LpTokenDeployerLib} from '@usum/core/external/deployer/LpTokenDeployer.sol';
+import {LpSlotSet} from '@usum/core/external/lpslot/LpSlotSet.sol';
+import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
+import {Position} from '@usum/core/libraries/Position.sol';
+import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
+import {Errors} from '@usum/core/libraries/Errors.sol';
 
 abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     IUSUMMarketFactory public immutable override factory;
@@ -28,20 +29,17 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     LpSlotSet internal lpSlotSet;
 
     mapping(uint256 => Position) internal positions;
+    mapping(uint256 => LpReceipt) internal lpReceipts;
 
     modifier onlyLiquidator() {
-        require(
-            msg.sender == address(liquidator),
-            Errors.ONLY_LIQUIDATOR_CAN_ACCESS
-        );
+        require(msg.sender == address(liquidator), Errors.ONLY_LIQUIDATOR_CAN_ACCESS);
         _;
     }
 
     constructor() {
         factory = IUSUMMarketFactory(msg.sender);
 
-        (address _oracleProvider, address _settlementToken) = factory
-            .parameters();
+        (address _oracleProvider, address _settlementToken) = factory.parameters();
 
         oracleProvider = IOracleProvider(_oracleProvider);
         settlementToken = IERC20Metadata(_settlementToken);
@@ -49,5 +47,7 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
         liquidator = IUSUMLiquidator(factory.liquidator());
         vault = IUSUMVault(factory.vault());
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
+
+        lpSlotSet.initialize();
     }
 }
