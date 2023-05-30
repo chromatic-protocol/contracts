@@ -2,12 +2,13 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
+import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
 import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
 import {LpContext} from '@usum/core/libraries/LpContext.sol';
 import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
 import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
 
-abstract contract Liquidity is MarketValue {
+abstract contract Liquidity is MarketValue, IERC1155Receiver {
     using Math for uint256;
 
     uint256 public constant MINIMUM_LIQUIDITY = 10 ** 3;
@@ -112,5 +113,33 @@ abstract contract Liquidity is MarketValue {
             lpTokenAmount,
             lpToken.totalSupply(LpTokenLib.encodeId(tradingFeeRate))
         );
+    }
+
+    // implement IERC1155Receiver
+
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external pure override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceID) external view returns (bool) {
+        return
+            interfaceID == this.supportsInterface.selector || // ERC165
+            interfaceID == this.onERC1155Received.selector ^ this.onERC1155BatchReceived.selector; // IERC1155Receiver
     }
 }

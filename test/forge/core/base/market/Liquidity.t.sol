@@ -97,7 +97,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
 
     function removeLiquidityCallback(address lpToken, bytes calldata data) external {
         (uint256 id, uint256 amount) = abi.decode(data, (uint256, uint256));
-        IERC1155(lpToken).safeTransferFrom(address(this), lpToken, id, amount, bytes(''));
+        IERC1155(lpToken).safeTransferFrom(address(this), msg.sender, id, amount, bytes(''));
     }
 
     // implement IERC1155Receiver
