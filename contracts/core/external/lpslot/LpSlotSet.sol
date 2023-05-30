@@ -348,7 +348,7 @@ library LpSlotSetLib {
         }
     }
 
-    function calculateLiquidity(
+    function calculateLpTokenMinting(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -356,7 +356,7 @@ library LpSlotSetLib {
         uint256 lpTokenTotalSupply
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 lpTokenAmount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        lpTokenAmount = slot.calculateLiquidity(ctx, amount, lpTokenTotalSupply);
+        lpTokenAmount = slot.calculateLpTokenMinting(ctx, amount, lpTokenTotalSupply);
     }
 
     /**
@@ -385,7 +385,7 @@ library LpSlotSetLib {
         amount = slot.removeLiquidity(ctx, lpTokenAmount, lpTokenTotalSupply);
     }
 
-    function calculateAmount(
+    function calculateLpTokenValue(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -393,7 +393,7 @@ library LpSlotSetLib {
         uint256 lpTokenTotalSupply
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        amount = slot.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
+        amount = slot.calculateLpTokenValue(ctx, lpTokenAmount, lpTokenTotalSupply);
     }
 
     function getSlotLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {

@@ -1,11 +1,11 @@
-import { USUMLpToken__factory } from "@usum/typechain-types"
-import { expect } from "chai"
-import { ethers } from "hardhat"
-import { logLiquidity } from "../log-utils"
-import { helpers, prepareMarketTest } from "./testHelper"
+import { USUMLpToken__factory } from '@usum/typechain-types'
+import { expect } from 'chai'
+import { ethers } from 'hardhat'
+import { logLiquidity } from '../log-utils'
+import { helpers, prepareMarketTest } from './testHelper'
 
-describe("market test", async function () {
-  const oneEther = ethers.utils.parseEther("1")
+describe('market test', async function () {
+  const oneEther = ethers.utils.parseEther('1')
 
   // prettier-ignore
   const fees = [
@@ -25,50 +25,37 @@ describe("market test", async function () {
     testData = await prepareMarketTest()
   })
 
-  it("change oracle price ", async () => {
+  it('change oracle price ', async () => {
     const { owner, oracleProvider } = testData
     const { version, timestamp, price } = await oracleProvider.currentVersion()
-    await oracleProvider
-      .connect(owner)
-      .increaseVersion(ethers.utils.parseEther("100"), { from: owner.address })
-    const { version: nextVersion, price: nextPrice } =
-      await oracleProvider.currentVersion()
-    console.log("prev", version, price)
-    console.log("after update", nextVersion, nextPrice)
+    await oracleProvider.connect(owner).increaseVersion(ethers.utils.parseEther('100'), { from: owner.address })
+    const { version: nextVersion, price: nextPrice } = await oracleProvider.currentVersion()
+    console.log('prev', version, price)
+    console.log('after update', nextVersion, nextPrice)
     expect(nextVersion).to.equal(version.add(1))
-    expect(nextPrice).to.equal(ethers.utils.parseEther("100"))
+    expect(nextPrice).to.equal(ethers.utils.parseEther('100'))
   })
 
-  it("add/remove liquidity", async () => {
-    const { market, usumRouter, tester, oracleProvider, settlementToken } =
-      testData
+  it('add/remove liquidity', async () => {
+    const { market, usumRouter, tester, oracleProvider, settlementToken } = testData
     const { addLiquidityTx } = helpers(testData)
-    const amount = ethers.utils.parseEther("100")
+    const amount = ethers.utils.parseEther('100')
     const feeSlotKey = 1
 
-    const expectedLiquidity = await market.calculateLiquidity(
-      feeSlotKey,
-      amount
-    )
+    const expectedLiquidity = await market.calculateLpTokenMinting(feeSlotKey, amount)
 
     await expect(addLiquidityTx(amount, feeSlotKey)).to.changeTokenBalance(
       settlementToken,
       tester.address,
       amount.mul(-1)
     )
-    expect(
-      await USUMLpToken__factory.connect(
-        await market.lpToken(),
-        market.signer
-      ).totalSupply(feeSlotKey)
-    ).to.equal(expectedLiquidity)
+    expect(await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(feeSlotKey)).to.equal(
+      expectedLiquidity
+    )
 
     const removeLiqAmount = amount.div(2)
 
-    const expectedAmount = await market.calculateAmount(
-      feeSlotKey,
-      removeLiqAmount
-    )
+    const expectedAmount = await market.calculateLpTokenValue(feeSlotKey, removeLiqAmount)
 
     await (
       await USUMLpToken__factory.connect(await market.lpToken(), tester)
@@ -88,14 +75,11 @@ describe("market test", async function () {
     ).to.changeTokenBalance(settlementToken, tester, expectedAmount)
 
     expect(
-      await await USUMLpToken__factory.connect(
-        await market.lpToken(),
-        market.signer
-      ).totalSupply(feeSlotKey)
+      await await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(feeSlotKey)
     ).to.equal(removeLiqAmount)
   })
 
-  it("print liquidity", async () => {
+  it('print liquidity', async () => {
     const { addLiquidityTx } = helpers(testData)
 
     const txs: Promise<any>[] = []

@@ -93,8 +93,11 @@ abstract contract Liquidity is MarketValue {
         lpSlotSet.distributeEarning(earning, marketBalance);
     }
 
-    function calculateLiquidity(int16 tradingFeeRate, uint256 amount) external view returns (uint256 lpTokenAmount) {
-        lpTokenAmount = lpSlotSet.calculateLiquidity(
+    function calculateLpTokenMinting(
+        int16 tradingFeeRate,
+        uint256 amount
+    ) external view returns (uint256 lpTokenAmount) {
+        lpTokenAmount = lpSlotSet.calculateLpTokenMinting(
             newLpContext(),
             tradingFeeRate,
             amount,
@@ -102,8 +105,8 @@ abstract contract Liquidity is MarketValue {
         );
     }
 
-    function calculateAmount(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256 amount) {
-        amount = lpSlotSet.calculateAmount(
+    function calculateLpTokenValue(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256 amount) {
+        amount = lpSlotSet.calculateLpTokenValue(
             newLpContext(),
             tradingFeeRate,
             lpTokenAmount,

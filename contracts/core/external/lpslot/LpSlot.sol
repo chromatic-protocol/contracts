@@ -154,12 +154,12 @@ library LpSlotLib {
     ) internal _settle(self, ctx) returns (uint256 lpTokenAmount) {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
-        lpTokenAmount = self.calculateLiquidity(ctx, amount, lpTokenTotalSupply);
+        lpTokenAmount = self.calculateLpTokenMinting(ctx, amount, lpTokenTotalSupply);
 
         self.total += amount;
     }
 
-    function calculateLiquidity(
+    function calculateLpTokenMinting(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount,
@@ -179,13 +179,13 @@ library LpSlotLib {
         uint256 lpTokenAmount,
         uint256 lpTokenTotalSupply
     ) internal _settle(self, ctx) returns (uint256 amount) {
-        amount = self.calculateAmount(ctx, lpTokenAmount, lpTokenTotalSupply);
+        amount = self.calculateLpTokenValue(ctx, lpTokenAmount, lpTokenTotalSupply);
         require(amount <= self.freeLiquidity(), Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
 
         self.total -= amount;
     }
 
-    function calculateAmount(
+    function calculateLpTokenValue(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 lpTokenAmount,
