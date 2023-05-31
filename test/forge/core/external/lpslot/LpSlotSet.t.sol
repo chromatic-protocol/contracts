@@ -52,8 +52,12 @@ contract LpSlotSetTest is Test {
             abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
         );
 
+        slotSet.initialize();
         slotSet._longSlots[1]._liquidity.total = 1000 ether;
         slotSet._longSlots[2]._liquidity.total = 1000 ether;
+
+        lpToken.mint(address(market), 1, 1000 ether, bytes(""));
+        lpToken.mint(address(market), 2, 1000 ether, bytes(""));
     }
 
     function testPrepareSlotMargins() public {
@@ -161,18 +165,20 @@ contract LpSlotSetTest is Test {
         assertEq(slotSet._longSlots[1].liquidity(), 1100 ether);
     }
 
-    // function testRemoveLiquidity() public {
-    //     LpContext memory ctx = _newLpContext();
-    //     ctx._currentVersionCache.version = 2;
-    //     ctx._currentVersionCache.timestamp = 2;
-    //     ctx._currentVersionCache.price = Fixed18Lib.from(90);
+    function testRemoveLiquidity() public {
+        LpContext memory ctx = _newLpContext();
 
-    //     // uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether, 1000 ether);
-    //     uint256 amount = slotSet.removeLiquidity(ctx, 1, 100 ether);
+        slotSet.acceptRemoveLiquidity(ctx, 1, 100 ether);
+        assertEq(slotSet._longSlots[1].liquidity(), 1000 ether);
 
-    //     assertEq(amount, 100 ether);
-    //     assertEq(slotSet._longSlots[1].liquidity(), 900 ether);
-    // }
+        // set oracle version to 2
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+
+        slotSet.settle(ctx);
+        assertEq(slotSet._longSlots[1].liquidity(), 900 ether);
+    }
 
     function _newLpContext() private view returns (LpContext memory) {
         IOracleProvider.OracleVersion memory _currentVersionCache;

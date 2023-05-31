@@ -105,7 +105,7 @@ library LpSlotLiquidityLib {
         self._pending.tokenAmount += amount;
     }
 
-    function onClaimLpToken(
+    function onClaimLiquidity(
         LpSlotLiquidity storage self,
         uint256 amount,
         uint256 oracleVersion
@@ -119,6 +119,40 @@ library LpSlotLiquidityLib {
             delete self._claimMintings[oracleVersion];
         } else {
             self._claimMintings[oracleVersion] = _cm;
+        }
+    }
+
+    function onRemoveLiquidity(
+        LpSlotLiquidity storage self,
+        uint256 lpTokenAmount,
+        uint256 oracleVersion
+    ) internal {
+        uint256 pendingOracleVersion = self._pending.oracleVersion;
+        require(
+            pendingOracleVersion == 0 || pendingOracleVersion == oracleVersion,
+            Errors.INVALID_ORACLE_VERSION
+        );
+
+        self._pending.oracleVersion = oracleVersion;
+        self._pending.lpTokenAmount += lpTokenAmount;
+    }
+
+    function onWithdrawLiquidity(
+        LpSlotLiquidity storage self,
+        uint256 lpTokenAmount,
+        uint256 oracleVersion
+    ) internal returns (uint256 amount, uint256 burnedLpTokenAmount) {
+        _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
+        amount = lpTokenAmount.mulDiv(_cb.tokenAmount, _cb.lpTokenAmount);
+        burnedLpTokenAmount = lpTokenAmount.mulDiv(_cb.burningAmount, _cb.lpTokenAmount);
+
+        _cb.burningAmount -= burnedLpTokenAmount;
+        _cb.tokenAmount -= amount;
+        _cb.lpTokenAmount -= lpTokenAmount;
+        if (_cb.lpTokenAmount == 0) {
+            delete self._claimBurnings[oracleVersion];
+        } else {
+            self._claimBurnings[oracleVersion] = _cb;
         }
     }
 

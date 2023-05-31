@@ -15,7 +15,6 @@ import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
 import {Account} from "@usum/periphery/Account.sol";
-import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -26,14 +25,17 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 amount;
     }
 
-    struct ClaimLpTokenCallbackData {
+    struct ClaimLiquidityCallbackData {
         address provider;
     }
 
-    struct BurnCallbackData {
-        address payer;
-        uint256 tokenId;
+    struct RemoveLiquidityCallbackData {
+        address provider;
         uint256 lpTokenAmount;
+    }
+
+    struct WithdrawLiquidityCallbackData {
+        address provider;
     }
 
     AccountFactory accountFactory;
@@ -60,26 +62,44 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         );
     }
 
-    function claimLpTokenCallback(
+    function claimLiquidityCallback(
         uint256 receiptId,
         bytes calldata data
     ) external override verifyCallback {
-        ClaimLpTokenCallbackData memory callbackData = abi.decode(data, (ClaimLpTokenCallbackData));
+        ClaimLiquidityCallbackData memory callbackData = abi.decode(
+            data,
+            (ClaimLiquidityCallbackData)
+        );
         receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
     function removeLiquidityCallback(
         address lpToken,
+        uint256 lpTokenId,
         bytes calldata data
     ) external override verifyCallback {
-        BurnCallbackData memory callbackData = abi.decode(data, (BurnCallbackData));
+        RemoveLiquidityCallbackData memory callbackData = abi.decode(
+            data,
+            (RemoveLiquidityCallbackData)
+        );
         IERC1155(lpToken).safeTransferFrom(
-            callbackData.payer,
+            callbackData.provider,
             msg.sender, // market
-            callbackData.tokenId,
+            lpTokenId,
             callbackData.lpTokenAmount,
             bytes("")
         );
+    }
+
+    function withdrawLiquidityCallback(
+        uint256 receiptId,
+        bytes calldata data
+    ) external override verifyCallback {
+        WithdrawLiquidityCallbackData memory callbackData = abi.decode(
+            data,
+            (WithdrawLiquidityCallbackData)
+        );
+        receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
     function openPosition(
@@ -123,13 +143,13 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
-    function claimLpToken(address market, uint256 receiptId) external override {
+    function claimLiquidity(address market, uint256 receiptId) external override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
-        IUSUMMarket(market).claimLpToken(
+        IUSUMMarket(market).claimLiquidity(
             receiptId,
-            abi.encode(ClaimLpTokenCallbackData({provider: provider}))
+            abi.encode(ClaimLiquidityCallbackData({provider: provider}))
         );
     }
 
@@ -137,21 +157,26 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         address market,
         int16 feeRate,
         uint256 lpTokenAmount,
-        uint256 amountMin,
         address recipient
-    ) external override returns (uint256 amount) {
-        amount = IUSUMMarket(market).removeLiquidity(
+    ) external override returns (LpReceipt memory receipt) {
+        receipt = IUSUMMarket(market).removeLiquidity(
             recipient,
             feeRate,
             abi.encode(
-                BurnCallbackData({
-                    payer: msg.sender,
-                    tokenId: LpTokenLib.encodeId(feeRate),
-                    lpTokenAmount: lpTokenAmount
-                })
+                RemoveLiquidityCallbackData({provider: msg.sender, lpTokenAmount: lpTokenAmount})
             )
         );
-        require(amount >= amountMin, "TradeRouter: insufficient amount");
+        receiptIds[market][msg.sender].add(receipt.id);
+    }
+
+    function withdrawLiquidity(address market, uint256 receiptId) external override {
+        address provider = msg.sender;
+        if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
+
+        IUSUMMarket(market).withdrawLiquidity(
+            receiptId,
+            abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
+        );
     }
 
     function getAccount() external view override returns (address) {

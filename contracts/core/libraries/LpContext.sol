@@ -29,13 +29,9 @@ library LpContextLib {
     /**
      * @notice Syncs the oracle version used by the market.
      * @param self The memory instance of `LpContext` struct
-     * @return OracleVersion The current oracle version.
      */
-    function syncOracleVersion(
-        LpContext memory self
-    ) internal returns (IOracleProvider.OracleVersion memory) {
+    function syncOracleVersion(LpContext memory self) internal {
         self._currentVersionCache = self.market.oracleProvider().sync();
-        return self._currentVersionCache;
     }
 
     /**

@@ -48,7 +48,10 @@ contract LpSlotTest is Test {
             abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
         );
 
+        slot.initialize(1);
         slot._liquidity.total = 20000 ether;
+
+        lpToken.mint(address(market), 1, 20000 ether, bytes(""));
     }
 
     function testAcceptAddLiquidity() public {
@@ -68,19 +71,22 @@ contract LpSlotTest is Test {
         assertEq(slot.liquidity(), 20100 ether);
     }
 
-    // function testRemoveLiquidity() public {
-    //     LpContext memory ctx = _newLpContext();
+    function testAcceptRemoveLiquidity() public {
+        LpContext memory ctx = _newLpContext();
 
-    //     ctx._currentVersionCache.version = 2;
-    //     ctx._currentVersionCache.timestamp = 2;
-    //     ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        // oracle version 2
+        ctx._currentVersionCache.version = 2;
+        ctx._currentVersionCache.timestamp = 2;
+        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        slot.acceptRemoveLiquidity(ctx, 100 ether);
+        assertEq(slot.liquidity(), 20000 ether);
 
-    //     // uint256 amount = slot.removeLiquidity(ctx, 100 ether, 20000 ether);
-    //     uint256 amount = slot.removeLiquidity(ctx, 100 ether);
-
-    //     assertEq(amount, 100 ether);
-    //     assertEq(slot.liquidity(), 19900 ether);
-    // }
+        // oracle version 3
+        ctx._currentVersionCache.version = 3;
+        ctx._currentVersionCache.timestamp = 3;
+        slot.settle(ctx);
+        assertEq(slot.liquidity(), 19900 ether);
+    }
 
     function testValue() public {
         LpContext memory ctx = _newLpContext();
