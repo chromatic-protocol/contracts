@@ -15,6 +15,8 @@ import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
 import {Account} from "@usum/periphery/Account.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -270,5 +272,48 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             }
         }
         return result;
+    }
+
+    function calculateLpTokenValueBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata lpTokenAmounts
+    ) external view override returns (uint256[] memory results) {
+        require(tradingFeeRates.length == lpTokenAmounts.length, "TradeRouter: invalid arguments");
+        results = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            results[i] = IUSUMMarket(market).calculateLpTokenValue(
+                tradingFeeRates[i],
+                lpTokenAmounts[i]
+            );
+        }
+    }
+
+    function calculateLpTokenMintingBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata amounts
+    ) external view override returns (uint256[] memory results) {
+        require(tradingFeeRates.length == amounts.length, "TradeRouter: invalid arguments");
+        results = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            results[i] = IUSUMMarket(market).calculateLpTokenMinting(
+                tradingFeeRates[i],
+                amounts[i]
+            );
+        }
+    }
+
+    function totalSupplies(
+        address market,
+        int16[] calldata tradingFeeRates
+    ) external view override returns (uint256[] memory supplies) {
+        supplies = new uint256[](tradingFeeRates.length);
+
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            supplies[i] = IUSUMLpToken(IUSUMMarket(market).lpToken()).totalSupply(
+                LpTokenLib.encodeId(tradingFeeRates[0])
+            );
+        }
     }
 }
