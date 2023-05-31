@@ -216,7 +216,6 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         return receiptIds[market][msg.sender].values();
     }
 
-    // TODO internal call 말고 직접 구현체 넣어서 가스비 비교해보기
     function addLiquidityBatch(
         address market,
         int16[] calldata feeRates,
@@ -265,7 +264,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     }
 
     function _call(address target, bytes memory data) internal returns (bytes memory) {
-        (bool success, bytes memory result) = address(target).call(data);
+        (bool success, bytes memory result) = target.call(data);
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
