@@ -328,6 +328,16 @@ library LpSlotSetLib {
         return slot.acceptClaimLiquidity(ctx, amount, oracleVersion);
     }
 
+    function acceptRemoveLiquidity(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 lpTokenAmount
+    ) external _validTradingFeeRate(tradingFeeRate) {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        slot.acceptRemoveLiquidity(ctx, lpTokenAmount);
+    }
+
     function calculateLpTokenMinting(
         LpSlotSet storage self,
         LpContext memory ctx,
@@ -336,17 +346,6 @@ library LpSlotSetLib {
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         return slot.calculateLpTokenMinting(ctx, amount);
-    }
-
-    function removeLiquidity(
-        LpSlotSet storage self,
-        LpContext memory ctx,
-        int16 tradingFeeRate,
-        uint256 lpTokenAmount
-    ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
-        LpSlot storage slot = targetSlot(self, tradingFeeRate);
-
-        amount = slot.removeLiquidity(ctx, lpTokenAmount);
     }
 
     function calculateLpTokenValue(

@@ -86,18 +86,34 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external override nonReentrant returns (uint256 amount) {
-        // uint256 id = LpTokenLib.encodeId(tradingFeeRate);
-        // uint256 balanceBefore = lpToken.balanceOf(address(lpToken), id);
-        // IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(address(lpToken), data);
-        // uint256 lpTokenAmount = lpToken.balanceOf(address(lpToken), id) - balanceBefore;
-        // if (lpTokenAmount == 0) return 0;
-        // LpContext memory ctx = newLpContext();
-        // ctx.syncOracleVersion();
-        // amount = lpSlotSet.removeLiquidity(ctx, tradingFeeRate, lpTokenAmount);
-        // vault.onRemoveLiquidity(recipient, amount);
-        // lpToken.burn(address(lpToken), id, lpTokenAmount);
-        // emit RemoveLiquidity(recipient, tradingFeeRate, id, amount, lpTokenAmount);
+    ) external override nonReentrant returns (LpReceipt memory) {
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        LpReceipt memory receipt = newLpReceipt(
+            ctx,
+            LpAction.REMOVE_LIQUIDITY,
+            0,
+            recipient,
+            tradingFeeRate
+        );
+
+        uint256 lpTokenId = receipt.lpTokenId();
+        uint256 balanceBefore = lpToken.balanceOf(address(this), lpTokenId);
+        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(
+            address(lpToken),
+            lpTokenId,
+            data
+        );
+
+        uint256 lpTokenAmount = lpToken.balanceOf(address(this), lpTokenId) - balanceBefore;
+        if (lpTokenAmount == 0) revert TooSmallAmount();
+
+        lpSlotSet.acceptRemoveLiquidity(ctx, tradingFeeRate, lpTokenAmount);
+        receipt.amount = lpTokenAmount;
+
+        emit RemoveLiquidity(recipient, receipt);
+        return receipt;
     }
 
     function getSlotLiquidities(

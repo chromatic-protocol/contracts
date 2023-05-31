@@ -32,9 +32,8 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         address market,
         int16 feeRate,
         uint256 lpTokenAmount,
-        uint256 amountMin,
         address recipient
-    ) external returns (uint256 amount);
+    ) external returns (LpReceipt memory);
 
     function getAccount() external view returns (address);
 }

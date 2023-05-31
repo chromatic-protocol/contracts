@@ -122,6 +122,21 @@ library LpSlotLiquidityLib {
         }
     }
 
+    function onRemoveLiquidity(
+        LpSlotLiquidity storage self,
+        uint256 lpTokenAmount,
+        uint256 oracleVersion
+    ) internal {
+        uint256 pendingOracleVersion = self._pending.oracleVersion;
+        require(
+            pendingOracleVersion == 0 || pendingOracleVersion == oracleVersion,
+            Errors.INVALID_ORACLE_VERSION
+        );
+
+        self._pending.oracleVersion = oracleVersion;
+        self._pending.lpTokenAmount += lpTokenAmount;
+    }
+
     function calculateLpTokenMinting(
         uint256 amount,
         uint256 slotValue,

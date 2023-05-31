@@ -158,6 +158,14 @@ library LpSlotLib {
         return self._liquidity.onClaimLiquidity(amount, oracleVersion);
     }
 
+    function acceptRemoveLiquidity(
+        LpSlot storage self,
+        LpContext memory ctx,
+        uint256 lpTokenAmount
+    ) internal _settle(self, ctx) {
+        self._liquidity.onRemoveLiquidity(lpTokenAmount, ctx.currentOracleVersion().version);
+    }
+
     function calculateLpTokenMinting(
         LpSlot storage self,
         LpContext memory ctx,
@@ -169,17 +177,6 @@ library LpSlotLib {
                 self.value(ctx),
                 ctx.lpToken.totalSupply(self.lpTokenId)
             );
-    }
-
-    function removeLiquidity(
-        LpSlot storage self,
-        LpContext memory ctx,
-        uint256 lpTokenAmount
-    ) internal _settle(self, ctx) returns (uint256 amount) {
-        amount = self.calculateLpTokenValue(ctx, lpTokenAmount);
-        require(amount <= self.freeLiquidity(), Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
-
-        self._liquidity.total -= amount;
     }
 
     function calculateLpTokenValue(

@@ -10,5 +10,9 @@ interface IUSUMLiquidityCallback {
 
     function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external;
 
-    function removeLiquidityCallback(address lpToken, bytes calldata data) external;
+    function removeLiquidityCallback(
+        address lpToken,
+        uint256 lpTokenId,
+        bytes calldata data
+    ) external;
 }

@@ -17,13 +17,7 @@ interface IUSUMLiquidity {
         LpReceipt receipt
     );
 
-    event RemoveLiquidity(
-        address indexed recipient,
-        int16 indexed tradingFeeRate,
-        uint256 indexed tokenId,
-        uint256 amount,
-        uint256 lpTokenAmount
-    );
+    event RemoveLiquidity(address indexed recipient, LpReceipt receipt);
 
     function addLiquidity(
         address recipient,
@@ -37,7 +31,7 @@ interface IUSUMLiquidity {
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external returns (uint256 amount);
+    ) external returns (LpReceipt memory);
 
     function getSlotLiquidities(
         int16[] memory tradingFeeRate

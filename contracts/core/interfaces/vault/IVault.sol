@@ -60,7 +60,7 @@ interface IVault {
 
     function onSettlePendingLiquidity(uint256 pendingDeposit, uint256 pendingWithdrawal) external;
 
-    function onRemoveLiquidity(address recipient, uint256 amount) external;
+    // function onRemoveLiquidity(address recipient, uint256 amount) external;
 
     function transferKeeperFee(
         address keeper,
