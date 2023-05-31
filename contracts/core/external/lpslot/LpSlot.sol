@@ -149,13 +149,13 @@ library LpSlotLib {
         self._liquidity.onAddLiquidity(amount, ctx.currentOracleVersion().version);
     }
 
-    function acceptClaimLpToken(
+    function acceptClaimLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount,
         uint256 oracleVersion
     ) internal _settle(self, ctx) returns (uint256) {
-        return self._liquidity.onClaimLpToken(amount, oracleVersion);
+        return self._liquidity.onClaimLiquidity(amount, oracleVersion);
     }
 
     function calculateLpTokenMinting(

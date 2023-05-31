@@ -317,7 +317,7 @@ library LpSlotSetLib {
         slot.acceptAddLiquidity(ctx, amount);
     }
 
-    function acceptClaimLpToken(
+    function acceptClaimLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -325,7 +325,7 @@ library LpSlotSetLib {
         uint256 oracleVersion
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        return slot.acceptClaimLpToken(ctx, amount, oracleVersion);
+        return slot.acceptClaimLiquidity(ctx, amount, oracleVersion);
     }
 
     function calculateLpTokenMinting(

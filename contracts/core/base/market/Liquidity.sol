@@ -54,7 +54,7 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         return receipt;
     }
 
-    function claimLpToken(uint256 receiptId, bytes calldata data) external override nonReentrant {
+    function claimLiquidity(uint256 receiptId, bytes calldata data) external override nonReentrant {
         LpReceipt memory receipt = lpReceipts[receiptId];
         if (receipt.id == 0) revert NotExistLpReceipt();
         if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
@@ -62,7 +62,7 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        uint256 lpTokenAmount = lpSlotSet.acceptClaimLpToken(
+        uint256 lpTokenAmount = lpSlotSet.acceptClaimLiquidity(
             ctx,
             receipt.tradingFeeRate,
             receipt.amount,
@@ -76,10 +76,10 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
             bytes("")
         );
 
-        IUSUMLiquidityCallback(msg.sender).claimLpTokenCallback(receipt.id, data);
+        IUSUMLiquidityCallback(msg.sender).claimLiquidityCallback(receipt.id, data);
         delete lpReceipts[receiptId];
 
-        emit ClaimLpToken(receipt.recipient, lpTokenAmount, receipt);
+        emit ClaimLiquidity(receipt.recipient, lpTokenAmount, receipt);
     }
 
     function removeLiquidity(

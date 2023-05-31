@@ -11,7 +11,11 @@ interface IUSUMLiquidity {
 
     event AddLiquidity(address indexed recipient, LpReceipt receipt);
 
-    event ClaimLpToken(address indexed recipient, uint256 indexed lpTokenAmount, LpReceipt receipt);
+    event ClaimLiquidity(
+        address indexed recipient,
+        uint256 indexed lpTokenAmount,
+        LpReceipt receipt
+    );
 
     event RemoveLiquidity(
         address indexed recipient,
@@ -27,7 +31,7 @@ interface IUSUMLiquidity {
         bytes calldata data
     ) external returns (LpReceipt memory);
 
-    function claimLpToken(uint256 receiptId, bytes calldata data) external;
+    function claimLiquidity(uint256 receiptId, bytes calldata data) external;
 
     function removeLiquidity(
         address recipient,

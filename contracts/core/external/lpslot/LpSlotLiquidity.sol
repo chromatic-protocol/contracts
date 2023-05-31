@@ -105,7 +105,7 @@ library LpSlotLiquidityLib {
         self._pending.tokenAmount += amount;
     }
 
-    function onClaimLpToken(
+    function onClaimLiquidity(
         LpSlotLiquidity storage self,
         uint256 amount,
         uint256 oracleVersion

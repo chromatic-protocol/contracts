@@ -26,7 +26,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 amount;
     }
 
-    struct ClaimLpTokenCallbackData {
+    struct ClaimLiquidityCallbackData {
         address provider;
     }
 
@@ -60,11 +60,14 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         );
     }
 
-    function claimLpTokenCallback(
+    function claimLiquidityCallback(
         uint256 receiptId,
         bytes calldata data
     ) external override verifyCallback {
-        ClaimLpTokenCallbackData memory callbackData = abi.decode(data, (ClaimLpTokenCallbackData));
+        ClaimLiquidityCallbackData memory callbackData = abi.decode(
+            data,
+            (ClaimLiquidityCallbackData)
+        );
         receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
@@ -123,13 +126,13 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
-    function claimLpToken(address market, uint256 receiptId) external override {
+    function claimLiquidity(address market, uint256 receiptId) external override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
-        IUSUMMarket(market).claimLpToken(
+        IUSUMMarket(market).claimLiquidity(
             receiptId,
-            abi.encode(ClaimLpTokenCallbackData({provider: provider}))
+            abi.encode(ClaimLiquidityCallbackData({provider: provider}))
         );
     }
 

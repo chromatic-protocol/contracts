@@ -51,7 +51,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addLongAmount, lpToken.balanceOf(address(market), receipt1.lpTokenId()));
 
         // claim lpToken at oracle version 2
-        market.claimLpToken(receipt1.id, bytes(""));
+        market.claimLiquidity(receipt1.id, bytes(""));
         assertEq(0, lpToken.balanceOf(address(market), receipt1.lpTokenId()));
         assertEq(addLongAmount, lpToken.balanceOf(address(this), receipt1.lpTokenId()));
 
@@ -79,7 +79,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addShortAmount, lpToken.balanceOf(address(market), receipt2.lpTokenId()));
 
         // claim lpToken at oracle version 3
-        market.claimLpToken(receipt2.id, bytes(""));
+        market.claimLiquidity(receipt2.id, bytes(""));
         assertEq(0, lpToken.balanceOf(address(market), receipt2.lpTokenId()));
         assertEq(addShortAmount, lpToken.balanceOf(address(this), receipt2.lpTokenId()));
 
@@ -162,7 +162,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         usdc.transfer(vault, amount);
     }
 
-    function claimLpTokenCallback(uint256 receiptId, bytes calldata data) external {}
+    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external {}
 
     function removeLiquidityCallback(address lpToken, bytes calldata data) external {
         (uint256 id, uint256 amount) = abi.decode(data, (uint256, uint256));
