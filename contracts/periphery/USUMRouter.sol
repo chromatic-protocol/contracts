@@ -175,7 +175,12 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
                 IUSUMMarket(market).removeLiquidity.selector,
                 recipient,
                 feeRate,
-                RemoveLiquidityCallbackData({provider: msg.sender, lpTokenAmount: lpTokenAmount})
+                abi.encode(
+                    RemoveLiquidityCallbackData({
+                        provider: msg.sender,
+                        lpTokenAmount: lpTokenAmount
+                    })
+                )
             )
         );
 
@@ -205,7 +210,9 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         return Account(accountFactory.getAccount(owner));
     }
 
-    function getLpReceiptIds(address market) external view override returns (uint256[] memory) {}
+    function getLpReceiptIds(address market) external view override returns (uint256[] memory) {
+        return receiptIds[market][msg.sender].values();
+    }
 
     // TODO internal call 말고 직접 구현체 넣어서 가스비 비교해보기
     function addLiquidityBatch(
@@ -258,12 +265,9 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     function _call(address target, bytes memory data) internal returns (bytes memory) {
         (bool success, bytes memory result) = address(target).call(data);
         if (!success) {
-            // https://ethereum.stackexchange.com/a/83577
-            if (result.length < 68) revert();
             assembly {
-                result := add(result, 0x04)
+                revert(add(result, 32), mload(result))
             }
-            revert(abi.decode(result, (string)));
         }
         return result;
     }
