@@ -12,11 +12,5 @@ interface IMarketDeployer {
     /// Returns settlementToken The settlement token of the market
     /// Returns vPoolCapacity Capacity of virtual future pool
     /// Returns vPoolA Amplification coefficient of virtual future pool, precise value
-    function parameters()
-        external
-        view
-        returns (
-            address oracleProvider,
-            address settlementToken
-        );
+    function parameters() external view returns (address oracleProvider, address settlementToken);
 }

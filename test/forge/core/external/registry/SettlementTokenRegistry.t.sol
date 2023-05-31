@@ -104,10 +104,7 @@ contract SettlementTokenRegistryTest is Test {
         );
     }
 
-    function appendInterestRate(
-        uint256 interestRate,
-        uint256 increseTime
-    ) internal {
+    function appendInterestRate(uint256 interestRate, uint256 increseTime) internal {
         tokenRegistry.appendInterestRateRecord(
             testToken,
             interestRate,

@@ -39,7 +39,7 @@ export class Keeper {
     this.provider.pollingInterval = 100
 
     const opsEvents = await ethers.getContractAt('LibEvents', this.automate.address)
-    
+
     this.onTaskCreated(opsEvents)
     this.onTaskCanceled(opsEvents)
     console.log('listening automate task event ....')
@@ -58,7 +58,6 @@ export class Keeper {
 
   private onTaskCanceled(contract: LibEvents) {
     contract.on(contract.filters.TaskCancelled(), (_0, _1, event) => {
-      
       const taskId = event.args.taskId
       this.tasks = this.tasks.filter((t) => t.taskId != taskId)
     })
@@ -82,7 +81,7 @@ export class Keeper {
     for (let i = 0; i < task.moduleData.modules.length; i++) {
       if (i == Module.RESOLVER) {
         const { resolverAddress, resolverData } = decodeResolverArgs(task.moduleData.args[i])
-     
+
         const result = decodeResolverResponse(
           await this.provider.call({
             to: resolverAddress,

@@ -49,10 +49,7 @@ interface ILegacyAutomate {
 
     function getFeeDetails() external view returns (uint256, address);
 
-    function getTaskIdsByUser(address _taskCreator)
-        external
-        view
-        returns (bytes32[] memory);
+    function getTaskIdsByUser(address _taskCreator) external view returns (bytes32[] memory);
 
     function taskTreasury() external view returns (ITaskTreasuryUpgradable);
 }

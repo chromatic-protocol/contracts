@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Test} from 'forge-std/Test.sol';
-import {IERC1155Receiver} from '@openzeppelin/contracts/interfaces/IERC1155Receiver.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {Fixed18Lib} from '@equilibria/root/number/types/Fixed18.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpSlot, LpSlotLib} from '@usum/core/external/lpslot/LpSlot.sol';
-import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
-import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
-import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
-import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
+import {Test} from "forge-std/Test.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 
 contract LpSlotTest is Test {
     using SafeCast for uint256;
@@ -28,11 +28,27 @@ contract LpSlotTest is Test {
         market = IUSUMMarket(address(3));
         lpToken = new USUMLpToken();
 
-        vm.mockCall(address(vault), abi.encodeWithSelector(vault.getPendingSlotShare.selector), abi.encode(0));
+        vm.mockCall(
+            address(vault),
+            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encode(0)
+        );
 
-        vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
-        vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
-        vm.mockCall(address(market), abi.encodeWithSelector(market.lpToken.selector), abi.encode(lpToken));
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.oracleProvider.selector),
+            abi.encode(provider)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.vault.selector),
+            abi.encode(vault)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.lpToken.selector),
+            abi.encode(lpToken)
+        );
         vm.mockCall(
             address(market),
             abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155Received.selector),
@@ -40,7 +56,9 @@ contract LpSlotTest is Test {
         );
         vm.mockCall(
             address(market),
-            abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector),
+            abi.encodeWithSelector(
+                IERC1155Receiver(address(market)).onERC1155BatchReceived.selector
+            ),
             abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
         );
 
@@ -102,9 +120,21 @@ contract LpSlotTest is Test {
         _ov.version = 2;
         _ov.timestamp = 2;
         _ov.price = Fixed18Lib.from(100);
-        vm.mockCall(address(provider), abi.encodeWithSelector(provider.atVersion.selector, 2), abi.encode(_ov));
-        vm.mockCall(address(market), abi.encodeWithSelector(0x05e1bd8c, 15000 ether, 1, 3), abi.encode(0.01 ether));
-        vm.mockCall(address(market), abi.encodeWithSelector(0x05e1bd8c, 1000 ether, 1, 3), abi.encode(0.001 ether));
+        vm.mockCall(
+            address(provider),
+            abi.encodeWithSelector(provider.atVersion.selector, 2),
+            abi.encode(_ov)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(0x05e1bd8c, 15000 ether, 1, 3),
+            abi.encode(0.01 ether)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(0x05e1bd8c, 1000 ether, 1, 3),
+            abi.encode(0.001 ether)
+        );
 
         uint256 value = slot.value(ctx);
         assertEq(value, 21501.111 ether);

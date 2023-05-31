@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
-import {Position} from '@usum/core/libraries/Position.sol';
-import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
+import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
+import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
 
 interface IUSUMRouter is IUSUMLiquidityCallback {
     function openPosition(

@@ -34,11 +34,7 @@ contract Account is IAccount, VerifyCallback {
         _;
     }
 
-    function initialize(
-        address _owner,
-        address _router,
-        address _marketFactory
-    ) external {
+    function initialize(address _owner, address _router, address _marketFactory) external {
         if (isInitialized) revert AlreadyInitialized();
         owner = _owner;
         router = _router;
@@ -60,14 +56,9 @@ contract Account is IAccount, VerifyCallback {
         address marketAddress,
         address settlementToken
     ) external onlyRouter {
-        if (balance(settlementToken) < marginRequired)
-            revert NotEnoughBalance();
+        if (balance(settlementToken) < marginRequired) revert NotEnoughBalance();
 
-        SafeERC20.safeTransfer(
-            IERC20(settlementToken),
-            marketAddress,
-            marginRequired
-        );
+        SafeERC20.safeTransfer(IERC20(settlementToken), marketAddress, marginRequired);
     }
 
     function addPositionId(address market, uint256 positionId) internal {
@@ -78,16 +69,11 @@ contract Account is IAccount, VerifyCallback {
         positionIds[market].remove(positionId);
     }
 
-    function hasPositionId(
-        address market,
-        uint256 id
-    ) public view returns (bool) {
+    function hasPositionId(address market, uint256 id) public view returns (bool) {
         return positionIds[market].contains(id);
     }
 
-    function getPositionIds(
-        address market
-    ) external view returns (uint256[] memory) {
+    function getPositionIds(address market) external view returns (uint256[] memory) {
         return positionIds[market].values();
     }
 
@@ -110,28 +96,16 @@ contract Account is IAccount, VerifyCallback {
         addPositionId(marketAddress, position.id);
     }
 
-    function closePosition(
-        address marketAddress,
-        uint256 positionId
-    ) external override onlyRouter {
-        if (!hasPositionId(marketAddress, positionId))
-            revert NotExistPosition();
+    function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
+        if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
         IUSUMMarket(marketAddress).closePosition(positionId);
     }
 
-    function claimPosition(
-        address marketAddress,
-        uint256 positionId
-    ) external override onlyRouter {
-        if (!hasPositionId(marketAddress, positionId))
-            revert NotExistPosition();
+    function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
+        if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        IUSUMMarket(marketAddress).claimPosition(
-            positionId,
-            address(this),
-            bytes("")
-        );
+        IUSUMMarket(marketAddress).claimPosition(positionId, address(this), bytes(""));
     }
 
     function openPositionCallback(
@@ -140,8 +114,7 @@ contract Account is IAccount, VerifyCallback {
         uint256 marginRequired,
         bytes calldata data
     ) external override verifyCallback {
-        if (balance(settlementToken) < marginRequired)
-            revert NotEnoughBalance();
+        if (balance(settlementToken) < marginRequired) revert NotEnoughBalance();
 
         SafeERC20.safeTransfer(IERC20(settlementToken), vault, marginRequired);
     }

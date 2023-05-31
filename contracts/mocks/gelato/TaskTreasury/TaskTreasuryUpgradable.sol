@@ -1,25 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {
-    IERC20,
-    SafeERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    ReentrancyGuardUpgradeable
-} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {
-    Initializable
-} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {_transfer, ETH} from "../functions/FUtils.sol";
 import {Proxied} from "../vendor/proxy/EIP173/Proxied.sol";
 import {ITaskTreasury} from "../interfaces/ITaskTreasury.sol";
-import {
-    ITaskTreasuryUpgradable
-} from "../interfaces/ITaskTreasuryUpgradable.sol";
+import {ITaskTreasuryUpgradable} from "../interfaces/ITaskTreasuryUpgradable.sol";
 import {LibShares} from "../libraries/LibShares.sol";
 
 contract TaskTreasuryUpgradable is
@@ -47,10 +36,7 @@ contract TaskTreasuryUpgradable is
     EnumerableSet.AddressSet internal _whitelistedServices;
 
     modifier onlyWhitelistedServices() {
-        require(
-            _whitelistedServices.contains(msg.sender),
-            "TaskTreasury: onlyWhitelistedServices"
-        );
+        require(_whitelistedServices.contains(msg.sender), "TaskTreasury: onlyWhitelistedServices");
         _;
     }
 
@@ -76,16 +62,14 @@ contract TaskTreasuryUpgradable is
         address _token,
         uint256 _amount
     ) external override onlyWhitelistedServices {
-        if (maxFee != 0)
-            require(maxFee >= _amount, "TaskTreasury: Overcharged");
+        if (maxFee != 0) require(maxFee >= _amount, "TaskTreasury: Overcharged");
 
         uint256 balanceInOld = _oldTreasuryUserTokenBalance(_user, _token);
 
         if (_amount <= balanceInOld) {
             oldTreasury.useFunds(_token, _amount, _user);
         } else {
-            if (balanceInOld > 0)
-                oldTreasury.useFunds(_token, balanceInOld, _user);
+            if (balanceInOld > 0) oldTreasury.useFunds(_token, balanceInOld, _user);
 
             _pay(_user, _token, _amount - balanceInOld);
         }
@@ -104,11 +88,10 @@ contract TaskTreasuryUpgradable is
     /// @notice Add or remove service that can call useFunds. Gelato Governance
     /// @param _service Service to add or remove from whitelist
     /// @param _add Add to whitelist if true, else remove from whitelist
-    function updateWhitelistedService(address _service, bool _add)
-        external
-        override
-        onlyProxyAdmin
-    {
+    function updateWhitelistedService(
+        address _service,
+        bool _add
+    ) external override onlyProxyAdmin {
         if (_add) {
             _whitelistedServices.add(_service);
         } else {
@@ -119,12 +102,7 @@ contract TaskTreasuryUpgradable is
     }
 
     /// @notice Get list of services that can call useFunds.
-    function getWhitelistedServices()
-        external
-        view
-        override
-        returns (address[] memory)
-    {
+    function getWhitelistedServices() external view override returns (address[] memory) {
         return _whitelistedServices.values();
     }
 
@@ -178,23 +156,15 @@ contract TaskTreasuryUpgradable is
 
     /// @notice Helper func to get all deposited tokens by a user.
     /// @param _user User to get the balances from
-    function getCreditTokensByUser(address _user)
-        public
-        view
-        override
-        returns (address[] memory)
-    {
+    function getCreditTokensByUser(address _user) public view override returns (address[] memory) {
         return _tokens[_user].values();
     }
 
     /// @notice Helper func to get all deposited tokens by a user across treasuries.
     /// @param _user User to get the balances from
-    function getTotalCreditTokensByUser(address _user)
-        public
-        view
-        override
-        returns (address[] memory)
-    {
+    function getTotalCreditTokensByUser(
+        address _user
+    ) public view override returns (address[] memory) {
         address[] memory tokensInNew = _tokens[_user].values();
         address[] memory tokensInOld = _oldTreasuryGetCreditTokensByUser(_user);
 
@@ -224,30 +194,21 @@ contract TaskTreasuryUpgradable is
     /// @notice Get balance of a token owned by user
     /// @param _user User to get balance from
     /// @param _token Token to check balance of
-    function userTokenBalance(address _user, address _token)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function userTokenBalance(
+        address _user,
+        address _token
+    ) public view override returns (uint256) {
         uint256 totalBalance = LibShares.contractBalance(_token);
-        return
-            LibShares.sharesToToken(
-                shares[_user][_token],
-                totalShares[_token],
-                totalBalance
-            );
+        return LibShares.sharesToToken(shares[_user][_token], totalShares[_token], totalBalance);
     }
 
     /// @notice Get balance of a token owned by user across treasuries
     /// @param _user User to get balance from
     /// @param _token Token to check balance of
-    function totalUserTokenBalance(address _user, address _token)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function totalUserTokenBalance(
+        address _user,
+        address _token
+    ) public view override returns (uint256) {
         uint256 balanceInNew = userTokenBalance(_user, _token);
         uint256 balanceInOld = _oldTreasuryUserTokenBalance(_user, _token);
 
@@ -284,11 +245,7 @@ contract TaskTreasuryUpgradable is
         _tokens[_user].add(_token);
     }
 
-    function _deductUser(
-        address _user,
-        address _token,
-        uint256 _amount
-    ) internal {
+    function _deductUser(address _user, address _token, uint256 _amount) internal {
         uint256 totalBalance = LibShares.contractBalance(_token);
         uint256 sharesTotal = totalShares[_token];
         uint256 sharesToCharge = LibShares.tokenToShares(
@@ -311,11 +268,7 @@ contract TaskTreasuryUpgradable is
         if (sharesOfUser == sharesToCharge) _tokens[_user].remove(_token);
     }
 
-    function _pay(
-        address _user,
-        address _token,
-        uint256 _amount
-    ) internal {
+    function _pay(address _user, address _token, uint256 _amount) internal {
         address admin = _proxyAdmin();
         require(_user != admin, "TaskTreasury: No proxy admin");
 
@@ -327,19 +280,14 @@ contract TaskTreasuryUpgradable is
             totalBalance
         );
 
-        require(
-            shares[_user][_token] >= sharesToPay,
-            "TaskTreasury: Not enough funds"
-        );
+        require(shares[_user][_token] >= sharesToPay, "TaskTreasury: Not enough funds");
         shares[_user][_token] -= sharesToPay;
         shares[admin][_token] += sharesToPay;
     }
 
-    function _oldTreasuryGetCreditTokensByUser(address _user)
-        private
-        view
-        returns (address[] memory)
-    {
+    function _oldTreasuryGetCreditTokensByUser(
+        address _user
+    ) private view returns (address[] memory) {
         if (address(oldTreasury) != address(0)) {
             return oldTreasury.getCreditTokensByUser(_user);
         }
@@ -347,11 +295,10 @@ contract TaskTreasuryUpgradable is
         return new address[](0);
     }
 
-    function _oldTreasuryUserTokenBalance(address _user, address _token)
-        private
-        view
-        returns (uint256)
-    {
+    function _oldTreasuryUserTokenBalance(
+        address _user,
+        address _token
+    ) private view returns (uint256) {
         if (address(oldTreasury) != address(0)) {
             return oldTreasury.userTokenBalance(_user, _token);
         }

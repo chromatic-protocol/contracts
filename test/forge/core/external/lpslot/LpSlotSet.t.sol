@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Test} from 'forge-std/Test.sol';
-import {IERC1155Receiver} from '@openzeppelin/contracts/interfaces/IERC1155Receiver.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {Fixed18Lib} from '@equilibria/root/number/types/Fixed18.sol';
-import {Position} from '@usum/core/libraries/Position.sol';
-import {QTY_PRECISION, LEVERAGE_PRECISION} from '@usum/core/libraries/PositionUtil.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpSlotMargin} from '@usum/core/libraries/LpSlotMargin.sol';
-import {LpSlot, LpSlotLib} from '@usum/core/external/lpslot/LpSlot.sol';
-import {LpSlotSet} from '@usum/core/external/lpslot/LpSlotSet.sol';
-import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
-import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
-import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
-import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
+import {Test} from "forge-std/Test.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
+import {QTY_PRECISION, LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
@@ -32,11 +32,27 @@ contract LpSlotSetTest is Test {
         market = IUSUMMarket(address(3));
         lpToken = new USUMLpToken();
 
-        vm.mockCall(address(vault), abi.encodeWithSelector(vault.getPendingSlotShare.selector), abi.encode(0));
+        vm.mockCall(
+            address(vault),
+            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encode(0)
+        );
 
-        vm.mockCall(address(market), abi.encodeWithSelector(market.oracleProvider.selector), abi.encode(provider));
-        vm.mockCall(address(market), abi.encodeWithSelector(market.vault.selector), abi.encode(vault));
-        vm.mockCall(address(market), abi.encodeWithSelector(market.lpToken.selector), abi.encode(lpToken));
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.oracleProvider.selector),
+            abi.encode(provider)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.vault.selector),
+            abi.encode(vault)
+        );
+        vm.mockCall(
+            address(market),
+            abi.encodeWithSelector(market.lpToken.selector),
+            abi.encode(lpToken)
+        );
         vm.mockCall(
             address(market),
             abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155Received.selector),
@@ -44,7 +60,9 @@ contract LpSlotSetTest is Test {
         );
         vm.mockCall(
             address(market),
-            abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector),
+            abi.encodeWithSelector(
+                IERC1155Receiver(address(market)).onERC1155BatchReceived.selector
+            ),
             abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
         );
 

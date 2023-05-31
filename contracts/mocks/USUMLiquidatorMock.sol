@@ -12,11 +12,7 @@ contract USUMLiquidatorMock is USUMLiquidator {
         address opsProxyFactory
     ) USUMLiquidator(_factory, _automate, opsProxyFactory) {}
 
-    function liquidate(
-        address market,
-        uint256 positionId,
-        uint256 fee
-    ) external {
+    function liquidate(address market, uint256 positionId, uint256 fee) external {
         _liquidate(market, positionId, fee);
     }
 }

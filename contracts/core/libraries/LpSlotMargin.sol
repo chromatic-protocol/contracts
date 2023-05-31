@@ -26,10 +26,7 @@ library LpSlotMarginLib {
      * @param self The memory instance of `LpSlotMargin` struct
      * @return uint256 The trading fee
      */
-    function tradingFee(
-        LpSlotMargin memory self
-    ) internal pure returns (uint256) {
-        return
-            self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION);
+    function tradingFee(LpSlotMargin memory self) internal pure returns (uint256) {
+        return self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION);
     }
 }

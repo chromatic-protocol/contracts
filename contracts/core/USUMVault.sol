@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ReentrancyGuard} from '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {SafeERC20, IERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
-import {IUSUMMarketFactory} from '@usum/core/interfaces/IUSUMMarketFactory.sol';
-import {IUSUMMarket} from '@usum/core/interfaces/IUSUMMarket.sol';
-import {IUSUMVault} from '@usum/core/interfaces/IUSUMVault.sol';
-import {IKeeperFeePayer} from '@usum/core/interfaces/IKeeperFeePayer.sol';
-import {IUSUMFlashLoanCallback} from '@usum/core/interfaces/callback/IUSUMFlashLoanCallback.sol';
-import {AutomateReady} from '@usum/core/base/gelato/AutomateReady.sol';
-import {IAutomate, Module, ModuleData} from '@usum/core/base/gelato/Types.sol';
-import {BPS} from '@usum/core/libraries/Constants.sol';
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
+import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
+import {IUSUMFlashLoanCallback} from "@usum/core/interfaces/callback/IUSUMFlashLoanCallback.sol";
+import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
+import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
+import {BPS} from "@usum/core/libraries/Constants.sol";
 
 contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     using Math for uint256;
@@ -121,13 +121,19 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         emit OnAddLiquidity(address(market), amount);
     }
 
-    function onSettlePendingLiquidity(uint256 pendingDeposit, uint256 pendingWithdrawal) external override onlyMarket {
+    function onSettlePendingLiquidity(
+        uint256 pendingDeposit,
+        uint256 pendingWithdrawal
+    ) external override onlyMarket {
         IUSUMMarket market = IUSUMMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         pendingDeposits[settlementToken] -= pendingDeposit;
         pendingWithdrawals[settlementToken] += pendingWithdrawal;
-        makerBalances[settlementToken] = makerBalances[settlementToken] + pendingDeposit - pendingWithdrawal;
+        makerBalances[settlementToken] =
+            makerBalances[settlementToken] +
+            pendingDeposit -
+            pendingWithdrawal;
         makerMarketBalances[address(market)] =
             makerMarketBalances[address(market)] +
             pendingDeposit -
@@ -176,7 +182,12 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         return keeperFeePayer.payKeeperFee(token, fee, keeper);
     }
 
-    function transferProtocolFee(address market, address settlementToken, uint256 positionId, uint256 amount) internal {
+    function transferProtocolFee(
+        address market,
+        address settlementToken,
+        uint256 positionId,
+        uint256 amount
+    ) internal {
         if (amount > 0) {
             SafeERC20.safeTransfer(IERC20(settlementToken), factory.treasury(), amount);
             emit TransferProtocolFee(market, positionId, amount);
@@ -185,10 +196,16 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
 
     // implement ILendingPool
 
-    function flashLoan(address token, uint256 amount, address recipient, bytes calldata data) external nonReentrant {
+    function flashLoan(
+        address token,
+        uint256 amount,
+        address recipient,
+        bytes calldata data
+    ) external nonReentrant {
         uint256 balance = IERC20(token).balanceOf(address(this));
 
-        if (amount > balance - pendingDeposits[token] - pendingWithdrawals[token]) revert NotEnoughBalance();
+        if (amount > balance - pendingDeposits[token] - pendingWithdrawals[token])
+            revert NotEnoughBalance();
 
         uint256 fee = amount.mulDiv(factory.getFlashLoanFeeRate(token), BPS, Math.Rounding.Up);
 
@@ -215,17 +232,32 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         emit FlashLoan(msg.sender, recipient, amount, paid, paidToTakerPool, paidToMakerPool);
     }
 
-    function getPendingSlotShare(address market, uint256 slotBalance) external view returns (uint256) {
+    function getPendingSlotShare(
+        address market,
+        uint256 slotBalance
+    ) external view returns (uint256) {
         address token = address(IUSUMMarket(market).settlementToken());
         uint256 makerBalance = makerBalances[token];
         uint256 marketBalance = makerMarketBalances[market];
 
         return
-            (makerBalance == 0 ? 0 : pendingMakerEarnings[token].mulDiv(slotBalance, makerBalance, Math.Rounding.Up)) +
+            (
+                makerBalance == 0
+                    ? 0
+                    : pendingMakerEarnings[token].mulDiv(
+                        slotBalance,
+                        makerBalance,
+                        Math.Rounding.Up
+                    )
+            ) +
             (
                 marketBalance == 0
                     ? 0
-                    : pendingMarketEarnings[market].mulDiv(slotBalance, marketBalance, Math.Rounding.Up)
+                    : pendingMarketEarnings[market].mulDiv(
+                        slotBalance,
+                        marketBalance,
+                        Math.Rounding.Up
+                    )
             );
     }
 
@@ -238,7 +270,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
             return (true, abi.encodeCall(this.distributeMakerEarning, token));
         }
 
-        return (false, '');
+        return (false, "");
     }
 
     function distributeMakerEarning(address token) external onlyDedicatedMsgSender {
@@ -246,15 +278,20 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         _distributeMakerEarning(token, fee);
     }
 
-    function createMakerEarningDistributionTask(address token) external virtual override onlyFactory {
-        if (makerEarningDistributionTaskIds[token] != bytes32(0)) revert ExistMarketEarningDistributionTask();
+    function createMakerEarningDistributionTask(
+        address token
+    ) external virtual override onlyFactory {
+        if (makerEarningDistributionTaskIds[token] != bytes32(0))
+            revert ExistMarketEarningDistributionTask();
 
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
 
         moduleData.modules[0] = Module.RESOLVER;
         moduleData.modules[1] = Module.TIME;
         moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = _resolverModuleArg(abi.encodeCall(this.resolveMakerEarningDistribution, token));
+        moduleData.args[0] = _resolverModuleArg(
+            abi.encodeCall(this.resolveMakerEarningDistribution, token)
+        );
         moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
         moduleData.args[2] = _proxyModuleArg();
 
@@ -266,7 +303,9 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         );
     }
 
-    function cancelMakerEarningDistributionTask(address token) external virtual override onlyFactory {
+    function cancelMakerEarningDistributionTask(
+        address token
+    ) external virtual override onlyFactory {
         bytes32 taskId = makerEarningDistributionTaskIds[token];
         if (taskId != bytes32(0)) {
             automate.cancelTask(taskId);
@@ -317,7 +356,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
             return (true, abi.encodeCall(this.distributeMarketEarning, market));
         }
 
-        return (false, '');
+        return (false, "");
     }
 
     function distributeMarketEarning(address market) external onlyDedicatedMsgSender {
@@ -325,15 +364,20 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         _distributeMarketEarning(market, fee);
     }
 
-    function createMarketEarningDistributionTask(address market) external virtual override onlyFactory {
-        if (marketEarningDistributionTaskIds[market] != bytes32(0)) revert ExistMarketEarningDistributionTask();
+    function createMarketEarningDistributionTask(
+        address market
+    ) external virtual override onlyFactory {
+        if (marketEarningDistributionTaskIds[market] != bytes32(0))
+            revert ExistMarketEarningDistributionTask();
 
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
 
         moduleData.modules[0] = Module.RESOLVER;
         moduleData.modules[1] = Module.TIME;
         moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = _resolverModuleArg(abi.encodeCall(this.resolveMarketEarningDistribution, market));
+        moduleData.args[0] = _resolverModuleArg(
+            abi.encodeCall(this.resolveMarketEarningDistribution, market)
+        );
         moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
         moduleData.args[2] = _proxyModuleArg();
 
@@ -345,7 +389,9 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         );
     }
 
-    function cancelMarketEarningDistributionTask(address market) external virtual override onlyFactory {
+    function cancelMarketEarningDistributionTask(
+        address market
+    ) external virtual override onlyFactory {
         bytes32 taskId = marketEarningDistributionTaskIds[market];
         if (taskId != bytes32(0)) {
             automate.cancelTask(taskId);
@@ -373,7 +419,10 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         emit MarketEarningDistributed(market, earning, usedFee, balance);
     }
 
-    function _marketEarningDistributable(address market, address token) private view returns (bool) {
+    function _marketEarningDistributable(
+        address market,
+        address token
+    ) private view returns (bool) {
         return pendingMarketEarnings[market] >= factory.getEarningDistributionThreshold(token);
     }
 
@@ -381,11 +430,14 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         return abi.encode(address(this), _resolverData);
     }
 
-    function _timeModuleArg(uint256 _startTime, uint256 _interval) internal pure returns (bytes memory) {
+    function _timeModuleArg(
+        uint256 _startTime,
+        uint256 _interval
+    ) internal pure returns (bytes memory) {
         return abi.encode(uint128(_startTime), uint128(_interval));
     }
 
     function _proxyModuleArg() internal pure returns (bytes memory) {
-        return bytes('');
+        return bytes("");
     }
 }

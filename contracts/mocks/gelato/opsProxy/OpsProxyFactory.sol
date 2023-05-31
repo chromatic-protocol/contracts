@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import {
-    Initializable
-} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {EIP173OpsProxy} from "../vendor/proxy/EIP173/EIP173OpsProxy.sol";
 import {Proxied} from "../vendor/proxy/EIP173/Proxied.sol";
 import {IOpsProxyFactory} from "../interfaces/IOpsProxyFactory.sol";
@@ -44,10 +42,7 @@ contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
         proxy = deployFor(msg.sender);
     }
 
-    function setImplementation(address _newImplementation)
-        external
-        onlyProxyAdmin
-    {
+    function setImplementation(address _newImplementation) external onlyProxyAdmin {
         address oldImplementation = implementation;
         require(
             oldImplementation != _newImplementation &&
@@ -70,12 +65,7 @@ contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
     }
 
     ///@inheritdoc IOpsProxyFactory
-    function getProxyOf(address _account)
-        external
-        view
-        override
-        returns (address, bool)
-    {
+    function getProxyOf(address _account) external view override returns (address, bool) {
         address proxyAddress = _proxyOf[_account];
 
         if (proxyAddress != address(0)) return (proxyAddress, true);
@@ -90,13 +80,9 @@ contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
     }
 
     ///@inheritdoc IOpsProxyFactory
-    function deployFor(address owner)
-        public
-        override
-        onlyOneProxy(owner)
-        notProxy(owner)
-        returns (address payable proxy)
-    {
+    function deployFor(
+        address owner
+    ) public override onlyOneProxy(owner) notProxy(owner) returns (address payable proxy) {
         proxy = _deploy(bytes32(0), _getBytecode(owner));
 
         _proxyOf[owner] = proxy;
@@ -105,33 +91,23 @@ contract OpsProxyFactory is Initializable, Proxied, IOpsProxyFactory {
     }
 
     ///@inheritdoc IOpsProxyFactory
-    function determineProxyAddress(address _account)
-        public
-        view
-        override
-        returns (address)
-    {
+    function determineProxyAddress(address _account) public view override returns (address) {
         address proxyAddress = _proxyOf[_account];
         if (proxyAddress != address(0)) return proxyAddress;
 
         bytes memory bytecode = _getBytecode(_account);
 
         bytes32 codeHash = keccak256(
-            abi.encodePacked(
-                bytes1(0xff),
-                address(this),
-                bytes32(0),
-                keccak256(bytecode)
-            )
+            abi.encodePacked(bytes1(0xff), address(this), bytes32(0), keccak256(bytecode))
         );
 
         return address(uint160(uint256(codeHash)));
     }
 
-    function _deploy(bytes32 _salt, bytes memory _bytecode)
-        internal
-        returns (address payable proxy)
-    {
+    function _deploy(
+        bytes32 _salt,
+        bytes memory _bytecode
+    ) internal returns (address payable proxy) {
         assembly {
             let endowment := 0
             let bytecodeStart := add(_bytecode, 0x20)

@@ -16,8 +16,7 @@ abstract contract AutomateReady {
     address public immutable dedicatedMsgSender;
     address private immutable _gelato;
     address internal constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address private constant OPS_PROXY_FACTORY =
-        0xC815dB16D4be6ddf2685C201937905aBf338F5D7;
+    address private constant OPS_PROXY_FACTORY = 0xC815dB16D4be6ddf2685C201937905aBf338F5D7;
 
     /**
      * @dev
@@ -25,10 +24,7 @@ abstract contract AutomateReady {
      * the functions with this modifier.
      */
     modifier onlyDedicatedMsgSender() {
-        require(
-            msg.sender == dedicatedMsgSender,
-            Errors.ONLY_DEDICATED_MSG_SENDER_CAN_ACCESS
-        );
+        require(msg.sender == dedicatedMsgSender, Errors.ONLY_DEDICATED_MSG_SENDER_CAN_ACCESS);
         _;
     }
 
@@ -36,17 +32,11 @@ abstract contract AutomateReady {
      * @dev
      * _taskCreator is the address which will create tasks for this contract.
      */
-    constructor(
-        address _automate,
-        address _taskCreator,
-        address opsProxyFactory
-    ) {
+    constructor(address _automate, address _taskCreator, address opsProxyFactory) {
         automate = IAutomate(_automate);
         _gelato = IAutomate(_automate).gelato();
         if (opsProxyFactory == address(0)) opsProxyFactory = OPS_PROXY_FACTORY;
-        (dedicatedMsgSender, ) = IOpsProxyFactory(opsProxyFactory).getProxyOf(
-            _taskCreator
-        );
+        (dedicatedMsgSender, ) = IOpsProxyFactory(opsProxyFactory).getProxyOf(_taskCreator);
     }
 
     /**
@@ -64,11 +54,7 @@ abstract contract AutomateReady {
         }
     }
 
-    function _getFeeDetails()
-        internal
-        view
-        returns (uint256 fee, address feeToken)
-    {
+    function _getFeeDetails() internal view returns (uint256 fee, address feeToken) {
         (fee, feeToken) = automate.getFeeDetails();
     }
 }

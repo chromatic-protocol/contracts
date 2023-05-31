@@ -21,10 +21,7 @@ library OracleProviderRegistryLib {
      * @param self The OracleProviderRegistry storage.
      * @param oracleProvider The address of the oracle provider to register.
      */
-    function register(
-        OracleProviderRegistry storage self,
-        address oracleProvider
-    ) external {
+    function register(OracleProviderRegistry storage self, address oracleProvider) external {
         require(
             !self._oracleProviders.contains(oracleProvider),
             Errors.ALREADY_REGISTERED_ORACLE_PROVIDER
@@ -38,10 +35,7 @@ library OracleProviderRegistryLib {
      * @param self The OracleProviderRegistry storage.
      * @param oracleProvider The address of the oracle provider to unregister.
      */
-    function unregister(
-        OracleProviderRegistry storage self,
-        address oracleProvider
-    ) external {
+    function unregister(OracleProviderRegistry storage self, address oracleProvider) external {
         self._oracleProviders.remove(oracleProvider);
     }
 

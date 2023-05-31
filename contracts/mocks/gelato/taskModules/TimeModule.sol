@@ -26,11 +26,10 @@ contract TimeModule is TaskModuleBase {
         emit LibEvents.TimerSet(_taskId, nextExec, interval);
     }
 
-    function preCancelTask(bytes32 _taskId, address _taskCreator)
-        external
-        override
-        returns (address)
-    {
+    function preCancelTask(
+        bytes32 _taskId,
+        address _taskCreator
+    ) external override returns (address) {
         delete timedTask[_taskId];
 
         return _taskCreator;
@@ -51,17 +50,12 @@ contract TimeModule is TaskModuleBase {
         bool isTimedTask = time.nextExec != 0;
 
         if (isTimedTask) {
-            require(
-                time.nextExec <= uint128(block.timestamp),
-                "TimeModule: Too early"
-            );
+            require(time.nextExec <= uint128(block.timestamp), "TimeModule: Too early");
 
             uint128 timeDiff = uint128(block.timestamp) - time.nextExec;
             uint128 intervals = (timeDiff / time.interval) + 1;
 
-            timedTask[_taskId].nextExec =
-                time.nextExec +
-                (intervals * time.interval);
+            timedTask[_taskId].nextExec = time.nextExec + (intervals * time.interval);
         }
         return (_execAddress, _execData);
     }
@@ -72,19 +66,16 @@ contract TimeModule is TaskModuleBase {
      * @param _startTime Time when the first execution should occur.
      * @param _interval Time interval between each execution.
      */
-    function encodeModuleArg(address _startTime, bytes calldata _interval)
-        external
-        pure
-        returns (bytes memory)
-    {
+    function encodeModuleArg(
+        address _startTime,
+        bytes calldata _interval
+    ) external pure returns (bytes memory) {
         return abi.encode(_startTime, _interval);
     }
 
-    function _decodeModuleArg(bytes calldata _arg)
-        private
-        pure
-        returns (uint128 startTime, uint128 interval)
-    {
+    function _decodeModuleArg(
+        bytes calldata _arg
+    ) private pure returns (uint128 startTime, uint128 interval) {
         (startTime, interval) = abi.decode(_arg, (uint128, uint128));
     }
 }

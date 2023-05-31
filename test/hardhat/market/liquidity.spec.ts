@@ -28,7 +28,9 @@ describe('market test', async function () {
   it('change oracle price ', async () => {
     const { owner, oracleProvider } = testData
     const { version, timestamp, price } = await oracleProvider.currentVersion()
-    await oracleProvider.connect(owner).increaseVersion(ethers.utils.parseEther('100'), { from: owner.address })
+    await oracleProvider
+      .connect(owner)
+      .increaseVersion(ethers.utils.parseEther('100'), { from: owner.address })
     const { version: nextVersion, price: nextPrice } = await oracleProvider.currentVersion()
     console.log('prev', version, price)
     console.log('after update', nextVersion, nextPrice)
@@ -49,9 +51,11 @@ describe('market test', async function () {
       tester.address,
       amount.mul(-1)
     )
-    expect(await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(feeSlotKey)).to.equal(
-      expectedLiquidity
-    )
+    expect(
+      await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
+        feeSlotKey
+      )
+    ).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
 
@@ -74,7 +78,9 @@ describe('market test', async function () {
     ).to.changeTokenBalance(settlementToken, tester, expectedAmount)
 
     expect(
-      await await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(feeSlotKey)
+      await await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
+        feeSlotKey
+      )
     ).to.equal(removeLiqAmount)
   })
 

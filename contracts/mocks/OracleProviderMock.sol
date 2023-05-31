@@ -24,12 +24,7 @@ contract OracleProviderMock is IOracleProvider {
         return oracleVersions[latestVersion];
     }
 
-    function currentVersion()
-        external
-        view
-        override
-        returns (OracleVersion memory)
-    {
+    function currentVersion() external view override returns (OracleVersion memory) {
         return oracleVersions[latestVersion];
     }
 

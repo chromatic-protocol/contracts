@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
-import {Position} from '@usum/core/libraries/Position.sol';
+import {Position} from "@usum/core/libraries/Position.sol";
 
 interface ITrade {
     error ZeroTargetAmount();
@@ -17,7 +17,12 @@ interface ITrade {
 
     event ClosePosition(address indexed account, Position position);
 
-    event ClaimPosition(address indexed account, int256 indexed pnl, uint256 indexed interest, Position position);
+    event ClaimPosition(
+        address indexed account,
+        int256 indexed pnl,
+        uint256 indexed interest,
+        Position position
+    );
 
     event TransferProtocolFee(uint256 indexed positionId, uint256 indexed amount);
 
@@ -40,5 +45,7 @@ interface ITrade {
         bytes calldata data
     ) external;
 
-    function getPositions(uint256[] calldata positionIds) external view returns (Position[] memory positions);
+    function getPositions(
+        uint256[] calldata positionIds
+    ) external view returns (Position[] memory positions);
 }

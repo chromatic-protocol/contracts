@@ -7,7 +7,9 @@ import { logYellow } from '../log-utils'
 
 export const prepareMarketTest = async () => {
   async function faucet(account: SignerWithAddress) {
-    const faucetTx = await settlementToken.connect(account).faucet(ethers.utils.parseEther('1000000000'))
+    const faucetTx = await settlementToken
+      .connect(account)
+      .faucet(ethers.utils.parseEther('1000000000'))
     await faucetTx.wait()
   }
   const {
@@ -19,7 +21,7 @@ export const prepareMarketTest = async () => {
     usumRouter,
     accountFactory,
     settlementToken,
-    gelato,
+    gelato
   } = await loadFixture(marketDeploy)
   const [owner, tester, trader] = await ethers.getSigners()
   console.log('owner', owner.address)
@@ -41,10 +43,14 @@ export const prepareMarketTest = async () => {
   await transferTx.wait()
 
   const traderRouter = usumRouter.connect(trader)
-  await (await settlementToken.connect(trader).approve(traderRouter.address, ethers.constants.MaxUint256)).wait()
+  await (
+    await settlementToken.connect(trader).approve(traderRouter.address, ethers.constants.MaxUint256)
+  ).wait()
 
   async function updatePrice(price: number) {
-    await (await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))).wait()
+    await (
+      await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
+    ).wait()
   }
 
   return {
@@ -61,7 +67,7 @@ export const prepareMarketTest = async () => {
     keeperFeePayer,
     traderAccount,
     traderRouter,
-    gelato,
+    gelato
     // addLiquidity,
     // updatePrice,
   }
@@ -70,7 +76,9 @@ export const prepareMarketTest = async () => {
 export const helpers = function (testData: Awaited<ReturnType<typeof prepareMarketTest>>) {
   const { oracleProvider, settlementToken, tester, usumRouter, market, traderRouter } = testData
   async function updatePrice(price: number) {
-    await (await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))).wait()
+    await (
+      await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
+    ).wait()
   }
 
   async function openPosition({
@@ -78,7 +86,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     makerMargin = ethers.utils.parseEther('50'),
     qty = 10 ** 4,
     leverage = 500, // 5 x
-    maxAllowFeeRate = 1,
+    maxAllowFeeRate = 1
   }: {
     takerMargin?: BigNumber
     makerMargin?: BigNumber
@@ -100,21 +108,27 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
       makerMargin,
       takerMargin,
       qty,
-      leverage,
+      leverage
     }
   }
 
   async function closePosition({}) {}
 
   async function addLiquidityTx(amount: BigNumber, feeSlotKey: number) {
-    const approveTx = await settlementToken.connect(tester).approve(usumRouter.address, ethers.constants.MaxUint256)
+    const approveTx = await settlementToken
+      .connect(tester)
+      .approve(usumRouter.address, ethers.constants.MaxUint256)
     await approveTx.wait()
 
-    return usumRouter.connect(tester).addLiquidity(market.address, feeSlotKey, amount, tester.address)
+    return usumRouter
+      .connect(tester)
+      .addLiquidity(market.address, feeSlotKey, amount, tester.address)
   }
 
   async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
-    const approveTx = await settlementToken.connect(tester).approve(usumRouter.address, ethers.constants.MaxUint256)
+    const approveTx = await settlementToken
+      .connect(tester)
+      .approve(usumRouter.address, ethers.constants.MaxUint256)
     await approveTx.wait()
 
     const amount = _amount ?? ethers.utils.parseEther('100')
@@ -124,7 +138,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     await addLiqTx.wait()
     return {
       amount,
-      feeSlotKey,
+      feeSlotKey
     }
   }
   async function awaitTx(response: any) {
@@ -139,6 +153,6 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     addLiquidity,
     awaitTx,
     openPosition,
-    closePosition,
+    closePosition
   }
 }

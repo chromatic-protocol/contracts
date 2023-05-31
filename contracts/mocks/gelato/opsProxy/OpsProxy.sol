@@ -14,10 +14,7 @@ contract OpsProxy is Proxied, IOpsProxy {
         address proxyOwner = owner();
         if (msg.sender != proxyOwner) {
             require(msg.sender == ops, "OpsProxy: Not authorised");
-            require(
-                _getTaskCreator() == proxyOwner,
-                "OpsProxy: Only tasks created by owner"
-            );
+            require(_getTaskCreator() == proxyOwner, "OpsProxy: Only tasks created by owner");
         } // else msg.sender == proxyOwner
         _;
     }
@@ -36,13 +33,9 @@ contract OpsProxy is Proxied, IOpsProxy {
         uint256[] calldata _values
     ) external payable override onlyAuth {
         uint256 length = _targets.length;
-        require(
-            length == _datas.length && length == _values.length,
-            "OpsProxy: Length mismatch"
-        );
+        require(length == _datas.length && length == _values.length, "OpsProxy: Length mismatch");
 
-        for (uint256 i; i < length; i++)
-            _executeCall(_targets[i], _datas[i], _values[i]);
+        for (uint256 i; i < length; i++) _executeCall(_targets[i], _datas[i], _values[i]);
     }
 
     ///@inheritdoc IOpsProxy
@@ -58,18 +51,8 @@ contract OpsProxy is Proxied, IOpsProxy {
         return _proxyAdmin();
     }
 
-    function _executeCall(
-        address _target,
-        bytes calldata _data,
-        uint256 _value
-    ) private {
-        (, bytes memory returnData) = _call(
-            _target,
-            _data,
-            _value,
-            true,
-            "OpsProxy.executeCall: "
-        );
+    function _executeCall(address _target, bytes calldata _data, uint256 _value) private {
+        (, bytes memory returnData) = _call(_target, _data, _value, true, "OpsProxy.executeCall: ");
 
         emit ExecuteCall(_target, _data, _value, returnData);
     }

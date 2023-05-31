@@ -39,7 +39,7 @@ describe('position & account test', async function () {
       qty: 10 ** 4 * Number(ethers.utils.formatEther(base)),
       leverage,
       takerMargin,
-      makerMargin,
+      makerMargin
     })
 
     const positionIds = await traderAccount.getPositionIds(market.address)
@@ -51,7 +51,10 @@ describe('position & account test', async function () {
     expect(slot0?.amount, 'not matched slot amount').to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
     expect(slot2?.amount, 'not matched slot2 amount').to.equal(base.mul(3))
-    const totalSlotMargin = position._slotMargins.reduce((acc, curr) => acc.add(curr.amount), BigNumber.from(0))
+    const totalSlotMargin = position._slotMargins.reduce(
+      (acc, curr) => acc.add(curr.amount),
+      BigNumber.from(0)
+    )
     expect(makerMargin, 'not matched marker margin ').to.equal(totalSlotMargin)
   })
 
@@ -67,7 +70,7 @@ describe('position & account test', async function () {
       qty: -(10 ** 4) * Number(ethers.utils.formatEther(base)),
       leverage,
       takerMargin,
-      makerMargin,
+      makerMargin
     })
 
     //TODO assert result
@@ -81,14 +84,19 @@ describe('position & account test', async function () {
     expect(slot0?.amount, 'not matched slot amount').to.equal(base)
     const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
     expect(slot2?.amount, 'not matched slot2 amount').to.equal(base.mul(3))
-    const totalSlotMargin = position._slotMargins.reduce((acc, curr) => acc.add(curr.amount), BigNumber.from(0))
+    const totalSlotMargin = position._slotMargins.reduce(
+      (acc, curr) => acc.add(curr.amount),
+      BigNumber.from(0)
+    )
     expect(makerMargin, 'not matched marker margin ').to.equal(totalSlotMargin)
   })
 
   function getPnl(lvQty: BigNumber, entryPrice: BigNumber, exitPrice: BigNumber) {
     console.log(
       '[getPnl]',
-      `enrtyPrice ${ethers.utils.formatEther(entryPrice)} , exitPrice : ${ethers.utils.formatEther(exitPrice)}`
+      `enrtyPrice ${ethers.utils.formatEther(entryPrice)} , exitPrice : ${ethers.utils.formatEther(
+        exitPrice
+      )}`
     )
     const delta = exitPrice.sub(entryPrice)
     return lvQty.mul(delta).div(entryPrice)
@@ -97,10 +105,17 @@ describe('position & account test', async function () {
   it('position info', async () => {
     //
 
-    const { traderAccount, market, traderRouter, oracleProvider, settlementToken, marketFactory } = testData
+    const { traderAccount, market, traderRouter, oracleProvider, settlementToken, marketFactory } =
+      testData
 
     const { updatePrice, openPosition, awaitTx } = helpers(testData)
-    await awaitTx(marketFactory.appendInterestRateRecord(settlementToken.address, 1500, (await time.latest()) + 100))
+    await awaitTx(
+      marketFactory.appendInterestRateRecord(
+        settlementToken.address,
+        1500,
+        (await time.latest()) + 100
+      )
+    )
 
     await time.increase(101)
     // prevent IOV
@@ -123,7 +138,10 @@ describe('position & account test', async function () {
       const entryPrice = entryVersions.find((v) => v.version.eq(curr.openVersion.add(1)))?.price
       if (!entryPrice) throw new Error('Not found oracle version for entry price')
 
-      const leveraged = curr.qty.abs().mul(settlementTokenDecimal.mul(curr.leverage)).div(QTY_LEVERAGE_PRECISION)
+      const leveraged = curr.qty
+        .abs()
+        .mul(settlementTokenDecimal.mul(curr.leverage))
+        .div(QTY_LEVERAGE_PRECISION)
       const leveragedQty = curr.qty.lt(0) ? leveraged.mul(-1) : leveraged
       const makerMargin = curr._slotMargins.map((m) => m.amount).reduce((a, b) => a.add(b))
       acc.push({
@@ -131,7 +149,7 @@ describe('position & account test', async function () {
         // pnl: getPnl(leveragedQty, entryPrice, currentPrice),
         leveragedQty: leveragedQty,
         entryPrice: entryPrice,
-        makerMargin: makerMargin,
+        makerMargin: makerMargin
       })
       return acc
     }, [])
@@ -198,10 +216,13 @@ describe('position & account test', async function () {
         index != results.length
           ? BigNumber.from(oraclePrices[oraclePrices.length - 1] - oraclePrices[index]).mul(10 ** 8)
           : currentPrice.sub(oraclePrices[index]) //
-      expect(expectedPnl, 'wrong pnl').to.equal(r.leveragedQty.mul(oraclePriceDiff).div(r.entryPrice))
-      expect(parseFloat(expectedPnl.toString()) / parseFloat(r.leveragedQty), 'wrong pnl percentage').to.equal(
-        oraclePriceDiff.toNumber() / r.entryPrice.toNumber()
+      expect(expectedPnl, 'wrong pnl').to.equal(
+        r.leveragedQty.mul(oraclePriceDiff).div(r.entryPrice)
       )
+      expect(
+        parseFloat(expectedPnl.toString()) / parseFloat(r.leveragedQty),
+        'wrong pnl percentage'
+      ).to.equal(oraclePriceDiff.toNumber() / r.entryPrice.toNumber())
       console.log(`pnl ${(parseFloat(expectedPnl.toString()) / parseFloat(r.leveragedQty)) * 100}%`)
 
       await expect(tx, 'not matched actual pnl')

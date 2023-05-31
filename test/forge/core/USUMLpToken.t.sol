@@ -14,11 +14,7 @@ contract OracleProviderMock is IOracleProvider {
         return "ETH / USD";
     }
 
-    function sync()
-        external
-        override
-        returns (IOracleProvider.OracleVersion memory)
-    {}
+    function sync() external override returns (IOracleProvider.OracleVersion memory) {}
 
     function currentVersion()
         external

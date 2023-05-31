@@ -32,20 +32,13 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
 
         amountIn = amountOut;
         require(tokenBalance >= amountIn, "balance of token is not enough");
-        require(
-            address(this).balance >= amountOut,
-            "balance of payer contract is not enough"
-        );
+        require(address(this).balance >= amountOut, "balance of payer contract is not enough");
 
         // send eth to keeper
         (bool success, ) = keeperAddress.call{value: amountOut}("");
         require(success, "_transfer: ETH transfer failed");
 
-        SafeERC20.safeTransfer(
-            IERC20(tokenIn),
-            msg.sender,
-            tokenBalance - amountIn
-        );
+        SafeERC20.safeTransfer(IERC20(tokenIn), msg.sender, tokenBalance - amountIn);
     }
 
     receive() external payable {}

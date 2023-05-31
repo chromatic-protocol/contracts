@@ -33,9 +33,7 @@ library PositionUtil {
      * @param oracleVersion Input oracle version
      * @return uint256 Next oracle version to settle
      */
-    function settleVersion(
-        uint256 oracleVersion
-    ) internal pure returns (uint256) {
+    function settleVersion(uint256 oracleVersion) internal pure returns (uint256) {
         require(oracleVersion > 0, Errors.INVALID_ORACLE_VERSION);
         return oracleVersion + 1;
     }
@@ -75,10 +73,7 @@ library PositionUtil {
         IOracleProvider.OracleVersion memory currentVersion
     ) internal view returns (UFixed18) {
         uint256 _settleVersion = settleVersion(oracleVersion);
-        require(
-            _settleVersion <= currentVersion.version,
-            Errors.UNSETTLED_POSITION
-        );
+        require(_settleVersion <= currentVersion.version, Errors.UNSETTLED_POSITION);
 
         IOracleProvider.OracleVersion memory _oracleVersion = _settleVersion ==
             currentVersion.version
@@ -144,13 +139,9 @@ library PositionUtil {
      * @param currentQty The current quantity of the slot's pending position
      * @param addedQty The position quantity added
      */
-    function checkAddPositionQty(
-        int256 currentQty,
-        int256 addedQty
-    ) internal pure {
+    function checkAddPositionQty(int256 currentQty, int256 addedQty) internal pure {
         require(
-            !((currentQty > 0 && addedQty <= 0) ||
-                (currentQty < 0 && addedQty >= 0)),
+            !((currentQty > 0 && addedQty <= 0) || (currentQty < 0 && addedQty >= 0)),
             Errors.INVALID_POSITION_QTY
         );
     }
@@ -164,10 +155,7 @@ library PositionUtil {
      * @param currentQty The current quantity of the slot's position
      * @param removeQty The position quantity removed
      */
-    function checkRemovePositionQty(
-        int256 currentQty,
-        int256 removeQty
-    ) internal pure {
+    function checkRemovePositionQty(int256 currentQty, int256 removeQty) internal pure {
         require(
             !((currentQty == 0) ||
                 (removeQty == 0) ||
@@ -181,10 +169,6 @@ library PositionUtil {
         int256 leveragedQty,
         UFixed18 price
     ) internal pure returns (uint256) {
-        return
-            leveragedQty.abs().mulDiv(
-                UFixed18.unwrap(price),
-                UFixed18.unwrap(UFixed18Lib.ONE)
-            );
+        return leveragedQty.abs().mulDiv(UFixed18.unwrap(price), UFixed18.unwrap(UFixed18Lib.ONE));
     }
 }

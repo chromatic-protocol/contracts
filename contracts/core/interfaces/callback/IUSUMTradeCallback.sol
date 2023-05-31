@@ -10,8 +10,5 @@ interface IUSUMTradeCallback {
         bytes calldata data
     ) external;
 
-    function claimPositionCallback(
-        uint256 positionId,
-        bytes calldata data
-    ) external;
+    function claimPositionCallback(uint256 positionId, bytes calldata data) external;
 }

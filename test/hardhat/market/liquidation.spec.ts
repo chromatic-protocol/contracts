@@ -50,13 +50,15 @@ describe('liquidation test', async () => {
   // 186250202000  8 decimal
 
   async function updatePrice(price: number) {
-    await (await testData.oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))).wait()
+    await (
+      await testData.oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
+    ).wait()
   }
 
   describe('long position', async () => {
     it('profit stop', async () => {
       // TODO here after lunch
-      
+
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('100') // 100 usd
       // 100
@@ -77,7 +79,6 @@ describe('liquidation test', async () => {
     })
 
     it('loss cut', async () => {
-      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('200') // 200 usd 20% loss
       const makerMargin = ethers.utils.parseEther('500') // 500 usd
@@ -96,7 +97,6 @@ describe('liquidation test', async () => {
 
   describe('short position', async () => {
     it('profit stop', async () => {
-      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('100') // 100 usd
       const makerMargin = ethers.utils.parseEther('190') // 19%
@@ -113,7 +113,6 @@ describe('liquidation test', async () => {
     })
 
     it('loss cut', async () => {
-      
       await updatePrice(2000)
       const takerMargin = ethers.utils.parseEther('200') // 20%
       const makerMargin = ethers.utils.parseEther('120') // 120 usd 20% profit stop

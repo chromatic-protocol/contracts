@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {
-    SafeERC20,
-    IERC20
-} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {
-    ReentrancyGuard
-} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {_transfer, ETH} from "../functions/FUtils.sol";
 
@@ -24,11 +17,7 @@ contract TaskTreasury is Ownable, ReentrancyGuard {
     EnumerableSet.AddressSet internal _whitelistedServices;
     address payable public immutable gelato;
 
-    event FundsDeposited(
-        address indexed sender,
-        address indexed token,
-        uint256 indexed amount
-    );
+    event FundsDeposited(address indexed sender, address indexed token, uint256 indexed amount);
     event FundsWithdrawn(
         address indexed receiver,
         address indexed initiator,
@@ -37,10 +26,7 @@ contract TaskTreasury is Ownable, ReentrancyGuard {
     );
 
     modifier onlyWhitelistedServices() {
-        require(
-            _whitelistedServices.contains(msg.sender),
-            "TaskTreasury: onlyWhitelistedServices"
-        );
+        require(_whitelistedServices.contains(msg.sender), "TaskTreasury: onlyWhitelistedServices");
         _;
     }
 
@@ -53,11 +39,7 @@ contract TaskTreasury is Ownable, ReentrancyGuard {
     /// @param _receiver Address receiving the credits
     /// @param _token Token to be credited, use "0xeeee...." for ETH
     /// @param _amount Amount to be credited
-    function depositFunds(
-        address _receiver,
-        address _token,
-        uint256 _amount
-    ) external payable {
+    function depositFunds(address _receiver, address _token, uint256 _amount) external payable {
         uint256 depositAmount;
         if (_token == ETH) {
             depositAmount = msg.value;
@@ -69,12 +51,9 @@ contract TaskTreasury is Ownable, ReentrancyGuard {
             depositAmount = postBalance - preBalance;
         }
 
-        userTokenBalance[_receiver][_token] =
-            userTokenBalance[_receiver][_token] +
-            depositAmount;
+        userTokenBalance[_receiver][_token] = userTokenBalance[_receiver][_token] + depositAmount;
 
-        if (!_tokenCredits[_receiver].contains(_token))
-            _tokenCredits[_receiver].add(_token);
+        if (!_tokenCredits[_receiver].contains(_token)) _tokenCredits[_receiver].add(_token);
 
         emit FundsDeposited(_receiver, _token, depositAmount);
     }
@@ -110,12 +89,9 @@ contract TaskTreasury is Ownable, ReentrancyGuard {
         uint256 _amount,
         address _user
     ) external onlyWhitelistedServices {
-        userTokenBalance[_user][_token] =
-            userTokenBalance[_user][_token] -
-            _amount;
+        userTokenBalance[_user][_token] = userTokenBalance[_user][_token] - _amount;
 
-        if (userTokenBalance[_user][_token] == 0)
-            _tokenCredits[_user].remove(_token);
+        if (userTokenBalance[_user][_token] == 0) _tokenCredits[_user].remove(_token);
 
         _transfer(gelato, _token, _amount);
     }
@@ -146,11 +122,7 @@ contract TaskTreasury is Ownable, ReentrancyGuard {
 
     /// @notice Helper func to get all deposited tokens by a user
     /// @param _user User to get the balances from
-    function getCreditTokensByUser(address _user)
-        external
-        view
-        returns (address[] memory)
-    {
+    function getCreditTokensByUser(address _user) external view returns (address[] memory) {
         uint256 length = _tokenCredits[_user].length();
         address[] memory creditTokens = new address[](length);
 

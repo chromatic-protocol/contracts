@@ -14,9 +14,10 @@ interface ITaskModule {
      * @return address Overriden or original taskCreator.
      * @return address Overriden or original execAddress.
      */
-    function preCreateTask(address taskCreator, address execAddress)
-        external
-        returns (address, address);
+    function preCreateTask(
+        address taskCreator,
+        address execAddress
+    ) external returns (address, address);
 
     /**
      * @notice Initiates task module whenever `createTask` is being called.
@@ -44,9 +45,7 @@ interface ITaskModule {
      *
      * @return address Overriden or original taskCreator.
      */
-    function preCancelTask(bytes32 taskId, address taskCreator)
-        external
-        returns (address);
+    function preCancelTask(bytes32 taskId, address taskCreator) external returns (address);
 
     /**
      * @notice Called during `exec` and before execAddress is called.

@@ -12,10 +12,7 @@ contract USUMLiquidator is Liquidator, AutomateReady {
         IUSUMMarketFactory _factory,
         address _automate,
         address opsProxyFactory
-    )
-        Liquidator(_factory)
-        AutomateReady(_automate, address(this), opsProxyFactory)
-    {}
+    ) Liquidator(_factory) AutomateReady(_automate, address(this), opsProxyFactory) {}
 
     ///@inheritdoc Liquidator
     function getAutomate() internal view override returns (IAutomate) {

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0 <0.9.0;
 
-import {
-    EnumerableSet
-} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Gelatofied} from "./vendor/gelato/Gelatofied.sol";
 import {GelatoBytes} from "./vendor/gelato/GelatoBytes.sol";
 import {Proxied} from "./vendor/proxy/EIP173/Proxied.sol";
@@ -13,10 +11,9 @@ import {LibEvents} from "./libraries/LibEvents.sol";
 import {LibLegacyTask} from "./libraries/LibLegacyTask.sol";
 import {LibTaskId} from "./libraries/LibTaskId.sol";
 import {LibTaskModule} from "./libraries/LibTaskModule.sol";
-import {
-    ITaskTreasuryUpgradable
-} from "./interfaces/ITaskTreasuryUpgradable.sol";
+import {ITaskTreasuryUpgradable} from "./interfaces/ITaskTreasuryUpgradable.sol";
 import {IAutomate} from "./interfaces/IAutomate.sol";
+
 /**
  * @notice Automate enables everyone to have Gelato monitor and execute transactions.
  * @notice ExecAddress refers to the contract that has the function which Gelato will call.
@@ -30,9 +27,10 @@ contract Automate is Gelatofied, Proxied, AutomateStorage, IAutomate {
     string public constant version = "5";
     ITaskTreasuryUpgradable public immutable override taskTreasury;
 
-    constructor(address payable _gelato, ITaskTreasuryUpgradable _taskTreasury)
-        Gelatofied(_gelato)
-    {
+    constructor(
+        address payable _gelato,
+        ITaskTreasuryUpgradable _taskTreasury
+    ) Gelatofied(_gelato) {
         taskTreasury = _taskTreasury;
     }
 
@@ -125,11 +123,7 @@ contract Automate is Gelatofied, Proxied, AutomateStorage, IAutomate {
     }
 
     ///@inheritdoc IAutomate
-    function getTaskIdsByUser(address _taskCreator)
-        external
-        view
-        returns (bytes32[] memory)
-    {
+    function getTaskIdsByUser(address _taskCreator) external view returns (bytes32[] memory) {
         bytes32[] memory taskIds = _createdTasks[_taskCreator].values();
 
         return taskIds;
@@ -143,13 +137,7 @@ contract Automate is Gelatofied, Proxied, AutomateStorage, IAutomate {
         LibDataTypes.ModuleData memory moduleData,
         address feeToken
     ) external pure returns (bytes32 taskId) {
-        taskId = LibTaskId.getTaskId(
-            taskCreator,
-            execAddress,
-            execSelector,
-            moduleData,
-            feeToken
-        );
+        taskId = LibTaskId.getTaskId(taskCreator, execAddress, execSelector, moduleData, feeToken);
     }
 
     ///@inheritdoc IAutomate
@@ -235,10 +223,7 @@ contract Automate is Gelatofied, Proxied, AutomateStorage, IAutomate {
         bool _useTaskTreasuryFunds,
         bool _revertOnFailure
     ) private {
-        require(
-            _createdTasks[_taskCreator].contains(_taskId),
-            "Automate.exec: Task not found"
-        );
+        require(_createdTasks[_taskCreator].contains(_taskId), "Automate.exec: Task not found");
 
         if (!_useTaskTreasuryFunds) {
             fee = _txFee;
@@ -263,20 +248,12 @@ contract Automate is Gelatofied, Proxied, AutomateStorage, IAutomate {
             delete feeToken;
         }
 
-        emit LibEvents.ExecSuccess(
-            _txFee,
-            _feeToken,
-            _execAddress,
-            _execData,
-            _taskId,
-            success
-        );
+        emit LibEvents.ExecSuccess(_txFee, _feeToken, _execAddress, _execData, _taskId, success);
     }
 
-    function _handleLegacyTaskCreation(bytes calldata _callData)
-        private
-        returns (bytes memory returnData)
-    {
+    function _handleLegacyTaskCreation(
+        bytes calldata _callData
+    ) private returns (bytes memory returnData) {
         bytes4 funcSig = _callData.calldataSliceSelector();
 
         (
@@ -286,13 +263,7 @@ contract Automate is Gelatofied, Proxied, AutomateStorage, IAutomate {
             address feeToken_
         ) = LibLegacyTask.getCreateTaskArg(funcSig, _callData);
 
-        bytes32 taskId = _createTask(
-            msg.sender,
-            execAddress,
-            execData,
-            moduleData,
-            feeToken_
-        );
+        bytes32 taskId = _createTask(msg.sender, execAddress, execData, moduleData, feeToken_);
 
         returnData = abi.encodePacked(taskId);
     }

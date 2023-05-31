@@ -40,13 +40,7 @@ library LibTaskId {
             );
         } else {
             taskId = keccak256(
-                abi.encode(
-                    taskCreator,
-                    execAddress,
-                    execSelector,
-                    moduleData,
-                    feeToken
-                )
+                abi.encode(taskCreator, execAddress, execSelector, moduleData, feeToken)
             );
         }
     }
@@ -87,11 +81,9 @@ library LibTaskId {
      * @dev For legacy tasks, resolvers are compulsory. Time tasks were also introduced.
      * The sequence of Module is enforced in {LibTaskModule-_validModules}
      */
-    function _shouldGetLegacyTaskId(LibDataTypes.Module[] memory _modules)
-        private
-        pure
-        returns (bool)
-    {
+    function _shouldGetLegacyTaskId(
+        LibDataTypes.Module[] memory _modules
+    ) private pure returns (bool) {
         uint256 length = _modules.length;
 
         if (
@@ -109,11 +101,7 @@ library LibTaskId {
      *
      * @param _resolverModuleArg Encoded value of resolverAddress and resolverData
      */
-    function _getResolverHash(bytes memory _resolverModuleArg)
-        private
-        pure
-        returns (bytes32)
-    {
+    function _getResolverHash(bytes memory _resolverModuleArg) private pure returns (bytes32) {
         return keccak256(_resolverModuleArg);
     }
 }

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {SignedMath} from '@openzeppelin/contracts/utils/math/SignedMath.sol';
-import {LpSlotLiquidity, LpSlotLiquidityLib} from '@usum/core/external/lpslot/LpSlotLiquidity.sol';
-import {LpSlotPosition, LpSlotPositionLib} from '@usum/core/external/lpslot/LpSlotPosition.sol';
-import {LpSlotClosedPosition, LpSlotClosedPositionLib} from '@usum/core/external/lpslot/LpSlotClosedPosition.sol';
-import {PositionParam} from '@usum/core/external/lpslot/PositionParam.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
-import {Errors} from '@usum/core/libraries/Errors.sol';
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {LpSlotLiquidity, LpSlotLiquidityLib} from "@usum/core/external/lpslot/LpSlotLiquidity.sol";
+import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
+import {LpSlotClosedPosition, LpSlotClosedPositionLib} from "@usum/core/external/lpslot/LpSlotClosedPosition.sol";
+import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct LpSlot {
     uint256 lpTokenId;
@@ -45,7 +45,12 @@ library LpSlotLib {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settleAccruedInterest(ctx);
         self._position.settlePendingPosition(ctx);
-        self._liquidity.settlePendingLiquidity(ctx, self.value(ctx), self.freeLiquidity(), self.lpTokenId);
+        self._liquidity.settlePendingLiquidity(
+            ctx,
+            self.value(ctx),
+            self.freeLiquidity(),
+            self.lpTokenId
+        );
     }
 
     function initialize(LpSlot storage self, int16 tradingFeeRate) internal {
@@ -132,10 +137,15 @@ library LpSlotLib {
         uint256 absPnl = unrealizedPnl.abs();
 
         uint256 _value = unrealizedPnl < 0 ? self.liquidity() - absPnl : self.liquidity() + absPnl;
-        return _value + ctx.market.vault().getPendingSlotShare(address(ctx.market), self.liquidity());
+        return
+            _value + ctx.market.vault().getPendingSlotShare(address(ctx.market), self.liquidity());
     }
 
-    function acceptAddLiquidity(LpSlot storage self, LpContext memory ctx, uint256 amount) internal _settle(self, ctx) {
+    function acceptAddLiquidity(
+        LpSlot storage self,
+        LpContext memory ctx,
+        uint256 amount
+    ) internal _settle(self, ctx) {
         self._liquidity.onAddLiquidity(amount, ctx.currentOracleVersion().version);
     }
 

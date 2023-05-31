@@ -6,6 +6,7 @@ import {_call, _delegateCall} from "../functions/FExec.sol";
 import {LibDataTypes} from "./LibDataTypes.sol";
 import {LibTaskModuleConfig} from "./LibTaskModuleConfig.sol";
 import {ITaskModule} from "../interfaces/ITaskModule.sol";
+
 // solhint-disable function-max-lines
 /// @notice Library to call task modules on task creation and execution.
 library LibTaskModule {
@@ -44,10 +45,7 @@ library LibTaskModule {
                 "Automate.preCreateTask: "
             );
 
-            (_taskCreator, _execAddress) = abi.decode(
-                returnData,
-                (address, address)
-            );
+            (_taskCreator, _execAddress) = abi.decode(returnData, (address, address));
         }
 
         return (_taskCreator, _execAddress);
@@ -91,11 +89,7 @@ library LibTaskModule {
                 _moduleData.args[i]
             );
 
-            _delegateCall(
-                moduleAddress,
-                delegatecallData,
-                "Automate.onCreateTask: "
-            );
+            _delegateCall(moduleAddress, delegatecallData, "Automate.onCreateTask: ");
         }
     }
 
@@ -161,10 +155,7 @@ library LibTaskModule {
         bool _revertOnFailure,
         mapping(LibDataTypes.Module => address) storage taskModuleAddresses
     ) internal returns (bool callSuccess) {
-        address[] memory moduleAddresses = _getModuleAddresses(
-            _modules,
-            taskModuleAddresses
-        );
+        address[] memory moduleAddresses = _getModuleAddresses(_modules, taskModuleAddresses);
 
         (_execAddress, _execData) = _preExecCall(
             _taskId,
@@ -188,14 +179,7 @@ library LibTaskModule {
             "Automate.exec: "
         );
 
-        _postExecCall(
-            _taskId,
-            _taskCreator,
-            _execAddress,
-            _execData,
-            _modules,
-            moduleAddresses
-        );
+        _postExecCall(_taskId, _taskCreator, _execAddress, _execData, _modules, moduleAddresses);
     }
 
     function _preExecCall(
@@ -225,10 +209,7 @@ library LibTaskModule {
                 "Automate.preExecCall: "
             );
 
-            (_execAddress, _execData) = abi.decode(
-                returnData,
-                (address, bytes)
-            );
+            (_execAddress, _execData) = abi.decode(returnData, (address, bytes));
         }
         return (_execAddress, _execData);
     }
@@ -254,11 +235,7 @@ library LibTaskModule {
                 _execData
             );
 
-            _delegateCall(
-                _moduleAddresses[i],
-                delegatecallData,
-                "Automate.postExecCall: "
-            );
+            _delegateCall(_moduleAddresses[i], delegatecallData, "Automate.postExecCall: ");
         }
     }
 
@@ -277,22 +254,13 @@ library LibTaskModule {
     }
 
     function _moduleInitialised(address _moduleAddress) private pure {
-        require(
-            _moduleAddress != address(0),
-            "Automate._moduleInitialised: Not init"
-        );
+        require(_moduleAddress != address(0), "Automate._moduleInitialised: Not init");
     }
 
     ///@dev Check for duplicate modules.
-    function _validModules(
-        uint256 _length,
-        LibDataTypes.Module[] memory _modules
-    ) private pure {
+    function _validModules(uint256 _length, LibDataTypes.Module[] memory _modules) private pure {
         if (_length > 1)
             for (uint256 i; i < _length - 1; i++)
-                require(
-                    _modules[i + 1] > _modules[i],
-                    "Automate._validModules: Asc only"
-                );
+                require(_modules[i + 1] > _modules[i], "Automate._validModules: Asc only");
     }
 }

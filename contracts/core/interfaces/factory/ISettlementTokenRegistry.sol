@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {InterestRate} from '@usum/core/libraries/InterestRate.sol';
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
 
 interface ISettlementTokenRegistry {
     event SettlementTokenRegistered(
@@ -18,7 +18,10 @@ interface ISettlementTokenRegistry {
 
     event SetFlashLoanFeeRate(address indexed token, uint256 indexed flashLoanFeeRate);
 
-    event SetEarningDistributionThreshold(address indexed token, uint256 indexed earningDistributionThreshold);
+    event SetEarningDistributionThreshold(
+        address indexed token,
+        uint256 indexed earningDistributionThreshold
+    );
 
     event SetUniswapFeeTier(address indexed token, uint24 indexed uniswapFeeTier);
 
@@ -57,13 +60,20 @@ interface ISettlementTokenRegistry {
 
     function getEarningDistributionThreshold(address token) external view returns (uint256);
 
-    function setEarningDistributionThreshold(address token, uint256 earningDistributionThreshold) external;
+    function setEarningDistributionThreshold(
+        address token,
+        uint256 earningDistributionThreshold
+    ) external;
 
     function getUniswapFeeTier(address token) external view returns (uint24);
 
     function setUniswapFeeTier(address token, uint24 uniswapFeeTier) external;
 
-    function appendInterestRateRecord(address token, uint256 annualRateBPS, uint256 beginTimestamp) external;
+    function appendInterestRateRecord(
+        address token,
+        uint256 annualRateBPS,
+        uint256 beginTimestamp
+    ) external;
 
     function removeLastInterestRateRecord(address token) external;
 
@@ -81,5 +91,7 @@ interface ISettlementTokenRegistry {
         uint256 to // timestamp (exclusive)
     ) external view returns (uint256);
 
-    function getInterestRateRecords(address token) external view returns (InterestRate.Record[] memory);
+    function getInterestRateRecords(
+        address token
+    ) external view returns (InterestRate.Record[] memory);
 }

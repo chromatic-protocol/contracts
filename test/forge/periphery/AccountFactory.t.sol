@@ -6,8 +6,7 @@ import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
 import {IAccountFactory} from "@usum/periphery/interfaces/IAccountFactory.sol";
 
 contract AccountFactoryMock is Test {
-    AccountFactory public accountFactory =
-        new AccountFactory(address(this), address(0)); // router, marketFactory
+    AccountFactory public accountFactory = new AccountFactory(address(this), address(0)); // router, marketFactory
 
     event AccountCreated(address);
 

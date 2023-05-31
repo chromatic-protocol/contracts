@@ -3,11 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 interface ITaskTreasury {
     /// @notice Events ///
-    event FundsDeposited(
-        address indexed sender,
-        address indexed token,
-        uint256 indexed amount
-    );
+    event FundsDeposited(address indexed sender, address indexed token, uint256 indexed amount);
 
     event FundsWithdrawn(
         address indexed receiver,
@@ -18,23 +14,11 @@ interface ITaskTreasury {
 
     /// @notice External functions ///
 
-    function depositFunds(
-        address receiver,
-        address token,
-        uint256 amount
-    ) external payable;
+    function depositFunds(address receiver, address token, uint256 amount) external payable;
 
-    function withdrawFunds(
-        address payable receiver,
-        address token,
-        uint256 amount
-    ) external;
+    function withdrawFunds(address payable receiver, address token, uint256 amount) external;
 
-    function useFunds(
-        address token,
-        uint256 amount,
-        address user
-    ) external;
+    function useFunds(address token, uint256 amount, address user) external;
 
     function addWhitelistedService(address service) external;
 
@@ -44,15 +28,9 @@ interface ITaskTreasury {
 
     function gelato() external view returns (address);
 
-    function getCreditTokensByUser(address user)
-        external
-        view
-        returns (address[] memory);
+    function getCreditTokensByUser(address user) external view returns (address[] memory);
 
     function getWhitelistedServices() external view returns (address[] memory);
 
-    function userTokenBalance(address user, address token)
-        external
-        view
-        returns (uint256);
+    function userTokenBalance(address user, address token) external view returns (uint256);
 }

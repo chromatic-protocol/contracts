@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {SignedMath} from '@openzeppelin/contracts/utils/math/SignedMath.sol';
-import {IUSUMLiquidity} from '@usum/core/interfaces/market/IUSUMLiquidity.sol';
-import {LpSlot, LpSlotLib} from '@usum/core/external/lpslot/LpSlot.sol';
-import {PositionParam} from '@usum/core/external/lpslot/PositionParam.sol';
-import {Position} from '@usum/core/libraries/Position.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpSlotMargin} from '@usum/core/libraries/LpSlotMargin.sol';
-import {Errors} from '@usum/core/libraries/Errors.sol';
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {IUSUMLiquidity} from "@usum/core/interfaces/market/IUSUMLiquidity.sol";
+import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
+import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
 struct LpSlotSet {
     mapping(uint16 => LpSlot) _longSlots;
@@ -35,7 +35,11 @@ library LpSlotSetLib {
      * @param slotType The type of the slot ("L" for long, "S" for short).
      * @param earning The accumulated earning.
      */
-    event LpSlotEarningAccumulated(uint16 indexed feeRate, bytes1 indexed slotType, uint256 indexed earning);
+    event LpSlotEarningAccumulated(
+        uint16 indexed feeRate,
+        bytes1 indexed slotType,
+        uint256 indexed earning
+    );
 
     uint256 private constant FEE_RATES_LENGTH = 36;
     uint16 private constant MIN_FEE_RATE = 1;
@@ -124,7 +128,10 @@ library LpSlotSetLib {
         LpSlotMargin[] memory slotMargins = new LpSlotMargin[](cnt);
         for ((uint256 i, uint256 idx) = (0, 0); i < to; i++) {
             if (_slotMargins[i] > 0) {
-                slotMargins[idx] = LpSlotMargin({tradingFeeRate: _tradingFeeRates[i], amount: _slotMargins[i]});
+                slotMargins[idx] = LpSlotMargin({
+                    tradingFeeRate: _tradingFeeRates[i],
+                    amount: _slotMargins[i]
+                });
                 idx++;
             }
         }
@@ -132,7 +139,11 @@ library LpSlotSetLib {
         return slotMargins;
     }
 
-    function acceptOpenPosition(LpSlotSet storage self, LpContext calldata ctx, Position memory position) external {
+    function acceptOpenPosition(
+        LpSlotSet storage self,
+        LpContext calldata ctx,
+        Position memory position
+    ) external {
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
@@ -154,12 +165,20 @@ library LpSlotSetLib {
                 param.takerMargin = paramValues[i].takerMargin;
                 param.makerMargin = slotMargin.amount;
 
-                _slots[slotMargins[i].tradingFeeRate].openPosition(ctx, param, slotMargin.tradingFee());
+                _slots[slotMargins[i].tradingFeeRate].openPosition(
+                    ctx,
+                    param,
+                    slotMargin.tradingFee()
+                );
             }
         }
     }
 
-    function acceptClosePosition(LpSlotSet storage self, LpContext calldata ctx, Position memory position) external {
+    function acceptClosePosition(
+        LpSlotSet storage self,
+        LpContext calldata ctx,
+        Position memory position
+    ) external {
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
@@ -259,7 +278,10 @@ library LpSlotSetLib {
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = slotMargins[i].amount;
 
-                    uint256 absTakerPnl = remainRealizedPnl.mulDiv(param.makerMargin, remainMakerMargin);
+                    uint256 absTakerPnl = remainRealizedPnl.mulDiv(
+                        param.makerMargin,
+                        remainMakerMargin
+                    );
                     if (realizedPnl < 0) {
                         // maker profit
                         absTakerPnl = Math.min(absTakerPnl, param.takerMargin);
@@ -268,7 +290,9 @@ library LpSlotSetLib {
                         absTakerPnl = Math.min(absTakerPnl, param.makerMargin);
                     }
 
-                    int256 takerPnl = realizedPnl < 0 ? -(absTakerPnl.toInt256()) : absTakerPnl.toInt256();
+                    int256 takerPnl = realizedPnl < 0
+                        ? -(absTakerPnl.toInt256())
+                        : absTakerPnl.toInt256();
 
                     _slot.claimPosition(ctx, param, takerPnl);
 
@@ -333,12 +357,18 @@ library LpSlotSetLib {
         amount = slot.calculateLpTokenValue(ctx, lpTokenAmount);
     }
 
-    function getSlotLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {
+    function getSlotLiquidity(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         return slot.liquidity();
     }
 
-    function getSlotFreeLiquidity(LpSlotSet storage self, int16 tradingFeeRate) external view returns (uint256 amount) {
+    function getSlotFreeLiquidity(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount) {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         return slot.freeLiquidity();
     }
@@ -350,7 +380,10 @@ library LpSlotSetLib {
      * @param sign The sign of the value (-1 for negative, 1 for positive).
      * @return _slots The target slots mapping associated with the sign of the value.
      */
-    function targetSlots(LpSlotSet storage self, int256 sign) private view returns (mapping(uint16 => LpSlot) storage) {
+    function targetSlots(
+        LpSlotSet storage self,
+        int256 sign
+    ) private view returns (mapping(uint16 => LpSlot) storage) {
         return sign < 0 ? self._shortSlots : self._longSlots;
     }
 
@@ -361,8 +394,14 @@ library LpSlotSetLib {
      * @param tradingFeeRate The trading fee rate associated with the slot.
      * @return slot The target slot associated with the trading fee rate.
      */
-    function targetSlot(LpSlotSet storage self, int16 tradingFeeRate) private view returns (LpSlot storage) {
-        return tradingFeeRate < 0 ? self._shortSlots[abs(tradingFeeRate)] : self._longSlots[abs(tradingFeeRate)];
+    function targetSlot(
+        LpSlotSet storage self,
+        int16 tradingFeeRate
+    ) private view returns (LpSlot storage) {
+        return
+            tradingFeeRate < 0
+                ? self._shortSlots[abs(tradingFeeRate)]
+                : self._longSlots[abs(tradingFeeRate)];
     }
 
     /**
@@ -386,7 +425,9 @@ library LpSlotSetLib {
         uint256 remainLeveragedQty = leveragedQty.abs();
         uint256 remainTakerMargin = takerMargin;
 
-        _proportionalPositionParamValue[] memory values = new _proportionalPositionParamValue[](slotMargins.length);
+        _proportionalPositionParamValue[] memory values = new _proportionalPositionParamValue[](
+            slotMargins.length
+        );
 
         for (uint256 i = 0; i < slotMargins.length - 1; i++) {
             uint256 _qty = remainLeveragedQty.mulDiv(slotMargins[i].amount, makerMargin);
@@ -402,7 +443,9 @@ library LpSlotSetLib {
         }
 
         values[slotMargins.length - 1] = _proportionalPositionParamValue({
-            leveragedQty: leveragedQty < 0 ? remainLeveragedQty.toInt256() : -(remainLeveragedQty.toInt256()), // opposit side
+            leveragedQty: leveragedQty < 0
+                ? remainLeveragedQty.toInt256()
+                : -(remainLeveragedQty.toInt256()), // opposit side
             takerMargin: remainTakerMargin
         });
 
@@ -497,7 +540,10 @@ library LpSlotSetLib {
      * @param element The element to find the upper bound for.
      * @return uint256 The index of the upper bound of the element in the array.
      */
-    function findUpperBound(uint16[FEE_RATES_LENGTH] memory array, uint16 element) private pure returns (uint256) {
+    function findUpperBound(
+        uint16[FEE_RATES_LENGTH] memory array,
+        uint16 element
+    ) private pure returns (uint256) {
         if (array.length == 0) {
             return 0;
         }
@@ -536,7 +582,11 @@ library LpSlotSetLib {
      * @param earning The total earnings to be distributed.
      * @param marketBalance The market balance.
      */
-    function distributeEarning(LpSlotSet storage self, uint256 earning, uint256 marketBalance) external {
+    function distributeEarning(
+        LpSlotSet storage self,
+        uint256 earning,
+        uint256 marketBalance
+    ) external {
         uint256 remainEarning = earning;
         uint256 remainBalance = marketBalance;
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
@@ -546,14 +596,14 @@ library LpSlotSetLib {
             remainEarning,
             remainBalance,
             _tradingFeeRates,
-            'L'
+            "L"
         );
         (remainEarning, remainBalance) = distributeEarning(
             self._shortSlots,
             remainEarning,
             remainBalance,
             _tradingFeeRates,
-            'S'
+            "S"
         );
     }
 

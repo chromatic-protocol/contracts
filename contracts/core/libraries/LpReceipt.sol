@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 enum LpAction {
     ADD_LIQUIDITY,

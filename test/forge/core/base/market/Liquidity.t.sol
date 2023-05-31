@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {BaseSetup} from './BaseSetup.sol';
-import {IERC1155} from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
-import {Fixed18Lib} from '@equilibria/root/number/types/Fixed18.sol';
-import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
-import {LpTokenLib} from '@usum/core/libraries/LpTokenLib.sol';
-import {LpReceipt} from '@usum/core/libraries/LpReceipt.sol';
+import {BaseSetup} from "./BaseSetup.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
+import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
+import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
 
 contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
     function getKeyList(int16 key) internal pure returns (int16[] memory keys) {
@@ -28,7 +28,11 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         oracleProvider.increaseVersion(Fixed18Lib.from(1));
 
         // add liquidity $10 to 0.01% long slot at oracle version 1
-        LpReceipt memory receipt1 = market.addLiquidity(address(this), 1, abi.encode(addLongAmount));
+        LpReceipt memory receipt1 = market.addLiquidity(
+            address(this),
+            1,
+            abi.encode(addLongAmount)
+        );
         assertEq(addLongAmount, usdc.balanceOf(address(vault)));
         assertEq(0, vault.makerBalances(address(usdc)));
         assertEq(0, vault.makerMarketBalances(address(market)));
@@ -47,12 +51,16 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addLongAmount, lpToken.balanceOf(address(market), receipt1.lpTokenId()));
 
         // claim lpToken at oracle version 2
-        market.claimLpToken(receipt1.id, bytes(''));
+        market.claimLpToken(receipt1.id, bytes(""));
         assertEq(0, lpToken.balanceOf(address(market), receipt1.lpTokenId()));
         assertEq(addLongAmount, lpToken.balanceOf(address(this), receipt1.lpTokenId()));
 
         // add liquidity $20 to 0.1% short slot at oracle version 2
-        LpReceipt memory receipt2 = market.addLiquidity(address(this), -10, abi.encode(addShortAmount));
+        LpReceipt memory receipt2 = market.addLiquidity(
+            address(this),
+            -10,
+            abi.encode(addShortAmount)
+        );
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
@@ -71,7 +79,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addShortAmount, lpToken.balanceOf(address(market), receipt2.lpTokenId()));
 
         // claim lpToken at oracle version 3
-        market.claimLpToken(receipt2.id, bytes(''));
+        market.claimLpToken(receipt2.id, bytes(""));
         assertEq(0, lpToken.balanceOf(address(market), receipt2.lpTokenId()));
         assertEq(addShortAmount, lpToken.balanceOf(address(this), receipt2.lpTokenId()));
 
@@ -103,7 +111,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         uint256 keeperFee = 1 ether;
 
         // prepare keeperFeePayer
-        address(keeperFeePayer).call{value: keeperFee}('');
+        address(keeperFeePayer).call{value: keeperFee}("");
 
         // set oracle version to 1
         oracleProvider.increaseVersion(Fixed18Lib.from(1));
@@ -127,25 +135,42 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         vault.distributeMarketEarning(address(market), keeperFee);
 
         // asserts
-        assertEq(addLongAmount + addShortAmount + earning - keeperFee, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount + addShortAmount + earning - keeperFee, vault.makerBalances(address(usdc)));
-        assertEq(addLongAmount + addShortAmount + earning - keeperFee, vault.makerMarketBalances(address(market)));
+        assertEq(
+            addLongAmount + addShortAmount + earning - keeperFee,
+            usdc.balanceOf(address(vault))
+        );
+        assertEq(
+            addLongAmount + addShortAmount + earning - keeperFee,
+            vault.makerBalances(address(usdc))
+        );
+        assertEq(
+            addLongAmount + addShortAmount + earning - keeperFee,
+            vault.makerMarketBalances(address(market))
+        );
         assertEq(addLongAmount + 3 ether, market.getSlotLiquidities(getKeyList(1))[0]);
         assertEq(addShortAmount + 6 ether, market.getSlotLiquidities(getKeyList(-10))[0]);
     }
 
     // implement IUSUMLiquidityCallback
 
-    function addLiquidityCallback(address settlementToken, address vault, bytes calldata data) external {
+    function addLiquidityCallback(
+        address settlementToken,
+        address vault,
+        bytes calldata data
+    ) external {
         uint256 amount = abi.decode(data, (uint256));
         usdc.transfer(vault, amount);
     }
 
-    function claimLpTokenCallback(uint256 receiptId, address recipient, bytes calldata data) external {}
+    function claimLpTokenCallback(
+        uint256 receiptId,
+        address recipient,
+        bytes calldata data
+    ) external {}
 
     function removeLiquidityCallback(address lpToken, bytes calldata data) external {
         (uint256 id, uint256 amount) = abi.decode(data, (uint256, uint256));
-        IERC1155(lpToken).safeTransferFrom(address(this), msg.sender, id, amount, bytes(''));
+        IERC1155(lpToken).safeTransferFrom(address(this), msg.sender, id, amount, bytes(""));
     }
 
     // implement IERC1155Receiver

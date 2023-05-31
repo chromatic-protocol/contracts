@@ -38,13 +38,8 @@ library InterestRate {
      * @param self The stored record array
      * @param initialInterestRate The initial interest rate
      */
-    function initialize(
-        Record[] storage self,
-        uint256 initialInterestRate
-    ) internal {
-        self.push(
-            Record({annualRateBPS: initialInterestRate, beginTimestamp: 0})
-        );
+    function initialize(Record[] storage self, uint256 initialInterestRate) internal {
+        self.push(Record({annualRateBPS: initialInterestRate, beginTimestamp: 0}));
     }
 
     /**
@@ -61,23 +56,12 @@ library InterestRate {
         uint256 beginTimestamp
     ) internal initialized(self) {
         require(annualRateBPS <= MAX_RATE_BPS, Errors.INTEREST_RATE_OVERFLOW);
-        require(
-            beginTimestamp > block.timestamp,
-            Errors.INTEREST_RATE_PAST_TIMESTAMP
-        );
+        require(beginTimestamp > block.timestamp, Errors.INTEREST_RATE_PAST_TIMESTAMP);
 
         Record memory lastRecord = self[self.length - 1];
-        require(
-            beginTimestamp > lastRecord.beginTimestamp,
-            Errors.INTEREST_RATE_NOT_APPENDABLE
-        );
+        require(beginTimestamp > lastRecord.beginTimestamp, Errors.INTEREST_RATE_NOT_APPENDABLE);
 
-        self.push(
-            Record({
-                annualRateBPS: annualRateBPS,
-                beginTimestamp: beginTimestamp
-            })
-        );
+        self.push(Record({annualRateBPS: annualRateBPS, beginTimestamp: beginTimestamp}));
     }
 
     /**
@@ -98,10 +82,7 @@ library InterestRate {
         }
 
         Record memory lastRecord = self[self.length - 1];
-        require(
-            block.timestamp < lastRecord.beginTimestamp,
-            Errors.INTEREST_RATE_ALREADY_APPLIED
-        );
+        require(block.timestamp < lastRecord.beginTimestamp, Errors.INTEREST_RATE_ALREADY_APPLIED);
 
         self.pop();
 
@@ -120,12 +101,7 @@ library InterestRate {
     function findRecordAt(
         Record[] storage self,
         uint256 timestamp
-    )
-        internal
-        view
-        initialized(self)
-        returns (Record memory interestRate, uint256 index)
-    {
+    ) internal view initialized(self) returns (Record memory interestRate, uint256 index) {
         for (uint256 i = self.length; i > 0; i--) {
             index = i - 1;
             interestRate = self[index];
@@ -167,8 +143,7 @@ library InterestRate {
             interest += _interest(
                 amount,
                 record.annualRateBPS,
-                Math.min(to, endTimestamp) -
-                    Math.max(from, record.beginTimestamp)
+                Math.min(to, endTimestamp) - Math.max(from, record.beginTimestamp)
             );
             endTimestamp = record.beginTimestamp;
         }

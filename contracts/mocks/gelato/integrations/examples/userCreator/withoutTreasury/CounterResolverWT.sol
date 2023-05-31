@@ -15,11 +15,7 @@ contract CounterResolverWT {
         counter = _counter;
     }
 
-    function checker()
-        external
-        view
-        returns (bool canExec, bytes memory execPayload)
-    {
+    function checker() external view returns (bool canExec, bytes memory execPayload) {
         uint256 lastExecuted = counter.lastExecuted();
 
         canExec = (block.timestamp - lastExecuted) > 180;

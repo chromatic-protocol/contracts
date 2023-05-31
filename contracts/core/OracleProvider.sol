@@ -7,14 +7,10 @@ import {ChainlinkAggregator} from "@equilibria/perennial-oracle/contracts/types/
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 
 contract OracleProvider is ChainlinkFeedOracle, IOracleProvider {
-    constructor(
-        address aggregator
-    ) ChainlinkFeedOracle(ChainlinkAggregator.wrap(aggregator)) {}
+    constructor(address aggregator) ChainlinkFeedOracle(ChainlinkAggregator.wrap(aggregator)) {}
 
     function description() external view override returns (string memory) {
-        return
-            AggregatorV2V3Interface(ChainlinkAggregator.unwrap(aggregator))
-                .description();
+        return AggregatorV2V3Interface(ChainlinkAggregator.unwrap(aggregator)).description();
     }
 
     function atVersions(

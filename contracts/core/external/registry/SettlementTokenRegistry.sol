@@ -28,10 +28,7 @@ library SettlementTokenRegistryLib {
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the token to check.
      */
-    modifier registeredOnly(
-        SettlementTokenRegistry storage self,
-        address token
-    ) {
+    modifier registeredOnly(SettlementTokenRegistry storage self, address token) {
         require(self._tokens.contains(token), Errors.UNREGISTERED_TOKEN);
         _;
     }
@@ -61,9 +58,7 @@ library SettlementTokenRegistryLib {
         self._interestRateRecords[token].initialize(interestRate);
         self._minimumTakerMargins[token] = minimumTakerMargin;
         self._flashLoanFeeRates[token] = flashLoanFeeRate;
-        self._earningDistributionThresholds[
-            token
-        ] = earningDistributionThreshold;
+        self._earningDistributionThresholds[token] = earningDistributionThreshold;
         self._uniswapFeeTiers[token] = uniswapFeeTier;
     }
 
@@ -169,9 +164,7 @@ library SettlementTokenRegistryLib {
         address token,
         uint256 earningDistributionThreshold
     ) external {
-        self._earningDistributionThresholds[
-            token
-        ] = earningDistributionThreshold;
+        self._earningDistributionThresholds[token] = earningDistributionThreshold;
     }
 
     /**
@@ -215,10 +208,7 @@ library SettlementTokenRegistryLib {
         uint256 annualRateBPS,
         uint256 beginTimestamp
     ) external registeredOnly(self, token) {
-        getInterestRateRecords(self, token).appendRecord(
-            annualRateBPS,
-            beginTimestamp
-        );
+        getInterestRateRecords(self, token).appendRecord(annualRateBPS, beginTimestamp);
     }
 
     /**
@@ -239,8 +229,7 @@ library SettlementTokenRegistryLib {
         registeredOnly(self, token)
         returns (bool removed, InterestRate.Record memory record)
     {
-        (removed, record) = getInterestRateRecords(self, token)
-            .removeLastRecord();
+        (removed, record) = getInterestRateRecords(self, token).removeLastRecord();
     }
 
     /**
@@ -253,16 +242,10 @@ library SettlementTokenRegistryLib {
     function currentInterestRate(
         SettlementTokenRegistry storage self,
         address token
-    )
-        external
-        view
-        registeredOnly(self, token)
-        returns (uint256 annualRateBPS)
-    {
-        (InterestRate.Record memory record, ) = getInterestRateRecords(
-            self,
-            token
-        ).findRecordAt(block.timestamp);
+    ) external view registeredOnly(self, token) returns (uint256 annualRateBPS) {
+        (InterestRate.Record memory record, ) = getInterestRateRecords(self, token).findRecordAt(
+            block.timestamp
+        );
         return record.annualRateBPS;
     }
 
@@ -283,12 +266,7 @@ library SettlementTokenRegistryLib {
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
     ) external view registeredOnly(self, token) returns (uint256) {
-        return
-            getInterestRateRecords(self, token).calculateInterest(
-                amount,
-                from,
-                to
-            );
+        return getInterestRateRecords(self, token).calculateInterest(amount, from, to);
     }
 
     /**

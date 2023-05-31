@@ -31,9 +31,7 @@ contract AccountFactory is IAccountFactory {
         emit AccountCreated(address(newAccount));
     }
 
-    function getAccount(
-        address accountAddress
-    ) external view onlyRouter returns (address) {
+    function getAccount(address accountAddress) external view onlyRouter returns (address) {
         return accounts[accountAddress];
     }
 

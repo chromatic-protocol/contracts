@@ -15,8 +15,7 @@ function _call(
 ) returns (bool success, bytes memory returnData) {
     (success, returnData) = _add.call{value: _value}(_data);
 
-    if (!success && _revertOnFailure)
-        GelatoBytes.revertWithError(returnData, _tracingInfo);
+    if (!success && _revertOnFailure) GelatoBytes.revertWithError(returnData, _tracingInfo);
 }
 
 function _delegateCall(
