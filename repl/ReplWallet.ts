@@ -95,7 +95,7 @@ export class ReplWallet {
       await this.AccountFactory.createAccount()
       accountAddress = await this.AccountFactory['getAccount()']()
     }
-    console.log(`crete Account, signer: ${accountAddress}, ${this.signer.address}`)
+    console.log(`create Account, signer: ${accountAddress}, ${this.signer.address}`)
     this.Account = IAccount__factory.connect(accountAddress, this.signer)
   }
 
@@ -113,6 +113,7 @@ export class ReplWallet {
       fee: 3000,
       // fee: 500,
       recipient: this.address,
+      deadline: Math.ceil(Date.now() / 1000) + 30,
       amountIn: parseEther(eth.toString()),
       amountOutMinimum: 0,
       sqrtPriceLimitX96: 0,
@@ -123,7 +124,7 @@ export class ReplWallet {
 
   async positions(): Promise<PositionStructOutput[]> {
     const positionIds = await this.Account.getPositionIds(this.USUMMarket.address)
-    return Promise.all(positionIds.map(async (positionId) => await this.USUMMarket.getPosition(positionId)))
+    return await this.USUMMarket.getPositions(positionIds)
   }
 
   async openPosition(qty: number, leverage: number, takerMargin: number, makerMargin: number) {
