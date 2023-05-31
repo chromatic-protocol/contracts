@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { deploy as marketDeploy } from '../deployMarket'
 import { logYellow } from '../log-utils'
+import { USUMLpToken__factory } from '@usum/typechain-types'
 
 export const prepareMarketTest = async () => {
   async function faucet(account: SignerWithAddress) {
@@ -58,6 +59,8 @@ export const prepareMarketTest = async () => {
     ).wait()
   }
 
+  const lpToken = USUMLpToken__factory.connect(await market.lpToken(), tester)
+
   return {
     oracleProvider,
     marketFactory,
@@ -72,7 +75,8 @@ export const prepareMarketTest = async () => {
     keeperFeePayer,
     traderAccount,
     traderRouter,
-    gelato
+    gelato,
+    lpToken
     // addLiquidity,
     // updatePrice,
   }

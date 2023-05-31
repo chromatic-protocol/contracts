@@ -1,8 +1,8 @@
-import { USUMLpToken__factory } from '@usum/typechain-types'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { logLiquidity } from '../log-utils'
 import { helpers, prepareMarketTest } from './testHelper'
+import { BigNumber } from 'ethers'
 
 describe('market test', async function () {
   const oneEther = ethers.utils.parseEther('1')
@@ -39,7 +39,7 @@ describe('market test', async function () {
   })
 
   it('add/remove liquidity', async () => {
-    const { market, usumRouter, tester, oracleProvider, settlementToken } = testData
+    const { market, usumRouter, tester, lpToken, settlementToken } = testData
     const {
       addLiquidityTx,
       updatePrice,
@@ -64,20 +64,12 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidity((await getLpReceiptIds())[0])).wait()
 
-    expect(
-      await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
-        feeSlotKey
-      )
-    ).to.equal(expectedLiquidity)
+    expect(await lpToken.totalSupply(feeSlotKey)).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
     const expectedAmount = await market.calculateLpTokenValue(feeSlotKey, removeLiqAmount)
 
-    await (
-      await USUMLpToken__factory.connect(await market.lpToken(), tester)
-        .connect(tester)
-        .setApprovalForAll(usumRouter.address, true)
-    ).wait()
+    await (await lpToken.setApprovalForAll(usumRouter.address, true)).wait()
 
     await (await removeLiquidity(removeLiqAmount, feeSlotKey)).wait()
 
@@ -89,11 +81,64 @@ describe('market test', async function () {
       expectedAmount
     )
 
-    expect(
-      await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
-        feeSlotKey
-      )
-    ).to.equal(removeLiqAmount)
+    expect(await lpToken.totalSupply(feeSlotKey)).to.equal(removeLiqAmount)
+  })
+
+  it('add/remove liquidity Batch', async () => {
+    const { market, usumRouter, tester, lpToken, settlementToken } = testData
+    const {
+      updatePrice,
+      addLiquidityBatch,
+      claimLiquidityBatch,
+      getLpReceiptIds,
+      removeLiquidityBatch,
+      withdrawLiquidityBatch
+    } = helpers(testData)
+    await updatePrice(1000)
+
+    const amount = ethers.utils.parseEther('100')
+    const amounts = totalFees.map((_) => amount)
+
+    const expectedLiquidities = await usumRouter.calculateLpTokenMintingBatch(
+      market.address,
+      totalFees,
+      amounts
+    )
+
+    await expect(addLiquidityBatch(amounts, totalFees)).to.changeTokenBalance(
+      settlementToken,
+      tester.address,
+      amounts.reduce((a, b) => a.add(b)).mul(-1)
+    )
+    await updatePrice(1100)
+    await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
+
+    expect(await usumRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
+      expectedLiquidities
+    )
+
+    // remove begin
+    await (await lpToken.setApprovalForAll(usumRouter.address, true)).wait()
+
+    const expectedAmounts = await usumRouter.calculateLpTokenValueBatch(
+      market.address,
+      totalFees,
+      expectedLiquidities
+    )
+
+    await (await removeLiquidityBatch(expectedLiquidities, totalFees)).wait()
+
+    await updatePrice(1000)
+
+    await expect(withdrawLiquidityBatch(await getLpReceiptIds())).to.changeTokenBalance(
+      settlementToken,
+      tester,
+      expectedAmounts.reduce((a, b) => a.add(b))
+    )
+
+    expect(await usumRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
+      totalFees.map((_) => BigNumber.from('0'))
+    )
   })
 
   it('print liquidity', async () => {
