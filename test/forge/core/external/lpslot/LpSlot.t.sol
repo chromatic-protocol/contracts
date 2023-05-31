@@ -48,7 +48,10 @@ contract LpSlotTest is Test {
             abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
         );
 
+        slot.initialize(1);
         slot._liquidity.total = 20000 ether;
+
+        lpToken.mint(address(market), 1, 20000 ether, bytes(""));
     }
 
     function testAcceptAddLiquidity() public {
