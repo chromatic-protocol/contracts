@@ -27,27 +27,20 @@ library LibShares {
         if (_totalShares == 0 || _totalBalance == 0) {
             sharesOfToken = tokenIn18Dp;
         } else {
-            sharesOfToken = divCeil(
-                tokenIn18Dp * _totalShares,
-                totalBalanceIn18Dp
-            );
+            sharesOfToken = divCeil(tokenIn18Dp * _totalShares, totalBalanceIn18Dp);
         }
 
         return sharesOfToken;
     }
 
-    function to18Dp(address _token, uint256 _amount)
-        internal
-        view
-        returns (uint256)
-    {
+    function to18Dp(address _token, uint256 _amount) internal view returns (uint256) {
         if (_token == ETH) return _amount;
         uint256 decimals = IERC20Extended(_token).decimals();
 
         if (decimals < 18) {
-            return _amount * 10**(18 - decimals);
+            return _amount * 10 ** (18 - decimals);
         } else {
-            return _amount / 10**(decimals - 18);
+            return _amount / 10 ** (decimals - 18);
         }
     }
 

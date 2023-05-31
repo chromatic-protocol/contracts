@@ -77,9 +77,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         emit SetVault(vault);
     }
 
-    function setKeeperFeePayer(
-        address _keeperFeePayer
-    ) external override onlyDao {
+    function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
         if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
 
         keeperFeePayer = _keeperFeePayer;
@@ -104,26 +102,18 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
         address[] memory markets = _marketsBySettlementToken[settlementToken];
         for (uint i = 0; i < markets.length; i++) {
-            if (
-                address(IUSUMMarket(markets[i]).oracleProvider()) ==
-                oracleProvider
-            ) {
+            if (address(IUSUMMarket(markets[i]).oracleProvider()) == oracleProvider) {
                 return markets[i];
             }
         }
         return address(0);
     }
 
-    function isRegisteredMarket(
-        address market
-    ) external view override returns (bool) {
+    function isRegisteredMarket(address market) external view override returns (bool) {
         return _markets.contains(market);
     }
 
-    function createMarket(
-        address oracleProvider,
-        address settlementToken
-    ) external override {
+    function createMarket(address oracleProvider, address settlementToken) external override {
         if (!_oracleProviderRegistry.isRegistered(oracleProvider))
             revert NotRegisteredOracleProvider();
 
@@ -156,26 +146,17 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
     // implement IOracleProviderRegistry
 
-    function registerOracleProvider(
-        address oracleProvider
-    ) external override onlyDao {
+    function registerOracleProvider(address oracleProvider) external override onlyDao {
         _oracleProviderRegistry.register(oracleProvider);
         emit OracleProviderRegistered(oracleProvider);
     }
 
-    function unregisterOracleProvider(
-        address oracleProvider
-    ) external override onlyDao {
+    function unregisterOracleProvider(address oracleProvider) external override onlyDao {
         _oracleProviderRegistry.unregister(oracleProvider);
         emit OracleProviderUnregistered(oracleProvider);
     }
 
-    function registeredOracleProviders()
-        external
-        view
-        override
-        returns (address[] memory)
-    {
+    function registeredOracleProviders() external view override returns (address[] memory) {
         return _oracleProviderRegistry.oracleProviders();
     }
 
@@ -216,55 +197,33 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         );
     }
 
-    function registeredSettlementTokens()
-        external
-        view
-        override
-        returns (address[] memory)
-    {
+    function registeredSettlementTokens() external view override returns (address[] memory) {
         return _settlementTokenRegistry.settlementTokens();
     }
 
-    function isRegisteredSettlementToken(
-        address token
-    ) external view override returns (bool) {
+    function isRegisteredSettlementToken(address token) external view override returns (bool) {
         return _settlementTokenRegistry.isRegistered(token);
     }
 
-    function getMinimumTakerMargin(
-        address token
-    ) external view returns (uint256) {
+    function getMinimumTakerMargin(address token) external view returns (uint256) {
         return _settlementTokenRegistry.getMinimumTakerMargin(token);
     }
 
-    function setMinimumTakerMargin(
-        address token,
-        uint256 minimumTakerMargin
-    ) external onlyDao {
-        _settlementTokenRegistry.setMinimumTakerMargin(
-            token,
-            minimumTakerMargin
-        );
+    function setMinimumTakerMargin(address token, uint256 minimumTakerMargin) external onlyDao {
+        _settlementTokenRegistry.setMinimumTakerMargin(token, minimumTakerMargin);
         emit SetMinimumTakerMargin(token, minimumTakerMargin);
     }
 
-    function getFlashLoanFeeRate(
-        address token
-    ) external view returns (uint256) {
+    function getFlashLoanFeeRate(address token) external view returns (uint256) {
         return _settlementTokenRegistry.getFlashLoanFeeRate(token);
     }
 
-    function setFlashLoanFeeRate(
-        address token,
-        uint256 flashLoanFeeRate
-    ) external onlyDao {
+    function setFlashLoanFeeRate(address token, uint256 flashLoanFeeRate) external onlyDao {
         _settlementTokenRegistry.setFlashLoanFeeRate(token, flashLoanFeeRate);
         emit SetFlashLoanFeeRate(token, flashLoanFeeRate);
     }
 
-    function getEarningDistributionThreshold(
-        address token
-    ) external view returns (uint256) {
+    function getEarningDistributionThreshold(address token) external view returns (uint256) {
         return _settlementTokenRegistry.getEarningDistributionThreshold(token);
     }
 
@@ -276,20 +235,14 @@ contract USUMMarketFactory is IUSUMMarketFactory {
             token,
             earningDistributionThreshold
         );
-        emit SetEarningDistributionThreshold(
-            token,
-            earningDistributionThreshold
-        );
+        emit SetEarningDistributionThreshold(token, earningDistributionThreshold);
     }
 
     function getUniswapFeeTier(address token) external view returns (uint24) {
         return _settlementTokenRegistry.getUniswapFeeTier(token);
     }
 
-    function setUniswapFeeTier(
-        address token,
-        uint24 uniswapFeeTier
-    ) external onlyDao {
+    function setUniswapFeeTier(address token, uint24 uniswapFeeTier) external onlyDao {
         _settlementTokenRegistry.setUniswapFeeTier(token, uniswapFeeTier);
         emit SetUniswapFeeTier(token, uniswapFeeTier);
     }
@@ -299,28 +252,16 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         uint256 annualRateBPS,
         uint256 beginTimestamp
     ) external override onlyDao {
-        _settlementTokenRegistry.appendInterestRateRecord(
-            token,
-            annualRateBPS,
-            beginTimestamp
-        );
+        _settlementTokenRegistry.appendInterestRateRecord(token, annualRateBPS, beginTimestamp);
         emit InterestRateRecordAppended(token, annualRateBPS, beginTimestamp);
     }
 
-    function removeLastInterestRateRecord(
-        address token
-    ) external override onlyDao {
-        (
-            bool removed,
-            InterestRate.Record memory record
-        ) = _settlementTokenRegistry.removeLastInterestRateRecord(token);
+    function removeLastInterestRateRecord(address token) external override onlyDao {
+        (bool removed, InterestRate.Record memory record) = _settlementTokenRegistry
+            .removeLastInterestRateRecord(token);
 
         if (removed) {
-            emit LastInterestRateRecordRemoved(
-                token,
-                record.annualRateBPS,
-                record.beginTimestamp
-            );
+            emit LastInterestRateRecordRemoved(token, record.annualRateBPS, record.beginTimestamp);
         }
     }
 
@@ -342,33 +283,24 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
     ) external view override returns (uint256) {
-        return
-            _settlementTokenRegistry.calculateInterest(token, amount, from, to);
+        return _settlementTokenRegistry.calculateInterest(token, amount, from, to);
     }
 
     // manage vault automate
 
-    function createMakerEarningDistributionTask(
-        address token
-    ) external override onlyDao {
+    function createMakerEarningDistributionTask(address token) external override onlyDao {
         IUSUMVault(vault).createMakerEarningDistributionTask(token);
     }
 
-    function cancelMakerEarningDistributionTask(
-        address token
-    ) external override onlyDao {
+    function cancelMakerEarningDistributionTask(address token) external override onlyDao {
         IUSUMVault(vault).cancelMakerEarningDistributionTask(token);
     }
 
-    function createMarketEarningDistributionTask(
-        address market
-    ) external override onlyDao {
+    function createMarketEarningDistributionTask(address market) external override onlyDao {
         IUSUMVault(vault).createMarketEarningDistributionTask(market);
     }
 
-    function cancelMarketEarningDistributionTask(
-        address market
-    ) external override onlyDao {
+    function cancelMarketEarningDistributionTask(address market) external override onlyDao {
         IUSUMVault(vault).cancelMarketEarningDistributionTask(market);
     }
 }

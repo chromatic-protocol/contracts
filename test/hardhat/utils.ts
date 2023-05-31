@@ -1,19 +1,19 @@
-import { ethers, deployments, getNamedAccounts } from "hardhat"
-import { DeployOptions } from "hardhat-deploy/types"
-import { Contract } from "ethers"
-import { logDeployed } from "./log-utils"
-import util from "util"
+import { ethers, deployments, getNamedAccounts } from 'hardhat'
+import { DeployOptions } from 'hardhat-deploy/types'
+import { Contract } from 'ethers'
+import { logDeployed } from './log-utils'
+import util from 'util'
 
 export async function deployContract<T>(
   contractName: string,
-  options?: Omit<DeployOptions, "from"> & { from?: string }
+  options?: Omit<DeployOptions, 'from'> & { from?: string }
 ): Promise<T> {
   return hardhatErrorPrettyPrint(async () => {
     const { deployer } = await getNamedAccounts()
 
     const result = await deployments.deploy(contractName, {
       from: options?.from || deployer,
-      ...options,
+      ...options
     })
 
     logDeployed(contractName, result.address)
@@ -21,10 +21,7 @@ export async function deployContract<T>(
   })
 }
 
-
-export async function hardhatErrorPrettyPrint<T>(
-  method: () => Promise<T>
-): Promise<T> {
+export async function hardhatErrorPrettyPrint<T>(method: () => Promise<T>): Promise<T> {
   try {
     return await method()
   } catch (e: any) {
@@ -36,10 +33,9 @@ export async function hardhatErrorPrettyPrint<T>(
     const reason = /reason=(.*)(?=, method)/g.exec(e.message)?.[1]
     try {
       const stackObj = JSON.parse(stackTraceString)
-      if (typeof stackObj === "object") {
+      if (typeof stackObj === 'object') {
         stackObj.stackTrace?.forEach((element: any) => {
-          if (element?.sourceReference?.sourceContent)
-            delete element.sourceReference.sourceContent
+          if (element?.sourceReference?.sourceContent) delete element.sourceReference.sourceContent
         })
       }
       console.error(`Error: ${reason}\n`, util.inspect(stackObj, { depth: 5 }))

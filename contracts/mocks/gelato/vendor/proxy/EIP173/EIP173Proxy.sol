@@ -11,18 +11,11 @@ interface ERC165 {
 contract EIP173Proxy is Proxy {
     // ////////////////////////// EVENTS ///////////////////////////////////////////////////////////////////////
 
-    event ProxyAdminTransferred(
-        address indexed previousAdmin,
-        address indexed newAdmin
-    );
+    event ProxyAdminTransferred(address indexed previousAdmin, address indexed newAdmin);
 
     // /////////////////////// CONSTRUCTOR //////////////////////////////////////////////////////////////////////
 
-    constructor(
-        address implementationAddress,
-        address adminAddress,
-        bytes memory data
-    ) payable {
+    constructor(address implementationAddress, address adminAddress, bytes memory data) payable {
         _setImplementation(implementationAddress, data);
         _setProxyAdmin(adminAddress);
     }
@@ -67,11 +60,10 @@ contract EIP173Proxy is Proxy {
         _setImplementation(newImplementation, "");
     }
 
-    function upgradeToAndCall(address newImplementation, bytes calldata data)
-        external
-        payable
-        onlyProxyAdmin
-    {
+    function upgradeToAndCall(
+        address newImplementation,
+        bytes calldata data
+    ) external payable onlyProxyAdmin {
         _setImplementation(newImplementation, data);
     }
 
@@ -97,10 +89,7 @@ contract EIP173Proxy is Proxy {
         address previousAdmin = _proxyAdmin();
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            sstore(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
-                newAdmin
-            )
+            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, newAdmin)
         }
         emit ProxyAdminTransferred(previousAdmin, newAdmin);
     }

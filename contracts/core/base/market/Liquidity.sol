@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
-import {IUSUMLiquidityCallback} from '@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpReceipt, LpAction} from '@usum/core/libraries/LpReceipt.sol';
-import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpReceipt, LpAction} from "@usum/core/libraries/LpReceipt.sol";
+import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
 
 abstract contract Liquidity is MarketValue, IERC1155Receiver {
     using Math for uint256;
@@ -26,7 +26,11 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt memory) {
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
-        IUSUMLiquidityCallback(msg.sender).addLiquidityCallback(address(settlementToken), address(vault), data);
+        IUSUMLiquidityCallback(msg.sender).addLiquidityCallback(
+            address(settlementToken),
+            address(vault),
+            data
+        );
 
         uint256 amount = settlementToken.balanceOf(address(vault)) - balanceBefore;
         if (amount <= MINIMUM_LIQUIDITY) revert TooSmallAmount();
@@ -37,7 +41,13 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         vault.onAddLiquidity(amount);
         lpSlotSet.acceptAddLiquidity(ctx, tradingFeeRate, amount);
 
-        LpReceipt memory receipt = newLpReceipt(ctx, LpAction.ADD_LIQUIDITY, amount, recipient, tradingFeeRate);
+        LpReceipt memory receipt = newLpReceipt(
+            ctx,
+            LpAction.ADD_LIQUIDITY,
+            amount,
+            recipient,
+            tradingFeeRate
+        );
         lpReceipts[receipt.id] = receipt;
 
         emit AddLiquidity(recipient, receipt);
@@ -58,9 +68,19 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
             receipt.amount,
             receipt.oracleVersion
         );
-        lpToken.safeTransferFrom(address(this), receipt.recipient, receipt.lpTokenId(), lpTokenAmount, bytes(''));
+        lpToken.safeTransferFrom(
+            address(this),
+            receipt.recipient,
+            receipt.lpTokenId(),
+            lpTokenAmount,
+            bytes("")
+        );
 
-        IUSUMLiquidityCallback(msg.sender).claimLpTokenCallback(receipt.id, receipt.recipient, data);
+        IUSUMLiquidityCallback(msg.sender).claimLpTokenCallback(
+            receipt.id,
+            receipt.recipient,
+            data
+        );
         delete lpReceipts[receiptId];
 
         emit ClaimLpToken(receipt.recipient, lpTokenAmount, receipt);
@@ -106,11 +126,17 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         lpSlotSet.distributeEarning(earning, marketBalance);
     }
 
-    function calculateLpTokenMinting(int16 tradingFeeRate, uint256 amount) external view returns (uint256) {
+    function calculateLpTokenMinting(
+        int16 tradingFeeRate,
+        uint256 amount
+    ) external view returns (uint256) {
         return lpSlotSet.calculateLpTokenMinting(newLpContext(), tradingFeeRate, amount);
     }
 
-    function calculateLpTokenValue(int16 tradingFeeRate, uint256 lpTokenAmount) external view returns (uint256) {
+    function calculateLpTokenValue(
+        int16 tradingFeeRate,
+        uint256 lpTokenAmount
+    ) external view returns (uint256) {
         return lpSlotSet.calculateLpTokenValue(newLpContext(), tradingFeeRate, lpTokenAmount);
     }
 

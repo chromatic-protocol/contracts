@@ -50,9 +50,7 @@ library PositionLib {
      * @param self The memory instance of the `Position` struct
      * @return utin256 The settle version for the position's entry
      */
-    function entryVersion(
-        Position memory self
-    ) internal pure returns (uint256) {
+    function entryVersion(Position memory self) internal pure returns (uint256) {
         return PositionUtil.settleVersion(self.openVersion);
     }
 
@@ -96,11 +94,7 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (UFixed18) {
-        return
-            PositionUtil.settlePrice(
-                ctx.market.oracleProvider(),
-                self.openVersion
-            );
+        return PositionUtil.settlePrice(ctx.market.oracleProvider(), self.openVersion);
     }
 
     /**
@@ -115,11 +109,7 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (UFixed18) {
-        return
-            PositionUtil.settlePrice(
-                ctx.market.oracleProvider(),
-                self.closeVersion
-            );
+        return PositionUtil.settlePrice(ctx.market.oracleProvider(), self.closeVersion);
     }
 
     /**
@@ -129,10 +119,7 @@ library PositionLib {
      * @param ctx The context object for this transaction
      * @return int256 The profit or loss
      */
-    function pnl(
-        Position memory self,
-        LpContext memory ctx
-    ) internal view returns (int256) {
+    function pnl(Position memory self, LpContext memory ctx) internal view returns (int256) {
         return
             self.closeVersion > self.openVersion
                 ? PositionUtil.pnl(
@@ -150,9 +137,7 @@ library PositionLib {
      * @param self The memory instance of the `Position` struct
      * @return margin The maker margin
      */
-    function makerMargin(
-        Position memory self
-    ) internal pure returns (uint256 margin) {
+    function makerMargin(Position memory self) internal pure returns (uint256 margin) {
         for (uint256 i = 0; i < self._slotMargins.length; i++) {
             margin += self._slotMargins[i].amount;
         }
@@ -165,9 +150,7 @@ library PositionLib {
      * @param self The memory instance of the `Position` struct
      * @return fee The trading fee
      */
-    function tradingFee(
-        Position memory self
-    ) internal pure returns (uint256 fee) {
+    function tradingFee(Position memory self) internal pure returns (uint256 fee) {
         for (uint256 i = 0; i < self._slotMargins.length; i++) {
             fee += self._slotMargins[i].tradingFee();
         }
@@ -190,10 +173,7 @@ library PositionLib {
      * @param self The memory instance of the `Position` struct
      * @param margins The slot margins for the position
      */
-    function setSlotMargins(
-        Position memory self,
-        LpSlotMargin[] memory margins
-    ) internal pure {
+    function setSlotMargins(Position memory self, LpSlotMargin[] memory margins) internal pure {
         self._slotMargins = margins;
     }
 
@@ -202,10 +182,7 @@ library PositionLib {
      * @param self The memory instance of the `Position` struct
      * @param storedPosition The target storage
      */
-    function storeTo(
-        Position memory self,
-        Position storage storedPosition
-    ) internal {
+    function storeTo(Position memory self, Position storage storedPosition) internal {
         storedPosition.id = self.id;
         storedPosition.openVersion = self.openVersion;
         storedPosition.closeVersion = self.closeVersion;

@@ -78,10 +78,7 @@ interface IAutomate {
      *
      * @return bytes32[] List of taskIds created.
      */
-    function getTaskIdsByUser(address taskCreator)
-        external
-        view
-        returns (bytes32[] memory);
+    function getTaskIdsByUser(address taskCreator) external view returns (bytes32[] memory);
 
     /**
      * @notice TaskTreasury contract where user deposit funds to be used for fee payments.

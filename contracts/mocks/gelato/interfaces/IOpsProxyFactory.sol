@@ -9,11 +9,7 @@ interface IOpsProxyFactory {
      * @param owner The address which the proxy is for.
      * @param proxy Address of deployed proxy.
      */
-    event DeployProxy(
-        address indexed deployer,
-        address indexed owner,
-        address indexed proxy
-    );
+    event DeployProxy(address indexed deployer, address indexed owner, address indexed proxy);
 
     /**
      * @notice Emitted when OpsProxy implementation to be deployed is changed.
@@ -21,10 +17,7 @@ interface IOpsProxyFactory {
      * @param oldImplementation Previous OpsProxy implementation.
      * @param newImplementation Current OpsProxy implementation.
      */
-    event SetImplementation(
-        address indexed oldImplementation,
-        address indexed newImplementation
-    );
+    event SetImplementation(address indexed oldImplementation, address indexed newImplementation);
 
     /**
      * @notice Emitted when OpsProxy implementation is added or removed from whitelist.
@@ -32,10 +25,7 @@ interface IOpsProxyFactory {
      * @param implementation OpsProxy implementation.
      * @param whitelisted Added or removed from whitelist.
      */
-    event UpdateWhitelistedImplementation(
-        address indexed implementation,
-        bool indexed whitelisted
-    );
+    event UpdateWhitelistedImplementation(address indexed implementation, bool indexed whitelisted);
 
     /**
      * @notice Deploys OpsProxy for the msg.sender.
@@ -66,20 +56,14 @@ interface IOpsProxyFactory {
      * @param implementation OpsProxy implementation.
      * @param whitelist Added or removed from whitelist.
      */
-    function updateWhitelistedImplementations(
-        address implementation,
-        bool whitelist
-    ) external;
+    function updateWhitelistedImplementations(address implementation, bool whitelist) external;
 
     /**
      * @notice Determines the OpsProxy address when it is not deployed.
      *
      * @param account Address to determine the proxy address for.
      */
-    function determineProxyAddress(address account)
-        external
-        view
-        returns (address);
+    function determineProxyAddress(address account) external view returns (address);
 
     /**
      * @return address Proxy address owned by account.
@@ -95,8 +79,5 @@ interface IOpsProxyFactory {
     /**
      * @return bool Whether if implementation is whitelisted.
      */
-    function whitelistedImplementations(address implementation)
-        external
-        view
-        returns (bool);
+    function whitelistedImplementations(address implementation) external view returns (bool);
 }

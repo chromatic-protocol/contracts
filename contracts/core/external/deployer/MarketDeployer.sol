@@ -34,9 +34,7 @@ library MarketDeployerLib {
             settlementToken: settlementToken
         });
         market = address(
-            new USUMMarket{
-                salt: keccak256(abi.encode(oracleProvider, settlementToken))
-            }()
+            new USUMMarket{salt: keccak256(abi.encode(oracleProvider, settlementToken))}()
         );
         delete self.parameters;
     }

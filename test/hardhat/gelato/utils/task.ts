@@ -1,5 +1,5 @@
-import { ethers } from "hardhat";
-import { ModuleData } from "./modules";
+import { ethers } from 'hardhat'
+import { ModuleData } from './modules'
 
 export const getTaskId = (
   taskCreator: string,
@@ -9,19 +9,13 @@ export const getTaskId = (
   feeToken: string
 ): string => {
   const encoded = ethers.utils.defaultAbiCoder.encode(
-    ["address", "address", "bytes4", "tuple(uint8[], bytes[])", "address"],
-    [
-      taskCreator,
-      execAddress,
-      execSelector,
-      [moduleData.modules, moduleData.args],
-      feeToken,
-    ]
-  );
+    ['address', 'address', 'bytes4', 'tuple(uint8[], bytes[])', 'address'],
+    [taskCreator, execAddress, execSelector, [moduleData.modules, moduleData.args], feeToken]
+  )
 
-  const taskId = ethers.utils.keccak256(encoded);
-  return taskId;
-};
+  const taskId = ethers.utils.keccak256(encoded)
+  return taskId
+}
 
 export const getLegacyTaskId = (
   taskCreator: string,
@@ -32,37 +26,27 @@ export const getLegacyTaskId = (
   resolverHash: string
 ): string => {
   const encoded = ethers.utils.defaultAbiCoder.encode(
-    ["address", "address", "bytes4", "bool", "address", "bytes32"],
-    [
-      taskCreator,
-      execAddress,
-      execSelector,
-      useTaskTreasuryFunds,
-      feeToken,
-      resolverHash,
-    ]
-  );
+    ['address', 'address', 'bytes4', 'bool', 'address', 'bytes32'],
+    [taskCreator, execAddress, execSelector, useTaskTreasuryFunds, feeToken, resolverHash]
+  )
 
-  const taskId = ethers.utils.keccak256(encoded);
-  return taskId;
-};
+  const taskId = ethers.utils.keccak256(encoded)
+  return taskId
+}
 
-export const getResolverHash = (
-  resolverAddress: string,
-  resolverData: string
-): string => {
+export const getResolverHash = (resolverAddress: string, resolverData: string): string => {
   const encoded = ethers.utils.defaultAbiCoder.encode(
-    ["address", "bytes"],
+    ['address', 'bytes'],
     [resolverAddress, resolverData]
-  );
+  )
 
-  const hash = ethers.utils.keccak256(encoded);
-  return hash;
-};
+  const hash = ethers.utils.keccak256(encoded)
+  return hash
+}
 
 export const getSelector = (func: string): string => {
-  const funcBytes = ethers.utils.toUtf8Bytes(func);
-  const hash = ethers.utils.keccak256(funcBytes);
-  const selector = hash.substring(0, 10);
-  return selector;
-};
+  const funcBytes = ethers.utils.toUtf8Bytes(func)
+  const hash = ethers.utils.keccak256(funcBytes)
+  const selector = hash.substring(0, 10)
+  return selector
+}

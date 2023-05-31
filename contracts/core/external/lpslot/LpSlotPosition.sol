@@ -44,15 +44,8 @@ library LpSlotPositionLib {
      * @param self The LpSlotPosition storage struct.
      * @param ctx The LpContext data struct.
      */
-    function settleAccruedInterest(
-        LpSlotPosition storage self,
-        LpContext memory ctx
-    ) internal {
-        self._accruedInterest.accumulate(
-            ctx.market,
-            self._totalMakerMargin,
-            block.timestamp
-        );
+    function settleAccruedInterest(LpSlotPosition storage self, LpContext memory ctx) internal {
+        self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
     }
 
     /**
@@ -60,15 +53,11 @@ library LpSlotPositionLib {
      * @param self The LpSlotPosition storage struct.
      * @param ctx The LpContext data struct.
      */
-    function settlePendingPosition(
-        LpSlotPosition storage self,
-        LpContext memory ctx
-    ) internal {
+    function settlePendingPosition(LpSlotPosition storage self, LpContext memory ctx) internal {
         uint256 openVersion = self._pending.openVersion;
         if (openVersion == 0) return;
 
-        IOracleProvider.OracleVersion memory currentVersion = ctx
-            .currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
         if (openVersion >= currentVersion.version) return;
 
         int256 pendingQty = self._pending.totalLeveragedQty;
@@ -81,10 +70,7 @@ library LpSlotPositionLib {
         self._totalTakerMargin += self._pending.totalTakerMargin;
 
         self._pending.settleAccruedInterest(ctx);
-        self._accruedInterest.accumulatedAmount += self
-            ._pending
-            .accruedInterest
-            .accumulatedAmount;
+        self._accruedInterest.accumulatedAmount += self._pending.accruedInterest.accumulatedAmount;
 
         delete self._pending;
     }
@@ -94,10 +80,7 @@ library LpSlotPositionLib {
      * @param self The LpSlotPosition storage struct.
      * @param param The PositionParam data struct containing the position parameters.
      */
-    function onOpenPosition(
-        LpSlotPosition storage self,
-        PositionParam memory param
-    ) internal {
+    function onOpenPosition(LpSlotPosition storage self, PositionParam memory param) internal {
         self._pending.onOpenPosition(param);
     }
 
@@ -117,18 +100,13 @@ library LpSlotPositionLib {
         } else {
             int256 totalLeveragedQty = self.totalLeveragedQty;
             int256 leveragedQty = param.leveragedQty;
-            PositionUtil.checkRemovePositionQty(
-                totalLeveragedQty,
-                leveragedQty
-            );
+            PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
             self.totalEntryAmount -= param.entryAmount(ctx);
             self._totalMakerMargin -= param.makerMargin;
             self._totalTakerMargin -= param.takerMargin;
-            self._accruedInterest.deduct(
-                param.calculateInterest(ctx, block.timestamp)
-            );
+            self._accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
         }
     }
 
@@ -137,9 +115,7 @@ library LpSlotPositionLib {
      * @param self The LpSlotPosition storage struct.
      * @return uint256 The total maker margin.
      */
-    function totalMakerMargin(
-        LpSlotPosition storage self
-    ) internal view returns (uint256) {
+    function totalMakerMargin(LpSlotPosition storage self) internal view returns (uint256) {
         return self._totalMakerMargin + self._pending.totalMakerMargin;
     }
 
@@ -148,9 +124,7 @@ library LpSlotPositionLib {
      * @param self The LpSlotPosition storage struct.
      * @return uint256 The total taker margin.
      */
-    function totalTakerMargin(
-        LpSlotPosition storage self
-    ) internal view returns (uint256) {
+    function totalTakerMargin(LpSlotPosition storage self) internal view returns (uint256) {
         return self._totalTakerMargin + self._pending.totalTakerMargin;
     }
 
@@ -164,17 +138,15 @@ library LpSlotPositionLib {
         LpSlotPosition storage self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        IOracleProvider.OracleVersion memory currentVersion = ctx
-            .currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
 
         int256 leveragedQty = self.totalLeveragedQty;
         int256 sign = leveragedQty < 0 ? int256(-1) : int256(1);
         UFixed18 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
-        int256 exitAmount = PositionUtil
-            .transactionAmount(leveragedQty, exitPrice)
-            .toInt256() * sign;
+        int256 exitAmount = PositionUtil.transactionAmount(leveragedQty, exitPrice).toInt256() *
+            sign;
 
         int256 rawPnl = exitAmount - entryAmount;
         int256 pnl = rawPnl +

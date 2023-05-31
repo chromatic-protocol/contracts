@@ -46,10 +46,7 @@ library LpContextLib {
         LpContext memory self
     ) internal view returns (IOracleProvider.OracleVersion memory) {
         if (self._currentVersionCache.version == 0) {
-            self._currentVersionCache = self
-                .market
-                .oracleProvider()
-                .currentVersion();
+            self._currentVersionCache = self.market.oracleProvider().currentVersion();
         }
 
         return self._currentVersionCache;

@@ -22,10 +22,7 @@ contract EIP173OpsProxy is Proxy {
 
     // ////////////////////////// EVENTS ///////////////////////////////////////////////////////////////////////
 
-    event ProxyAdminTransferred(
-        address indexed previousAdmin,
-        address indexed newAdmin
-    );
+    event ProxyAdminTransferred(address indexed previousAdmin, address indexed newAdmin);
 
     // /////////////////////// MODIFIERS //////////////////////////////////////////////////////////////////////
     modifier onlyWhitelistedImplementation(address _implementation) {
@@ -86,20 +83,16 @@ contract EIP173OpsProxy is Proxy {
         }
     }
 
-    function upgradeTo(address newImplementation)
-        external
-        onlyProxyAdmin
-        onlyWhitelistedImplementation(newImplementation)
-    {
+    function upgradeTo(
+        address newImplementation
+    ) external onlyProxyAdmin onlyWhitelistedImplementation(newImplementation) {
         _setImplementation(newImplementation, "");
     }
 
-    function upgradeToAndCall(address newImplementation, bytes calldata data)
-        external
-        payable
-        onlyProxyAdmin
-        onlyWhitelistedImplementation(newImplementation)
-    {
+    function upgradeToAndCall(
+        address newImplementation,
+        bytes calldata data
+    ) external payable onlyProxyAdmin onlyWhitelistedImplementation(newImplementation) {
         _setImplementation(newImplementation, data);
     }
 
@@ -125,10 +118,7 @@ contract EIP173OpsProxy is Proxy {
         address previousAdmin = _proxyAdmin();
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
-            sstore(
-                0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103,
-                newAdmin
-            )
+            sstore(0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, newAdmin)
         }
         emit ProxyAdminTransferred(previousAdmin, newAdmin);
     }

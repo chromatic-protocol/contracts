@@ -9,9 +9,7 @@ contract CounterWT is AutomateReady {
     uint256 public count;
     uint256 public lastExecuted;
 
-    constructor(address _automate, address _taskCreator)
-        AutomateReady(_automate, _taskCreator)
-    {}
+    constructor(address _automate, address _taskCreator) AutomateReady(_automate, _taskCreator) {}
 
     receive() external payable {}
 

@@ -35,9 +35,7 @@ library PositionParamLib {
      * @param self The PositionParam data struct.
      * @return uint256 The settle version for the position's entry.
      */
-    function entryVersion(
-        PositionParam memory self
-    ) internal pure returns (uint256) {
+    function entryVersion(PositionParam memory self) internal pure returns (uint256) {
         return PositionUtil.settleVersion(self.openVersion);
     }
 
@@ -63,11 +61,7 @@ library PositionParamLib {
         PositionParam memory self,
         LpContext memory ctx
     ) internal view returns (uint256) {
-        return
-            PositionUtil.transactionAmount(
-                self.leveragedQty,
-                self.entryPrice(ctx)
-            );
+        return PositionUtil.transactionAmount(self.leveragedQty, self.entryPrice(ctx));
     }
 
     /**
@@ -99,12 +93,7 @@ library PositionParamLib {
         LpContext memory ctx,
         uint256 until
     ) internal view returns (uint256) {
-        return
-            ctx.market.calculateInterest(
-                self.makerMargin,
-                self.openTimestamp,
-                until
-            );
+        return ctx.market.calculateInterest(self.makerMargin, self.openTimestamp, until);
     }
 
     /**
@@ -112,9 +101,7 @@ library PositionParamLib {
      * @param self The PositionParam data struct.
      * @return PositionParam The cloned PositionParam.
      */
-    function clone(
-        PositionParam memory self
-    ) internal pure returns (PositionParam memory) {
+    function clone(PositionParam memory self) internal pure returns (PositionParam memory) {
         return
             PositionParam({
                 openVersion: self.openVersion,
@@ -134,9 +121,7 @@ library PositionParamLib {
      * @param self The PositionParam data struct.
      * @return PositionParam The inverted PositionParam.
      */
-    function inverse(
-        PositionParam memory self
-    ) internal pure returns (PositionParam memory) {
+    function inverse(PositionParam memory self) internal pure returns (PositionParam memory) {
         PositionParam memory param = self.clone();
         param.leveragedQty *= -1;
         return param;

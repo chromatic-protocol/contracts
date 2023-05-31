@@ -80,8 +80,6 @@ library AccruedInterestLib {
         uint256 accumulatedAmount = self.accumulatedAmount;
         if (until <= accumulatedAt) return accumulatedAmount;
 
-        return
-            accumulatedAmount +
-            calculator.calculateInterest(tokenAmount, accumulatedAt, until);
+        return accumulatedAmount + calculator.calculateInterest(tokenAmount, accumulatedAt, until);
     }
 }

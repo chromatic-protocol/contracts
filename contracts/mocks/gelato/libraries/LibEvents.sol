@@ -58,9 +58,5 @@ library LibEvents {
      * @param nextExec Time when the next execution will occur.
      * @param interval Time interval between each execution.
      */
-    event TimerSet(
-        bytes32 indexed taskId,
-        uint128 indexed nextExec,
-        uint128 indexed interval
-    );
+    event TimerSet(bytes32 indexed taskId, uint128 indexed nextExec, uint128 indexed interval);
 }

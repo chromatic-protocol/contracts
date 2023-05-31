@@ -45,11 +45,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx
     ) internal {
-        self.accruedInterest.accumulate(
-            ctx.market,
-            self.totalMakerMargin,
-            block.timestamp
-        );
+        self.accruedInterest.accumulate(ctx.market, self.totalMakerMargin, block.timestamp);
     }
 
     /**
@@ -88,10 +84,7 @@ library LpSlotPendingPositionLib {
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
-        require(
-            self.openVersion == param.openVersion,
-            Errors.INVALID_ORACLE_VERSION
-        );
+        require(self.openVersion == param.openVersion, Errors.INVALID_ORACLE_VERSION);
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
@@ -100,9 +93,7 @@ library LpSlotPendingPositionLib {
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;
-        self.accruedInterest.deduct(
-            param.calculateInterest(ctx, block.timestamp)
-        );
+        self.accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
     }
 
     /**
@@ -117,8 +108,7 @@ library LpSlotPendingPositionLib {
     ) internal view returns (int256) {
         if (self.openVersion == 0) return 0;
 
-        IOracleProvider.OracleVersion memory currentVersion = ctx
-            .currentOracleVersion();
+        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
         if (self.openVersion >= currentVersion.version) return 0;
 
         UFixed18 _entryPrice = PositionUtil.settlePrice(
@@ -128,11 +118,8 @@ library LpSlotPendingPositionLib {
         );
         UFixed18 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 
-        int256 pnl = PositionUtil.pnl(
-            self.totalLeveragedQty,
-            _entryPrice,
-            _exitPrice
-        ) + currentInterest(self, ctx).toInt256();
+        int256 pnl = PositionUtil.pnl(self.totalLeveragedQty, _entryPrice, _exitPrice) +
+            currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();
 
         if (pnl >= 0) {

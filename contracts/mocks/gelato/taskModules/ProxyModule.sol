@@ -29,19 +29,16 @@ contract ProxyModule is TaskModuleBase {
      * @inheritdoc TaskModuleBase
      * @dev _taskCreator cannot create task to other user's proxy
      */
-    function preCreateTask(address _taskCreator, address _execAddress)
-        external
-        view
-        override
-        returns (address, address)
-    {
+    function preCreateTask(
+        address _taskCreator,
+        address _execAddress
+    ) external view override returns (address, address) {
         address ownerOfExecAddress = opsProxyFactory.ownerOf(_execAddress);
 
         if (ownerOfExecAddress != address(0)) {
             // creating task to proxy
             require(
-                _taskCreator == ownerOfExecAddress ||
-                    _taskCreator == _execAddress,
+                _taskCreator == ownerOfExecAddress || _taskCreator == _execAddress,
                 "ProxyModule: Only owner of proxy"
             );
 
@@ -60,12 +57,7 @@ contract ProxyModule is TaskModuleBase {
         }
     }
 
-    function preCancelTask(bytes32, address _taskCreator)
-        external
-        view
-        override
-        returns (address)
-    {
+    function preCancelTask(bytes32, address _taskCreator) external view override returns (address) {
         address ownerOfTaskCreator = opsProxyFactory.ownerOf(_taskCreator);
 
         if (ownerOfTaskCreator != address(0)) {
@@ -88,38 +80,28 @@ contract ProxyModule is TaskModuleBase {
         bytes calldata _execData
     ) external view override returns (address, bytes memory execData) {
         (address proxy, ) = opsProxyFactory.getProxyOf(_taskCreator);
-        
-        execData = _execAddress == proxy
-            ? _execData
-            : _encodeWithOpsProxy(_execAddress, _execData);
+
+        execData = _execAddress == proxy ? _execData : _encodeWithOpsProxy(_execAddress, _execData);
 
         _execAddress = proxy;
         return (_execAddress, execData);
     }
 
     function _deployIfNoProxy(address _taskCreator) private {
-        bool isTaskCreatorProxy = opsProxyFactory.ownerOf(_taskCreator) !=
-            address(0);
+        bool isTaskCreatorProxy = opsProxyFactory.ownerOf(_taskCreator) != address(0);
 
         if (!isTaskCreatorProxy) {
             (, bool deployed) = opsProxyFactory.getProxyOf(_taskCreator);
-            if (!deployed){
-                  opsProxyFactory.deployFor(_taskCreator);
+            if (!deployed) {
+                opsProxyFactory.deployFor(_taskCreator);
             }
         }
     }
 
-    function _encodeWithOpsProxy(address _execAddress, bytes calldata _execData)
-        private
-        pure
-        returns (bytes memory)
-    {
-        return
-            abi.encodeWithSelector(
-                IOpsProxy.executeCall.selector,
-                _execAddress,
-                _execData,
-                0
-            );
+    function _encodeWithOpsProxy(
+        address _execAddress,
+        bytes calldata _execData
+    ) private pure returns (bytes memory) {
+        return abi.encodeWithSelector(IOpsProxy.executeCall.selector, _execAddress, _execData, 0);
     }
 }

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {SignedMath} from '@openzeppelin/contracts/utils/math/SignedMath.sol';
-import {PositionUtil} from '@usum/core/libraries/PositionUtil.sol';
-import {Position} from '@usum/core/libraries/Position.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {LpSlotMargin} from '@usum/core/libraries/LpSlotMargin.sol';
-import {MarketValue} from '@usum/core/base/market/MarketValue.sol';
-import {IUSUMTradeCallback} from '@usum/core/interfaces/callback/IUSUMTradeCallback.sol';
-import {ITrade} from '@usum/core/interfaces/market/ITrade.sol';
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
+import {Position} from "@usum/core/libraries/Position.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
+import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
+import {ITrade} from "@usum/core/interfaces/market/ITrade.sol";
 
 abstract contract Trade is MarketValue {
     using Math for uint256;
@@ -30,7 +30,8 @@ abstract contract Trade is MarketValue {
         bytes calldata data
     ) external override nonReentrant returns (Position memory) {
         if (qty == 0) revert ZeroTargetAmount();
-        if (takerMargin < factory.getMinimumTakerMargin(address(settlementToken))) revert TooSmallTakerMargin();
+        if (takerMargin < factory.getMinimumTakerMargin(address(settlementToken)))
+            revert TooSmallTakerMargin();
         //TODO get slotmargin by using makerMargin
 
         LpContext memory ctx = newLpContext();
@@ -129,19 +130,8 @@ abstract contract Trade is MarketValue {
 
         if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
 
-        uint256 usedKeeperFee = vault.transferKeeperFee(
-            keeper,
-            keeperFee,
-            position.takerMargin
-        );
-        _claimPosition(
-            ctx,
-            position,
-            position.pnl(ctx),
-            usedKeeperFee,
-            position.owner,
-            bytes("")
-        );
+        uint256 usedKeeperFee = vault.transferKeeperFee(keeper, keeperFee, position.takerMargin);
+        _claimPosition(ctx, position, position.pnl(ctx), usedKeeperFee, position.owner, bytes(""));
 
         liquidator.cancelClaimPositionTask(position.id);
     }
@@ -151,8 +141,6 @@ abstract contract Trade is MarketValue {
         address keeper,
         uint256 keeperFee // native token amount
     ) external nonReentrant onlyLiquidator {
-        
-
         Position memory position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
         if (position.closeVersion != 0) revert AlreadyClosedPosition();
@@ -163,19 +151,8 @@ abstract contract Trade is MarketValue {
         (bool _liquidate, int256 _pnl) = _checkLiquidation(ctx, position);
         if (!_liquidate) return;
 
-        uint256 usedKeeperFee = vault.transferKeeperFee(
-            keeper,
-            keeperFee,
-            position.takerMargin
-        );
-        _claimPosition(
-            ctx,
-            position,
-            _pnl,
-            usedKeeperFee,
-            position.owner,
-            bytes("")
-        );
+        uint256 usedKeeperFee = vault.transferKeeperFee(keeper, keeperFee, position.takerMargin);
+        _claimPosition(ctx, position, _pnl, usedKeeperFee, position.owner, bytes(""));
         liquidator.cancelLiquidationTask(positionId);
 
         emit Liquidate(position.owner, usedKeeperFee, position);
@@ -193,11 +170,7 @@ abstract contract Trade is MarketValue {
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
         uint256 settlementAmount = takerMargin;
 
-        uint256 interest = calculateInterest(
-            makerMargin,
-            position.openTimestamp,
-            block.timestamp
-        );
+        uint256 interest = calculateInterest(makerMargin, position.openTimestamp, block.timestamp);
         int256 realizedPnl = pnl - interest.toInt256();
 
         uint256 absRealizedPnl = realizedPnl.abs();
@@ -234,9 +207,7 @@ abstract contract Trade is MarketValue {
         emit ClaimPosition(position.owner, pnl, interest, position);
     }
 
-    function checkLiquidation(
-        uint256 positionId
-    ) external view returns (bool _liquidate) {
+    function checkLiquidation(uint256 positionId) external view returns (bool _liquidate) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
 
@@ -274,14 +245,17 @@ abstract contract Trade is MarketValue {
     function checkClaimPosition(uint256 positionId) external view returns (bool) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
-        
+
         return _checkClaimPosition(position, newLpContext());
     }
 
-    function _checkClaimPosition(Position memory position, LpContext memory ctx) internal view returns (bool) {
-        return position.closeVersion > 0 && position.closeVersion < ctx.currentOracleVersion().version;
+    function _checkClaimPosition(
+        Position memory position,
+        LpContext memory ctx
+    ) internal view returns (bool) {
+        return
+            position.closeVersion > 0 && position.closeVersion < ctx.currentOracleVersion().version;
     }
-
 
     function getProtocolFee(uint256 margin) public view returns (uint16) {
         // returns (protocolFeeRate)
@@ -310,7 +284,9 @@ abstract contract Trade is MarketValue {
             });
     }
 
-    function getPositions(uint256[] calldata positionIds) external view returns (Position[] memory _positions) {
+    function getPositions(
+        uint256[] calldata positionIds
+    ) external view returns (Position[] memory _positions) {
         _positions = new Position[](positionIds.length);
         for (uint i = 0; i < positionIds.length; i++) {
             _positions[i] = positions[positionIds[i]];

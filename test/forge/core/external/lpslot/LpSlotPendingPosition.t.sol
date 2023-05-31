@@ -160,10 +160,7 @@ contract LpSlotPendingPositionTest is Test {
             abi.encode(_ov)
         );
 
-        vm.expectCall(
-            address(provider),
-            abi.encodeWithSelector(provider.atVersion.selector, 2)
-        );
+        vm.expectCall(address(provider), abi.encodeWithSelector(provider.atVersion.selector, 2));
         UFixed18 entryPrice = pending.entryPrice(ctx);
 
         assertEq(UFixed18.unwrap(entryPrice), 1100);

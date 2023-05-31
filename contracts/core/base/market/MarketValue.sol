@@ -15,12 +15,6 @@ abstract contract MarketValue is MarketBase {
         uint256 from,
         uint256 to
     ) public view override returns (uint256) {
-        return
-            factory.calculateInterest(
-                address(settlementToken),
-                amount,
-                from,
-                to
-            );
+        return factory.calculateInterest(address(settlementToken), amount, from, to);
     }
 }

@@ -10,10 +10,7 @@ contract CounterWL is Ownable {
     mapping(address => bool) public whitelisted;
 
     modifier onlyWhitelisted() {
-        require(
-            whitelisted[msg.sender] || msg.sender == owner(),
-            "Counter: Not whitelisted"
-        );
+        require(whitelisted[msg.sender] || msg.sender == owner(), "Counter: Not whitelisted");
         _;
     }
 
@@ -27,10 +24,7 @@ contract CounterWL is Ownable {
         lastExecuted = block.timestamp;
     }
 
-    function setWhitelist(address _account, bool _whitelist)
-        external
-        onlyOwner
-    {
+    function setWhitelist(address _account, bool _whitelist) external onlyOwner {
         whitelisted[_account] = _whitelist;
     }
 }

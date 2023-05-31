@@ -30,14 +30,7 @@ abstract contract Proxy {
                 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc
             )
             calldatacopy(0x0, 0x0, calldatasize())
-            let success := delegatecall(
-                gas(),
-                implementationAddress,
-                0x0,
-                calldatasize(),
-                0,
-                0
-            )
+            let success := delegatecall(gas(), implementationAddress, 0x0, calldatasize(), 0, 0)
             let retSz := returndatasize()
             returndatacopy(0, 0, retSz)
             switch success
@@ -50,9 +43,7 @@ abstract contract Proxy {
         }
     }
 
-    function _setImplementation(address newImplementation, bytes memory data)
-        internal
-    {
+    function _setImplementation(address newImplementation, bytes memory data) internal {
         address previousImplementation;
         // solhint-disable-next-line security/no-inline-assembly
         assembly {
@@ -69,10 +60,7 @@ abstract contract Proxy {
             )
         }
 
-        emit ProxyImplementationUpdated(
-            previousImplementation,
-            newImplementation
-        );
+        emit ProxyImplementationUpdated(previousImplementation, newImplementation);
 
         if (data.length > 0) {
             (bool success, ) = newImplementation.delegatecall(data);

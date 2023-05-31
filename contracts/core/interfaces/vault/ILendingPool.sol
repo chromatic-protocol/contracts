@@ -11,7 +11,15 @@ interface ILendingPool {
         uint256 paidToMakerPool
     );
 
-    function flashLoan(address token, uint256 amount, address recipient, bytes calldata data) external;
+    function flashLoan(
+        address token,
+        uint256 amount,
+        address recipient,
+        bytes calldata data
+    ) external;
 
-    function getPendingSlotShare(address market, uint256 slotBalance) external view returns (uint256);
+    function getPendingSlotShare(
+        address market,
+        uint256 slotBalance
+    ) external view returns (uint256);
 }

@@ -18,9 +18,10 @@ contract CounterTimeTaskCreatorWT is AutomateTaskCreator {
 
     event CounterTaskCreated(bytes32 taskId);
 
-    constructor(address payable _automate, address _fundsOwner)
-        AutomateTaskCreator(_automate, _fundsOwner)
-    {}
+    constructor(
+        address payable _automate,
+        address _fundsOwner
+    ) AutomateTaskCreator(_automate, _fundsOwner) {}
 
     receive() external payable {}
 
@@ -29,10 +30,7 @@ contract CounterTimeTaskCreatorWT is AutomateTaskCreator {
 
         bytes memory execData = abi.encodeCall(this.increaseCount, (1));
 
-        ModuleData memory moduleData = ModuleData({
-            modules: new Module[](2),
-            args: new bytes[](2)
-        });
+        ModuleData memory moduleData = ModuleData({modules: new Module[](2), args: new bytes[](2)});
         moduleData.modules[0] = Module.TIME;
         moduleData.modules[1] = Module.PROXY;
 

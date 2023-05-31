@@ -9,9 +9,7 @@ contract CounterTestWT is AutomateReady {
     uint256 public count;
     uint256 public lastExecuted;
 
-    constructor(address _automate, address _taskCreator)
-        AutomateReady(_automate, _taskCreator)
-    {}
+    constructor(address _automate, address _taskCreator) AutomateReady(_automate, _taskCreator) {}
 
     receive() external payable {}
 
@@ -29,11 +27,7 @@ contract CounterTestWT is AutomateReady {
         _transfer(fee, feeToken);
     }
 
-    function checker()
-        external
-        view
-        returns (bool canExec, bytes memory execPayload)
-    {
+    function checker() external view returns (bool canExec, bytes memory execPayload) {
         canExec = (block.timestamp - lastExecuted) > 180;
 
         execPayload = abi.encodeCall(this.increaseCount, (1));

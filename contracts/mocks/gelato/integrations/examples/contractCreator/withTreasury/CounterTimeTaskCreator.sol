@@ -18,31 +18,24 @@ contract CounterTimeTaskCreator is AutomateTaskCreator {
 
     event CounterTaskCreated(bytes32 taskId);
 
-    constructor(address _automate, address _fundsOwner)
-        AutomateTaskCreator(_automate, _fundsOwner)
-    {}
+    constructor(
+        address _automate,
+        address _fundsOwner
+    ) AutomateTaskCreator(_automate, _fundsOwner) {}
 
     function createTask() external {
         require(taskId == bytes32(""), "Already started task");
 
         bytes memory execData = abi.encodeCall(this.increaseCount, (1));
 
-        ModuleData memory moduleData = ModuleData({
-            modules: new Module[](2),
-            args: new bytes[](2)
-        });
+        ModuleData memory moduleData = ModuleData({modules: new Module[](2), args: new bytes[](2)});
         moduleData.modules[0] = Module.TIME;
         moduleData.modules[1] = Module.PROXY;
 
         moduleData.args[0] = _timeModuleArg(block.timestamp, INTERVAL);
         moduleData.args[1] = _proxyModuleArg();
 
-        bytes32 id = _createTask(
-            address(this),
-            execData,
-            moduleData,
-            address(0)
-        );
+        bytes32 id = _createTask(address(this), execData, moduleData, address(0));
 
         taskId = id;
         emit CounterTaskCreated(id);

@@ -16,7 +16,10 @@ library LibLegacyTask {
      * @param _funcSig Function signature of calldata.
      * @param _callData Calldata that was passed from fallback function.
      */
-    function getCreateTaskArg(bytes4 _funcSig, bytes calldata _callData)
+    function getCreateTaskArg(
+        bytes4 _funcSig,
+        bytes calldata _callData
+    )
         internal
         pure
         returns (
@@ -27,29 +30,19 @@ library LibLegacyTask {
         )
     {
         if (_funcSig == ILegacyAutomate.createTask.selector) {
-            (execAddress, execData, moduleData, feeToken) = _resolveCreateTask(
+            (execAddress, execData, moduleData, feeToken) = _resolveCreateTask(_callData[4:]);
+        } else if (_funcSig == ILegacyAutomate.createTaskNoPrepayment.selector) {
+            (execAddress, execData, moduleData, feeToken) = _resolveCreateTaskNoPrepayment(
                 _callData[4:]
             );
-        } else if (
-            _funcSig == ILegacyAutomate.createTaskNoPrepayment.selector
-        ) {
-            (
-                execAddress,
-                execData,
-                moduleData,
-                feeToken
-            ) = _resolveCreateTaskNoPrepayment(_callData[4:]);
         } else if (_funcSig == ILegacyAutomate.createTimedTask.selector) {
-            (
-                execAddress,
-                execData,
-                moduleData,
-                feeToken
-            ) = _resolveCreateTimedTask(_callData[4:]);
+            (execAddress, execData, moduleData, feeToken) = _resolveCreateTimedTask(_callData[4:]);
         } else revert("Automate.fallback: Function not found");
     }
 
-    function _resolveCreateTask(bytes calldata _callDataSliced)
+    function _resolveCreateTask(
+        bytes calldata _callDataSliced
+    )
         private
         pure
         returns (
@@ -80,7 +73,9 @@ library LibLegacyTask {
         feeToken = address(0);
     }
 
-    function _resolveCreateTaskNoPrepayment(bytes calldata _callDataSliced)
+    function _resolveCreateTaskNoPrepayment(
+        bytes calldata _callDataSliced
+    )
         private
         pure
         returns (
@@ -94,13 +89,7 @@ library LibLegacyTask {
         address resolverAddress;
         bytes memory resolverData;
 
-        (
-            execAddress,
-            execSelector,
-            resolverAddress,
-            resolverData,
-            feeToken
-        ) = abi.decode(
+        (execAddress, execSelector, resolverAddress, resolverData, feeToken) = abi.decode(
             _callDataSliced,
             (address, bytes4, address, bytes, address)
         );
@@ -116,7 +105,9 @@ library LibLegacyTask {
         execData = abi.encodePacked(execSelector);
     }
 
-    function _resolveCreateTimedTask(bytes calldata _callDataSliced)
+    function _resolveCreateTimedTask(
+        bytes calldata _callDataSliced
+    )
         private
         pure
         returns (
@@ -146,17 +137,9 @@ library LibLegacyTask {
         moduleData = LibDataTypes.ModuleData(modules, args);
     }
 
-    function _decodeTimedTaskCallData(bytes calldata _callDataSliced)
-        private
-        pure
-        returns (
-            address,
-            bytes memory,
-            address,
-            bytes memory,
-            bytes memory
-        )
-    {
+    function _decodeTimedTaskCallData(
+        bytes calldata _callDataSliced
+    ) private pure returns (address, bytes memory, address, bytes memory, bytes memory) {
         (
             uint128 startTime,
             uint128 interval,
@@ -168,16 +151,7 @@ library LibLegacyTask {
             bool useTreasury
         ) = abi.decode(
                 _callDataSliced,
-                (
-                    uint128,
-                    uint128,
-                    address,
-                    bytes4,
-                    address,
-                    bytes,
-                    address,
-                    bool
-                )
+                (uint128, uint128, address, bytes4, address, bytes, address, bool)
             );
 
         return (

@@ -18,27 +18,22 @@ contract CounterResolverTaskCreatorWT is AutomateTaskCreator {
 
     event CounterTaskCreated(bytes32 taskId);
 
-    constructor(address payable _automate, address _fundsOwner)
-        AutomateTaskCreator(_automate, _fundsOwner)
-    {}
+    constructor(
+        address payable _automate,
+        address _fundsOwner
+    ) AutomateTaskCreator(_automate, _fundsOwner) {}
 
     receive() external payable {}
 
     function createTask() external payable {
         require(taskId == bytes32(""), "Already started task");
 
-        ModuleData memory moduleData = ModuleData({
-            modules: new Module[](2),
-            args: new bytes[](2)
-        });
+        ModuleData memory moduleData = ModuleData({modules: new Module[](2), args: new bytes[](2)});
 
         moduleData.modules[0] = Module.RESOLVER;
         moduleData.modules[1] = Module.PROXY;
 
-        moduleData.args[0] = _resolverModuleArg(
-            address(this),
-            abi.encodeCall(this.checker, ())
-        );
+        moduleData.args[0] = _resolverModuleArg(address(this), abi.encodeCall(this.checker, ()));
         moduleData.args[1] = _proxyModuleArg();
 
         bytes32 id = _createTask(
@@ -68,11 +63,7 @@ contract CounterResolverTaskCreatorWT is AutomateTaskCreator {
         _transfer(fee, feeToken);
     }
 
-    function checker()
-        external
-        view
-        returns (bool canExec, bytes memory execPayload)
-    {
+    function checker() external view returns (bool canExec, bytes memory execPayload) {
         canExec = (block.timestamp - lastExecuted) >= INTERVAL;
 
         execPayload = abi.encodeCall(this.increaseCount, (1));

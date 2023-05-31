@@ -35,11 +35,7 @@ library LpSlotClosingPositionLib {
         LpSlotClosingPosition storage self,
         LpContext memory ctx
     ) internal {
-        self.accruedInterest.accumulate(
-            ctx.market,
-            self.totalMakerMargin,
-            block.timestamp
-        );
+        self.accruedInterest.accumulate(ctx.market, self.totalMakerMargin, block.timestamp);
     }
 
     /**
@@ -68,10 +64,7 @@ library LpSlotClosingPositionLib {
         self.totalEntryAmount += param.entryAmount(ctx);
         self.totalMakerMargin += param.makerMargin;
         self.totalTakerMargin += param.takerMargin;
-        self.accruedInterest.accumulatedAmount += param.calculateInterest(
-            ctx,
-            block.timestamp
-        );
+        self.accruedInterest.accumulatedAmount += param.calculateInterest(ctx, block.timestamp);
     }
 
     /**
@@ -85,10 +78,7 @@ library LpSlotClosingPositionLib {
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
-        require(
-            self.closeVersion == param.closeVersion,
-            Errors.INVALID_ORACLE_VERSION
-        );
+        require(self.closeVersion == param.closeVersion, Errors.INVALID_ORACLE_VERSION);
 
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
@@ -98,8 +88,6 @@ library LpSlotClosingPositionLib {
         self.totalEntryAmount -= param.entryAmount(ctx);
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;
-        self.accruedInterest.deduct(
-            param.calculateInterest(ctx, block.timestamp)
-        );
+        self.accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
     }
 }

@@ -27,7 +27,7 @@ describe('interest fee test', async function () {
     year,
     qty,
     leverage = 100,
-    margin = 10,
+    margin = 10
   }: {
     liquidityConfig: LiquidityConfig[]
     year: number
@@ -92,7 +92,9 @@ describe('interest fee test', async function () {
       await time.setNextBlockTimestamp(wantedTimestamp - 3)
       // timestamp = await time.latest()
 
-      await awaitTx(traderRouter.closePosition(market.address, positionIds[0], ethers.constants.MaxUint256))
+      await awaitTx(
+        traderRouter.closePosition(market.address, positionIds[0], ethers.constants.MaxUint256)
+      )
       await updatePrice(1000)
       await awaitTx(traderRouter.claimPosition(market.address, positionIds[0]))
 
@@ -121,12 +123,12 @@ describe('interest fee test', async function () {
       liquidityConfig: [
         {
           tradingFee: 1,
-          amount: ethers.utils.parseEther('50'),
-        },
+          amount: ethers.utils.parseEther('50')
+        }
       ],
       year: 1,
       qty: 10,
-      margin: 10,
+      margin: 10
     })
   )
 
@@ -136,12 +138,12 @@ describe('interest fee test', async function () {
       liquidityConfig: [
         {
           tradingFee: 1,
-          amount: ethers.utils.parseEther('50'),
-        },
+          amount: ethers.utils.parseEther('50')
+        }
       ],
       year: 1,
       qty: 10,
-      margin: 10,
+      margin: 10
     })
   )
   it(
@@ -150,12 +152,12 @@ describe('interest fee test', async function () {
       liquidityConfig: [
         {
           tradingFee: 1,
-          amount: ethers.utils.parseEther('50'),
-        },
+          amount: ethers.utils.parseEther('50')
+        }
       ],
       year: 1,
       qty: 10,
-      margin: 10,
+      margin: 10
     })
   )
 
@@ -165,16 +167,16 @@ describe('interest fee test', async function () {
       liquidityConfig: [
         {
           tradingFee: 1,
-          amount: ethers.utils.parseEther('10'),
+          amount: ethers.utils.parseEther('10')
         },
         {
           tradingFee: 3,
-          amount: ethers.utils.parseEther('100'),
-        },
+          amount: ethers.utils.parseEther('100')
+        }
       ],
       year: 1,
       qty: 50,
-      margin: 50,
+      margin: 50
     })
   )
 })

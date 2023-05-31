@@ -10,12 +10,7 @@ interface IOpsProxy {
      * @param value Native token value used in the call.
      * @param returnData Data returned by the call.
      */
-    event ExecuteCall(
-        address indexed target,
-        bytes data,
-        uint256 value,
-        bytes returnData
-    );
+    event ExecuteCall(address indexed target, bytes data, uint256 value, bytes returnData);
 
     /**
      * @notice Multicall to different contracts with different datas.
@@ -37,11 +32,7 @@ interface IOpsProxy {
      * @param data Data for contract call.
      * @param value Native token value for contract call.
      */
-    function executeCall(
-        address target,
-        bytes calldata data,
-        uint256 value
-    ) external payable;
+    function executeCall(address target, bytes calldata data, uint256 value) external payable;
 
     /**
      * @return address Ops smart contract address

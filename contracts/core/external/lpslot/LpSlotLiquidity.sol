@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {DoubleEndedQueue} from '@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol';
-import {IOracleProvider} from '@usum/core/interfaces/IOracleProvider.sol';
-import {USUMLpToken} from '@usum/core/USUMLpToken.sol';
-import {LpContext} from '@usum/core/libraries/LpContext.sol';
-import {Errors} from '@usum/core/libraries/Errors.sol';
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
+import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {Errors} from "@usum/core/libraries/Errors.sol";
 
-import 'forge-std/console.sol';
+import "forge-std/console.sol";
 
 struct LpSlotLiquidity {
     uint256 total;
@@ -78,7 +78,7 @@ library LpSlotLiquidityLib {
         );
 
         if (mintingAmount > burningAmount) {
-            lpToken.mint(address(ctx.market), lpTokenId, mintingAmount - burningAmount, bytes(''));
+            lpToken.mint(address(ctx.market), lpTokenId, mintingAmount - burningAmount, bytes(""));
         } else if (mintingAmount < burningAmount) {
             lpToken.burn(address(ctx.market), lpTokenId, burningAmount - mintingAmount);
         }
@@ -88,11 +88,18 @@ library LpSlotLiquidityLib {
         delete self._pending;
     }
 
-    function onAddLiquidity(LpSlotLiquidity storage self, uint256 amount, uint256 oracleVersion) internal {
+    function onAddLiquidity(
+        LpSlotLiquidity storage self,
+        uint256 amount,
+        uint256 oracleVersion
+    ) internal {
         require(amount > MIN_AMOUNT, Errors.TOO_SMALL_AMOUNT);
 
         uint256 pendingOracleVersion = self._pending.oracleVersion;
-        require(pendingOracleVersion == 0 || pendingOracleVersion == oracleVersion, Errors.INVALID_ORACLE_VERSION);
+        require(
+            pendingOracleVersion == 0 || pendingOracleVersion == oracleVersion,
+            Errors.INVALID_ORACLE_VERSION
+        );
 
         self._pending.oracleVersion = oracleVersion;
         self._pending.tokenAmount += amount;
@@ -123,7 +130,10 @@ library LpSlotLiquidityLib {
         return
             lpTokenTotalSupply == 0
                 ? amount
-                : amount.mulDiv(lpTokenTotalSupply, slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue);
+                : amount.mulDiv(
+                    lpTokenTotalSupply,
+                    slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue
+                );
     }
 
     function calculateLpTokenValue(
@@ -190,7 +200,11 @@ library LpSlotLiquidityLib {
             uint256 _pendingLpTokenAmount = _cb.lpTokenAmount - _cb.burningAmount;
             if (_pendingLpTokenAmount > 0) {
                 uint256 _burningAmount;
-                uint256 _pendingWithdrawal = calculateLpTokenValue(_pendingLpTokenAmount, slotValue, totalSupply);
+                uint256 _pendingWithdrawal = calculateLpTokenValue(
+                    _pendingLpTokenAmount,
+                    slotValue,
+                    totalSupply
+                );
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingLpTokenAmount;
                 } else {

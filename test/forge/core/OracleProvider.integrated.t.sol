@@ -10,11 +10,7 @@ import {PriceFeedMock} from "contracts/mocks/PriceFeedMock.sol";
 
 // forge test --fork-url https://eth.llamarpc.com --fork-block-number 10000000 -vv
 contract OracleProviderTest is Test {
-    event OracleVersionUpdated(
-        uint256 newVersion,
-        uint256 timestamp,
-        int256 price
-    );
+    event OracleVersionUpdated(uint256 newVersion, uint256 timestamp, int256 price);
 
     OracleProvider oracleProvider;
     PriceFeedMock priceFeedMock;
@@ -35,11 +31,9 @@ contract OracleProviderTest is Test {
     function syncVersion() internal returns (uint256) {
         IOracleProvider.OracleVersion memory ov = oracleProvider.sync();
         emit log_named_uint("version", ov.version);
-        IOracleProvider.OracleVersion memory ovByVersion = oracleProvider
-            .atVersion(ov.version);
+        IOracleProvider.OracleVersion memory ovByVersion = oracleProvider.atVersion(ov.version);
         assertTrue(ov.price.eq(ovByVersion.price));
-        (uint80 roundId, int256 feedPrice, , , ) = priceFeedMock
-            .latestRoundData();
+        (uint80 roundId, int256 feedPrice, , , ) = priceFeedMock.latestRoundData();
         assertEq(feedPrice, Fixed18.unwrap(ovByVersion.price));
         emit log_named_uint("roundId", roundId);
         emit log_named_int("ov.price", Fixed18.unwrap(ov.price));

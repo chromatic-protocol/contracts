@@ -8,8 +8,5 @@ pragma solidity >=0.8.0 <0.9.0;
  * called with static call off chain
  */
 interface IResolver {
-    function checker()
-        external
-        view
-        returns (bool canExec, bytes memory execPayload);
+    function checker() external view returns (bool canExec, bytes memory execPayload);
 }

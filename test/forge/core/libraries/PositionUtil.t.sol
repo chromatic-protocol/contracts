@@ -7,32 +7,16 @@ import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 
 contract PositionUtilTest is Test {
     function testPnl() public {
-        int256 longProfit = PositionUtil.pnl(
-            50,
-            UFixed18.wrap(100),
-            UFixed18.wrap(110)
-        );
+        int256 longProfit = PositionUtil.pnl(50, UFixed18.wrap(100), UFixed18.wrap(110));
         assertEq(longProfit, 5);
 
-        int256 longLoss = PositionUtil.pnl(
-            50,
-            UFixed18.wrap(100),
-            UFixed18.wrap(90)
-        );
+        int256 longLoss = PositionUtil.pnl(50, UFixed18.wrap(100), UFixed18.wrap(90));
         assertEq(longLoss, -5);
 
-        int256 shortProfit = PositionUtil.pnl(
-            -50,
-            UFixed18.wrap(100),
-            UFixed18.wrap(90)
-        );
+        int256 shortProfit = PositionUtil.pnl(-50, UFixed18.wrap(100), UFixed18.wrap(90));
         assertEq(shortProfit, 5);
 
-        int256 shortLoss = PositionUtil.pnl(
-            -50,
-            UFixed18.wrap(100),
-            UFixed18.wrap(110)
-        );
+        int256 shortLoss = PositionUtil.pnl(-50, UFixed18.wrap(100), UFixed18.wrap(110));
         assertEq(shortLoss, -5);
     }
 }

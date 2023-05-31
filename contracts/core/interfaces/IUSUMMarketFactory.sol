@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IMarketDeployer} from '@usum/core/interfaces/factory/IMarketDeployer.sol';
-import {ISettlementTokenRegistry} from '@usum/core/interfaces/factory/ISettlementTokenRegistry.sol';
-import {IOracleProviderRegistry} from '@usum/core/interfaces/factory/IOracleProviderRegistry.sol';
+import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
+import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
+import {IOracleProviderRegistry} from "@usum/core/interfaces/factory/IOracleProviderRegistry.sol";
 
 interface IUSUMMarketFactory is IMarketDeployer, IOracleProviderRegistry, ISettlementTokenRegistry {
     event UpdateDao(address indexed dao);
@@ -12,7 +12,11 @@ interface IUSUMMarketFactory is IMarketDeployer, IOracleProviderRegistry, ISettl
     event SetVault(address indexed vault);
     event SetKeeperFeePayer(address indexed keeperFeePayer);
 
-    event MarketCreated(address indexed oracleProvider, address indexed settlementToken, address indexed market);
+    event MarketCreated(
+        address indexed oracleProvider,
+        address indexed settlementToken,
+        address indexed market
+    );
 
     function dao() external view returns (address);
 
@@ -36,9 +40,14 @@ interface IUSUMMarketFactory is IMarketDeployer, IOracleProviderRegistry, ISettl
 
     function getMarkets() external view returns (address[] memory market);
 
-    function getMarketsBySettlmentToken(address settlementToken) external view returns (address[] memory);
+    function getMarketsBySettlmentToken(
+        address settlementToken
+    ) external view returns (address[] memory);
 
-    function getMarket(address oracleProvider, address settlementToken) external view returns (address);
+    function getMarket(
+        address oracleProvider,
+        address settlementToken
+    ) external view returns (address);
 
     function createMarket(address oracleProvider, address settlementToken) external;
 

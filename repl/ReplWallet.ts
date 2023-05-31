@@ -19,7 +19,7 @@ import {
   IUSUMRouter,
   IUSUMRouter__factory,
   IWETH9,
-  IWETH9__factory,
+  IWETH9__factory
 } from '../typechain-types'
 import { PositionStructOutput } from './../typechain-types/contracts/core/interfaces/IUSUMMarket'
 
@@ -116,7 +116,7 @@ export class ReplWallet {
       deadline: Math.ceil(Date.now() / 1000) + 30,
       amountIn: parseEther(eth.toString()),
       amountOutMinimum: 0,
-      sqrtPriceLimitX96: 0,
+      sqrtPriceLimitX96: 0
     })
 
     await this.WETH9.approve(this.SwapRouter.address, 0)
