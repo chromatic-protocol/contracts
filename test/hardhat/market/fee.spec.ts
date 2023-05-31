@@ -16,10 +16,14 @@ describe('interest fee test', async function () {
   })
 
   async function initialize(liquidityMap: LiquidityConfig[]) {
-    const { addLiquidity } = helpers(testData)
+    const { addLiquidity, updatePrice, getLpReceiptIds, claimLiquidityBatch } = helpers(testData)
+    await updatePrice(1000)
     for (const conf of liquidityMap) {
       await addLiquidity(conf.amount, conf.tradingFee)
     }
+    await updatePrice(1000)
+
+    await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
   }
 
   function persistPositionFor({
@@ -79,8 +83,7 @@ describe('interest fee test', async function () {
           leverage, // leverage ( x1 )
           takerMargin, // losscut <= qty
           makerMargin, // profit stop token,
-          tradingFee, // maxAllowFee (0.01% * makerMargin)
-          ethers.constants.MaxUint256
+          tradingFee // maxAllowFee (0.01% * makerMargin)
         )
       )
       await updatePrice(1000)
@@ -92,9 +95,7 @@ describe('interest fee test', async function () {
       await time.setNextBlockTimestamp(wantedTimestamp - 3)
       // timestamp = await time.latest()
 
-      await awaitTx(
-        traderRouter.closePosition(market.address, positionIds[0], ethers.constants.MaxUint256)
-      )
+      await awaitTx(traderRouter.closePosition(market.address, positionIds[0]))
       await updatePrice(1000)
       await awaitTx(traderRouter.claimPosition(market.address, positionIds[0]))
 

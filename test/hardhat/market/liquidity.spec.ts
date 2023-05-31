@@ -21,7 +21,7 @@ describe('market test', async function () {
 
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
 
-  before(async () => {
+  beforeEach(async () => {
     testData = await prepareMarketTest()
   })
 
@@ -40,7 +40,16 @@ describe('market test', async function () {
 
   it('add/remove liquidity', async () => {
     const { market, usumRouter, tester, oracleProvider, settlementToken } = testData
-    const { addLiquidityTx } = helpers(testData)
+    const {
+      addLiquidityTx,
+      updatePrice,
+      claimLiquidity,
+      getLpReceiptIds,
+      removeLiquidity,
+      withdrawLiquidity
+    } = helpers(testData)
+    await updatePrice(1000)
+
     const amount = ethers.utils.parseEther('100')
     const feeSlotKey = 1
 
@@ -51,6 +60,10 @@ describe('market test', async function () {
       tester.address,
       amount.mul(-1)
     )
+
+    await updatePrice(1100)
+    await (await claimLiquidity((await getLpReceiptIds())[0])).wait()
+
     expect(
       await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
         feeSlotKey
@@ -58,7 +71,6 @@ describe('market test', async function () {
     ).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
-
     const expectedAmount = await market.calculateLpTokenValue(feeSlotKey, removeLiqAmount)
 
     await (
@@ -67,65 +79,36 @@ describe('market test', async function () {
         .setApprovalForAll(usumRouter.address, true)
     ).wait()
 
-    await expect(
-      usumRouter.connect(tester).removeLiquidity(
-        market.address,
-        feeSlotKey,
-        removeLiqAmount,
-        0, // amountMin
-        tester.address
-      )
-    ).to.changeTokenBalance(settlementToken, tester, expectedAmount)
+    await (await removeLiquidity(removeLiqAmount, feeSlotKey)).wait()
+
+    await updatePrice(1000)
+
+    await expect(withdrawLiquidity((await getLpReceiptIds())[0])).to.changeTokenBalance(
+      settlementToken,
+      tester,
+      expectedAmount
+    )
 
     expect(
-      await await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
+      await USUMLpToken__factory.connect(await market.lpToken(), market.signer).totalSupply(
         feeSlotKey
       )
     ).to.equal(removeLiqAmount)
   })
 
   it('print liquidity', async () => {
-    const { addLiquidityTx } = helpers(testData)
+    const { addLiquidityBatch, claimLiquidityBatch, getLpReceiptIds, updatePrice } =
+      helpers(testData)
 
-    const txs: Promise<any>[] = []
+    await updatePrice(1000)
 
-    for (let i = 0; i < fees.length; i++) {
-      const amount = oneEther.add(oneEther.div(20).mul(fees.length - i))
-      txs.push(addLiquidityTx(amount, fees[i]))
-      txs.push(addLiquidityTx(amount, -fees[i]))
+    const amounts = totalFees.map((fee) =>
+      oneEther.add(oneEther.div(20).mul(fees.length - fees.indexOf(Math.max(fee, -fee))))
+    )
 
-      // address market,
-      // int224 qty,
-      // uint32 leverage,
-      // uint256 takerMargin,
-      // uint256 makerMargin,
-      // uint256 maxAllowableTradingFee,
-    }
-
-    await Promise.all(txs)
-
-    // await (
-    //   await testData.traderRouter.openPosition(
-    //     testData.market.address,
-    //     1,
-    //     oneEther.mul(50),
-    //     oneEther.div(100), // losscut 1 token
-    //     oneEther.mul(100), // profit stop 10 token,
-    //     ethers.constants.MaxUint256, // maxAllowFee (1% * makerMargin)
-    //     ethers.constants.MaxUint256
-    //   )
-    // ).wait();
-    // await (
-    //   await testData.traderRouter.openPosition(
-    //     testData.market.address,
-    //     -1,
-    //     oneEther.mul(30),
-    //     oneEther.div(100), // losscut 1 token
-    //     oneEther.mul(100), // profit stop 10 token,
-    //     ethers.constants.MaxUint256, // maxAllowFee (1% * makerMargin)
-    //     ethers.constants.MaxUint256
-    //   )
-    // ).wait();
+    await (await addLiquidityBatch(amounts, totalFees)).wait()
+    await updatePrice(1200)
+    await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
 
     // const totals: BigNumber[] = [];
     // const unuseds: BigNumber[] = [];

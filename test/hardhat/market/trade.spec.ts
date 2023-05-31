@@ -14,11 +14,13 @@ describe('position & account test', async function () {
   const base = ethers.utils.parseEther('1000')
   async function initialize() {
     testData = await prepareMarketTest()
-    const { addLiquidity } = helpers(testData)
-    await addLiquidity(base, 1)
-    await addLiquidity(base.mul(5), 10)
-    await addLiquidity(base, -1)
-    await addLiquidity(base.mul(5), -10)
+
+    const { updatePrice, addLiquidityBatch, claimLiquidityBatch, getLpReceiptIds } =
+      helpers(testData)
+    await updatePrice(1000)
+    await addLiquidityBatch([base, base.mul(5), base, base.mul(5)], [1, 10, -1, -10])
+    await updatePrice(1000)
+    await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
   }
 
   beforeEach(async () => {
@@ -172,9 +174,7 @@ describe('position & account test', async function () {
     const interestRates = await marketFactory.getInterestRateRecords(settlementToken.address)
     // console.log("fees", interestRates);
 
-    await bluebird.each(results, async (r) =>
-      traderRouter.closePosition(market.address, r.id, ethers.constants.MaxUint256)
-    )
+    await bluebird.each(results, async (r) => traderRouter.closePosition(market.address, r.id))
 
     await updatePrice(1200)
 
@@ -227,7 +227,7 @@ describe('position & account test', async function () {
 
       await expect(tx, 'not matched actual pnl')
         .to.emit(market, 'ClaimPosition')
-        .withArgs(anyValue, anyValue, expectedPnl, interestFee)
+        .withArgs(traderAccount.address, expectedPnl, interestFee, anyValue)
     })
   })
 })

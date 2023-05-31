@@ -20,14 +20,18 @@ describe('liquidation test', async () => {
     )
     console.log('='.repeat(50))
 
-    const { addLiquidity } = helpers(testData)
+    const { updatePrice, addLiquidityBatch, claimLiquidityBatch, getLpReceiptIds } =
+      helpers(testData)
+    await updatePrice(1000)
     // add 10000 usdc liquidity to 0.01% long /short  slot
-    await addLiquidity(eth100.mul(100), 1)
-    await addLiquidity(eth100.mul(100), -1)
-
     // add 50000 usdc liquidity to 0.1% long /short  slot
-    await addLiquidity(eth100.mul(500), 10)
-    await addLiquidity(eth100.mul(500), -10)
+    await addLiquidityBatch(
+      [eth100.mul(100), eth100.mul(100), eth100.mul(500), eth100.mul(500)],
+      [1, -1, 10, -10]
+    )
+    await updatePrice(1000)
+    await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
+
     // keeper init
     // 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
     // deployContract<Token>()
@@ -71,8 +75,7 @@ describe('liquidation test', async () => {
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-        ethers.constants.MaxUint256
+        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
       )
 
       await simulate([2000, 2200, 2400], [1, 1, 0], true)
@@ -88,8 +91,7 @@ describe('liquidation test', async () => {
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-        ethers.constants.MaxUint256
+        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
       )
       await simulate([2000, 1800, 1600], [1, 1, 0], false)
     })
@@ -106,8 +108,7 @@ describe('liquidation test', async () => {
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-        ethers.constants.MaxUint256
+        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
       )
       await simulate([2000, 1800, 1600], [1, 1, 0], true)
     })
@@ -122,8 +123,7 @@ describe('liquidation test', async () => {
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100), // maxAllowFee (1% * makerMargin)
-        ethers.constants.MaxUint256
+        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
       )
 
       await simulate([2000, 2200, 2400], [1, 1, 0], false)

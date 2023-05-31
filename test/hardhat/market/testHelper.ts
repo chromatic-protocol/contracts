@@ -26,6 +26,11 @@ export const prepareMarketTest = async () => {
   const [owner, tester, trader] = await ethers.getSigners()
   console.log('owner', owner.address)
 
+  const approveTx = await settlementToken
+    .connect(tester)
+    .approve(usumRouter.address, ethers.constants.MaxUint256)
+  await approveTx.wait()
+
   await faucet(tester)
   await faucet(trader)
 
@@ -100,8 +105,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
       leverage,
       takerMargin, // losscut 1 token
       makerMargin, // profit stop 10 token,
-      makerMargin.mul(maxAllowFeeRate.toString()).div(100), // maxAllowFee (1% * makerMargin)
-      ethers.constants.MaxUint256
+      makerMargin.mul(maxAllowFeeRate.toString()).div(100) // maxAllowFee (1% * makerMargin)
     )
     return {
       receipt: await openPositionTx.wait(),
@@ -114,23 +118,17 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
 
   async function closePosition({}) {}
 
-  async function addLiquidityTx(amount: BigNumber, feeSlotKey: number) {
-    const approveTx = await settlementToken
-      .connect(tester)
-      .approve(usumRouter.address, ethers.constants.MaxUint256)
-    await approveTx.wait()
+  async function getLpReceiptIds() {
+    return usumRouter.connect(tester).getLpReceiptIds(market.address)
+  }
 
+  async function addLiquidityTx(amount: BigNumber, feeSlotKey: number) {
     return usumRouter
       .connect(tester)
       .addLiquidity(market.address, feeSlotKey, amount, tester.address)
   }
 
   async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
-    const approveTx = await settlementToken
-      .connect(tester)
-      .approve(usumRouter.address, ethers.constants.MaxUint256)
-    await approveTx.wait()
-
     const amount = _amount ?? ethers.utils.parseEther('100')
     const feeSlotKey = _feeSlotKey ?? 1
 
@@ -141,6 +139,47 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
       feeSlotKey
     }
   }
+
+  async function addLiquidityBatch(amounts: BigNumber[], feeRates: number[]) {
+    return usumRouter.connect(tester).addLiquidityBatch(
+      market.address,
+      feeRates,
+      amounts,
+      feeRates.map((_) => tester.address)
+    )
+  }
+
+  async function claimLiquidity(receiptId: BigNumber) {
+    return usumRouter.connect(tester).claimLiquidity(market.address, receiptId)
+  }
+
+  async function claimLiquidityBatch(receiptIds: BigNumber[]) {
+    return usumRouter.connect(tester).claimLiquidityBatch(market.address, receiptIds)
+  }
+
+  async function removeLiquidity(lpTokenAmount: BigNumber, feeRate: number) {
+    return usumRouter
+      .connect(tester)
+      .removeLiquidity(market.address, feeRate, lpTokenAmount, tester.address)
+  }
+
+  async function removeLiquidityBatch(lpTokenAmounts: BigNumber[], feeRates: number[]) {
+    return usumRouter.connect(tester).removeLiquidityBatch(
+      market.address,
+      feeRates,
+      lpTokenAmounts,
+      feeRates.map((_) => tester.address)
+    )
+  }
+
+  async function withdrawLiquidity(receiptId: BigNumber) {
+    return usumRouter.connect(tester).withdrawLiquidity(market.address, receiptId)
+  }
+
+  async function withdrawLiquidityBatch(receiptIds: BigNumber[]) {
+    return usumRouter.connect(tester).withdrawLiquidityBatch(market.address, receiptIds)
+  }
+
   async function awaitTx(response: any) {
     response = await response
     if (typeof response.wait === 'function') return await response.wait()
@@ -149,10 +188,18 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
 
   return {
     updatePrice,
+    getLpReceiptIds,
+    addLiquidityBatch,
     addLiquidityTx,
     addLiquidity,
     awaitTx,
     openPosition,
-    closePosition
+    closePosition,
+    claimLiquidity,
+    claimLiquidityBatch,
+    removeLiquidity,
+    removeLiquidityBatch,
+    withdrawLiquidity,
+    withdrawLiquidityBatch
   }
 }
