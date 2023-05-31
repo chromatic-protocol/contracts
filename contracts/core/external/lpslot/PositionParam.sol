@@ -51,7 +51,7 @@ library PositionParamLib {
     ) internal view returns (UFixed18) {
         return
             PositionUtil.settlePrice(
-                ctx.market.oracleProvider(),
+                ctx.oracleProvider,
                 self.openVersion,
                 self.entryOracleVersion(ctx)
             );

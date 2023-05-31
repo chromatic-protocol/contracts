@@ -6,8 +6,8 @@ import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 
 interface IUSUMMarketState {
     function factory() external view returns (IUSUMMarketFactory);
@@ -16,7 +16,7 @@ interface IUSUMMarketState {
 
     function oracleProvider() external view returns (IOracleProvider);
 
-    function lpToken() external view returns (USUMLpToken);
+    function lpToken() external view returns (IUSUMLpToken);
 
     function liquidator() external view returns (IUSUMLiquidator);
 

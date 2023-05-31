@@ -136,9 +136,9 @@ library LpSlotLib {
         int256 unrealizedPnl = self._position.unrealizedPnl(ctx);
         uint256 absPnl = unrealizedPnl.abs();
 
-        uint256 _value = unrealizedPnl < 0 ? self.liquidity() - absPnl : self.liquidity() + absPnl;
-        return
-            _value + ctx.market.vault().getPendingSlotShare(address(ctx.market), self.liquidity());
+        uint256 _liquidity = self.liquidity();
+        uint256 _value = unrealizedPnl < 0 ? _liquidity - absPnl : _liquidity + absPnl;
+        return _value + ctx.vault.getPendingSlotShare(address(ctx.market), _liquidity);
     }
 
     function acceptAddLiquidity(
@@ -167,7 +167,7 @@ library LpSlotLib {
             LpSlotLiquidityLib.calculateLpTokenMinting(
                 amount,
                 self.value(ctx),
-                ctx.market.lpToken().totalSupply(self.lpTokenId)
+                ctx.lpToken.totalSupply(self.lpTokenId)
             );
     }
 
@@ -191,7 +191,7 @@ library LpSlotLib {
             LpSlotLiquidityLib.calculateLpTokenValue(
                 lpTokenAmount,
                 self.value(ctx),
-                ctx.market.lpToken().totalSupply(self.lpTokenId)
+                ctx.lpToken.totalSupply(self.lpTokenId)
             );
     }
 }
