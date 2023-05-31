@@ -20,6 +20,11 @@ contract KeeperFeePayer is IKeeperFeePayer {
         _;
     }
 
+    modifier onlyVault() {
+        require(msg.sender == factory.vault(), Errors.ONLY_VAULT_CAN_ACCESS);
+        _;
+    }
+
     constructor(IUSUMMarketFactory _factory, ISwapRouter _uniswapRouter, IWETH9 _weth) {
         factory = _factory;
         uniswapRouter = _uniswapRouter;
@@ -40,7 +45,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
         address tokenIn,
         uint256 amountOut,
         address keeperAddress
-    ) external returns (uint256 amountIn) {
+    ) external onlyVault returns (uint256 amountIn) {
         uint256 balance = IERC20(tokenIn).balanceOf(address(this));
 
         amountIn = swapExactOutput(tokenIn, address(this), amountOut, balance);

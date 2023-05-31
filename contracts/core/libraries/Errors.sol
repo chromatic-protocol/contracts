@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 library Errors {
     string constant ONLY_DAO_CAN_ACCESS = "DAO";
+    string constant ONLY_VAULT_CAN_ACCESS = "VLT";
     string constant ONLY_DEDICATED_MSG_SENDER_CAN_ACCESS = "DMS";
     string constant ONLY_LIQUIDATOR_CAN_ACCESS = "LIQ";
     string constant ONLY_FUNDS_OWNER_CAN_WITHDRAW_FUNDS = "FOW";

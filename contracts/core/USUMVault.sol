@@ -403,7 +403,6 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         address token = address(IUSUMMarket(market).settlementToken());
         if (!_marketEarningDistributable(market, token)) return;
 
-        uint256 balance = makerMarketBalances[market];
         uint256 earning = pendingMarketEarnings[market];
         delete pendingMarketEarnings[market];
 
@@ -411,10 +410,12 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         emit TransferKeeperFee(market, fee, usedFee);
 
         uint256 remainEarning = earning - usedFee;
-        IUSUMMarket(market).distributeEarningToSlots(remainEarning, balance);
 
+        uint256 balance = makerMarketBalances[market];
         makerMarketBalances[market] += remainEarning;
         makerBalances[token] += remainEarning;
+
+        IUSUMMarket(market).distributeEarningToSlots(remainEarning, balance);
 
         emit MarketEarningDistributed(market, earning, usedFee, balance);
     }
