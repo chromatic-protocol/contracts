@@ -24,7 +24,8 @@ library LibTaskModule {
         address _execAddress,
         mapping(LibDataTypes.Module => address) storage taskModuleAddresses
     ) internal returns (address, address) {
-        uint256 length = uint256(type(LibDataTypes.Module).max);
+        // uint256 length = uint256(type(LibDataTypes.Module).max);
+        uint256 length = 3;
 
         for (uint256 i; i <= length; i++) {
             LibDataTypes.Module module = LibDataTypes.Module(i);
@@ -105,7 +106,8 @@ library LibTaskModule {
         address _taskCreator,
         mapping(LibDataTypes.Module => address) storage taskModuleAddresses
     ) internal returns (address) {
-        uint256 length = uint256(type(LibDataTypes.Module).max);
+        // uint256 length = uint256(type(LibDataTypes.Module).max);
+        uint256 length = 3;
 
         for (uint256 i; i <= length; i++) {
             LibDataTypes.Module module = LibDataTypes.Module(i);
