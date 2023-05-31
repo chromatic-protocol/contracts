@@ -76,11 +76,7 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
             bytes("")
         );
 
-        IUSUMLiquidityCallback(msg.sender).claimLpTokenCallback(
-            receipt.id,
-            receipt.recipient,
-            data
-        );
+        IUSUMLiquidityCallback(msg.sender).claimLpTokenCallback(receipt.id, data);
         delete lpReceipts[receiptId];
 
         emit ClaimLpToken(receipt.recipient, lpTokenAmount, receipt);

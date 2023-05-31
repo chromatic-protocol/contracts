@@ -162,11 +162,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         usdc.transfer(vault, amount);
     }
 
-    function claimLpTokenCallback(
-        uint256 receiptId,
-        address recipient,
-        bytes calldata data
-    ) external {}
+    function claimLpTokenCallback(uint256 receiptId, bytes calldata data) external {}
 
     function removeLiquidityCallback(address lpToken, bytes calldata data) external {
         (uint256 id, uint256 amount) = abi.decode(data, (uint256, uint256));
