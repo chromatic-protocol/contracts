@@ -15,4 +15,6 @@ interface IUSUMLiquidityCallback {
         uint256 lpTokenId,
         bytes calldata data
     ) external;
+
+    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external;
 }

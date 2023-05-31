@@ -156,14 +156,21 @@ export class ReplWallet {
     )
   }
 
-  async removeLiquidity(feeRate: number, liquidity: number, amountMin: number) {
+  async claimLiquidity(receiptId: number) {
+    await this.USUMRouter.claimLiquidity(this.USUMMarket.address, receiptId)
+  }
+
+  async removeLiquidity(feeRate: number, lpTokenAmount: number) {
     const decimals = await this.USDC.decimals()
     await this.USUMRouter.removeLiquidity(
       this.USUMMarket.address,
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
-      parseUnits(liquidity.toString(), decimals),
-      parseUnits(amountMin.toString(), decimals),
+      parseUnits(lpTokenAmount.toString(), decimals),
       this.address
     )
+  }
+
+  async withdrawLiquidity(receiptId: number) {
+    await this.USUMRouter.withdrawLiquidity(this.USUMMarket.address, receiptId)
   }
 }

@@ -35,5 +35,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
         address recipient
     ) external returns (LpReceipt memory);
 
+    function withdrawLiquidity(address market, uint256 receiptId) external;
+
     function getAccount() external view returns (address);
 }

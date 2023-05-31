@@ -137,6 +137,25 @@ library LpSlotLiquidityLib {
         self._pending.lpTokenAmount += lpTokenAmount;
     }
 
+    function onWithdrawLiquidity(
+        LpSlotLiquidity storage self,
+        uint256 lpTokenAmount,
+        uint256 oracleVersion
+    ) internal returns (uint256 amount, uint256 burnedLpTokenAmount) {
+        _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
+        amount = lpTokenAmount.mulDiv(_cb.tokenAmount, _cb.lpTokenAmount);
+        burnedLpTokenAmount = lpTokenAmount.mulDiv(_cb.burningAmount, _cb.lpTokenAmount);
+
+        _cb.burningAmount -= burnedLpTokenAmount;
+        _cb.tokenAmount -= amount;
+        _cb.lpTokenAmount -= lpTokenAmount;
+        if (_cb.lpTokenAmount == 0) {
+            delete self._claimBurnings[oracleVersion];
+        } else {
+            self._claimBurnings[oracleVersion] = _cb;
+        }
+    }
+
     function calculateLpTokenMinting(
         uint256 amount,
         uint256 slotValue,

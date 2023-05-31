@@ -338,6 +338,21 @@ library LpSlotSetLib {
         slot.acceptRemoveLiquidity(ctx, lpTokenAmount);
     }
 
+    function acceptWithdrawLiquidity(
+        LpSlotSet storage self,
+        LpContext memory ctx,
+        int16 tradingFeeRate,
+        uint256 lpTokenAmount,
+        uint256 oracleVersion
+    )
+        external
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 amount, uint256 burnedLpTokenAmount)
+    {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.acceptWithdrawLiquidity(ctx, lpTokenAmount, oracleVersion);
+    }
+
     function calculateLpTokenMinting(
         LpSlotSet storage self,
         LpContext memory ctx,

@@ -112,8 +112,46 @@ abstract contract Liquidity is MarketValue, IERC1155Receiver {
         lpSlotSet.acceptRemoveLiquidity(ctx, tradingFeeRate, lpTokenAmount);
         receipt.amount = lpTokenAmount;
 
+        lpReceipts[receipt.id] = receipt;
+
         emit RemoveLiquidity(recipient, receipt);
         return receipt;
+    }
+
+    function withdrawLiquidity(
+        uint256 receiptId,
+        bytes calldata data
+    ) external override nonReentrant {
+        LpReceipt memory receipt = lpReceipts[receiptId];
+        if (receipt.id == 0) revert NotExistLpReceipt();
+        if (receipt.action != LpAction.REMOVE_LIQUIDITY) revert InvalidLpReceiptAction();
+
+        LpContext memory ctx = newLpContext();
+        ctx.syncOracleVersion();
+
+        address recipient = receipt.recipient;
+        uint256 lpTokenAmount = receipt.amount;
+
+        (uint256 amount, uint256 burnedLpTokenAmount) = lpSlotSet.acceptWithdrawLiquidity(
+            ctx,
+            receipt.tradingFeeRate,
+            lpTokenAmount,
+            receipt.oracleVersion
+        );
+
+        lpToken.safeTransferFrom(
+            address(this),
+            recipient,
+            receipt.lpTokenId(),
+            lpTokenAmount - burnedLpTokenAmount,
+            bytes("")
+        );
+        vault.onWithdrawLiquidity(recipient, amount);
+
+        IUSUMLiquidityCallback(msg.sender).withdrawLiquidityCallback(receipt.id, data);
+        delete lpReceipts[receiptId];
+
+        emit WithdrawLiquidity(recipient, amount, burnedLpTokenAmount, receipt);
     }
 
     function getSlotLiquidities(

@@ -34,6 +34,10 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         uint256 lpTokenAmount;
     }
 
+    struct WithdrawLiquidityCallbackData {
+        address provider;
+    }
+
     AccountFactory accountFactory;
     mapping(address => mapping(address => EnumerableSet.UintSet)) private receiptIds; // market => provider => receiptIds
 
@@ -85,6 +89,17 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             callbackData.lpTokenAmount,
             bytes("")
         );
+    }
+
+    function withdrawLiquidityCallback(
+        uint256 receiptId,
+        bytes calldata data
+    ) external override verifyCallback {
+        WithdrawLiquidityCallbackData memory callbackData = abi.decode(
+            data,
+            (WithdrawLiquidityCallbackData)
+        );
+        receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
     function openPosition(
@@ -152,6 +167,16 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
             )
         );
         receiptIds[market][msg.sender].add(receipt.id);
+    }
+
+    function withdrawLiquidity(address market, uint256 receiptId) external override {
+        address provider = msg.sender;
+        if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
+
+        IUSUMMarket(market).withdrawLiquidity(
+            receiptId,
+            abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
+        );
     }
 
     function getAccount() external view override returns (address) {

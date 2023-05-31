@@ -26,7 +26,7 @@ interface IVault {
         uint256 indexed pendingWithdrawal
     );
 
-    event OnRemoveLiquidity(
+    event OnWithdrawLiquidity(
         address indexed market,
         uint256 indexed amount,
         address indexed recipient
@@ -60,7 +60,7 @@ interface IVault {
 
     function onSettlePendingLiquidity(uint256 pendingDeposit, uint256 pendingWithdrawal) external;
 
-    // function onRemoveLiquidity(address recipient, uint256 amount) external;
+    function onWithdrawLiquidity(address recipient, uint256 amount) external;
 
     function transferKeeperFee(
         address keeper,

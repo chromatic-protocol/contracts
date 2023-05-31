@@ -142,17 +142,16 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         emit OnSettlePendingLiquidity(address(market), pendingDeposit, pendingWithdrawal);
     }
 
-    // function onRemoveLiquidity(address recipient, uint256 amount) external override onlyMarket {
-    //     IUSUMMarket market = IUSUMMarket(msg.sender);
-    //     address settlementToken = address(market.settlementToken());
+    function onWithdrawLiquidity(address recipient, uint256 amount) external override onlyMarket {
+        IUSUMMarket market = IUSUMMarket(msg.sender);
+        address settlementToken = address(market.settlementToken());
 
-    //     SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
+        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
 
-    //     makerBalances[settlementToken] -= amount;
-    //     makerMarketBalances[address(market)] -= amount;
+        pendingWithdrawals[settlementToken] -= amount;
 
-    //     emit OnRemoveLiquidity(address(market), amount, recipient);
-    // }
+        emit OnWithdrawLiquidity(address(market), amount, recipient);
+    }
 
     function transferKeeperFee(
         address keeper,

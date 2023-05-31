@@ -50,7 +50,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addLongAmount, market.getSlotLiquidities(getKeyList(1))[0]);
         assertEq(addLongAmount, lpToken.balanceOf(address(market), receipt1.lpTokenId()));
 
-        // claim lpToken at oracle version 2
+        // claim liquidity at oracle version 2
         market.claimLiquidity(receipt1.id, bytes(""));
         assertEq(0, lpToken.balanceOf(address(market), receipt1.lpTokenId()));
         assertEq(addLongAmount, lpToken.balanceOf(address(this), receipt1.lpTokenId()));
@@ -78,7 +78,7 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addShortAmount, market.getSlotLiquidities(getKeyList(-10))[0]);
         assertEq(addShortAmount, lpToken.balanceOf(address(market), receipt2.lpTokenId()));
 
-        // claim lpToken at oracle version 3
+        // claim liquidity at oracle version 3
         market.claimLiquidity(receipt2.id, bytes(""));
         assertEq(0, lpToken.balanceOf(address(market), receipt2.lpTokenId()));
         assertEq(addShortAmount, lpToken.balanceOf(address(this), receipt2.lpTokenId()));
@@ -112,21 +112,65 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         assertEq(addLongAmount - removeLongAmount, market.getSlotLiquidities(getKeyList(1))[0]);
         assertEq(0, lpToken.balanceOf(address(market), receipt3.lpTokenId()));
 
-        // // remove liquidity $5 from 0.1% short slot
-        // market.removeLiquidity(address(this), -10, abi.encode(removeShortAmount));
-        // assertEq(
-        //     addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-        //     usdc.balanceOf(address(vault))
-        // );
-        // assertEq(
-        //     addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-        //     vault.makerBalances(address(usdc))
-        // );
-        // assertEq(
-        //     addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-        //     vault.makerMarketBalances(address(market))
-        // );
-        // assertEq(addShortAmount - removeShortAmount, market.getSlotLiquidities(getKeyList(-10))[0]);
+        // withdraw liquidity at oracle version 4
+        uint256 beforeAt4 = usdc.balanceOf(address(this));
+        market.withdrawLiquidity(receipt3.id, bytes(""));
+        assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
+        assertEq(0, lpToken.balanceOf(address(market), receipt3.lpTokenId()));
+        assertEq(beforeAt4 + removeLongAmount, usdc.balanceOf(address(this)));
+        assertEq(
+            addLongAmount - removeLongAmount,
+            lpToken.balanceOf(address(this), receipt3.lpTokenId())
+        );
+
+        // remove liquidity $5 from 0.1% short slot at oracle version 4
+        LpReceipt memory receipt4 = market.removeLiquidity(
+            address(this),
+            -10,
+            abi.encode(removeShortAmount)
+        );
+        assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount,
+            vault.makerBalances(address(usdc))
+        );
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount,
+            vault.makerMarketBalances(address(market))
+        );
+        assertEq(addShortAmount, market.getSlotLiquidities(getKeyList(-10))[0]);
+        assertEq(removeShortAmount, lpToken.balanceOf(address(market), receipt4.lpTokenId()));
+
+        // set oracle version to 5
+        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+
+        // settle oracle version 5
+        market.settle();
+        assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
+            vault.makerBalances(address(usdc))
+        );
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
+            vault.makerMarketBalances(address(market))
+        );
+        assertEq(addShortAmount - removeShortAmount, market.getSlotLiquidities(getKeyList(-10))[0]);
+        assertEq(0, lpToken.balanceOf(address(market), receipt4.lpTokenId()));
+
+        // withdraw liquidity at oracle version 5
+        uint256 beforeAt5 = usdc.balanceOf(address(this));
+        market.withdrawLiquidity(receipt4.id, bytes(""));
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
+            usdc.balanceOf(address(vault))
+        );
+        assertEq(0, lpToken.balanceOf(address(market), receipt4.lpTokenId()));
+        assertEq(beforeAt5 + removeShortAmount, usdc.balanceOf(address(this)));
+        assertEq(
+            addShortAmount - removeShortAmount,
+            lpToken.balanceOf(address(this), receipt4.lpTokenId())
+        );
     }
 
     function testDistributeMarketEarning() public {
@@ -197,6 +241,8 @@ contract LiquidityTest is BaseSetup, IUSUMLiquidityCallback {
         uint256 amount = abi.decode(data, (uint256));
         IERC1155(lpToken).safeTransferFrom(address(this), msg.sender, lpTokenId, amount, bytes(""));
     }
+
+    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external {}
 
     // implement IERC1155Receiver
 
