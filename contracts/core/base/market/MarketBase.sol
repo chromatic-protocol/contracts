@@ -6,6 +6,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
@@ -13,7 +14,6 @@ import {LpTokenDeployerLib} from "@usum/core/external/deployer/LpTokenDeployer.s
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
 abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
@@ -21,7 +21,7 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     IOracleProvider public immutable override oracleProvider;
     IERC20Metadata public immutable override settlementToken;
 
-    USUMLpToken public immutable override lpToken;
+    IUSUMLpToken public immutable override lpToken;
     IUSUMLiquidator public immutable override liquidator;
     IUSUMVault public immutable override vault;
     IKeeperFeePayer public immutable override keeperFeePayer;
@@ -43,7 +43,7 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
 
         oracleProvider = IOracleProvider(_oracleProvider);
         settlementToken = IERC20Metadata(_settlementToken);
-        lpToken = USUMLpToken(LpTokenDeployerLib.deploy());
+        lpToken = IUSUMLpToken(LpTokenDeployerLib.deploy());
         liquidator = IUSUMLiquidator(factory.liquidator());
         vault = IUSUMVault(factory.vault());
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());

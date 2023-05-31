@@ -94,7 +94,7 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (UFixed18) {
-        return PositionUtil.settlePrice(ctx.market.oracleProvider(), self.openVersion);
+        return PositionUtil.settlePrice(ctx.oracleProvider, self.openVersion);
     }
 
     /**
@@ -109,7 +109,7 @@ library PositionLib {
         Position memory self,
         LpContext memory ctx
     ) internal view returns (UFixed18) {
-        return PositionUtil.settlePrice(ctx.market.oracleProvider(), self.closeVersion);
+        return PositionUtil.settlePrice(ctx.oracleProvider, self.closeVersion);
     }
 
     /**

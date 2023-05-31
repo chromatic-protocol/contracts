@@ -112,7 +112,7 @@ library LpSlotPendingPositionLib {
         if (self.openVersion >= currentVersion.version) return 0;
 
         UFixed18 _entryPrice = PositionUtil.settlePrice(
-            ctx.market.oracleProvider(),
+            ctx.oracleProvider,
             self.openVersion,
             currentVersion
         );
@@ -159,7 +159,7 @@ library LpSlotPendingPositionLib {
     ) internal view returns (UFixed18) {
         return
             PositionUtil.settlePrice(
-                ctx.market.oracleProvider(),
+                ctx.oracleProvider,
                 self.openVersion,
                 ctx.currentOracleVersion()
             );

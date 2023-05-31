@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
@@ -55,7 +55,7 @@ library LpSlotLiquidityLib {
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
         if (oracleVersion >= currentVersion.version) return;
 
-        USUMLpToken lpToken = ctx.market.lpToken();
+        IUSUMLpToken lpToken = ctx.lpToken;
         uint256 totalSupply = lpToken.totalSupply(lpTokenId);
 
         uint256 pendingDeposit = self._pending.tokenAmount;
@@ -83,7 +83,7 @@ library LpSlotLiquidityLib {
             lpToken.burn(address(ctx.market), lpTokenId, burningAmount - mintingAmount);
         }
 
-        ctx.market.vault().onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
+        ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
 
         delete self._pending;
     }

@@ -10,6 +10,7 @@ import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 
 contract LpSlotTest is Test {
@@ -19,7 +20,7 @@ contract LpSlotTest is Test {
     IOracleProvider provider;
     IUSUMVault vault;
     IUSUMMarket market;
-    USUMLpToken lpToken;
+    IUSUMLpToken lpToken;
     LpSlot slot;
 
     function setUp() public {
@@ -34,21 +35,6 @@ contract LpSlotTest is Test {
             abi.encode(0)
         );
 
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.oracleProvider.selector),
-            abi.encode(provider)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.vault.selector),
-            abi.encode(vault)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.lpToken.selector),
-            abi.encode(lpToken)
-        );
         vm.mockCall(
             address(market),
             abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155Received.selector),
@@ -140,8 +126,16 @@ contract LpSlotTest is Test {
         assertEq(value, 21501.111 ether);
     }
 
-    function _newLpContext() private view returns (LpContext memory ctx) {
-        ctx.market = market;
-        ctx.tokenPrecision = 10 ** 18;
+    function _newLpContext() private view returns (LpContext memory) {
+        IOracleProvider.OracleVersion memory _currentVersionCache;
+        return
+            LpContext({
+                oracleProvider: provider,
+                vault: vault,
+                lpToken: lpToken,
+                market: market,
+                tokenPrecision: 1e18,
+                _currentVersionCache: _currentVersionCache
+            });
     }
 }

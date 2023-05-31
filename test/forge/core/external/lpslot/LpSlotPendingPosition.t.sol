@@ -12,6 +12,8 @@ import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 
 contract LpSlotPendingPositionTest is Test {
     using SafeCast for uint256;
@@ -20,29 +22,14 @@ contract LpSlotPendingPositionTest is Test {
     IOracleProvider provider;
     IUSUMVault vault;
     IUSUMMarket market;
+    IUSUMLpToken lpToken;
     LpSlotPendingPosition pending;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
         vault = IUSUMVault(address(2));
         market = IUSUMMarket(address(3));
-
-        vm.mockCall(
-            address(vault),
-            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
-            abi.encode(0)
-        );
-
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.oracleProvider.selector),
-            abi.encode(provider)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.vault.selector),
-            abi.encode(vault)
-        );
+        lpToken = new USUMLpToken();
     }
 
     function testOnOpenPosition_WhenEmpty() public {
@@ -166,9 +153,17 @@ contract LpSlotPendingPositionTest is Test {
         assertEq(UFixed18.unwrap(entryPrice), 1100);
     }
 
-    function _newLpContext() private view returns (LpContext memory ctx) {
-        ctx.market = market;
-        ctx.tokenPrecision = 10 ** 6;
+    function _newLpContext() private view returns (LpContext memory) {
+        IOracleProvider.OracleVersion memory _currentVersionCache;
+        return
+            LpContext({
+                oracleProvider: provider,
+                vault: vault,
+                lpToken: lpToken,
+                market: market,
+                tokenPrecision: 1e6,
+                _currentVersionCache: _currentVersionCache
+            });
     }
 
     function _newPositionParam() private pure returns (PositionParam memory p) {

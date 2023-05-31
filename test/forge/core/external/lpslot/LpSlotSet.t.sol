@@ -14,6 +14,7 @@ import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 
 contract LpSlotSetTest is Test {
@@ -23,7 +24,7 @@ contract LpSlotSetTest is Test {
     IOracleProvider provider;
     IUSUMVault vault;
     IUSUMMarket market;
-    USUMLpToken lpToken;
+    IUSUMLpToken lpToken;
     LpSlotSet slotSet;
 
     function setUp() public {
@@ -38,21 +39,6 @@ contract LpSlotSetTest is Test {
             abi.encode(0)
         );
 
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.oracleProvider.selector),
-            abi.encode(provider)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.vault.selector),
-            abi.encode(vault)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.lpToken.selector),
-            abi.encode(lpToken)
-        );
         vm.mockCall(
             address(market),
             abi.encodeWithSelector(IERC1155Receiver(address(market)).onERC1155Received.selector),
@@ -188,11 +174,19 @@ contract LpSlotSetTest is Test {
     //     assertEq(slotSet._longSlots[1].liquidity(), 900 ether);
     // }
 
-    function _newLpContext() private view returns (LpContext memory ctx) {
-        ctx.market = market;
-        ctx.tokenPrecision = 10 ** 18;
-        ctx._currentVersionCache.version = 1;
-        ctx._currentVersionCache.timestamp = 1;
+    function _newLpContext() private view returns (LpContext memory) {
+        IOracleProvider.OracleVersion memory _currentVersionCache;
+        _currentVersionCache.version = 1;
+        _currentVersionCache.timestamp = 1;
+        return
+            LpContext({
+                oracleProvider: provider,
+                vault: vault,
+                lpToken: lpToken,
+                market: market,
+                tokenPrecision: 1e18,
+                _currentVersionCache: _currentVersionCache
+            });
     }
 
     function _newPosition() private pure returns (Position memory) {

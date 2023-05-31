@@ -4,8 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Test} from "forge-std/Test.sol";
 import {IAutomate, IOpsProxyFactory} from "@usum/core/base/gelato/Types.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {USUMMarketFactory} from "@usum/core/USUMMarketFactory.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
 import {KeeperFeePayerMock} from "@usum/mocks/KeeperFeePayerMock.sol";
 import {OracleProviderMock} from "@usum/mocks/OracleProviderMock.sol";
 import {Token} from "@usum/mocks/Token.sol";
@@ -20,7 +20,7 @@ abstract contract BaseSetup is Test {
     USUMVaultMock vault;
     USUMLiquidatorMock liquidator;
     IUSUMMarket market;
-    USUMLpToken lpToken;
+    IUSUMLpToken lpToken;
 
     function setUp() public virtual {
         IAutomate _automate = IAutomate(address(5555));

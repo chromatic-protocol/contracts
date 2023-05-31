@@ -3,9 +3,14 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 
 /// @dev LpContext type
 struct LpContext {
+    IOracleProvider oracleProvider;
+    IUSUMVault vault;
+    IUSUMLpToken lpToken;
     /// @dev The address of market contract
     IUSUMMarket market;
     /// @dev The precision of the settlement token used in the market

@@ -68,7 +68,7 @@ library LpSlotSetLib {
         }
     }
 
-    function settle(LpSlotSet storage self, LpContext calldata ctx) external {
+    function settle(LpSlotSet storage self, LpContext memory ctx) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
@@ -132,7 +132,9 @@ library LpSlotSetLib {
                     tradingFeeRate: _tradingFeeRates[i],
                     amount: _slotMargins[i]
                 });
-                idx++;
+                unchecked {
+                    idx++;
+                }
             }
         }
 
@@ -141,7 +143,7 @@ library LpSlotSetLib {
 
     function acceptOpenPosition(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         Position memory position
     ) external {
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
@@ -176,7 +178,7 @@ library LpSlotSetLib {
 
     function acceptClosePosition(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         Position memory position
     ) external {
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
@@ -213,7 +215,7 @@ library LpSlotSetLib {
 
     function acceptClaimPosition(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         Position memory position,
         int256 realizedPnl // realized position pnl (taker side)
     ) external {
@@ -307,7 +309,7 @@ library LpSlotSetLib {
 
     function acceptAddLiquidity(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external _validTradingFeeRate(tradingFeeRate) {
@@ -317,7 +319,7 @@ library LpSlotSetLib {
 
     function acceptClaimLpToken(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount,
         uint256 oracleVersion
@@ -328,7 +330,7 @@ library LpSlotSetLib {
 
     function calculateLpTokenMinting(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
@@ -338,7 +340,7 @@ library LpSlotSetLib {
 
     function removeLiquidity(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 lpTokenAmount
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
@@ -349,7 +351,7 @@ library LpSlotSetLib {
 
     function calculateLpTokenValue(
         LpSlotSet storage self,
-        LpContext calldata ctx,
+        LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 lpTokenAmount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
