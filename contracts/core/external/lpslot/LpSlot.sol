@@ -41,9 +41,7 @@ library LpSlotLib {
     }
 
     function settle(LpSlot storage self, LpContext memory ctx) internal {
-        self._closedPosition.settleAccruedInterest(ctx);
         self._closedPosition.settleClosingPosition(ctx);
-        self._position.settleAccruedInterest(ctx);
         self._position.settlePendingPosition(ctx);
         self._liquidity.settlePendingLiquidity(
             ctx,

@@ -216,11 +216,11 @@ library LpSlotLiquidityLib {
         while (!self._burningVersions.empty()) {
             uint256 _ov = uint256(self._burningVersions.front());
             _ClaimBurning memory _cb = self._claimBurnings[_ov];
-            if (_cb.lpTokenAmount == 0) {
-                delete self._claimBurnings[_ov];
+            if (_cb.burningAmount >= _cb.lpTokenAmount) {
                 self._burningVersions.popFront();
-            } else if (_cb.burningAmount >= _cb.lpTokenAmount) {
-                self._burningVersions.popFront();
+                if (_cb.lpTokenAmount == 0) {
+                    delete self._claimBurnings[_ov];
+                }
             } else {
                 break;
             }
