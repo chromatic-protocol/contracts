@@ -38,4 +38,41 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
     function withdrawLiquidity(address market, uint256 receiptId) external;
 
     function getAccount() external view returns (address);
+
+    function getLpReceiptIds(address market) external view returns (uint256[] memory);
+
+    function addLiquidityBatch(
+        address market,
+        int16[] calldata feeRates,
+        uint256[] calldata amounts,
+        address[] calldata recipients
+    ) external returns (LpReceipt[] memory lpReceipts);
+
+    function claimLiquidityBatch(address market, uint256[] calldata receiptIds) external;
+
+    function removeLiquidityBatch(
+        address market,
+        int16[] calldata feeRates,
+        uint256[] calldata lpTokenAmounts,
+        address[] calldata recipients
+    ) external returns (LpReceipt[] memory lpReceipts);
+
+    function withdrawLiquidityBatch(address market, uint256[] calldata receiptIds) external;
+
+    function calculateLpTokenValueBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata lpTokenAmounts
+    ) external view returns (uint256[] memory results);
+
+    function calculateLpTokenMintingBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata amounts
+    ) external view returns (uint256[] memory results);
+
+    function totalSupplies(
+        address market,
+        int16[] calldata tradingFeeRates
+    ) external view returns (uint256[] memory supplies);
 }

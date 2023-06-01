@@ -15,6 +15,8 @@ import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
 import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
 import {Account} from "@usum/periphery/Account.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 
 contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
@@ -134,22 +136,32 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         int16 feeRate,
         uint256 amount,
         address recipient
-    ) external override returns (LpReceipt memory receipt) {
-        receipt = IUSUMMarket(market).addLiquidity(
-            recipient,
-            feeRate,
-            abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: amount}))
+    ) public override returns (LpReceipt memory receipt) {
+        bytes memory result = _call(
+            market,
+            abi.encodeWithSelector(
+                IUSUMMarket(market).addLiquidity.selector,
+                recipient,
+                feeRate,
+                abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: amount}))
+            )
         );
+
+        receipt = abi.decode(result, (LpReceipt));
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
-    function claimLiquidity(address market, uint256 receiptId) external override {
+    function claimLiquidity(address market, uint256 receiptId) public override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
-        IUSUMMarket(market).claimLiquidity(
-            receiptId,
-            abi.encode(ClaimLiquidityCallbackData({provider: provider}))
+        _call(
+            market,
+            abi.encodeWithSelector(
+                IUSUMMarket(market).claimLiquidity.selector,
+                receiptId,
+                abi.encode(ClaimLiquidityCallbackData({provider: provider}))
+            )
         );
     }
 
@@ -158,24 +170,37 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         int16 feeRate,
         uint256 lpTokenAmount,
         address recipient
-    ) external override returns (LpReceipt memory receipt) {
-        receipt = IUSUMMarket(market).removeLiquidity(
-            recipient,
-            feeRate,
-            abi.encode(
-                RemoveLiquidityCallbackData({provider: msg.sender, lpTokenAmount: lpTokenAmount})
+    ) public override returns (LpReceipt memory receipt) {
+        bytes memory result = _call(
+            market,
+            abi.encodeWithSelector(
+                IUSUMMarket(market).removeLiquidity.selector,
+                recipient,
+                feeRate,
+                abi.encode(
+                    RemoveLiquidityCallbackData({
+                        provider: msg.sender,
+                        lpTokenAmount: lpTokenAmount
+                    })
+                )
             )
         );
+
+        receipt = abi.decode(result, (LpReceipt));
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
-    function withdrawLiquidity(address market, uint256 receiptId) external override {
+    function withdrawLiquidity(address market, uint256 receiptId) public override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
-        IUSUMMarket(market).withdrawLiquidity(
-            receiptId,
-            abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
+        _call(
+            market,
+            abi.encodeWithSelector(
+                IUSUMMarket(market).withdrawLiquidity.selector,
+                receiptId,
+                abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
+            )
         );
     }
 
@@ -185,5 +210,109 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     function _getAccount(address owner) internal view returns (Account) {
         return Account(accountFactory.getAccount(owner));
+    }
+
+    function getLpReceiptIds(address market) external view override returns (uint256[] memory) {
+        return receiptIds[market][msg.sender].values();
+    }
+
+    function addLiquidityBatch(
+        address market,
+        int16[] calldata feeRates,
+        uint256[] calldata amounts,
+        address[] calldata recipients
+    ) external override returns (LpReceipt[] memory lpReceipts) {
+        require(
+            feeRates.length == amounts.length && feeRates.length == recipients.length,
+            "TradeRouter: invalid arguments"
+        );
+        lpReceipts = new LpReceipt[](feeRates.length);
+        for (uint i = 0; i < feeRates.length; i++) {
+            lpReceipts[i] = addLiquidity(market, feeRates[i], amounts[i], recipients[i]);
+        }
+    }
+
+    function claimLiquidityBatch(address market, uint256[] calldata _receiptIds) external override {
+        for (uint i = 0; i < _receiptIds.length; i++) {
+            claimLiquidity(market, _receiptIds[i]);
+        }
+    }
+
+    function removeLiquidityBatch(
+        address market,
+        int16[] calldata feeRates,
+        uint256[] calldata lpTokenAmounts,
+        address[] calldata recipients
+    ) external override returns (LpReceipt[] memory lpReceipts) {
+        require(
+            feeRates.length == lpTokenAmounts.length && feeRates.length == recipients.length,
+            "TradeRouter: invalid arguments"
+        );
+        lpReceipts = new LpReceipt[](feeRates.length);
+        for (uint i = 0; i < feeRates.length; i++) {
+            lpReceipts[i] = removeLiquidity(market, feeRates[i], lpTokenAmounts[i], recipients[i]);
+        }
+    }
+
+    function withdrawLiquidityBatch(
+        address market,
+        uint256[] calldata _receiptIds
+    ) external override {
+        for (uint i = 0; i < _receiptIds.length; i++) {
+            withdrawLiquidity(market, _receiptIds[i]);
+        }
+    }
+
+    function _call(address target, bytes memory data) internal returns (bytes memory) {
+        (bool success, bytes memory result) = target.call(data);
+        if (!success) {
+            assembly {
+                revert(add(result, 32), mload(result))
+            }
+        }
+        return result;
+    }
+
+    function calculateLpTokenValueBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata lpTokenAmounts
+    ) external view override returns (uint256[] memory results) {
+        require(tradingFeeRates.length == lpTokenAmounts.length, "TradeRouter: invalid arguments");
+        results = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            results[i] = IUSUMMarket(market).calculateLpTokenValue(
+                tradingFeeRates[i],
+                lpTokenAmounts[i]
+            );
+        }
+    }
+
+    function calculateLpTokenMintingBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata amounts
+    ) external view override returns (uint256[] memory results) {
+        require(tradingFeeRates.length == amounts.length, "TradeRouter: invalid arguments");
+        results = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            results[i] = IUSUMMarket(market).calculateLpTokenMinting(
+                tradingFeeRates[i],
+                amounts[i]
+            );
+        }
+    }
+
+    function totalSupplies(
+        address market,
+        int16[] calldata tradingFeeRates
+    ) external view override returns (uint256[] memory supplies) {
+        supplies = new uint256[](tradingFeeRates.length);
+
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            supplies[i] = IUSUMLpToken(IUSUMMarket(market).lpToken()).totalSupply(
+                LpTokenLib.encodeId(tradingFeeRates[0])
+            );
+        }
     }
 }
