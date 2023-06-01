@@ -29,13 +29,6 @@ library LpSlotClosedPositionLib {
     using AccruedInterestLib for AccruedInterest;
     using LpSlotClosingPositionLib for LpSlotClosingPosition;
 
-    function settleAccruedInterest(
-        LpSlotClosedPosition storage self,
-        LpContext memory ctx
-    ) internal {
-        self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
-    }
-
     function settleClosingPosition(
         LpSlotClosedPosition storage self,
         LpContext memory ctx
@@ -52,6 +45,9 @@ library LpSlotClosedPositionLib {
             totalMakerMargin: self._closing.totalMakerMargin,
             totalTakerMargin: self._closing.totalTakerMargin
         });
+
+        // accumulate interest before update `_totalMakerMargin`
+        self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
 
         self._totalMakerMargin += waitingPosition.totalMakerMargin;
         self._waitingVersions.add(closeVersion);
@@ -82,6 +78,9 @@ library LpSlotClosedPositionLib {
             self._closing.onClaimPosition(ctx, param);
         } else {
             bool exhausted = _onClaimPosition(self._waitingPositions[closeVersion], ctx, param);
+
+            // accumulate interest before update `_totalMakerMargin`
+            self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
 
             self._totalMakerMargin -= param.makerMargin;
             self._accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
