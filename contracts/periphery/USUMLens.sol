@@ -52,7 +52,7 @@ contract USUMLens {
             results[i] = EntryPriceStruct(positionIds[i], oracleVersions[i].price);
         }
     }
-    
+
     function CLBValues(
         IUSUMMarket market,
         int16[] calldata tradingFeeRates
@@ -73,7 +73,6 @@ contract USUMLens {
             );
         }
     }
-
 
     function slotValue(
         IUSUMMarket market,
@@ -106,11 +105,39 @@ contract USUMLens {
     function lpReceipts(
         IUSUMMarket market,
         uint256[] calldata receiptIds
-    ) external view returns (LpReceipt[] memory result) {
+    ) public view returns (LpReceipt[] memory result) {
         result = new LpReceipt[](receiptIds.length);
         for (uint i = 0; i < receiptIds.length; i++) {
             result[i] = market.getLpReceipt(receiptIds[i]);
         }
     }
 
+    struct RemoveLiquidityInfo {
+        uint256 receiptId;
+        int16 tradingFeeRate;
+        uint256 lpTokenAmount;
+        uint256 burningAmount;
+        uint256 tokenAmount;
+    }
+
+    // LpReceipt 에 대해서 settlement token 을 claim을 할 수 있는 진행정도를 구하기 위한 값..
+    function removableLiquidity(
+        IUSUMMarket market,
+        uint256[] calldata receiptIds
+    ) external view returns (RemoveLiquidityInfo[] memory results) {
+        LpReceipt[] memory reciepts = lpReceipts(market, receiptIds);
+        results = new RemoveLiquidityInfo[](receiptIds.length);
+        for (uint i = 0; i < reciepts.length; i++) {
+            (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount) = market
+                .getClaimBurning(reciepts[i]);
+        
+            results[i] = RemoveLiquidityInfo(
+                reciepts[i].id,
+                reciepts[i].tradingFeeRate,
+                lpTokenAmount,
+                burningAmount,
+                tokenAmount
+            );
+        }
+    }
 }

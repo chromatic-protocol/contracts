@@ -10,6 +10,7 @@ import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.so
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import 'hardhat/console.sol';
 
 /**
  * @title LiquidityBin
@@ -179,6 +180,7 @@ library LiquidityBinLib {
      */
     function value(LiquidityBin storage self, LpContext memory ctx) internal view returns (uint256) {
         int256 unrealizedPnl = self._position.unrealizedPnl(ctx);
+        
         uint256 absPnl = unrealizedPnl.abs();
 
         uint256 _liquidity = self.liquidity();
@@ -303,5 +305,12 @@ library LiquidityBinLib {
                 self.value(ctx),
                 ctx.clbToken.totalSupply(self.clbTokenId)
             );
+    }
+
+    function getClaimBurning(
+        LpSlot storage self,
+        uint256 oracleVersion
+    ) internal view returns (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        return self._liquidity.getClaimBurning(oracleVersion);
     }
 }

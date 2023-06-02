@@ -7,6 +7,7 @@ import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/I
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic/core/libraries/LpReceipt.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
+import 'hardhat/console.sol';
 
 abstract contract Liquidity is MarketBase, IERC1155Receiver {
     using Math for uint256;
@@ -113,7 +114,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         receipt.amount = clbTokenAmount;
 
         lpReceipts[receipt.id] = receipt;
-
+        console.log('emit remove liquidity');
         emit RemoveLiquidity(recipient, receipt);
         return receipt;
     }
@@ -245,5 +246,11 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
         receipt = lpReceipts[receiptId];
         if (receipt.id == 0) revert NotExistLpReceipt();
+    }
+
+    function getClaimBurning(
+        LpReceipt memory receipt
+    ) external view returns (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        return lpSlotSet.getClaimBurning(receipt.tradingFeeRate, receipt.oracleVersion);
     }
 }

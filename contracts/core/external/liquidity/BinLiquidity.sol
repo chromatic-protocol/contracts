@@ -7,6 +7,7 @@ import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import "hardhat/console.sol";
 
 /**
  * @title BinLiquidity
@@ -375,6 +376,7 @@ library BinLiquidityLib {
                 }
 
                 _cb.burningAmount += _burningAmount;
+                console.log("_settleBurning", _cb.burningAmount);
                 _cb.tokenAmount += _pendingWithdrawal;
 
                 burningAmount += _burningAmount;
@@ -384,5 +386,15 @@ library BinLiquidityLib {
         }
 
         self.total -= pendingWithdrawal;
+    }
+
+    function getClaimBurning(
+        BinLiquidity storage self,
+        uint256 oracleVersion
+    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
+        clbTokenAmount = _cb.clbTokenAmount;
+        burningAmount = _cb.burningAmount;
+        tokenAmount = _cb.tokenAmount;
     }
 }

@@ -825,10 +825,24 @@ library LiquidityPoolLib {
         LpSlotSet storage self,
         int16[] calldata _tradingFeeRates,
         LpContext memory ctx
-    ) internal view returns (uint256[] memory values) {
+    ) external view returns (uint256[] memory values) {
         values = new uint256[](_tradingFeeRates.length);
         for (uint i = 0; i < _tradingFeeRates.length; i++) {
             values[i] = targetSlot(self, _tradingFeeRates[i]).value(ctx);
         }
+    }
+
+    function getClaimBurning(
+        LpSlotSet storage self,
+        int16 tradingFeeRate,
+        uint256 oracleVersion
+    )
+        external
+        view
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount)
+    {
+        LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        return slot.getClaimBurning(oracleVersion);
     }
 }

@@ -174,6 +174,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function removeLiquidity(clbTokenAmount: BigNumber, feeRate: number) {
+    await (await testData.clbToken.connect(tester).setApprovalForAll(chromaticRouter.address, true)).wait()
     return chromaticRouter
       .connect(tester)
       .removeLiquidity(market.address, feeRate, clbTokenAmount, tester.address)
@@ -202,6 +203,10 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     return response
   }
 
+  async function settle(){
+    return (await market.settle()).wait()
+  }
+
   return {
     updatePrice,
     getLpReceiptIds,
@@ -217,6 +222,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     removeLiquidity,
     removeLiquidityBatch,
     withdrawLiquidity,
-    withdrawLiquidityBatch
+    withdrawLiquidityBatch,
+    settle
   }
 }

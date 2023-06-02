@@ -11,6 +11,7 @@ import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic/core
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic/core/external/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic/core/libraries/InterestRate.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import 'hardhat/console.sol';
 
 contract ChromaticMarketFactory is IChromaticMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
@@ -285,6 +286,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
     ) external view override returns (uint256) {
+        console.log('[MarketFactory cal] amount / from / to ');
+        console.log(amount, from, to );
         return _settlementTokenRegistry.calculateInterest(token, amount, from, to);
     }
 

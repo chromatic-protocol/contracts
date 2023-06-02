@@ -2,6 +2,7 @@ import { ethers } from 'hardhat'
 import { prepareMarketTest, helpers } from './testHelper'
 import { BigNumber } from 'ethers'
 import { expect } from 'chai'
+import { LpReceiptStructOutput } from '../../../typechain-types/contracts/core/USUMMarket'
 describe('lens', async () => {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
   const feeRates = [100, 200, 300]
@@ -83,7 +84,7 @@ describe('lens', async () => {
   it('get slot liquidity information', async () => {
     const { lens, market } = testData
     const { openPosition } = helpers(testData)
-    
+
     await openPosition({
       qty: 300 * 10 ** 4,
       leverage: 100,
@@ -101,17 +102,79 @@ describe('lens', async () => {
 
     // total makerMargin : 250
     const tradingFees = [
-      ethers.utils.parseEther('1'),  // 1% * 100
-      ethers.utils.parseEther('2'),  // 2% * 100
+      ethers.utils.parseEther('1'), // 1% * 100
+      ethers.utils.parseEther('2'), // 2% * 100
       ethers.utils.parseEther('1.5') // 3% * 50
     ]
 
     const exepectedFreeLiquidities = [0, 0, 50]
 
-    liquidityInfo.forEach(({ freeVolume ,liquidity}, i) => {
-      const expectedFreeLiquidity = ethers.utils.parseEther(exepectedFreeLiquidities[i].toString()).add(tradingFees[i])
+    liquidityInfo.forEach(({ freeVolume, liquidity }, i) => {
+      const expectedFreeLiquidity = ethers.utils
+        .parseEther(exepectedFreeLiquidities[i].toString())
+        .add(tradingFees[i])
       expect(freeVolume).to.equal(expectedFreeLiquidity)
-      expect(liquidity).to.equal(amounts[i].add(tradingFees[i]));
+      expect(liquidity).to.equal(amounts[i].add(tradingFees[i]))
     })
   })
+
+  it('removable liquidity info ', async () => {
+    const { lens, market, lpToken,tester,usumRouter } = testData
+    const { openPosition, removeLiquidity, updatePrice,awaitTx,settle,getLpReceiptIds } = helpers(testData)
+    await updatePrice(1000)
+    // check user's CLB tokens
+    
+    // consume all liquidity
+    await openPosition({
+      qty: 300 * 10 ** 4,
+      leverage: 100,
+      takerMargin: ethers.utils.parseEther('300'),
+      makerMargin: ethers.utils.parseEther('300'),
+      maxAllowFeeRate: 3
+    })
+    console.log('slot values', await lens.slotValue(market.address, feeRates));
+    const receipts: LpReceiptStructOutput[] = []
+    market.on(market.filters.RemoveLiquidity(), (_, receipt) => {
+      console.log('receive receipt event', receipt)
+      receipts.push(receipt)
+    })
+    // Retrieve some liqudity
+    console.log('remove liquidity from 100')
+    await awaitTx(removeLiquidity(ethers.utils.parseEther('50'), 100))
+    
+    // next oracle round
+    await updatePrice(1000)
+    await settle();
+    // await awaitTx(removeLiquidity(ethers.utils.parseEther('50'), 100))
+    // await updatePrice(1000)
+    // await settle();
+
+    // await awaitTx(removeLiquidity(ethers.utils.parseEther('50'), 100))
+    // await updatePrice(1000)\=
+
+    await sleep(15000)
+    let removableLiquidity = await lens.removableLiquidity(
+      market.address,
+      receipts.map((r) => r.id)
+    )
+    receipts.splice(0,receipts.length);
+
+    console.log('removableLiquidity feeRate 100', removableLiquidity)
+
+    // console.log('remove liquidity from 200')
+    // await awaitTx(removeLiquidity(ethers.utils.parseEther('50'), 200))
+    // await awaitTx(removeLiquidity(ethers.utils.parseEther('50'), 200))
+    // await updatePrice(1000)
+    // await sleep(5000)
+    // removableLiquidity = await lens.removableLiquidity(
+    //   market.address,
+    //   receipts.map((r) => r.id)
+    // )
+    // console.log('removableLiquidity feeRate 200', removableLiquidity)
+    
+  })
 })
+
+async function sleep(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time))
+}

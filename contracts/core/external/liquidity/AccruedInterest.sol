@@ -9,7 +9,7 @@ import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
  */
 struct AccruedInterest {
     /// @dev The timestamp at which the interest was last accumulated.
-    uint256 accumulatedAt;
+    uint256 accumulatedAt; // required init value ? 
     /// @dev The total amount of interest accumulated.
     uint256 accumulatedAmount;
 }

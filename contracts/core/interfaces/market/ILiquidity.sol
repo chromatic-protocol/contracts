@@ -66,7 +66,9 @@ interface ILiquidity {
         uint256 clbTokenAmount
     ) external view returns (uint256);
 
-    function getLpReceipt(
-        uint256 receiptId
-    ) external view returns (LpReceipt memory);
+    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory);
+
+    function getClaimBurning(
+        LpReceipt memory reciept
+    ) external view returns (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount);
 }
