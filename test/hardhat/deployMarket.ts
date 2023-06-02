@@ -7,6 +7,7 @@ import { Token, AccountFactory, ChromaticRouter } from '../../typechain-types'
 import { BigNumber } from 'ethers'
 import { parseUnits } from 'ethers/lib/utils'
 import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
+import { USUMLens } from '@usum/typechain-types'
 
 export async function deploy() {
   return hardhatErrorPrettyPrint(async () => {
@@ -50,6 +51,7 @@ export async function deploy() {
     })
 
     await (await chromaticRouter.initialize(accountFactory.address, marketFactory.address)).wait()
+    const lens = await deployContract<USUMLens>('USUMLens')
 
     return {
       marketFactory,
@@ -60,6 +62,7 @@ export async function deploy() {
       chromaticRouter,
       accountFactory,
       settlementToken,
+      lens,
       gelato: {
         gelato,
         taskTreasury,

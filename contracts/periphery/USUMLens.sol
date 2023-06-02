@@ -4,12 +4,17 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
+import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {BPS} from "@usum/core/libraries/Constants.sol";
+import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
+import "hardhat/console.sol";
 
 contract USUMLens {
     //
+    using Math for uint256;
 
     struct EntryPriceStruct {
         uint256 positionId;
@@ -17,11 +22,11 @@ contract USUMLens {
     }
     struct CLBValue {
         int16 tradingFeeRate;
-        uint256 value;
+        UFixed18 value; // 18 decimals
     }
     struct SlotValue {
         int16 tradingFeeRate;
-        uint256 value;
+        UFixed18 value; // 18 decimals
     }
 
     struct SlotLiquidity {
@@ -47,8 +52,7 @@ contract USUMLens {
             results[i] = EntryPriceStruct(positionIds[i], oracleVersions[i].price);
         }
     }
-
-    // lpTokenValue(slotIds? ) : { slotId, value:number }
+    
     function CLBValues(
         IUSUMMarket market,
         int16[] calldata tradingFeeRates
@@ -60,14 +64,16 @@ contract USUMLens {
             uint256 totalSupply = IUSUMLpToken(market.lpToken()).totalSupply(
                 LpTokenLib.encodeId(tradingFeeRates[i])
             );
+
             results[i] = CLBValue(
                 tradingFeeRates[i],
-                totalSupply == 0 ? 0 : _slotValue[i].value / totalSupply
+                totalSupply == 0
+                    ? UFixed18.wrap(0)
+                    : _slotValue[i].value.muldiv(10 ** 18, totalSupply)
             );
         }
     }
 
-    // lpSlotVolume(slotIds?) : { slotId, volume:number }
 
     function slotValue(
         IUSUMMarket market,
@@ -76,7 +82,7 @@ contract USUMLens {
         uint256[] memory values = market.getSlotValues(tradingFeeRates);
         results = new SlotValue[](values.length);
         for (uint i = 0; i < values.length; i++) {
-            results[i] = SlotValue(tradingFeeRates[i], values[i]);
+            results[i] = SlotValue(tradingFeeRates[i], UFixed18.wrap(values[i]));
         }
     }
 
@@ -85,8 +91,9 @@ contract USUMLens {
      */
     function slotLiquidities(
         IUSUMMarket market,
-        int16[] calldata tradingFeeRates
+        int16[] calldata tradingFeeRates //TODO use LpTokenId instead of tradingFeeRate
     ) external view returns (SlotLiquidity[] memory results) {
+        // decode tradingFeeRate
         results = new SlotLiquidity[](tradingFeeRates.length);
         uint256[] memory liquidities = market.getSlotLiquidities(tradingFeeRates);
         uint256[] memory freeLiquidities = market.getSlotFreeLiquidities(tradingFeeRates);
@@ -96,5 +103,14 @@ contract USUMLens {
         }
     }
 
-    //TODO [Trade] removeLiquidity 의 진행률?
+    function lpReceipts(
+        IUSUMMarket market,
+        uint256[] calldata receiptIds
+    ) external view returns (LpReceipt[] memory result) {
+        result = new LpReceipt[](receiptIds.length);
+        for (uint i = 0; i < receiptIds.length; i++) {
+            result[i] = market.getLpReceipt(receiptIds[i]);
+        }
+    }
+
 }

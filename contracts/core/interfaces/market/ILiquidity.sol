@@ -65,4 +65,8 @@ interface ILiquidity {
         int16 tradingFeeRate,
         uint256 clbTokenAmount
     ) external view returns (uint256);
+
+    function getLpReceipt(
+        uint256 receiptId
+    ) external view returns (LpReceipt memory);
 }

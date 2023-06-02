@@ -241,4 +241,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
             interfaceID == this.supportsInterface.selector || // ERC165
             interfaceID == this.onERC1155Received.selector ^ this.onERC1155BatchReceived.selector; // IERC1155Receiver
     }
+
+    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
+        receipt = lpReceipts[receiptId];
+        if (receipt.id == 0) revert NotExistLpReceipt();
+    }
 }

@@ -22,7 +22,8 @@ export const prepareMarketTest = async () => {
     chromaticRouter,
     accountFactory,
     settlementToken,
-    gelato
+    gelato,
+    lens
   } = await loadFixture(marketDeploy)
   const [owner, tester, trader] = await ethers.getSigners()
   console.log('owner', owner.address)
@@ -76,7 +77,8 @@ export const prepareMarketTest = async () => {
     traderAccount,
     traderRouter,
     gelato,
-    clbToken
+    clbToken,
+    lens
     // addLiquidity,
     // updatePrice,
   }
@@ -120,7 +122,12 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
-  async function closePosition({}) {}
+  async function closePosition(positionId: BigNumber) {
+    const closePositionTx = await traderRouter.closePosition(market.address, positionId)
+    return {
+      receipt: await closePositionTx.wait()
+    }
+  }
 
   async function getLpReceiptIds() {
     return chromaticRouter.connect(tester).getLpReceiptIds(market.address)
@@ -144,6 +151,10 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
+  async function claimPosition(positionId : BigNumber){
+    const claimTx = await traderRouter.claimPosition(market.address, positionId)
+    return claimTx.wait()
+  }
 
   async function addLiquidityBatch(amounts: BigNumber[], feeRates: number[]) {
     return chromaticRouter.connect(tester).addLiquidityBatch(
@@ -200,11 +211,12 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     awaitTx,
     openPosition,
     closePosition,
+    claimPosition,
     claimLiquidity,
     claimLiquidityBatch,
     removeLiquidity,
     removeLiquidityBatch,
     withdrawLiquidity,
-    withdrawLiquidityBatch,
+    withdrawLiquidityBatch
   }
 }
