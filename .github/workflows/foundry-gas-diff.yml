@@ -20,8 +20,9 @@ jobs:
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
         with:
-          scope: "@chromatic-protocol"
-          node-auth-token: "${{ secrets.GITHUB_TOKEN }}"
+          scope: '@chromatic-protocol'
+          ignore-scripts: false
+          node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
 
       # Add any step generating a gas report to a temporary file named gasreport.ansi. For example:
       - name: Run tests

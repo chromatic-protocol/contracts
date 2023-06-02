@@ -21,6 +21,7 @@ jobs:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
         with:
           scope: "@chromatic-protocol"
+          ignore-scripts: false
           node-auth-token: "${{ secrets.GITHUB_TOKEN }}"
 
       # step generating a coverage report

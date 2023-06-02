@@ -35,12 +35,13 @@ jobs:
       contents: read
       packages: write
     env:
-      NODE_AUTH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
         with:
-          scope: "@chromatic-protocol"
-          node-auth-token: "${{ secrets.GITHUB_TOKEN }}"
+          scope: '@chromatic-protocol'
+          ignore-scripts: false
+          node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
 
       - name: build SDK
         env:
