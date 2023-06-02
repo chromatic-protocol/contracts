@@ -3,26 +3,34 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {USUMMarket} from "@usum/core/USUMMarket.sol";
 
+/**
+ * @title MarketDeployer
+ * @notice Storage struct for deploying a USUMMarket contract
+ */
 struct MarketDeployer {
     Parameters parameters;
 }
 
+/**
+ * @title Parameters
+ * @notice Struct for storing deployment parameters
+ */
 struct Parameters {
     address oracleProvider;
     address settlementToken;
 }
 
 /**
- * @title MarketDeployer
- * @notice This library provides a function to deploy a USUMMarket contract.
+ * @title MarketDeployerLib
+ * @notice Library for deploying a USUMMarket contract
  */
 library MarketDeployerLib {
     /**
-     * @notice Deploys a USUMMarket contract.
-     * @param self The MarketDeployer storage.
-     * @param oracleProvider The address of the oracle provider.
-     * @param settlementToken The address of the settlement token.
-     * @return market The address of the deployed USUMMarket contract.
+     * @notice Deploys a USUMMarket contract
+     * @param self The MarketDeployer storage
+     * @param oracleProvider The address of the oracle provider
+     * @param settlementToken The address of the settlement token
+     * @return market The address of the deployed USUMMarket contract
      */
     function deploy(
         MarketDeployer storage self,

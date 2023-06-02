@@ -4,12 +4,17 @@ pragma solidity >=0.8.0 <0.9.0;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
+/**
+ * @title OracleProviderRegistry
+ * @dev A registry for managing oracle providers.
+ */
 struct OracleProviderRegistry {
+    /// @dev Set of registered oracle providers
     EnumerableSet.AddressSet _oracleProviders;
 }
 
 /**
- * @title OracleProviderRegistry
+ * @title OracleProviderRegistryLib
  * @notice Library for managing a registry of oracle providers.
  */
 library OracleProviderRegistryLib {

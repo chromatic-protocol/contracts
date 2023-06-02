@@ -11,10 +11,18 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
+/**
+ * @title LpSlot
+ * @notice Structure representing a liquidity slot
+ */
 struct LpSlot {
+    /// @dev The ID of the LP token
     uint256 lpTokenId;
+    /// @dev The liquidity data for the slot
     LpSlotLiquidity _liquidity;
+    /// @dev The position data for the slot
     LpSlotPosition _position;
+    /// @dev The closed position data for the slot
     LpSlotClosedPosition _closedPosition;
 }
 
@@ -31,7 +39,8 @@ library LpSlotLib {
     using LpSlotClosedPositionLib for LpSlotClosedPosition;
 
     /**
-     * @notice Modifier to settle accrued interest and pending positions before executing a function.
+     * @notice Modifier to settle the pending positions, closing positions,
+     *         and pending liquidity of the slot before executing a function.
      * @param self The LpSlot storage.
      * @param ctx The LpContext data struct.
      */
@@ -40,6 +49,11 @@ library LpSlotLib {
         _;
     }
 
+    /**
+     * @notice Settles the pending positions, closing positions, and pending liquidity of the slot.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext data struct.
+     */
     function settle(LpSlot storage self, LpContext memory ctx) internal {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settlePendingPosition(ctx);
@@ -51,10 +65,22 @@ library LpSlotLib {
         );
     }
 
+    /**
+     * @notice Initializes the liquidity slot with the given trading fee rate
+     * @param self The LpSlot storage
+     * @param tradingFeeRate The trading fee rate to set
+     */
     function initialize(LpSlot storage self, int16 tradingFeeRate) internal {
         self.lpTokenId = LpTokenLib.encodeId(tradingFeeRate);
     }
 
+    /**
+     * @notice Opens a new position in the liquidity slot
+     * @param self The LpSlot storage
+     * @param ctx The LpContext data struct
+     * @param param The position parameters
+     * @param tradingFee The trading fee amount
+     */
     function openPosition(
         LpSlot storage self,
         LpContext memory ctx,
@@ -67,6 +93,12 @@ library LpSlotLib {
         self._liquidity.total += tradingFee;
     }
 
+    /**
+     * @notice Closes a position in the liquidity slot
+     * @param self The LpSlot storage
+     * @param ctx The LpContext data struct
+     * @param param The position parameters
+     */
     function closePosition(
         LpSlot storage self,
         LpContext memory ctx,
@@ -109,14 +141,29 @@ library LpSlotLib {
         }
     }
 
+    /**
+     * @notice Retrieves the total liquidity in the slot
+     * @param self The LpSlot storage
+     * @return uint256 The total liquidity in the slot
+     */
     function liquidity(LpSlot storage self) internal view returns (uint256) {
         return self._liquidity.total;
     }
 
+    /**
+     * @notice Retrieves the free liquidity in the slot (liquidity minus total maker margin)
+     * @param self The LpSlot storage
+     * @return uint256 The free liquidity in the slot
+     */
     function freeLiquidity(LpSlot storage self) internal view returns (uint256) {
         return self._liquidity.total - self._position.totalMakerMargin();
     }
 
+    /**
+     * @notice Applies earnings to the liquidity slot
+     * @param self The LpSlot storage
+     * @param earning The earning amount to apply
+     */
     function applyEarning(LpSlot storage self, uint256 earning) internal {
         self._liquidity.total += earning;
     }
@@ -139,6 +186,14 @@ library LpSlotLib {
         return _value + ctx.vault.getPendingSlotShare(ctx.market, _liquidity);
     }
 
+    /**
+     * @notice Accepts an add liquidity request.
+     * @dev This function adds liquidity to the slot by calling the `onAddLiquidity` function
+     *      of the liquidity component.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param amount The amount of liquidity to add.
+     */
     function acceptAddLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
@@ -147,6 +202,18 @@ library LpSlotLib {
         self._liquidity.onAddLiquidity(amount, ctx.currentOracleVersion().version);
     }
 
+    /**
+     * @notice Accepts a claim liquidity request.
+     * @dev This function claims liquidity from the slot by calling the `onClaimLiquidity` function
+     *      of the liquidity component.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param amount The amount of liquidity to claim.
+     *        (should be the same as the one used in acceptAddLiquidity)
+     * @param oracleVersion The oracle version used for the claim.
+     *        (should be the oracle version when call acceptAddLiquidity)
+     * @return The amount of liquidity (LP tokens) received as a result of the liquidity claim.
+     */
     function acceptClaimLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
@@ -156,6 +223,14 @@ library LpSlotLib {
         return self._liquidity.onClaimLiquidity(amount, oracleVersion);
     }
 
+    /**
+     * @notice Accepts a remove liquidity request.
+     * @dev This function removes liquidity from the slot by calling the `onRemoveLiquidity` function
+     *      of the liquidity component.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param lpTokenAmount The amount of LP tokens to remove.
+     */
     function acceptRemoveLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
@@ -164,6 +239,19 @@ library LpSlotLib {
         self._liquidity.onRemoveLiquidity(lpTokenAmount, ctx.currentOracleVersion().version);
     }
 
+    /**
+     * @notice Accepts a withdraw liquidity request.
+     * @dev This function withdraws liquidity from the slot by calling the `onWithdrawLiquidity` function
+     *      of the liquidity component.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param lpTokenAmount The amount of LP tokens to withdraw.
+     *        (should be the same as the one used in acceptRemoveLiquidity)
+     * @param oracleVersion The oracle version used for the withdrawal.
+     *        (should be the oracle version when call acceptRemoveLiquidity)
+     * @return amount The amount of liquidity withdrawn
+     * @return burnedLpTokenAmount The amount of LP tokens burned during the withdrawal.
+     */
     function acceptWithdrawLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
@@ -173,6 +261,15 @@ library LpSlotLib {
         return self._liquidity.onWithdrawLiquidity(lpTokenAmount, oracleVersion);
     }
 
+    /**
+     * @notice Calculates the amount of LP tokens to be minted when adding liquidity.
+     * @dev This function calculates the number of LP tokens to be minted
+     *      based on the specified amount of liquidity, the slot's current value, and the total supply of LP tokens.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param amount The amount of liquidity to be added.
+     * @return The amount of LP tokens to be minted.
+     */
     function calculateLpTokenMinting(
         LpSlot storage self,
         LpContext memory ctx,
@@ -186,6 +283,15 @@ library LpSlotLib {
             );
     }
 
+    /**
+     * @notice Calculates the value of the specified amount of LP tokens.
+     * @dev This function calculates the value of the specified amount of LP tokens
+     *      based on the slot's current value and the total supply of LP tokens.
+     * @param self The LpSlot storage.
+     * @param ctx The LpContext memory.
+     * @param lpTokenAmount The amount of LP tokens.
+     * @return The value of the specified amount of LP tokens.
+     */
     function calculateLpTokenValue(
         LpSlot storage self,
         LpContext memory ctx,

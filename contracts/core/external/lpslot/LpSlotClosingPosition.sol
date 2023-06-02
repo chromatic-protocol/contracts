@@ -7,7 +7,10 @@ import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
-/// @dev LpSlotClosingPosition type
+/**
+ * @title LpSlotClosingPosition
+ * @dev Represents the closing position within an LpSlot.
+ */
 struct LpSlotClosingPosition {
     /// @dev The oracle version when the position was closed.
     uint256 closeVersion;
@@ -23,6 +26,10 @@ struct LpSlotClosingPosition {
     AccruedInterest accruedInterest;
 }
 
+/**
+ * @title LpSlotClosingPositionLib
+ * @notice A library that provides functions to manage the closing position within an LpSlot.
+ */
 library LpSlotClosingPositionLib {
     using AccruedInterestLib for AccruedInterest;
 

@@ -8,8 +8,10 @@ import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
-import "forge-std/console.sol";
-
+/**
+ * @title LpSlotLiquidity
+ * @notice Represents the liquidity information within an LpSlot.
+ */
 struct LpSlotLiquidity {
     uint256 total;
     _PendingLiquidity _pending;
@@ -18,23 +20,41 @@ struct LpSlotLiquidity {
     DoubleEndedQueue.Bytes32Deque _burningVersions;
 }
 
+/**
+ * @title _PendingLiquidity
+ * @notice Represents the pending liquidity details within LpSlotLiquidity.
+ */
 struct _PendingLiquidity {
     uint256 oracleVersion;
     uint256 tokenAmount;
     uint256 lpTokenAmount;
 }
 
+/**
+ * @title _ClaimMinting
+ * @notice Represents the accumulated values of minting claims
+ *         for a specific oracle version within LpSlotLiquidity.
+ */
 struct _ClaimMinting {
     uint256 tokenAmount;
     uint256 mintingAmount;
 }
 
+/**
+ * @title _ClaimBurning
+ * @notice Represents the accumulated values of burning claims
+ *         for a specific oracle version within LpSlotLiquidity.
+ */
 struct _ClaimBurning {
     uint256 lpTokenAmount;
     uint256 burningAmount;
     uint256 tokenAmount;
 }
 
+/**
+ * @title LpSlotLiquidityLib
+ * @notice A library that provides functions to manage the liquidity within an LpSlot.
+ */
 library LpSlotLiquidityLib {
     using Math for uint256;
     using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
@@ -42,6 +62,37 @@ library LpSlotLiquidityLib {
     /// @dev Minimum amount constant to prevent division by zero.
     uint256 private constant MIN_AMOUNT = 1000;
 
+    /**
+     * @notice Settles the pending liquidity within the LpSlotLiquidity.
+     * @dev If the pending oracle version is not set or is greater than or equal to the current oracle version, no action is taken.
+     *      Otherwise, the pending liquidity and burning LP tokens are settled by following steps:
+     *          1. Settles pending liquidity
+     *              a. If there is a pending deposit,
+     *                 it calculates the minting amount of LP tokens
+     *                 based on the pending deposit, slot value, and LP token total supply.
+     *                 It updates the total liquidity and adds the pending deposit to the claim mintings.
+     *              b. If there is a pending LP token burning,
+     *                 it adds the oracle version to the burning versions list
+     *                 and initializes the claim burning details.
+     *          2. Settles bunding LP tokens
+     *              a. It trims all completed burning versions from the burning versions list.
+     *              b. For each burning version in the list,
+     *                 it calculates the pending LP token amount and the pending withdrawal amount
+     *                 based on the slot value and LP token total supply.
+     *                 - If there is sufficient free liquidity, it calculates the burning amount of LP tokens.
+     *                 - If there is insufficient free liquidity, it calculates the burning amount
+     *                   based on the available free liquidity and updates the pending withdrawal accordingly.
+     *              c. It updates the burning amount and pending withdrawal,
+     *                 and reduces the free liquidity accordingly.
+     *              d. Finally, it updates the total liquidity by subtracting the pending withdrawal.
+     *      And the LP tokens are minted or burned accordingly.
+     *      The pending deposit and withdrawal amounts are passed to the vault for further processing.
+     * @param self The LpSlotLiquidity storage.
+     * @param ctx The LpContext memory.
+     * @param slotValue The current value of the slot.
+     * @param freeLiquidity The amount of free liquidity available in the slot.
+     * @param lpTokenId The ID of the LP token.
+     */
     function settlePendingLiquidity(
         LpSlotLiquidity storage self,
         LpContext memory ctx,
@@ -88,6 +139,15 @@ library LpSlotLiquidityLib {
         delete self._pending;
     }
 
+    /**
+     * @notice Adds liquidity to the LpSlotLiquidity.
+     * @dev Sets the pending liquidity with the specified amount and oracle version.
+     *      If the amount is less than the minimum amount, it reverts with an error.
+     *      If there is already pending liquidity with a different oracle version, it reverts with an error.
+     * @param self The LpSlotLiquidity storage.
+     * @param amount The amount of tokens to add for liquidity.
+     * @param oracleVersion The oracle version associated with the liquidity.
+     */
     function onAddLiquidity(
         LpSlotLiquidity storage self,
         uint256 amount,
@@ -105,6 +165,17 @@ library LpSlotLiquidityLib {
         self._pending.tokenAmount += amount;
     }
 
+    /**
+     * @notice Claims liquidity from the LpSlotLiquidity by minting LP tokens.
+     * @dev Retrieves the minting details for the specified oracle version
+     *      and calculates the LP token amount to be claimed.
+     *      Updates the claim minting details and returns the LP token amount to be claimed.
+     *      If there are no more tokens remaining for the claim, it is removed from the mapping.
+     * @param self The LpSlotLiquidity storage.
+     * @param amount The amount of tokens to claim.
+     * @param oracleVersion The oracle version associated with the claim.
+     * @return lpTokenAmount The amount of LP tokens to be claimed.
+     */
     function onClaimLiquidity(
         LpSlotLiquidity storage self,
         uint256 amount,
@@ -122,6 +193,14 @@ library LpSlotLiquidityLib {
         }
     }
 
+    /**
+     * @notice Removes liquidity from the LpSlotLiquidity by setting pending LP token amount.
+     * @dev Sets the pending liquidity with the specified LP token amount and oracle version.
+     *      If there is already pending liquidity with a different oracle version, it reverts with an error.
+     * @param self The LpSlotLiquidity storage.
+     * @param lpTokenAmount The amount of LP tokens to remove liquidity.
+     * @param oracleVersion The oracle version associated with the liquidity.
+     */
     function onRemoveLiquidity(
         LpSlotLiquidity storage self,
         uint256 lpTokenAmount,
@@ -137,6 +216,18 @@ library LpSlotLiquidityLib {
         self._pending.lpTokenAmount += lpTokenAmount;
     }
 
+    /**
+     * @notice Withdraws liquidity from the LpSlotLiquidity by burning LP tokens and withdrawing tokens.
+     * @dev Retrieves the burning details for the specified oracle version
+     *      and calculates the LP token amount and token amount to burn and withdraw, respectively.
+     *      Updates the claim burning details and returns the token amount to withdraw and the burned LP token amount.
+     *      If there are no more LP tokens remaining for the claim, it is removed from the mapping.
+     * @param self The LpSlotLiquidity storage.
+     * @param lpTokenAmount The amount of LP tokens to withdraw.
+     * @param oracleVersion The oracle version associated with the claim.
+     * @return amount The amount of tokens to be withdrawn for the claim.
+     * @return burnedLpTokenAmount The amount of LP tokens to be burned for the claim.
+     */
     function onWithdrawLiquidity(
         LpSlotLiquidity storage self,
         uint256 lpTokenAmount,
@@ -156,6 +247,17 @@ library LpSlotLiquidityLib {
         }
     }
 
+    /**
+     * @notice Calculates the amount of LP tokens to be minted
+     *         for a given token amount, slot value, and LP token total supply.
+     * @dev If the LP token total supply is zero, returns the token amount as is.
+     *      Otherwise, calculates the minting amount
+     *      based on the token amount, slot value, and LP token total supply.
+     * @param amount The amount of tokens to be minted.
+     * @param slotValue The current slot value.
+     * @param lpTokenTotalSupply The total supply of LP tokens.
+     * @return The amount of LP tokens to be minted.
+     */
     function calculateLpTokenMinting(
         uint256 amount,
         uint256 slotValue,
@@ -170,6 +272,16 @@ library LpSlotLiquidityLib {
                 );
     }
 
+    /**
+     * @notice Calculates the value of LP tokens
+     *         for a given LP token amount, slot value, and LP token total supply.
+     * @dev If the LP token total supply is zero, returns zero.
+     *      Otherwise, calculates the value based on the LP token amount, slot value, and LP token total supply.
+     * @param lpTokenAmount The amount of LP tokens.
+     * @param slotValue The current slot value.
+     * @param lpTokenTotalSupply The total supply of LP tokens.
+     * @return The value of the LP tokens.
+     */
     function calculateLpTokenValue(
         uint256 lpTokenAmount,
         uint256 slotValue,
@@ -178,6 +290,16 @@ library LpSlotLiquidityLib {
         return lpTokenTotalSupply == 0 ? 0 : lpTokenAmount.mulDiv(slotValue, lpTokenTotalSupply);
     }
 
+    /**
+     * @dev Settles the pending deposit and pending LP token burning.
+     * @param self The LpSlotLiquidity storage.
+     * @param pendingDeposit The amount of pending deposit to settle.
+     * @param pendingLpTokenAmount The amount of pending LP tokens to burn.
+     * @param slotValue The current value of the slot.
+     * @param totalSupply The total supply of LP tokens.
+     * @param oracleVersion The oracle version associated with the pending deposit and LP token burning.
+     * @return mintingAmount The calculated minting amount of LP tokens for the pending deposit.
+     */
     function _settlePending(
         LpSlotLiquidity storage self,
         uint256 pendingDeposit,
@@ -206,6 +328,15 @@ library LpSlotLiquidityLib {
         }
     }
 
+    /**
+     * @dev Settles the pending LP token burning and calculates the burning amount and pending withdrawal.
+     * @param self The LpSlotLiquidity storage.
+     * @param freeLiquidity The amount of free liquidity available for burning.
+     * @param slotValue The current value of the slot.
+     * @param totalSupply The total supply of LP tokens.
+     * @return burningAmount The calculated burning amount of LP tokens.
+     * @return pendingWithdrawal The calculated pending withdrawal amount.
+     */
     function _settleBurning(
         LpSlotLiquidity storage self,
         uint256 freeLiquidity,

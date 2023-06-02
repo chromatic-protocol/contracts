@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -165,6 +165,12 @@ library PositionUtil {
         );
     }
 
+    /**
+     * @notice Calculates the transaction amount based on the leveraged quantity and price
+     * @param leveragedQty The leveraged quantity of the position
+     * @param price The price of the position
+     * @return uint256 The transaction amount
+     */
     function transactionAmount(
         int256 leveragedQty,
         UFixed18 price

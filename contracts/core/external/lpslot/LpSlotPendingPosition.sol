@@ -12,7 +12,10 @@ import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
-/// @dev LpSlotPendingPosition type
+/**
+ * @title LpSlotPendingPosition
+ * @notice Represents a pending position within the LpSlot
+ */
 struct LpSlotPendingPosition {
     /// @dev The oracle version when the position was opened.
     uint256 openVersion;

@@ -3,7 +3,10 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
-/// @dev AccruedInterest type
+/**
+ * @title AccruedInterest
+ * @notice Structure for tracking accumulated interest
+ */
 struct AccruedInterest {
     /// @dev The timestamp at which the interest was last accumulated.
     uint256 accumulatedAt;
@@ -16,6 +19,13 @@ struct AccruedInterest {
  * @notice Tracks the accumulated interest for a given token amount and period of time
  */
 library AccruedInterestLib {
+    /**
+     * @notice Accumulates interest for a given token amount and period of time
+     * @param self The AccruedInterest storage
+     * @param ctx The LpContext instance for interest calculation
+     * @param tokenAmount The amount of tokens to calculate interest for
+     * @param until The timestamp until which interest should be accumulated
+     */
     function accumulate(
         AccruedInterest storage self,
         LpContext memory ctx,
@@ -49,6 +59,14 @@ library AccruedInterestLib {
         }
     }
 
+    /**
+     * @notice Calculates the accumulated interest for a given token amount and period of time
+     * @param self The AccruedInterest storage
+     * @param ctx The LpContext instance for interest calculation
+     * @param tokenAmount The amount of tokens to calculate interest for
+     * @param until The timestamp until which interest should be accumulated
+     * @return The accumulated interest amount
+     */
     function calculateInterest(
         AccruedInterest storage self,
         LpContext memory ctx,

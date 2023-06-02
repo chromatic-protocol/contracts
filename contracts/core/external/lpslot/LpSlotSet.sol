@@ -12,6 +12,10 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
+/**
+ * @title LpSlotSet
+ * @notice Represents a collection of long and short liquidity slots
+ */
 struct LpSlotSet {
     mapping(uint16 => LpSlot) _longSlots;
     mapping(uint16 => LpSlot) _shortSlots;
@@ -59,6 +63,10 @@ library LpSlotSetLib {
         _;
     }
 
+    /**
+     * @notice Initializes the LpSlotSet.
+     * @param self The reference to the LpSlotSet.
+     */
     function initialize(LpSlotSet storage self) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
@@ -68,6 +76,11 @@ library LpSlotSetLib {
         }
     }
 
+    /**
+     * @notice Settles the liquidity slots in the LpSlotSet.
+     * @param self The reference to the LpSlotSet.
+     * @param ctx The LpContext object.
+     */
     function settle(LpSlotSet storage self, LpContext memory ctx) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
@@ -99,6 +112,7 @@ library LpSlotSetLib {
         int224 qty,
         uint256 makerMargin
     ) external view returns (LpSlotMargin[] memory) {
+        // Retrieve the target liquidity slots based on the position quantity
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, qty);
 
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
@@ -141,16 +155,27 @@ library LpSlotSetLib {
         return slotMargins;
     }
 
+    /**
+     * @notice Accepts an open position and opens corresponding liquidity slots.
+     * @dev This function calculates the target liquidity slots based on the position quantity.
+     *      It prepares the slot margins and divides the position parameters accordingly.
+     *      Then, it opens the liquidity slots with the corresponding parameters and trading fees.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param position The Position object representing the open position.
+     */
     function acceptOpenPosition(
         LpSlotSet storage self,
         LpContext memory ctx,
         Position memory position
     ) external {
+        // Retrieve the target liquidity slots based on the position quantity
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
+        // Divide the position parameters to match the slot margins
         _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
             position.leveragedQty(ctx),
             makerMargin,
@@ -176,16 +201,28 @@ library LpSlotSetLib {
         }
     }
 
+    /**
+     * @notice Accepts a close position request and closes the corresponding liquidity slots.
+     * @dev This function calculates the target liquidity slots based on the position quantity.
+     *      It retrieves the maker margin and slot margins from the position.
+     *      Then, it divides the position parameters to match the slot margins.
+     *      Finally, it closes the liquidity slots with the provided parameters.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param position The Position object representing the close position request.
+     */
     function acceptClosePosition(
         LpSlotSet storage self,
         LpContext memory ctx,
         Position memory position
     ) external {
+        // Retrieve the target liquidity slots based on the position quantity
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
 
         uint256 makerMargin = position.makerMargin();
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
+        // Divide the position parameters to match the slot margins
         _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
             position.leveragedQty(ctx),
             makerMargin,
@@ -213,6 +250,19 @@ library LpSlotSetLib {
         }
     }
 
+    /**
+     * @notice Accepts a claim position request and processes the corresponding liquidity slots
+     *         based on the realized position pnl.
+     * @dev This function verifies if the absolute value of the realized position pnl is within the acceptable margin range.
+     *      It retrieves the target liquidity slots based on the position quantity and the slot margins from the position.
+     *      Then, it divides the position parameters to match the slot margins.
+     *      Depending on the value of the realized position pnl, it either claims the position fully or partially.
+     *      The claimed pnl is distributed among the liquidity slots according to their respective margins.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param position The Position object representing the position to claim.
+     * @param realizedPnl The realized position pnl (taker side).
+     */
     function acceptClaimPosition(
         LpSlotSet storage self,
         LpContext memory ctx,
@@ -221,15 +271,18 @@ library LpSlotSetLib {
     ) external {
         uint256 absRealizedPnl = realizedPnl.abs();
         uint256 makerMargin = position.makerMargin();
+        // Ensure that the realized position pnl is within the acceptable margin range
         require(
             !((realizedPnl > 0 && absRealizedPnl > makerMargin) ||
                 (realizedPnl < 0 && absRealizedPnl > position.takerMargin)),
             Errors.EXCEED_MARGIN_RANGE
         );
 
+        // Retrieve the target liquidity slots based on the position quantity
         mapping(uint16 => LpSlot) storage _slots = targetSlots(self, position.qty);
         LpSlotMargin[] memory slotMargins = position.slotMargins();
 
+        // Divide the position parameters to match the slot margins
         _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
             position.leveragedQty(ctx),
             makerMargin,
@@ -307,16 +360,42 @@ library LpSlotSetLib {
         }
     }
 
+    /**
+     * @notice Accepts an add liquidity request
+     *         and processes the liquidity slot corresponding to the given trading fee rate.
+     * @dev This function validates the trading fee rate
+     *      and calls the acceptAddLiquidity function on the target liquidity slot.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @param amount The amount of liquidity to add.
+     */
     function acceptAddLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external _validTradingFeeRate(tradingFeeRate) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Process the add liquidity request on the liquidity slot
         slot.acceptAddLiquidity(ctx, amount);
     }
 
+    /**
+     * @notice Accepts a claim liquidity request
+     *         and processes the liquidity slot corresponding to the given trading fee rate.
+     * @dev This function validates the trading fee rate
+     *      and calls the acceptClaimLiquidity function on the target liquidity slot.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @param amount The amount of liquidity to claim.
+     *        (should be the same as the one used in acceptAddLiquidity)
+     * @param oracleVersion The oracle version used for the claim.
+     *        (should be the oracle version when call acceptAddLiquidity)
+     * @return The amount of liquidity (LP tokens) received as a result of the liquidity claim.
+     */
     function acceptClaimLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
@@ -324,20 +403,49 @@ library LpSlotSetLib {
         uint256 amount,
         uint256 oracleVersion
     ) external _validTradingFeeRate(tradingFeeRate) returns (uint256) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Process the claim liquidity request on the liquidity slot and return the actual claimed amount
         return slot.acceptClaimLiquidity(ctx, amount, oracleVersion);
     }
 
+    /**
+     * @notice Accepts a remove liquidity request
+     *         and processes the liquidity slot corresponding to the given trading fee rate.
+     * @dev This function validates the trading fee rate
+     *      and calls the acceptRemoveLiquidity function on the target liquidity slot.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @param lpTokenAmount The amount of LP tokens to remove.
+     */
     function acceptRemoveLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 lpTokenAmount
     ) external _validTradingFeeRate(tradingFeeRate) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Process the remove liquidity request on the liquidity slot
         slot.acceptRemoveLiquidity(ctx, lpTokenAmount);
     }
 
+    /**
+     * @notice Accepts a withdraw liquidity request
+     *         and processes the liquidity slot corresponding to the given trading fee rate.
+     * @dev This function validates the trading fee rate
+     *      and calls the acceptWithdrawLiquidity function on the target liquidity slot.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @param lpTokenAmount The amount of LP tokens to withdraw.
+     *        (should be the same as the one used in acceptRemoveLiquidity)
+     * @param oracleVersion The oracle version used for the withdrawal.
+     *        (should be the oracle version when call acceptRemoveLiquidity)
+     * @return amount The amount of base tokens withdrawn
+     * @return burnedLpTokenAmount the amount of LP tokens burned.
+     */
     function acceptWithdrawLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
@@ -349,43 +457,90 @@ library LpSlotSetLib {
         _validTradingFeeRate(tradingFeeRate)
         returns (uint256 amount, uint256 burnedLpTokenAmount)
     {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Process the withdraw liquidity request on the liquidity slot
+        // and get the amount of base tokens withdrawn and LP tokens burned
         return slot.acceptWithdrawLiquidity(ctx, lpTokenAmount, oracleVersion);
     }
 
+    /**
+     * @notice Calculates the amount of LP tokens to be minted for the given amount of base tokens and trading fee rate.
+     * @dev This function validates the trading fee rate
+     *      and calls the calculateLpTokenMinting function on the target liquidity slot.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @param amount The amount of base tokens.
+     * @return The amount of LP tokens to be minted.
+     */
     function calculateLpTokenMinting(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Calculate the amount of LP tokens to be minted based on the given amount of base tokens
         return slot.calculateLpTokenMinting(ctx, amount);
     }
 
+    /**
+     * @notice Calculates the value of the given amount of LP tokens for the specified trading fee rate.
+     * @dev This function validates the trading fee rate
+     *      and calls the calculateLpTokenValue function on the target liquidity slot.
+     * @param self The reference to the LpSlotSet storage.
+     * @param ctx The LpContext object.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @param lpTokenAmount The amount of LP tokens.
+     * @return amount The value of the LP tokens in base tokens.
+     */
     function calculateLpTokenValue(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 lpTokenAmount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Calculate the value of the given amount of LP tokens in base tokens
         amount = slot.calculateLpTokenValue(ctx, lpTokenAmount);
     }
 
+    /**
+     * @notice Retrieves the total liquidity amount in base tokens for the specified trading fee rate.
+     * @dev This function retrieves the liquidity slot based on the trading fee rate
+     *      and calls the liquidity function on it.
+     * @param self The reference to the LpSlotSet storage.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @return amount The total liquidity amount in base tokens.
+     */
     function getSlotLiquidity(
         LpSlotSet storage self,
         int16 tradingFeeRate
     ) external view returns (uint256 amount) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Get the total liquidity amount in base tokens from the liquidity slot
         return slot.liquidity();
     }
 
+    /**
+     * @notice Retrieves the free liquidity amount in base tokens for the specified trading fee rate.
+     * @dev This function retrieves the liquidity slot based on the trading fee rate
+     *      and calls the freeLiquidity function on it.
+     * @param self The reference to the LpSlotSet storage.
+     * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
+     * @return amount The free liquidity amount in base tokens.
+     */
     function getSlotFreeLiquidity(
         LpSlotSet storage self,
         int16 tradingFeeRate
     ) external view returns (uint256 amount) {
+        // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
+        // Get the free liquidity amount in base tokens from the liquidity slot
         return slot.freeLiquidity();
     }
 

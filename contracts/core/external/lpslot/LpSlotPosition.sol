@@ -12,7 +12,10 @@ import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/extern
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 
-/// @dev LpSlotPosition type
+/**
+ * @title LpSlotPosition
+ * @notice Represents a position in the LpSlot
+ */
 struct LpSlotPosition {
     /// @dev The total leveraged quantity of the `LpSlot`
     int256 totalLeveragedQty;
@@ -69,6 +72,12 @@ library LpSlotPositionLib {
         delete self._pending;
     }
 
+    /**
+     * @notice Handles the opening of a position for a liquidity slot.
+     * @param self The LpSlotPosition storage.
+     * @param ctx The LpContext data struct.
+     * @param param The PositionParam containing the position parameters.
+     */
     function onOpenPosition(
         LpSlotPosition storage self,
         LpContext memory ctx,
