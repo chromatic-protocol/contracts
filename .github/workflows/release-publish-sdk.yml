@@ -63,3 +63,4 @@ jobs:
           external_repository: chromatic-protocol/sdk-typechain
           destination_dir: src.ts
           publish_branch: develop
+          enable_jekyll: true
