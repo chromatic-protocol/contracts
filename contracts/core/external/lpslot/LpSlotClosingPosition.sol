@@ -35,7 +35,7 @@ library LpSlotClosingPositionLib {
         LpSlotClosingPosition storage self,
         LpContext memory ctx
     ) internal {
-        self.accruedInterest.accumulate(ctx.market, self.totalMakerMargin, block.timestamp);
+        self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
     }
 
     /**

@@ -10,6 +10,7 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/external/lpslot/LpSlotPendingPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
@@ -158,9 +159,11 @@ contract LpSlotPendingPositionTest is Test {
         return
             LpContext({
                 oracleProvider: provider,
+                interestCalculator: IInterestCalculator(address(0)),
                 vault: vault,
                 lpToken: lpToken,
-                market: market,
+                market: address(market),
+                settlementToken: address(0),
                 tokenPrecision: 1e6,
                 _currentVersionCache: _currentVersionCache
             });

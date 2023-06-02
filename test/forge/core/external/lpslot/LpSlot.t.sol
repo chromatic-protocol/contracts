@@ -8,6 +8,7 @@ import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
@@ -18,15 +19,19 @@ contract LpSlotTest is Test {
     using LpSlotLib for LpSlot;
 
     IOracleProvider provider;
+    IInterestCalculator interestCalculator;
     IUSUMVault vault;
     IUSUMMarket market;
     IUSUMLpToken lpToken;
+    address settlementToken;
     LpSlot slot;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        vault = IUSUMVault(address(2));
-        market = IUSUMMarket(address(3));
+        interestCalculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(3));
+        market = IUSUMMarket(address(4));
+        settlementToken = address(5);
         lpToken = new USUMLpToken();
 
         vm.mockCall(
@@ -118,13 +123,25 @@ contract LpSlotTest is Test {
             abi.encode(_ov)
         );
         vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(0x05e1bd8c, 15000 ether, 1, 3),
+            address(interestCalculator),
+            abi.encodeWithSelector(
+                interestCalculator.calculateInterest.selector,
+                settlementToken,
+                15000 ether,
+                1,
+                3
+            ),
             abi.encode(0.01 ether)
         );
         vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(0x05e1bd8c, 1000 ether, 1, 3),
+            address(interestCalculator),
+            abi.encodeWithSelector(
+                interestCalculator.calculateInterest.selector,
+                settlementToken,
+                1000 ether,
+                1,
+                3
+            ),
             abi.encode(0.001 ether)
         );
 
@@ -137,9 +154,11 @@ contract LpSlotTest is Test {
         return
             LpContext({
                 oracleProvider: provider,
+                interestCalculator: interestCalculator,
                 vault: vault,
                 lpToken: lpToken,
-                market: market,
+                market: address(market),
+                settlementToken: settlementToken,
                 tokenPrecision: 1e18,
                 _currentVersionCache: _currentVersionCache
             });

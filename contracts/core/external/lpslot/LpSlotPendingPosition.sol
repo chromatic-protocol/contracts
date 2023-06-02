@@ -45,7 +45,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx
     ) internal {
-        self.accruedInterest.accumulate(ctx.market, self.totalMakerMargin, block.timestamp);
+        self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
     }
 
     /**
@@ -139,12 +139,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (uint256) {
-        return
-            self.accruedInterest.calculateInterest(
-                ctx.market,
-                self.totalMakerMargin,
-                block.timestamp
-            );
+        return self.accruedInterest.calculateInterest(ctx, self.totalMakerMargin, block.timestamp);
     }
 
     /**

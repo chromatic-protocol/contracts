@@ -52,7 +52,7 @@ library LpSlotPositionLib {
         if (openVersion >= currentVersion.version) return;
 
         // accumulate interest before update `_totalMakerMargin`
-        self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
+        self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
         int256 pendingQty = self._pending.totalLeveragedQty;
         self.totalLeveragedQty += pendingQty;
@@ -97,7 +97,7 @@ library LpSlotPositionLib {
             PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
 
             // accumulate interest before update `_totalMakerMargin`
-            self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
+            self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
             self.totalEntryAmount -= param.entryAmount(ctx);
@@ -182,10 +182,6 @@ library LpSlotPositionLib {
         LpContext memory ctx
     ) private view returns (uint256) {
         return
-            self._accruedInterest.calculateInterest(
-                ctx.market,
-                self._totalMakerMargin,
-                block.timestamp
-            );
+            self._accruedInterest.calculateInterest(ctx, self._totalMakerMargin, block.timestamp);
     }
 }

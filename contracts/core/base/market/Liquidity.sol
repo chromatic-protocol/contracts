@@ -6,9 +6,9 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Re
 import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@usum/core/libraries/LpReceipt.sol";
-import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
+import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
 
-abstract contract Liquidity is MarketValue, IERC1155Receiver {
+abstract contract Liquidity is MarketBase, IERC1155Receiver {
     using Math for uint256;
 
     uint256 constant MINIMUM_LIQUIDITY = 10 ** 3;

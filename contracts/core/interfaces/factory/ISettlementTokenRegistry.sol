@@ -79,18 +79,6 @@ interface ISettlementTokenRegistry {
 
     function currentInterestRate(address token) external view returns (uint256);
 
-    // function getInterestRates(
-    //     address token,
-    //     uint256 from
-    // ) external view returns (InterestRate.Record[] memory);
-
-    function calculateInterest(
-        address token,
-        uint256 amount,
-        uint256 from, // timestamp (inclusive)
-        uint256 to // timestamp (exclusive)
-    ) external view returns (uint256);
-
     function getInterestRateRecords(
         address token
     ) external view returns (InterestRate.Record[] memory);
