@@ -7,18 +7,26 @@ import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 
-/// @dev LpContext type
+/**
+ * @title LpContext
+ * @notice Represents the context information required for LP slot operations.
+ */
 struct LpContext {
+    /// @dev The Oracle Provider contract used for price feed
     IOracleProvider oracleProvider;
+    /// @dev The Interest Calculator contract used for interest calculations
     IInterestCalculator interestCalculator;
+    /// @dev The USUM Vault contract responsible for managing LP funds
     IUSUMVault vault;
+    /// @dev The LP token contract that represents LP ownership in the pool
     IUSUMLpToken lpToken;
     /// @dev The address of market contract
     address market;
+    /// @dev The address of the settlement token used in the market
     address settlementToken;
     /// @dev The precision of the settlement token used in the market
     uint256 tokenPrecision;
-    /// @dev Cached instance of `OracleVersion` struct, which represents the current oracle version
+    /// @dev Cached instance of the current oracle version
     IOracleProvider.OracleVersion _currentVersionCache;
 }
 
@@ -75,11 +83,21 @@ library LpContextLib {
         return self.oracleProvider.atVersion(version);
     }
 
+    /**
+     * @notice Calculates the interest accrued for a given amount of settlement tokens
+               within a specified time range.
+     * @dev This function internally calls the `calculateInterest` function on the `interestCalculator` contract.
+     * @param self The memory instance of the `LpContext` struct.
+     * @param amount The amount of settlement tokens for which the interest needs to be calculated.
+     * @param from The starting timestamp of the time range (inclusive).
+     * @param to The ending timestamp of the time range (exclusive).
+     * @return The accrued interest as a `uint256` value.
+     */
     function calculateInterest(
         LpContext memory self,
         uint256 amount,
-        uint256 from, // timestamp (inclusive)
-        uint256 to // timestamp (exclusive)
+        uint256 from,
+        uint256 to
     ) internal view returns (uint256) {
         return
             amount == 0 || from >= to
