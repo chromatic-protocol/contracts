@@ -18,21 +18,10 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: chromatic-protocol/action-setup-foundry-yarn@v1
         with:
-          submodules: recursive
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.15
-          cache: "yarn"
-          registry-url: https://npm.pkg.github.com/
-          scope: "@chromatic-finance"
-        env:
-          NODE_AUTH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      - run: yarn install
-      - uses: onbjerg/foundry-toolchain@v1
-        with:
-          version: nightly
+          scope: "@chromatic-protocol"
+          node-auth-token: "${{ secrets.GITHUB_TOKEN }}"
 
       # step generating a coverage report
       - name: Run coverage
