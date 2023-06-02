@@ -69,13 +69,12 @@ library LpSlotPositionLib {
         delete self._pending;
     }
 
-    /**
-     * @notice Handles the opening of a position for a liquidity slot.
-     * @param self The LpSlotPosition storage struct.
-     * @param param The PositionParam data struct containing the position parameters.
-     */
-    function onOpenPosition(LpSlotPosition storage self, PositionParam memory param) internal {
-        self._pending.onOpenPosition(param);
+    function onOpenPosition(
+        LpSlotPosition storage self,
+        LpContext memory ctx,
+        PositionParam memory param
+    ) internal {
+        self._pending.onOpenPosition(ctx, param);
     }
 
     /**

@@ -59,6 +59,9 @@ library LpSlotClosingPositionLib {
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
 
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
+
         self.closeVersion = param.closeVersion;
         self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
         self.totalEntryAmount += param.entryAmount(ctx);
@@ -83,6 +86,9 @@ library LpSlotClosingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalEntryAmount -= param.entryAmount(ctx);

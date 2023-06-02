@@ -55,6 +55,7 @@ library LpSlotPendingPositionLib {
      */
     function onOpenPosition(
         LpSlotPendingPosition storage self,
+        LpContext memory ctx,
         PositionParam memory param
     ) internal {
         uint256 openVersion = self.openVersion;
@@ -66,6 +67,9 @@ library LpSlotPendingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.openVersion = param.openVersion;
         self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
@@ -89,6 +93,9 @@ library LpSlotPendingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalMakerMargin -= param.makerMargin;

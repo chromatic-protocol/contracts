@@ -63,7 +63,7 @@ library LpSlotLib {
     ) internal _settle(self, ctx) {
         require(param.makerMargin <= self.freeLiquidity(), Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
 
-        self._position.onOpenPosition(param);
+        self._position.onOpenPosition(ctx, param);
         self._liquidity.total += tradingFee;
     }
 

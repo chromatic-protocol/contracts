@@ -21,6 +21,7 @@ contract LpSlotPendingPositionTest is Test {
     using LpSlotPendingPositionLib for LpSlotPendingPosition;
 
     IOracleProvider provider;
+    IInterestCalculator interestCalculator;
     IUSUMVault vault;
     IUSUMMarket market;
     IUSUMLpToken lpToken;
@@ -28,15 +29,23 @@ contract LpSlotPendingPositionTest is Test {
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        vault = IUSUMVault(address(2));
-        market = IUSUMMarket(address(3));
+        interestCalculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(3));
+        market = IUSUMMarket(address(4));
         lpToken = new USUMLpToken();
+
+        vm.mockCall(
+            address(interestCalculator),
+            abi.encodeWithSelector(interestCalculator.calculateInterest.selector),
+            abi.encode(0)
+        );
     }
 
     function testOnOpenPosition_WhenEmpty() public {
+        LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
 
-        pending.onOpenPosition(param);
+        pending.onOpenPosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
         assertEq(pending.totalLeveragedQty, param.leveragedQty);
@@ -45,12 +54,13 @@ contract LpSlotPendingPositionTest is Test {
     }
 
     function testOnOpenPosition_Normal() public {
+        LpContext memory ctx = _newLpContext();
+        PositionParam memory param = _newPositionParam();
+
         pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
-        PositionParam memory param = _newPositionParam();
-
-        pending.onOpenPosition(param);
+        pending.onOpenPosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
         assertEq(pending.totalLeveragedQty, param.leveragedQty + 10);
@@ -59,24 +69,26 @@ contract LpSlotPendingPositionTest is Test {
     }
 
     function testOnOpenPosition_InvalidOracleVersion() public {
+        LpContext memory ctx = _newLpContext();
+        PositionParam memory param = _newPositionParam();
+
         pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
-
-        PositionParam memory param = _newPositionParam();
         param.openVersion = 2;
 
         vm.expectRevert(bytes("IOV"));
-        pending.onOpenPosition(param);
+        pending.onOpenPosition(ctx, param);
     }
 
     function testOnOpenPosition_InvalidOpenPositionQty() public {
+        LpContext memory ctx = _newLpContext();
+        PositionParam memory param = _newPositionParam().inverse();
+
         pending.openVersion = 1;
         pending.totalLeveragedQty = 10;
 
-        PositionParam memory param = _newPositionParam().inverse();
-
         vm.expectRevert(bytes("IPQ"));
-        pending.onOpenPosition(param);
+        pending.onOpenPosition(ctx, param);
     }
 
     function testOnClosePosition_WhenEmpty() public {
@@ -90,13 +102,13 @@ contract LpSlotPendingPositionTest is Test {
     }
 
     function testOnClosePosition_Normal() public {
+        LpContext memory ctx = _newLpContext();
+        PositionParam memory param = _newPositionParam();
+
         pending.openVersion = 1;
         pending.totalLeveragedQty = 50;
         pending.totalMakerMargin = 50;
         pending.totalTakerMargin = 10;
-
-        LpContext memory ctx = _newLpContext();
-        PositionParam memory param = _newPositionParam();
 
         pending.onClosePosition(ctx, param);
 
@@ -159,7 +171,7 @@ contract LpSlotPendingPositionTest is Test {
         return
             LpContext({
                 oracleProvider: provider,
-                interestCalculator: IInterestCalculator(address(0)),
+                interestCalculator: interestCalculator,
                 vault: vault,
                 lpToken: lpToken,
                 market: address(market),
