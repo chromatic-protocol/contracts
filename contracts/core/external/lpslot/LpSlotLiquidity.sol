@@ -175,7 +175,7 @@ library LpSlotLiquidityLib {
         uint256 slotValue,
         uint256 lpTokenTotalSupply
     ) internal pure returns (uint256) {
-        return lpTokenAmount.mulDiv(slotValue, lpTokenTotalSupply);
+        return lpTokenTotalSupply == 0 ? 0 : lpTokenAmount.mulDiv(slotValue, lpTokenTotalSupply);
     }
 
     function _settlePending(

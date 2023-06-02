@@ -168,4 +168,16 @@ describe('market test', async function () {
 
     logLiquidity(totalMargins, unusedMargins)
   })
+
+  it('calculate LpTokenMinting/LpTokenValue when zero liquidity', async () => {
+    const { market } = testData
+
+    const amount = ethers.utils.parseEther('100')
+    const feeSlotKey = 1
+    const expectedLiquidity = await market.calculateLpTokenMinting(feeSlotKey, amount)
+    expect(expectedLiquidity).to.equal(amount)
+
+    const expectedAmount = await market.calculateLpTokenValue(feeSlotKey, amount)
+    expect(expectedAmount).to.equal(0)
+  })
 })
