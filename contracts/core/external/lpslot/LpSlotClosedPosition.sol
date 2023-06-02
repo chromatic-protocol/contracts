@@ -9,6 +9,10 @@ import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
+/**
+ * @title LpSlotClosedPosition
+ * @notice Represents a closed position within an LpSlot.
+ */
 struct LpSlotClosedPosition {
     uint256 _totalMakerMargin;
     LpSlotClosingPosition _closing;
@@ -17,6 +21,11 @@ struct LpSlotClosedPosition {
     AccruedInterest _accruedInterest;
 }
 
+/**
+ * @title _ClaimWaitingPosition
+ * @notice Represents the accumulated values of the waiting positions to be claimed
+ *      for a specific version within LpSlotClosedPosition.
+ */
 struct _ClaimWaitingPosition {
     int256 totalLeveragedQty;
     uint256 totalEntryAmount;
@@ -24,11 +33,22 @@ struct _ClaimWaitingPosition {
     uint256 totalTakerMargin;
 }
 
+/**
+ * @title LpSlotClosedPositionLib
+ * @notice A library that provides functions to manage the closed position within an LpSlot.
+ */
 library LpSlotClosedPositionLib {
     using EnumerableSet for EnumerableSet.UintSet;
     using AccruedInterestLib for AccruedInterest;
     using LpSlotClosingPositionLib for LpSlotClosingPosition;
 
+    /**
+     * @notice Settles the closing position within the LpSlotClosedPosition.
+     * @dev If the closeVersion is not set or is equal to the current oracle version, no action is taken.
+     *      Otherwise, the waiting position is stored and the accrued interest is accumulated.
+     * @param self The LpSlotClosedPosition storage.
+     * @param ctx The LpContext memory.
+     */
     function settleClosingPosition(
         LpSlotClosedPosition storage self,
         LpContext memory ctx
@@ -59,6 +79,13 @@ library LpSlotClosedPositionLib {
         delete self._closing;
     }
 
+    /**
+     * @notice Closes the position within the LpSlotClosedPosition.
+     * @dev Delegates the onClosePosition function call to the underlying LpSlotClosingPosition.
+     * @param self The LpSlotClosedPosition storage.
+     * @param ctx The LpContext memory.
+     * @param param The PositionParam memory.
+     */
     function onClosePosition(
         LpSlotClosedPosition storage self,
         LpContext memory ctx,
@@ -67,6 +94,15 @@ library LpSlotClosedPositionLib {
         self._closing.onClosePosition(ctx, param);
     }
 
+    /**
+     * @notice Claims the position within the LpSlotClosedPosition.
+     * @dev If the closeVersion is equal to the LpSlotClosingPosition's closeVersion, the claim is made directly.
+     *      Otherwise, the claim is made from the waiting position, and if exhausted, the waiting position is removed.
+     *      The accrued interest is accumulated and deducted accordingly.
+     * @param self The LpSlotClosedPosition storage.
+     * @param ctx The LpContext memory.
+     * @param param The PositionParam memory.
+     */
     function onClaimPosition(
         LpSlotClosedPosition storage self,
         LpContext memory ctx,
@@ -92,6 +128,14 @@ library LpSlotClosedPositionLib {
         }
     }
 
+    /**
+     * @dev Claims the position from the waiting position within the LpSlotClosedPosition.
+     *      Updates the waiting position and returns whether the waiting position is exhausted.
+     * @param waitingPosition The waiting position storage.
+     * @param ctx The LpContext memory.
+     * @param param The PositionParam memory.
+     * @return exhausted Whether the waiting position is exhausted.
+     */
     function _onClaimPosition(
         _ClaimWaitingPosition storage waitingPosition,
         LpContext memory ctx,
