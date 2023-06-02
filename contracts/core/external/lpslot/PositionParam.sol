@@ -93,7 +93,7 @@ library PositionParamLib {
         LpContext memory ctx,
         uint256 until
     ) internal view returns (uint256) {
-        return ctx.market.calculateInterest(self.makerMargin, self.openTimestamp, until);
+        return ctx.calculateInterest(self.makerMargin, self.openTimestamp, until);
     }
 
     /**

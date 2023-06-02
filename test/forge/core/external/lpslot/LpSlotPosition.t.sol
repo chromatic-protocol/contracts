@@ -8,37 +8,36 @@ import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
 import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 
 contract LpSlotPositionTest is Test {
     using LpSlotPositionLib for LpSlotPosition;
 
     IOracleProvider provider;
+    IInterestCalculator interestCalculator;
     IUSUMVault vault;
     IUSUMMarket market;
     LpSlotPosition position;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        vault = IUSUMVault(address(2));
-        market = IUSUMMarket(address(3));
+        interestCalculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(3));
+        market = IUSUMMarket(address(4));
+
+        vm.mockCall(
+            address(interestCalculator),
+            abi.encodeWithSelector(interestCalculator.calculateInterest.selector),
+            abi.encode(0)
+        );
 
         vm.mockCall(
             address(vault),
             abi.encodeWithSelector(vault.getPendingSlotShare.selector),
             abi.encode(0)
-        );
-
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.oracleProvider.selector),
-            abi.encode(provider)
-        );
-        vm.mockCall(
-            address(market),
-            abi.encodeWithSelector(market.vault.selector),
-            abi.encode(vault)
         );
     }
 
@@ -67,8 +66,20 @@ contract LpSlotPositionTest is Test {
     }
 
     function _newLpContext() private view returns (LpContext memory ctx) {
-        ctx.market = market;
-        ctx.tokenPrecision = 10 ** 6;
+        IOracleProvider.OracleVersion memory _currentVersionCache;
+        _currentVersionCache.version = 1;
+        _currentVersionCache.timestamp = 1;
+        return
+            LpContext({
+                oracleProvider: provider,
+                interestCalculator: interestCalculator,
+                vault: vault,
+                lpToken: IUSUMLpToken(address(0)),
+                market: address(market),
+                settlementToken: address(0),
+                tokenPrecision: 1e6,
+                _currentVersionCache: _currentVersionCache
+            });
     }
 
     function _newPositionParam() private pure returns (PositionParam memory p) {

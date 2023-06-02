@@ -9,11 +9,11 @@ import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {MarketValue} from "@usum/core/base/market/MarketValue.sol";
+import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
 import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
 import {ITrade} from "@usum/core/interfaces/market/ITrade.sol";
 
-abstract contract Trade is MarketValue {
+abstract contract Trade is MarketBase {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
@@ -170,7 +170,11 @@ abstract contract Trade is MarketValue {
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
         uint256 settlementAmount = takerMargin;
 
-        uint256 interest = calculateInterest(makerMargin, position.openTimestamp, block.timestamp);
+        uint256 interest = ctx.calculateInterest(
+            makerMargin,
+            position.openTimestamp,
+            block.timestamp
+        );
         int256 realizedPnl = pnl - interest.toInt256();
 
         uint256 absRealizedPnl = realizedPnl.abs();
@@ -218,7 +222,7 @@ abstract contract Trade is MarketValue {
         LpContext memory ctx,
         Position memory position
     ) internal view returns (bool _liquidate, int256 _pnl) {
-        uint256 interest = calculateInterest(
+        uint256 interest = ctx.calculateInterest(
             position.makerMargin(),
             position.openTimestamp,
             block.timestamp

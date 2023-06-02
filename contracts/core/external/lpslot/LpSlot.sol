@@ -63,7 +63,7 @@ library LpSlotLib {
     ) internal _settle(self, ctx) {
         require(param.makerMargin <= self.freeLiquidity(), Errors.NOT_ENOUGH_SLOT_FREE_LIQUIDITY);
 
-        self._position.onOpenPosition(param);
+        self._position.onOpenPosition(ctx, param);
         self._liquidity.total += tradingFee;
     }
 
@@ -136,7 +136,7 @@ library LpSlotLib {
 
         uint256 _liquidity = self.liquidity();
         uint256 _value = unrealizedPnl < 0 ? _liquidity - absPnl : _liquidity + absPnl;
-        return _value + ctx.vault.getPendingSlotShare(address(ctx.market), _liquidity);
+        return _value + ctx.vault.getPendingSlotShare(ctx.market, _liquidity);
     }
 
     function acceptAddLiquidity(

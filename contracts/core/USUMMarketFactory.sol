@@ -277,6 +277,8 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         return _settlementTokenRegistry.currentInterestRate(token);
     }
 
+    // implement IInterestCalculator
+
     function calculateInterest(
         address token,
         uint256 amount,

@@ -12,6 +12,7 @@ import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
@@ -22,6 +23,7 @@ contract LpSlotSetTest is Test {
     using LpSlotLib for LpSlot;
 
     IOracleProvider provider;
+    IInterestCalculator interestCalculator;
     IUSUMVault vault;
     IUSUMMarket market;
     IUSUMLpToken lpToken;
@@ -29,9 +31,16 @@ contract LpSlotSetTest is Test {
 
     function setUp() public {
         provider = IOracleProvider(address(1));
-        vault = IUSUMVault(address(2));
-        market = IUSUMMarket(address(3));
+        interestCalculator = IInterestCalculator(address(2));
+        vault = IUSUMVault(address(3));
+        market = IUSUMMarket(address(4));
         lpToken = new USUMLpToken();
+
+        vm.mockCall(
+            address(interestCalculator),
+            abi.encodeWithSelector(interestCalculator.calculateInterest.selector),
+            abi.encode(0)
+        );
 
         vm.mockCall(
             address(vault),
@@ -187,9 +196,11 @@ contract LpSlotSetTest is Test {
         return
             LpContext({
                 oracleProvider: provider,
+                interestCalculator: interestCalculator,
                 vault: vault,
                 lpToken: lpToken,
-                market: market,
+                market: address(market),
+                settlementToken: address(0),
                 tokenPrecision: 1e18,
                 _currentVersionCache: _currentVersionCache
             });

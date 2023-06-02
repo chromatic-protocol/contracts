@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
@@ -12,6 +13,7 @@ import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
 import {LpTokenDeployerLib} from "@usum/core/external/deployer/LpTokenDeployer.sol";
 import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
 import {Position} from "@usum/core/libraries/Position.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
@@ -49,5 +51,20 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
 
         lpSlotSet.initialize();
+    }
+
+    function newLpContext() internal view returns (LpContext memory) {
+        IOracleProvider.OracleVersion memory _currentVersionCache;
+        return
+            LpContext({
+                oracleProvider: oracleProvider,
+                interestCalculator: factory,
+                vault: vault,
+                lpToken: lpToken,
+                market: address(this),
+                settlementToken: address(settlementToken),
+                tokenPrecision: 10 ** settlementToken.decimals(),
+                _currentVersionCache: _currentVersionCache
+            });
     }
 }

@@ -35,7 +35,7 @@ library LpSlotClosingPositionLib {
         LpSlotClosingPosition storage self,
         LpContext memory ctx
     ) internal {
-        self.accruedInterest.accumulate(ctx.market, self.totalMakerMargin, block.timestamp);
+        self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
     }
 
     /**
@@ -58,6 +58,9 @@ library LpSlotClosingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.closeVersion = param.closeVersion;
         self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
@@ -83,6 +86,9 @@ library LpSlotClosingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalEntryAmount -= param.entryAmount(ctx);

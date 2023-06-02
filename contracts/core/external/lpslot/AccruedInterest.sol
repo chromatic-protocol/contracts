@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IInterestCalculator} from "@usum/core/interfaces/market/IInterestCalculator.sol";
+import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
 /// @dev AccruedInterest type
 struct AccruedInterest {
@@ -16,16 +16,9 @@ struct AccruedInterest {
  * @notice Tracks the accumulated interest for a given token amount and period of time
  */
 library AccruedInterestLib {
-    /**
-     * @notice Accumulates interest for a given period of time.
-     * @param self The AccruedInterest storage.
-     * @param calculator The interest calculator.
-     * @param tokenAmount The amount of tokens.
-     * @param until The timestamp until which interest should be accumulated.
-     */
     function accumulate(
         AccruedInterest storage self,
-        IInterestCalculator calculator,
+        LpContext memory ctx,
         uint256 tokenAmount,
         uint256 until
     ) internal {
@@ -35,11 +28,7 @@ library AccruedInterestLib {
 
         if (tokenAmount > 0) {
             // calculate the interest for the given period of time and accumulate it
-            self.accumulatedAmount += calculator.calculateInterest(
-                tokenAmount,
-                accumulatedAt,
-                until
-            );
+            self.accumulatedAmount += ctx.calculateInterest(tokenAmount, accumulatedAt, until);
         }
         // update the timestamp at which the interest was last accumulated.
         self.accumulatedAt = until;
@@ -60,17 +49,9 @@ library AccruedInterestLib {
         }
     }
 
-    /**
-     * @notice Calculates the total interest accumulated for a given period of time.
-     * @param self The AccruedInterest storage.
-     * @param calculator The interest calculator.
-     * @param tokenAmount The amount of tokens.
-     * @param until The timestamp until which interest should be calculated.
-     * @return The total interest accumulated.
-     */
     function calculateInterest(
         AccruedInterest storage self,
-        IInterestCalculator calculator,
+        LpContext memory ctx,
         uint256 tokenAmount,
         uint256 until
     ) internal view returns (uint256) {
@@ -80,6 +61,6 @@ library AccruedInterestLib {
         uint256 accumulatedAmount = self.accumulatedAmount;
         if (until <= accumulatedAt) return accumulatedAmount;
 
-        return accumulatedAmount + calculator.calculateInterest(tokenAmount, accumulatedAt, until);
+        return accumulatedAmount + ctx.calculateInterest(tokenAmount, accumulatedAt, until);
     }
 }

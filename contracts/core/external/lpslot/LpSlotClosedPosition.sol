@@ -47,7 +47,7 @@ library LpSlotClosedPositionLib {
         });
 
         // accumulate interest before update `_totalMakerMargin`
-        self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
+        self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
         self._totalMakerMargin += waitingPosition.totalMakerMargin;
         self._waitingVersions.add(closeVersion);
@@ -80,7 +80,7 @@ library LpSlotClosedPositionLib {
             bool exhausted = _onClaimPosition(self._waitingPositions[closeVersion], ctx, param);
 
             // accumulate interest before update `_totalMakerMargin`
-            self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
+            self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
             self._totalMakerMargin -= param.makerMargin;
             self._accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));

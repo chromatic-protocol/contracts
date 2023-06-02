@@ -45,7 +45,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx
     ) internal {
-        self.accruedInterest.accumulate(ctx.market, self.totalMakerMargin, block.timestamp);
+        self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
     }
 
     /**
@@ -55,6 +55,7 @@ library LpSlotPendingPositionLib {
      */
     function onOpenPosition(
         LpSlotPendingPosition storage self,
+        LpContext memory ctx,
         PositionParam memory param
     ) internal {
         uint256 openVersion = self.openVersion;
@@ -66,6 +67,9 @@ library LpSlotPendingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.openVersion = param.openVersion;
         self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
@@ -89,6 +93,9 @@ library LpSlotPendingPositionLib {
         int256 totalLeveragedQty = self.totalLeveragedQty;
         int256 leveragedQty = param.leveragedQty;
         PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+
+        // accumulate interest before update `totalMakerMargin`
+        settleAccruedInterest(self, ctx);
 
         self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
         self.totalMakerMargin -= param.makerMargin;
@@ -139,12 +146,7 @@ library LpSlotPendingPositionLib {
         LpSlotPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (uint256) {
-        return
-            self.accruedInterest.calculateInterest(
-                ctx.market,
-                self.totalMakerMargin,
-                block.timestamp
-            );
+        return self.accruedInterest.calculateInterest(ctx, self.totalMakerMargin, block.timestamp);
     }
 
     /**

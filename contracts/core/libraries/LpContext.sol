@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
 import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
 import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
@@ -9,10 +10,12 @@ import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
 /// @dev LpContext type
 struct LpContext {
     IOracleProvider oracleProvider;
+    IInterestCalculator interestCalculator;
     IUSUMVault vault;
     IUSUMLpToken lpToken;
     /// @dev The address of market contract
-    IUSUMMarket market;
+    address market;
+    address settlementToken;
     /// @dev The precision of the settlement token used in the market
     uint256 tokenPrecision;
     /// @dev Cached instance of `OracleVersion` struct, which represents the current oracle version
@@ -31,7 +34,7 @@ library LpContextLib {
      * @param self The memory instance of `LpContext` struct
      */
     function syncOracleVersion(LpContext memory self) internal {
-        self._currentVersionCache = self.market.oracleProvider().sync();
+        self._currentVersionCache = self.oracleProvider.sync();
     }
 
     /**
@@ -47,7 +50,7 @@ library LpContextLib {
         LpContext memory self
     ) internal view returns (IOracleProvider.OracleVersion memory) {
         if (self._currentVersionCache.version == 0) {
-            self._currentVersionCache = self.market.oracleProvider().currentVersion();
+            self._currentVersionCache = self.oracleProvider.currentVersion();
         }
 
         return self._currentVersionCache;
@@ -69,6 +72,18 @@ library LpContextLib {
         if (self._currentVersionCache.version == version) {
             return self._currentVersionCache;
         }
-        return self.market.oracleProvider().atVersion(version);
+        return self.oracleProvider.atVersion(version);
+    }
+
+    function calculateInterest(
+        LpContext memory self,
+        uint256 amount,
+        uint256 from, // timestamp (inclusive)
+        uint256 to // timestamp (exclusive)
+    ) internal view returns (uint256) {
+        return
+            amount == 0 || from >= to
+                ? 0
+                : self.interestCalculator.calculateInterest(self.settlementToken, amount, from, to);
     }
 }

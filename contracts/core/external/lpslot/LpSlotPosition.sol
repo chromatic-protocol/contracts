@@ -52,7 +52,7 @@ library LpSlotPositionLib {
         if (openVersion >= currentVersion.version) return;
 
         // accumulate interest before update `_totalMakerMargin`
-        self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
+        self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
         int256 pendingQty = self._pending.totalLeveragedQty;
         self.totalLeveragedQty += pendingQty;
@@ -69,13 +69,12 @@ library LpSlotPositionLib {
         delete self._pending;
     }
 
-    /**
-     * @notice Handles the opening of a position for a liquidity slot.
-     * @param self The LpSlotPosition storage struct.
-     * @param param The PositionParam data struct containing the position parameters.
-     */
-    function onOpenPosition(LpSlotPosition storage self, PositionParam memory param) internal {
-        self._pending.onOpenPosition(param);
+    function onOpenPosition(
+        LpSlotPosition storage self,
+        LpContext memory ctx,
+        PositionParam memory param
+    ) internal {
+        self._pending.onOpenPosition(ctx, param);
     }
 
     /**
@@ -97,7 +96,7 @@ library LpSlotPositionLib {
             PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
 
             // accumulate interest before update `_totalMakerMargin`
-            self._accruedInterest.accumulate(ctx.market, self._totalMakerMargin, block.timestamp);
+            self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
             self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
             self.totalEntryAmount -= param.entryAmount(ctx);
@@ -182,10 +181,6 @@ library LpSlotPositionLib {
         LpContext memory ctx
     ) private view returns (uint256) {
         return
-            self._accruedInterest.calculateInterest(
-                ctx.market,
-                self._totalMakerMargin,
-                block.timestamp
-            );
+            self._accruedInterest.calculateInterest(ctx, self._totalMakerMargin, block.timestamp);
     }
 }

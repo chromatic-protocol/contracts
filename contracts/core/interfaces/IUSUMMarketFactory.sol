@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
 import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
 import {ISettlementTokenRegistry} from "@usum/core/interfaces/factory/ISettlementTokenRegistry.sol";
 import {IOracleProviderRegistry} from "@usum/core/interfaces/factory/IOracleProviderRegistry.sol";
 
-interface IUSUMMarketFactory is IMarketDeployer, IOracleProviderRegistry, ISettlementTokenRegistry {
+interface IUSUMMarketFactory is
+    IMarketDeployer,
+    IOracleProviderRegistry,
+    ISettlementTokenRegistry,
+    IInterestCalculator
+{
     event UpdateDao(address indexed dao);
     event UpdateTreasury(address indexed treasury);
     event SetLiquidator(address indexed liquidator);

@@ -78,9 +78,9 @@ library LpSlotLiquidityLib {
         );
 
         if (mintingAmount > burningAmount) {
-            lpToken.mint(address(ctx.market), lpTokenId, mintingAmount - burningAmount, bytes(""));
+            lpToken.mint(ctx.market, lpTokenId, mintingAmount - burningAmount, bytes(""));
         } else if (mintingAmount < burningAmount) {
-            lpToken.burn(address(ctx.market), lpTokenId, burningAmount - mintingAmount);
+            lpToken.burn(ctx.market, lpTokenId, burningAmount - mintingAmount);
         }
 
         ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
