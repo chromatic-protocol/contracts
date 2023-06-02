@@ -10,7 +10,10 @@ import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/Positio
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
 
-/// @dev Position type
+/**
+ * @title Position
+ * @dev The Position struct represents a trading position.
+ */
 struct Position {
     /// @dev The position identifier
     uint256 id;
