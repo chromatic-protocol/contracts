@@ -5,18 +5,28 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
 import {Errors} from "@usum/core/libraries/Errors.sol";
 
+/**
+ * @title SettlementTokenRegistry
+ * @dev A registry for managing settlement tokens and their associated parameters.
+ */
 struct SettlementTokenRegistry {
+    /// @dev Set of registered settlement tokens
     EnumerableSet.AddressSet _tokens;
+    /// @dev Mapping of settlement tokens to their interest rate records
     mapping(address => InterestRate.Record[]) _interestRateRecords;
+    /// @dev Mapping of settlement tokens to their minimum taker margins
     mapping(address => uint256) _minimumTakerMargins;
+    /// @dev Mapping of settlement tokens to their flash loan fee rates
     mapping(address => uint256) _flashLoanFeeRates;
+    /// @dev Mapping of settlement tokens to their earning distribution thresholds
     mapping(address => uint256) _earningDistributionThresholds;
+    /// @dev Mapping of settlement tokens to their Uniswap fee tiers
     mapping(address => uint24) _uniswapFeeTiers;
 }
 
 /**
  * @title SettlementTokenRegistryLib
- * @notice Library for managing a registry of settlement tokens.
+ * @notice Library for managing the settlement token registry.
  */
 library SettlementTokenRegistryLib {
     using EnumerableSet for EnumerableSet.AddressSet;
