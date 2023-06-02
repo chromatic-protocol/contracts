@@ -176,6 +176,12 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 
+    function getSlotValues(
+        int16[] calldata tradingFeeRates
+    ) external view returns (uint256[] memory values) {
+        values = liquidityPool.slotValues(tradingFeeRates, newLpContext());
+    }
+
     function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount

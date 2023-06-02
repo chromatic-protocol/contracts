@@ -144,6 +144,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
+
   async function addLiquidityBatch(amounts: BigNumber[], feeRates: number[]) {
     return chromaticRouter.connect(tester).addLiquidityBatch(
       market.address,
@@ -204,6 +205,6 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     removeLiquidity,
     removeLiquidityBatch,
     withdrawLiquidity,
-    withdrawLiquidityBatch
+    withdrawLiquidityBatch,
   }
 }

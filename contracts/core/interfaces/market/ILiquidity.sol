@@ -44,11 +44,15 @@ interface ILiquidity {
 
     function getBinLiquidities(
         int16[] memory tradingFeeRate
-    ) external returns (uint256[] memory amounts);
+    ) external view returns (uint256[] memory amounts);
 
     function getBinFreeLiquidities(
         int16[] memory tradingFeeRate
-    ) external returns (uint256[] memory amounts);
+    ) external view returns (uint256[] memory amounts);
+
+    function getSlotValues(
+        int16[] memory tradingFeeRates
+    ) external view returns (uint256[] memory values);
 
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external;
 

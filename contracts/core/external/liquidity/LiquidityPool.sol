@@ -820,4 +820,15 @@ library LiquidityPoolLib {
             emit LiquidityBinEarningAccumulated(feeRate, binType, binEarning);
         }
     }
+
+    function slotValues(
+        LpSlotSet storage self,
+        int16[] calldata _tradingFeeRates,
+        LpContext memory ctx
+    ) internal view returns (uint256[] memory values) {
+        values = new uint256[](_tradingFeeRates.length);
+        for (uint i = 0; i < _tradingFeeRates.length; i++) {
+            values[i] = targetSlot(self, _tradingFeeRates[i]).value(ctx);
+        }
+    }
 }
