@@ -1,4 +1,4 @@
-import "@chromatic-finance/hardhat-package"
+import "@chromatic-protocol/hardhat-package"
 import "@nomicfoundation/hardhat-foundry"
 import "@nomicfoundation/hardhat-toolbox"
 import "@nomiclabs/hardhat-ethers"
