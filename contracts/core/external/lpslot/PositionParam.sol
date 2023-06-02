@@ -8,15 +8,28 @@ import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
 import {LpContext} from "@usum/core/libraries/LpContext.sol";
 
+/**
+ * @title PositionParam
+ * @dev A struct representing the parameters of a position.
+ */
 struct PositionParam {
+    /// @dev The version of the position's open transaction
     uint256 openVersion;
+    /// @dev The version of the position's close transaction
     uint256 closeVersion;
+    /// @dev The leveraged quantity of the position
     int256 leveragedQty;
+    /// @dev The margin amount provided by the taker
     uint256 takerMargin;
+    /// @dev The margin amount provided by the maker
     uint256 makerMargin;
+    /// @dev The timestamp of the position's open transaction
     uint256 openTimestamp;
+    /// @dev The timestamp of the position's close transaction
     uint256 closeTimestamp;
+    /// @dev Caches the settle oracle version for the position's entry
     IOracleProvider.OracleVersion _entryVersionCache;
+    /// @dev Caches the settle oracle version for the position's exit
     IOracleProvider.OracleVersion _exitVersionCache;
 }
 
@@ -32,7 +45,7 @@ library PositionParamLib {
 
     /**
      * @notice Returns the settle version for the position's entry.
-     * @param self The PositionParam data struct.
+     * @param self The PositionParam struct.
      * @return uint256 The settle version for the position's entry.
      */
     function entryVersion(PositionParam memory self) internal pure returns (uint256) {
@@ -41,8 +54,8 @@ library PositionParamLib {
 
     /**
      * @notice Calculates the entry price for a PositionParam.
-     * @param self The PositionParam data struct.
-     * @param ctx The LpContext data struct.
+     * @param self The PositionParam struct.
+     * @param ctx The LpContext struct.
      * @return UFixed18 The entry price.
      */
     function entryPrice(
@@ -57,6 +70,12 @@ library PositionParamLib {
             );
     }
 
+    /**
+     * @notice Calculates the entry amount for a PositionParam.
+     * @param self The PositionParam struct.
+     * @param ctx The LpContext struct.
+     * @return uint256 The entry amount.
+     */
     function entryAmount(
         PositionParam memory self,
         LpContext memory ctx
@@ -66,8 +85,8 @@ library PositionParamLib {
 
     /**
      * @notice Retrieves the settle oracle version for the position's entry.
-     * @param self The PositionParam data struct.
-     * @param ctx The LpContext data struct.
+     * @param self The PositionParam struct.
+     * @param ctx The LpContext struct.
      * @return OracleVersion The settle oracle version for the position's entry.
      */
     function entryOracleVersion(
@@ -83,8 +102,8 @@ library PositionParamLib {
     /**
      * @dev Calculates the interest for a PositionParam until a specified timestamp.
      * @dev It is used only to deduct accumulated accrued interest when close position
-     * @param self The PositionParam data struct.
-     * @param ctx The LpContext data struct.
+     * @param self The PositionParam struct.
+     * @param ctx The LpContext struct.
      * @param until The timestamp until which to calculate the interest.
      * @return uint256 The calculated interest.
      */
