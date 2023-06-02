@@ -12,6 +12,7 @@ on:
       - deploy/**
       - package.sdk.json
       - hardhat.config.ts
+      - .github/workflows/release-publish-sdk.yml
 permissions:
   contents: write
 
@@ -20,69 +21,45 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
-      tag_name: ${{ steps.changelog.outputs.tag }}
+      tag: ${{ steps.semantic-release.outputs.tag }}
+      # changelog: ${{ steps.semantic-release.outputs.changelog }}
     steps:
-      - uses: actions/checkout@v3 # Checkout our working repository
-      - name: Conventional Changelog Action
-        id: changelog
-        uses: TriPSs/conventional-changelog-action@v3
+      - uses: chromatic-protocol/action-semantic-release@main
+        id: semantic-release
         with:
-          github-token: ${{ secrets.github_token }}
-          output-file: false
-          pre-release: true
-          skip-on-empty: false
-          git-push: false
-          skip-version-file: true
-          skip-commit: true
-      - name: Create Release # This action will create the actual release
-        uses: actions/create-release@v1.1.4
-        if: ${{ steps.changelog.outputs.skipped == 'false' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
-        with:
-          tag_name: ${{ steps.changelog.outputs.tag }}
-          release_name: ${{ steps.changelog.outputs.tag }}
-          body: ${{ steps.changelog.outputs.clean_changelog }}
-          prerelease: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
   Publish:
     needs: Release
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    env:
+      NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
-      - uses: actions/checkout@v3
+      - uses: chromatic-protocol/action-setup-foundry-yarn@v1
         with:
-          submodules: recursive
-      - name: Cache foundry
-        id: cache-foundry
-        uses: actions/cache@v3
-        with:
-          path: ~/.foundry
-          key: ${{ runner.os }}-foundry
-      - uses: onbjerg/foundry-toolchain@v1
-        with:
-          version: nightly
-      - name: setup to build
-        uses: actions/setup-node@v3
-        with:
-          cache: yarn
-          node-version: 18.15
-          registry-url: https://npm.pkg.github.com/
-          scope: "@chromatic-finance"
+          scope: '@chromatic-protocol'
+          ignore-scripts: false
+          node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
+
       - name: build SDK
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          yarn install
           yarn clean
           yarn build
       - name: publish
         working-directory: ./dist
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm version ${{needs.Release.outputs.tag_name}}
+          npm version ${{ needs.Release.outputs.tag }}
           npm publish
-
+      # export src.ts to chromatic-protocol/sdk-typechain
+      - name: export src.ts
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.SSH_SDK_TYPECHAIN }}
+          publish_dir: ./dist/src.ts
+          external_repository: chromatic-protocol/sdk-typechain
+          destination_dir: src.ts
+          publish_branch: develop
