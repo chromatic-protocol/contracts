@@ -74,19 +74,44 @@ describe('lens', async () => {
       market.address,
       feeRates.map((v) => v.toString())
     )
-    //TODO test
     console.log('slotValue', slotValue)
+    slotValue.forEach(({ value }, i) => {
+      expect(value).to.equal(amounts[i])
+    })
   })
 
   it('get slot liquidity information', async () => {
     const { lens, market } = testData
     const { openPosition } = helpers(testData)
-    await openPosition()
+    
+    await openPosition({
+      qty: 300 * 10 ** 4,
+      leverage: 100,
+      takerMargin: ethers.utils.parseEther('300'),
+      makerMargin: ethers.utils.parseEther('250'),
+      maxAllowFeeRate: 3
+    })
     const liquidityInfo = await lens.slotLiquidities(
       market.address,
       feeRates.map((v) => v.toString())
     )
+
     //TODO test
     console.log('liquidity info', liquidityInfo)
+
+    // total makerMargin : 250
+    const tradingFees = [
+      ethers.utils.parseEther('1'),  // 1% * 100
+      ethers.utils.parseEther('2'),  // 2% * 100
+      ethers.utils.parseEther('1.5') // 3% * 50
+    ]
+
+    const exepectedFreeLiquidities = [0, 0, 50]
+
+    liquidityInfo.forEach(({ freeVolume ,liquidity}, i) => {
+      const expectedFreeLiquidity = ethers.utils.parseEther(exepectedFreeLiquidities[i].toString()).add(tradingFees[i])
+      expect(freeVolume).to.equal(expectedFreeLiquidity)
+      expect(liquidity).to.equal(amounts[i].add(tradingFees[i]));
+    })
   })
 })
