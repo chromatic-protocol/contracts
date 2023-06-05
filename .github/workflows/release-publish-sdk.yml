@@ -69,3 +69,4 @@ jobs:
           path: sdk
           add-paths: src/gen/**
           token: ${{ steps.generate-token.outputs.token }}
+          commit-message: $ {{ github.event.pull_request.title }}
