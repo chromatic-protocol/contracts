@@ -50,6 +50,22 @@ jobs:
           yarn clean
           yarn build
       # export src.ts to chromatic-protocol/sdk
+      - uses: actions/checkout@v3
+        with:
+          repository: chromatic-protocol/sdk
+          ref: main
+          path: sdk
+          ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
+          persist-credentials: false
+      - run: cp -r dist/src.ts sdk/src.ts
+      - name: pull-request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          base: main
+          branch: develop
+          path: sdk
+          add-paths: src.ts/**
+
       # checkout copy src.ts to target
       # - uses: actions/checkout@v3
       #   with:
@@ -58,14 +74,14 @@ jobs:
       #     path: sdk
       #     ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
       #     persist-credentials: false
-      - name: pull-request
-        uses: paygoc6/action-pull-request-another-repo@v1.0.1
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SSH_SDK_TYPECHAIN }}
-        with:
-          source_folder: 'dist/src.ts'
-          destination_repo: chromatic-protocol/sdk
-          destination_folder: 'src.ts'
-          destination_head_branch: 'action'
-          user_email: 'no.reply@github.com'
-          user_name: 'github'
+      # - name: pull-request
+      #   uses: paygoc6/action-pull-request-another-repo@v1.0.1
+      #   env:
+      #     API_TOKEN_GITHUB: ${{ secrets.SSH_SDK_TYPECHAIN }}
+      #   with:
+      #     source_folder: 'dist/src.ts'
+      #     destination_repo: chromatic-protocol/sdk
+      #     destination_folder: 'src.ts'
+      #     destination_head_branch: 'action'
+      #     user_email: 'no.reply@github.com'
+      #     user_name: 'github'
