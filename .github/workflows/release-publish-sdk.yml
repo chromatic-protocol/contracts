@@ -56,7 +56,7 @@ jobs:
           repository: chromatic-protocol/sdk
           ref: develop
           path: sdk
-          token: ${{ secrets.SSH_SDK_TYPECHAIN }}
+          ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
           persist-credentials: false
       - run: cp -r dist/src.ts sdk/src.ts
       - name: pull-request
