@@ -56,7 +56,6 @@ jobs:
           ref: main
           path: sdk
           ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
-          persist-credentials: false
       - run: cp -r dist/src.ts sdk/src.ts
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
