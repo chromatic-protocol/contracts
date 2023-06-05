@@ -64,4 +64,3 @@ jobs:
         with:
           destination_repository: chromatic-protocol/sdk
           destination_branch: 'develop'
-          github_token: ${{ secrets.SSH_SDK_TYPECHAIN }}
