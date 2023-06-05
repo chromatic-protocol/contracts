@@ -175,10 +175,10 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 
-    function getSlotValues(
+    function getBinValues(
         int16[] calldata tradingFeeRates
     ) external view returns (uint256[] memory values) {
-        values = liquidityPool.slotValues(tradingFeeRates, newLpContext());
+        values = liquidityPool.binValues(tradingFeeRates, newLpContext());
     }
 
     function calculateCLBTokenMinting(
@@ -249,6 +249,6 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     function getClaimBurning(
         LpReceipt memory receipt
     ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return lpSlotSet.getClaimBurning(receipt.tradingFeeRate, receipt.oracleVersion);
+        return liquidityPool.getClaimBurning(receipt.tradingFeeRate, receipt.oracleVersion);
     }
 }

@@ -50,7 +50,7 @@ interface ILiquidity {
         int16[] memory tradingFeeRate
     ) external view returns (uint256[] memory amounts);
 
-    function getSlotValues(
+    function getBinValues(
         int16[] memory tradingFeeRates
     ) external view returns (uint256[] memory values);
 

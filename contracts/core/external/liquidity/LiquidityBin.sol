@@ -317,7 +317,7 @@ library LiquidityBinLib {
     }
 
     function getClaimBurning(
-        LpSlot storage self,
+        LiquidityBin storage self,
         uint256 oracleVersion
     ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
         return self._liquidity.getClaimBurning(oracleVersion);

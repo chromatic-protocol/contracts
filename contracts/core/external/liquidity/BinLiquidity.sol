@@ -372,7 +372,7 @@ library BinLiquidityLib {
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingCLBTokenAmount;
                 } else {
-                    _burningAmount = calculateCLBTokenMinting(freeLiquidity, slotValue, totalSupply);
+                    _burningAmount = calculateCLBTokenMinting(freeLiquidity, binValue, totalSupply);
                     console.log("[LpSlotLiq] _burningAmount",_burningAmount);
                     require(_burningAmount < _pendingCLBTokenAmount);
                     _pendingWithdrawal = freeLiquidity;

@@ -24,12 +24,12 @@ contract ChromaticLens {
         int16 tradingFeeRate;
         UFixed18 value; // 18 decimals
     }
-    struct SlotValue {
+    struct LiquidityBinValue {
         int16 tradingFeeRate;
         UFixed18 value; // 18 decimals
     }
 
-    struct SlotLiquidity {
+    struct LiquidityBin {
         int16 tradingFeeRate;
         uint256 liquidity;
         uint256 freeVolume;
@@ -58,9 +58,9 @@ contract ChromaticLens {
         int16[] calldata tradingFeeRates
     ) external view returns (CLBValue[] memory results) {
         //
-        SlotValue[] memory _slotValue = slotValue(market, tradingFeeRates);
+        LiquidityBinValue[] memory _liquidityBinValue = liquidityBinValue(market, tradingFeeRates);
         results = new CLBValue[](tradingFeeRates.length);
-        for (uint256 i = 0; i < _slotValue.length; i++) {
+        for (uint256 i = 0; i < _liquidityBinValue.length; i++) {
             uint256 totalSupply = ICLBToken(market.clbToken()).totalSupply(
                 CLBTokenLib.encodeId(tradingFeeRates[i])
             );
@@ -69,36 +69,36 @@ contract ChromaticLens {
                 tradingFeeRates[i],
                 totalSupply == 0
                     ? UFixed18.wrap(0)
-                    : _slotValue[i].value.muldiv(10 ** 18, totalSupply)
+                    : _liquidityBinValue[i].value.muldiv(10 ** 18, totalSupply)
             );
         }
     }
 
-    function slotValue(
+    function liquidityBinValue(
         IChromaticMarket market,
         int16[] calldata tradingFeeRates
-    ) public view returns (SlotValue[] memory results) {
-        uint256[] memory values = market.getSlotValues(tradingFeeRates);
-        results = new SlotValue[](values.length);
+    ) public view returns (LiquidityBinValue[] memory results) {
+        uint256[] memory values = market.getBinValues(tradingFeeRates);
+        results = new LiquidityBinValue[](values.length);
         for (uint i = 0; i < values.length; i++) {
-            results[i] = SlotValue(tradingFeeRates[i], UFixed18.wrap(values[i]));
+            results[i] = LiquidityBinValue(tradingFeeRates[i], UFixed18.wrap(values[i]));
         }
     }
 
     /**
      * get Liquidity information for each slot
      */
-    function slotLiquidities(
+    function liquidityBins(
         IChromaticMarket market,
         int16[] calldata tradingFeeRates //TODO use LpTokenId instead of tradingFeeRate
-    ) external view returns (SlotLiquidity[] memory results) {
+    ) external view returns (LiquidityBin[] memory results) {
         // decode tradingFeeRate
-        results = new SlotLiquidity[](tradingFeeRates.length);
-        uint256[] memory liquidities = market.getSlotLiquidities(tradingFeeRates);
-        uint256[] memory freeLiquidities = market.getSlotFreeLiquidities(tradingFeeRates);
+        results = new LiquidityBin[](tradingFeeRates.length);
+        uint256[] memory liquidities = market.getBinLiquidities(tradingFeeRates);
+        uint256[] memory freeLiquidities = market.getBinFreeLiquidities(tradingFeeRates);
 
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            results[i] = SlotLiquidity(tradingFeeRates[i], liquidities[i], freeLiquidities[i]);
+            results[i] = LiquidityBin(tradingFeeRates[i], liquidities[i], freeLiquidities[i]);
         }
     }
 
