@@ -107,7 +107,6 @@ const config: HardhatUserConfig = {
     heidi: 9,
   },
   package: {
-    packageJson: "package.sdk.json",
     includes: [
       "OracleProvider",
       "ChromaticMarket",
@@ -127,18 +126,6 @@ const config: HardhatUserConfig = {
     artifactFromDeployment: true,
     excludesFromDeployed: ["KeeperFeePayer", "*Lib", "*Mock"],
     excludeBytecode: true,
-    docgen: {
-      sourcesDir: "contracts",
-      exclude: [
-        "./core/base",
-        "./core/external",
-        "./core/interfaces",
-        "./core/libraries",
-        "./mocks",
-        "./peirphery/base",
-        "./peirphery/interfaces",
-      ],
-    },
   },
 }
 
