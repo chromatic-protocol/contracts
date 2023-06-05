@@ -9,7 +9,7 @@ import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 
 /**
  * @title LpContext
- * @notice Represents the context information required for LP slot operations.
+ * @notice Represents the context information required for LP bin operations.
  */
 struct LpContext {
     /// @dev The Oracle Provider contract used for price feed

@@ -18,8 +18,8 @@ interface ILendingPool {
         bytes calldata data
     ) external;
 
-    function getPendingSlotShare(
+    function getPendingBinShare(
         address market,
-        uint256 slotBalance
+        uint256 binBalance
     ) external view returns (uint256);
 }

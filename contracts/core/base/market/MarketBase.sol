@@ -12,7 +12,7 @@ import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquida
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic/core/interfaces/IKeeperFeePayer.sol";
 import {CLBTokenDeployerLib} from "@chromatic/core/external/deployer/CLBTokenDeployer.sol";
-import {LpSlotSet} from "@chromatic/core/external/lpslot/LpSlotSet.sol";
+import {LiquidityPool} from "@chromatic/core/external/liquidity/LiquidityPool.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
@@ -28,7 +28,7 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
     IChromaticVault public immutable override vault;
     IKeeperFeePayer public immutable override keeperFeePayer;
 
-    LpSlotSet internal lpSlotSet;
+    LiquidityPool internal liquidityPool;
 
     mapping(uint256 => Position) internal positions;
     mapping(uint256 => LpReceipt) internal lpReceipts;
@@ -50,7 +50,7 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
         vault = IChromaticVault(factory.vault());
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
 
-        lpSlotSet.initialize();
+        liquidityPool.initialize();
     }
 
     function newLpContext() internal view returns (LpContext memory) {

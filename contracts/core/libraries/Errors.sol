@@ -9,7 +9,7 @@ library Errors {
     string constant ONLY_FUNDS_OWNER_CAN_WITHDRAW_FUNDS = "FOW";
     string constant ETH_TRANSFER_FAILED = "ETF";
     string constant INVALID_SWAP_VALUE = "ISV";
-    string constant NOT_ENOUGH_SLOT_FREE_LIQUIDITY = "NESL";
+    string constant NOT_ENOUGH_FREE_LIQUIDITY = "NEFL";
     string constant TOO_SMALL_AMOUNT = "TSA";
     string constant INVALID_ORACLE_VERSION = "IOV";
     string constant EXCEED_MARGIN_RANGE = "IOV";

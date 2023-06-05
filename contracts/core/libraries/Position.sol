@@ -8,7 +8,7 @@ import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
+import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 
 /**
  * @title Position
@@ -33,8 +33,8 @@ struct Position {
     uint256 takerMargin;
     /// @dev The owner of the position, usually it is the account address of trader
     address owner;
-    /// @dev The slot margins for the position, it represents the amount of collateral for each slot
-    LpSlotMargin[] _slotMargins;
+    /// @dev The bin margins for the position, it represents the amount of collateral for each bin
+    BinMargin[] _binMargins;
 }
 
 using PositionLib for Position global;
@@ -135,49 +135,49 @@ library PositionLib {
 
     /**
      * @notice Calculates the total margin required for the makers of the position
-     * @dev The maker margin is calculated by summing up the amounts of all slot margins
-     *      in the `_slotMargins` array
+     * @dev The maker margin is calculated by summing up the amounts of all bin margins
+     *      in the `_binMargins` array
      * @param self The memory instance of the `Position` struct
      * @return margin The maker margin
      */
     function makerMargin(Position memory self) internal pure returns (uint256 margin) {
-        for (uint256 i = 0; i < self._slotMargins.length; i++) {
-            margin += self._slotMargins[i].amount;
+        for (uint256 i = 0; i < self._binMargins.length; i++) {
+            margin += self._binMargins[i].amount;
         }
     }
 
     /**
      * @notice Calculates the total trading fee for the position
-     * @dev The trading fee is calculated by summing up the trading fees of all slot margins
-     *      in the `_slotMargins` array
+     * @dev The trading fee is calculated by summing up the trading fees of all bin margins
+     *      in the `_binMargins` array
      * @param self The memory instance of the `Position` struct
      * @return fee The trading fee
      */
     function tradingFee(Position memory self) internal pure returns (uint256 fee) {
-        for (uint256 i = 0; i < self._slotMargins.length; i++) {
-            fee += self._slotMargins[i].tradingFee();
+        for (uint256 i = 0; i < self._binMargins.length; i++) {
+            fee += self._binMargins[i].tradingFee();
         }
     }
 
     /**
-     * @notice Returns an array of LpSlotMargin instances
-     *         representing the slot margins for the position
+     * @notice Returns an array of BinMargin instances
+     *         representing the bin margins for the position
      * @param self The memory instance of the `Position` struct
-     * @return margins The slot margins for the position
+     * @return margins The bin margins for the position
      */
-    function slotMargins(
+    function binMargins(
         Position memory self
-    ) internal pure returns (LpSlotMargin[] memory margins) {
-        margins = self._slotMargins;
+    ) internal pure returns (BinMargin[] memory margins) {
+        margins = self._binMargins;
     }
 
     /**
-     * @notice Sets the `_slotMargins` array for the position
+     * @notice Sets the `_binMargins` array for the position
      * @param self The memory instance of the `Position` struct
-     * @param margins The slot margins for the position
+     * @param margins The bin margins for the position
      */
-    function setSlotMargins(Position memory self, LpSlotMargin[] memory margins) internal pure {
-        self._slotMargins = margins;
+    function setBinMargins(Position memory self, BinMargin[] memory margins) internal pure {
+        self._binMargins = margins;
     }
 
     /**
@@ -196,11 +196,11 @@ library PositionLib {
         storedPosition.takerMargin = self.takerMargin;
         storedPosition.owner = self.owner;
         // can not convert memory array to storage array
-        delete storedPosition._slotMargins;
-        for (uint i = 0; i < self._slotMargins.length; i++) {
-            LpSlotMargin memory slotMargin = self._slotMargins[i];
-            if (slotMargin.amount > 0) {
-                storedPosition._slotMargins.push(self._slotMargins[i]);
+        delete storedPosition._binMargins;
+        for (uint i = 0; i < self._binMargins.length; i++) {
+            BinMargin memory binMargin = self._binMargins[i];
+            if (binMargin.amount > 0) {
+                storedPosition._binMargins.push(self._binMargins[i]);
             }
         }
     }

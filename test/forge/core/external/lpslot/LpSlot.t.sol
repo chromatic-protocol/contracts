@@ -6,7 +6,7 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Recei
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpSlot, LpSlotLib} from "@chromatic/core/external/lpslot/LpSlot.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic/core/external/liquidity/LiquidityBin.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
@@ -14,9 +14,9 @@ import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol"
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {CLBToken} from "@chromatic/core/CLBToken.sol";
 
-contract LpSlotTest is Test {
+contract LiquidityBinTest is Test {
     using SafeCast for uint256;
-    using LpSlotLib for LpSlot;
+    using LiquidityBinLib for LiquidityBin;
 
     IOracleProvider provider;
     IInterestCalculator interestCalculator;
@@ -24,7 +24,7 @@ contract LpSlotTest is Test {
     IChromaticMarket market;
     ICLBToken clbToken;
     address settlementToken;
-    LpSlot slot;
+    LiquidityBin bin;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
@@ -36,7 +36,7 @@ contract LpSlotTest is Test {
 
         vm.mockCall(
             address(vault),
-            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encodeWithSelector(vault.getPendingBinShare.selector),
             abi.encode(0)
         );
 
@@ -53,8 +53,8 @@ contract LpSlotTest is Test {
             abi.encode(IERC1155Receiver(address(market)).onERC1155BatchReceived.selector)
         );
 
-        slot.initialize(1);
-        slot._liquidity.total = 20000 ether;
+        bin.initialize(1);
+        bin._liquidity.total = 20000 ether;
 
         clbToken.mint(address(market), 1, 20000 ether, bytes(""));
     }
@@ -66,14 +66,14 @@ contract LpSlotTest is Test {
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
-        slot.acceptAddLiquidity(ctx, 100 ether);
-        assertEq(slot.liquidity(), 20000 ether);
+        bin.acceptAddLiquidity(ctx, 100 ether);
+        assertEq(bin.liquidity(), 20000 ether);
 
         // oracle version 3
         ctx._currentVersionCache.version = 3;
         ctx._currentVersionCache.timestamp = 3;
-        slot.settle(ctx);
-        assertEq(slot.liquidity(), 20100 ether);
+        bin.settle(ctx);
+        assertEq(bin.liquidity(), 20100 ether);
     }
 
     function testAcceptRemoveLiquidity() public {
@@ -83,30 +83,30 @@ contract LpSlotTest is Test {
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = Fixed18Lib.from(90);
-        slot.acceptRemoveLiquidity(ctx, 100 ether);
-        assertEq(slot.liquidity(), 20000 ether);
+        bin.acceptRemoveLiquidity(ctx, 100 ether);
+        assertEq(bin.liquidity(), 20000 ether);
 
         // oracle version 3
         ctx._currentVersionCache.version = 3;
         ctx._currentVersionCache.timestamp = 3;
-        slot.settle(ctx);
-        assertEq(slot.liquidity(), 19900 ether);
+        bin.settle(ctx);
+        assertEq(bin.liquidity(), 19900 ether);
     }
 
     function testValue() public {
         LpContext memory ctx = _newLpContext();
 
-        slot._position.totalLeveragedQty = -150 ether;
-        slot._position.totalEntryAmount = 15000 ether; // oraclePrice 100
-        slot._position._totalMakerMargin = 15000 ether;
-        slot._position._totalTakerMargin = 15000 ether;
-        slot._position._accruedInterest.accumulatedAt = 1;
-        slot._position._accruedInterest.accumulatedAmount = 0.1 ether;
-        slot._position._pending.openVersion = 1;
-        slot._position._pending.totalLeveragedQty = -10 ether;
-        slot._position._pending.totalMakerMargin = 1000 ether;
-        slot._position._pending.totalTakerMargin = 1000 ether;
-        slot._position._pending.accruedInterest.accumulatedAt = 1;
+        bin._position.totalLeveragedQty = -150 ether;
+        bin._position.totalEntryAmount = 15000 ether; // oraclePrice 100
+        bin._position._totalMakerMargin = 15000 ether;
+        bin._position._totalTakerMargin = 15000 ether;
+        bin._position._accruedInterest.accumulatedAt = 1;
+        bin._position._accruedInterest.accumulatedAmount = 0.1 ether;
+        bin._position._pending.openVersion = 1;
+        bin._position._pending.totalLeveragedQty = -10 ether;
+        bin._position._pending.totalMakerMargin = 1000 ether;
+        bin._position._pending.totalTakerMargin = 1000 ether;
+        bin._position._pending.accruedInterest.accumulatedAt = 1;
 
         vm.warp(3);
         ctx._currentVersionCache.version = 3;
@@ -145,7 +145,7 @@ contract LpSlotTest is Test {
             abi.encode(0.001 ether)
         );
 
-        uint256 value = slot.value(ctx);
+        uint256 value = bin.value(ctx);
         assertEq(value, 21501.111 ether);
     }
 

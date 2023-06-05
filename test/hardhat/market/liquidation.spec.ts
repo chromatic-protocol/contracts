@@ -23,8 +23,8 @@ describe('liquidation test', async () => {
     const { updatePrice, addLiquidityBatch, claimLiquidityBatch, getLpReceiptIds } =
       helpers(testData)
     await updatePrice(1000)
-    // add 10000 usdc liquidity to 0.01% long /short  slot
-    // add 50000 usdc liquidity to 0.1% long /short  slot
+    // add 10000 usdc liquidity to 0.01% long /short  bin
+    // add 50000 usdc liquidity to 0.1% long /short  bin
     await addLiquidityBatch(
       [eth100.mul(100), eth100.mul(100), eth100.mul(500), eth100.mul(500)],
       [1, -1, 10, -10]

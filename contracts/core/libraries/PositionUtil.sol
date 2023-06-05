@@ -132,11 +132,11 @@ library PositionUtil {
     }
 
     /**
-     * @notice Verifies the validity of a position quantity added to the slot
-     * @dev It ensures that the sign of the current quantity of the slot's position
+     * @notice Verifies the validity of a position quantity added to the bin
+     * @dev It ensures that the sign of the current quantity of the bin's position
      *      and the added quantity are same or zero.
      *      If the condition is not met, it triggers an error with the message `INVALID_POSITION_QTY`.
-     * @param currentQty The current quantity of the slot's pending position
+     * @param currentQty The current quantity of the bin's pending position
      * @param addedQty The position quantity added
      */
     function checkAddPositionQty(int256 currentQty, int256 addedQty) internal pure {
@@ -147,12 +147,12 @@ library PositionUtil {
     }
 
     /**
-     * @notice Verifies the validity of a position quantity removed from the slot
-     * @dev It ensures that the sign of the current quantity of the slot's position
+     * @notice Verifies the validity of a position quantity removed from the bin
+     * @dev It ensures that the sign of the current quantity of the bin's position
      *      and the removed quantity are same or zero,
      *      and the absolute removed quantity is not greater than the absolute current quantity.
      *      If the condition is not met, it triggers an error with the message `INVALID_POSITION_QTY`.
-     * @param currentQty The current quantity of the slot's position
+     * @param currentQty The current quantity of the bin's position
      * @param removeQty The position quantity removed
      */
     function checkRemovePositionQty(int256 currentQty, int256 removeQty) internal pure {

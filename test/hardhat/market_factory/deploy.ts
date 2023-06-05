@@ -14,11 +14,11 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
   const oracleProviderRegistryLib = await deployContract<Contract>('OracleProviderRegistryLib')
   const settlementTokenRegistryLib = await deployContract<Contract>('SettlementTokenRegistryLib')
 
-  const lpSlotSetLib = await deployContract<Contract>('LpSlotSetLib')
+  const liquidityPoolLib = await deployContract<Contract>('LiquidityPoolLib')
   const clbTokenDeployerLib = await deployContract<Contract>('CLBTokenDeployerLib')
   const marketDeployerLib = await deployContract<Contract>('MarketDeployerLib', {
     libraries: {
-      LpSlotSetLib: lpSlotSetLib.address,
+      LiquidityPoolLib: liquidityPoolLib.address,
       CLBTokenDeployerLib: clbTokenDeployerLib.address
     }
   })

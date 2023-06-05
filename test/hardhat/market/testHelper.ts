@@ -126,21 +126,21 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     return chromaticRouter.connect(tester).getLpReceiptIds(market.address)
   }
 
-  async function addLiquidityTx(amount: BigNumber, feeSlotKey: number) {
+  async function addLiquidityTx(amount: BigNumber, feeBinKey: number) {
     return chromaticRouter
       .connect(tester)
-      .addLiquidity(market.address, feeSlotKey, amount, tester.address)
+      .addLiquidity(market.address, feeBinKey, amount, tester.address)
   }
 
-  async function addLiquidity(_amount?: BigNumber, _feeSlotKey?: number) {
+  async function addLiquidity(_amount?: BigNumber, _feeBinKey?: number) {
     const amount = _amount ?? ethers.utils.parseEther('100')
-    const feeSlotKey = _feeSlotKey ?? 1
+    const feeBinKey = _feeBinKey ?? 1
 
-    const addLiqTx = await addLiquidityTx(amount, feeSlotKey)
+    const addLiqTx = await addLiquidityTx(amount, feeBinKey)
     await addLiqTx.wait()
     return {
       amount,
-      feeSlotKey
+      feeBinKey
     }
   }
 
