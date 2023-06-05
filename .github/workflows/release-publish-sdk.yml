@@ -58,9 +58,14 @@ jobs:
           path: sdk
           ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
           persist-credentials: false
-      - run: cp -r dist/src.ts sdk/src.ts
       - name: pull-request
-        uses: repo-sync/pull-request@v2
+        uses: paygoc6/action-pull-request-another-repo@v1.0.1
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.SSH_SDK_TYPECHAIN }}
         with:
-          destination_repository: chromatic-protocol/sdk
-          destination_branch: 'develop'
+          source_folder: 'dist/src.ts'
+          destination_repo: chromatic-protocol/sdk
+          destination_folder: 'src.ts'
+          destination_head_branch: 'action'
+          user_email: 'no.reply@github.com'
+          user_name: 'github'
