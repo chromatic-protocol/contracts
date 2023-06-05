@@ -54,13 +54,29 @@ jobs:
         run: |
           npm version ${{ needs.Release.outputs.tag }}
           npm publish
-      # export src.ts to chromatic-protocol/sdk-typechain
-      - name: export src.ts
-        uses: peaceiris/actions-gh-pages@v3
+      # export src.ts to chromatic-protocol/sdk
+      # checkout copy src.ts to target
+      - uses: actions/checkout@v3
         with:
-          deploy_key: ${{ secrets.SSH_SDK_TYPECHAIN }}
-          publish_dir: ./dist/src.ts
-          external_repository: chromatic-protocol/sdk-typechain
-          destination_dir: src.ts
-          publish_branch: develop
-          enable_jekyll: true
+          repository: chromatic-protocol/sdk
+          ref: develop
+          path: sdk
+          token: ${{ secrets.SSH_SDK_TYPECHAIN }}
+          persist-credentials: true
+      - run: cp -r dist/src.ts sdk/src.ts
+      - name: pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_repository: chromatic-protocol/sdk
+          destination_branch: 'develop'
+          github_token: ${{ secrets.SSH_SDK_TYPECHAIN }}
+
+      # - name: export src.ts
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     deploy_key: ${{ secrets.SSH_SDK_TYPECHAIN }}
+      #     publish_dir: ./dist/src.ts
+      #     external_repository: chromatic-protocol/sdk
+      #     destination_dir: src.ts
+      #     publish_branch: develop
+      #     enable_jekyll: true
