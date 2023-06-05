@@ -840,7 +840,7 @@ library LiquidityPoolLib {
         external
         view
         _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount)
+        returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount)
     {
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         return slot.getClaimBurning(oracleVersion);

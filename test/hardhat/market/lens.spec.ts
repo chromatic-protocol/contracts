@@ -2,7 +2,8 @@ import { ethers } from 'hardhat'
 import { prepareMarketTest, helpers } from './testHelper'
 import { BigNumber } from 'ethers'
 import { expect } from 'chai'
-import { LpReceiptStructOutput } from '../../../typechain-types/contracts/core/USUMMarket'
+import { LpReceiptStructOutput } from '@chromatic/typechain-types/contracts/core/ChromaticMarket'
+
 describe('lens', async () => {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
   const feeRates = [100, 200, 300]
@@ -119,7 +120,7 @@ describe('lens', async () => {
   })
 
   it('removable liquidity info ', async () => {
-    const { lens, market, lpToken,tester,usumRouter } = testData
+    const { lens, market, clbToken,tester,chromaticRouter } = testData
     const { openPosition, removeLiquidity, updatePrice,awaitTx,settle,getLpReceiptIds } = helpers(testData)
     await updatePrice(1000)
     // check user's CLB tokens

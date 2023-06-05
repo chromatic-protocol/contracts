@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {BPS} from "@usum/core/libraries/Constants.sol";
-import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
+import {BPS} from "@chromatic/core/libraries/Constants.sol";
+import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import "hardhat/console.sol";
 
-contract USUMLens {
+contract ChromaticLens {
     //
     using Math for uint256;
 
@@ -36,7 +36,7 @@ contract USUMLens {
     }
 
     function eachEntryPrice(
-        IUSUMMarket market,
+        IChromaticMarket market,
         uint256[] calldata positionIds
     ) external view returns (EntryPriceStruct[] memory results) {
         results = new EntryPriceStruct[](positionIds.length);
@@ -54,15 +54,15 @@ contract USUMLens {
     }
 
     function CLBValues(
-        IUSUMMarket market,
+        IChromaticMarket market,
         int16[] calldata tradingFeeRates
     ) external view returns (CLBValue[] memory results) {
         //
         SlotValue[] memory _slotValue = slotValue(market, tradingFeeRates);
         results = new CLBValue[](tradingFeeRates.length);
         for (uint256 i = 0; i < _slotValue.length; i++) {
-            uint256 totalSupply = IUSUMLpToken(market.lpToken()).totalSupply(
-                LpTokenLib.encodeId(tradingFeeRates[i])
+            uint256 totalSupply = ICLBToken(market.clbToken()).totalSupply(
+                CLBTokenLib.encodeId(tradingFeeRates[i])
             );
 
             results[i] = CLBValue(
@@ -75,7 +75,7 @@ contract USUMLens {
     }
 
     function slotValue(
-        IUSUMMarket market,
+        IChromaticMarket market,
         int16[] calldata tradingFeeRates
     ) public view returns (SlotValue[] memory results) {
         uint256[] memory values = market.getSlotValues(tradingFeeRates);
@@ -89,7 +89,7 @@ contract USUMLens {
      * get Liquidity information for each slot
      */
     function slotLiquidities(
-        IUSUMMarket market,
+        IChromaticMarket market,
         int16[] calldata tradingFeeRates //TODO use LpTokenId instead of tradingFeeRate
     ) external view returns (SlotLiquidity[] memory results) {
         // decode tradingFeeRate
@@ -103,7 +103,7 @@ contract USUMLens {
     }
 
     function lpReceipts(
-        IUSUMMarket market,
+        IChromaticMarket market,
         uint256[] calldata receiptIds
     ) public view returns (LpReceipt[] memory result) {
         result = new LpReceipt[](receiptIds.length);
@@ -115,26 +115,26 @@ contract USUMLens {
     struct RemoveLiquidityInfo {
         uint256 receiptId;
         int16 tradingFeeRate;
-        uint256 lpTokenAmount;
+        uint256 clbTokenAmount;
         uint256 burningAmount;
         uint256 tokenAmount;
     }
 
     // LpReceipt 에 대해서 settlement token 을 claim을 할 수 있는 진행정도를 구하기 위한 값..
     function removableLiquidity(
-        IUSUMMarket market,
+        IChromaticMarket market,
         uint256[] calldata receiptIds
     ) external view returns (RemoveLiquidityInfo[] memory results) {
         LpReceipt[] memory reciepts = lpReceipts(market, receiptIds);
         results = new RemoveLiquidityInfo[](receiptIds.length);
         for (uint i = 0; i < reciepts.length; i++) {
-            (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount) = market
+            (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) = market
                 .getClaimBurning(reciepts[i]);
         
             results[i] = RemoveLiquidityInfo(
                 reciepts[i].id,
                 reciepts[i].tradingFeeRate,
-                lpTokenAmount,
+                clbTokenAmount,
                 burningAmount,
                 tokenAmount
             );

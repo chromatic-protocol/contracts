@@ -250,7 +250,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
 
     function getClaimBurning(
         LpReceipt memory receipt
-    ) external view returns (uint256 lpTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
         return lpSlotSet.getClaimBurning(receipt.tradingFeeRate, receipt.oracleVersion);
     }
 }

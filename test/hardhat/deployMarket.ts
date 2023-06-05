@@ -3,11 +3,10 @@ import { deploy as gelatoDeploy } from './gelato/deploy'
 import { deploy as marketFactoryDeploy } from './market_factory/deploy'
 import { deploy as oracleProviderDeploy } from './oracle_provider/deploy'
 import { deployContract, hardhatErrorPrettyPrint } from './utils'
-import { Token, AccountFactory, ChromaticRouter } from '../../typechain-types'
+import { Token, AccountFactory, ChromaticRouter, ChromaticLens } from '../../typechain-types'
 import { BigNumber } from 'ethers'
 import { parseUnits } from 'ethers/lib/utils'
 import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
-import { USUMLens } from '@usum/typechain-types'
 
 export async function deploy() {
   return hardhatErrorPrettyPrint(async () => {
@@ -51,7 +50,7 @@ export async function deploy() {
     })
 
     await (await chromaticRouter.initialize(accountFactory.address, marketFactory.address)).wait()
-    const lens = await deployContract<USUMLens>('USUMLens')
+    const lens = await deployContract<ChromaticLens>('ChromaticLens')
 
     return {
       marketFactory,
