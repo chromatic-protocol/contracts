@@ -49,11 +49,6 @@ jobs:
         run: |
           yarn clean
           yarn build
-      - name: publish
-        working-directory: ./dist
-        run: |
-          npm version ${{ needs.Release.outputs.tag }}
-          npm publish
       # export src.ts to chromatic-protocol/sdk
       # checkout copy src.ts to target
       - uses: actions/checkout@v3
