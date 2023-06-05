@@ -49,15 +49,15 @@ describe('position & account test', async function () {
 
     expect(positionIds.length, 'invalid position length').to.equal(1)
     const position = (await market.getPositions(positionIds))[0]
-    const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
-    expect(slot0?.amount, 'not matched slot amount').to.equal(base)
-    const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
-    expect(slot2?.amount, 'not matched slot2 amount').to.equal(base.mul(3))
-    const totalSlotMargin = position._slotMargins.reduce(
+    const bin0 = position._binMargins.find((p) => p.tradingFeeRate == 1)
+    expect(bin0?.amount, 'not matched bin amount').to.equal(base)
+    const bin2 = position._binMargins.find((p) => p.tradingFeeRate === 10)
+    expect(bin2?.amount, 'not matched bin2 amount').to.equal(base.mul(3))
+    const totalBinMargin = position._binMargins.reduce(
       (acc, curr) => acc.add(curr.amount),
       BigNumber.from(0)
     )
-    expect(makerMargin, 'not matched marker margin ').to.equal(totalSlotMargin)
+    expect(makerMargin, 'not matched marker margin ').to.equal(totalBinMargin)
   })
 
   it('open short position ', async () => {
@@ -82,15 +82,15 @@ describe('position & account test', async function () {
 
     expect(positionIds.length, 'invalid position length').to.equal(1)
     const position = (await market.getPositions(positionIds))[0]
-    const slot0 = position._slotMargins.find((p) => p.tradingFeeRate == 1)
-    expect(slot0?.amount, 'not matched slot amount').to.equal(base)
-    const slot2 = position._slotMargins.find((p) => p.tradingFeeRate === 10)
-    expect(slot2?.amount, 'not matched slot2 amount').to.equal(base.mul(3))
-    const totalSlotMargin = position._slotMargins.reduce(
+    const bin0 = position._binMargins.find((p) => p.tradingFeeRate == 1)
+    expect(bin0?.amount, 'not matched bin amount').to.equal(base)
+    const bin2 = position._binMargins.find((p) => p.tradingFeeRate === 10)
+    expect(bin2?.amount, 'not matched bin2 amount').to.equal(base.mul(3))
+    const totalBinMargin = position._binMargins.reduce(
       (acc, curr) => acc.add(curr.amount),
       BigNumber.from(0)
     )
-    expect(makerMargin, 'not matched marker margin ').to.equal(totalSlotMargin)
+    expect(makerMargin, 'not matched marker margin ').to.equal(totalBinMargin)
   })
 
   function getPnl(lvQty: BigNumber, entryPrice: BigNumber, exitPrice: BigNumber) {
@@ -145,7 +145,7 @@ describe('position & account test', async function () {
         .mul(settlementTokenDecimal.mul(curr.leverage))
         .div(QTY_LEVERAGE_PRECISION)
       const leveragedQty = curr.qty.lt(0) ? leveraged.mul(-1) : leveraged
-      const makerMargin = curr._slotMargins.map((m) => m.amount).reduce((a, b) => a.add(b))
+      const makerMargin = curr._binMargins.map((m) => m.amount).reduce((a, b) => a.add(b))
       acc.push({
         ...curr,
         // pnl: getPnl(leveragedQty, entryPrice, currentPrice),

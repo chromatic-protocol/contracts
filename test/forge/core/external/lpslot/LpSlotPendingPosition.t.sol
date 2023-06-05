@@ -7,7 +7,7 @@ import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@chromatic/core/external/lpslot/LpSlotPendingPosition.sol";
+import {BinPendingPosition, BinPendingPositionLib} from "@chromatic/core/external/lpslot/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
@@ -16,16 +16,16 @@ import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol"
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {CLBToken} from "@chromatic/core/CLBToken.sol";
 
-contract LpSlotPendingPositionTest is Test {
+contract BinPendingPositionTest is Test {
     using SafeCast for uint256;
-    using LpSlotPendingPositionLib for LpSlotPendingPosition;
+    using BinPendingPositionLib for BinPendingPosition;
 
     IOracleProvider provider;
     IInterestCalculator interestCalculator;
     IChromaticVault vault;
     IChromaticMarket market;
     ICLBToken clbToken;
-    LpSlotPendingPosition pending;
+    BinPendingPosition pending;
 
     function setUp() public {
         provider = IOracleProvider(address(1));

@@ -8,46 +8,46 @@ import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/lpslot/AccruedInterest.sol";
-import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@chromatic/core/external/lpslot/LpSlotPendingPosition.sol";
+import {BinPendingPosition, BinPendingPositionLib} from "@chromatic/core/external/lpslot/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 
 /**
- * @title LpSlotPosition
- * @notice Represents a position in the LpSlot
+ * @title BinPosition
+ * @notice Represents a position in the LiquidityBin
  */
-struct LpSlotPosition {
-    /// @dev The total leveraged quantity of the `LpSlot`
+struct BinPosition {
+    /// @dev The total leveraged quantity of the `LiquidityBin`
     int256 totalLeveragedQty;
-    /// @dev The total entry amount of the `LpSlot`
+    /// @dev The total entry amount of the `LiquidityBin`
     uint256 totalEntryAmount;
-    /// @dev The total maker margin of the `LpSlot`
+    /// @dev The total maker margin of the `LiquidityBin`
     uint256 _totalMakerMargin;
-    /// @dev The total taker margin of the `LpSlot`
+    /// @dev The total taker margin of the `LiquidityBin`
     uint256 _totalTakerMargin;
-    /// @dev The pending position of the `LpSlot`
-    LpSlotPendingPosition _pending;
-    /// @dev The accumulated interest of the `LpSlot`
+    /// @dev The pending position of the `LiquidityBin`
+    BinPendingPosition _pending;
+    /// @dev The accumulated interest of the `LiquidityBin`
     AccruedInterest _accruedInterest;
 }
 
 /**
- * @title LpSlotPositionLib
- * @notice Library for managing positions in the `LpSlot`
+ * @title BinPositionLib
+ * @notice Library for managing positions in the `LiquidityBin`
  */
-library LpSlotPositionLib {
+library BinPositionLib {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
     using AccruedInterestLib for AccruedInterest;
-    using LpSlotPendingPositionLib for LpSlotPendingPosition;
+    using BinPendingPositionLib for BinPendingPosition;
 
     /**
-     * @notice Settles pending positions for a liquidity slot position.
-     * @param self The LpSlotPosition storage struct.
+     * @notice Settles pending positions for a liquidity bin position.
+     * @param self The BinPosition storage struct.
      * @param ctx The LpContext data struct.
      */
-    function settlePendingPosition(LpSlotPosition storage self, LpContext memory ctx) internal {
+    function settlePendingPosition(BinPosition storage self, LpContext memory ctx) internal {
         uint256 openVersion = self._pending.openVersion;
         if (openVersion == 0) return;
 
@@ -73,13 +73,13 @@ library LpSlotPositionLib {
     }
 
     /**
-     * @notice Handles the opening of a position for a liquidity slot.
-     * @param self The LpSlotPosition storage.
+     * @notice Handles the opening of a position for a liquidity bin.
+     * @param self The BinPosition storage.
      * @param ctx The LpContext data struct.
      * @param param The PositionParam containing the position parameters.
      */
     function onOpenPosition(
-        LpSlotPosition storage self,
+        BinPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -87,13 +87,13 @@ library LpSlotPositionLib {
     }
 
     /**
-     * @notice Handles the closing of a position for a liquidity slot.
-     * @param self The LpSlotPosition storage struct.
+     * @notice Handles the closing of a position for a liquidity bin.
+     * @param self The BinPosition storage struct.
      * @param ctx The LpContext data struct.
      * @param param The PositionParam data struct containing the position parameters.
      */
     function onClosePosition(
-        LpSlotPosition storage self,
+        BinPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -116,31 +116,31 @@ library LpSlotPositionLib {
     }
 
     /**
-     * @notice Returns the total maker margin for a liquidity slot position.
-     * @param self The LpSlotPosition storage struct.
+     * @notice Returns the total maker margin for a liquidity bin position.
+     * @param self The BinPosition storage struct.
      * @return uint256 The total maker margin.
      */
-    function totalMakerMargin(LpSlotPosition storage self) internal view returns (uint256) {
+    function totalMakerMargin(BinPosition storage self) internal view returns (uint256) {
         return self._totalMakerMargin + self._pending.totalMakerMargin;
     }
 
     /**
-     * @notice Returns the total taker margin for a liquidity slot position.
-     * @param self The LpSlotPosition storage struct.
+     * @notice Returns the total taker margin for a liquidity bin position.
+     * @param self The BinPosition storage struct.
      * @return uint256 The total taker margin.
      */
-    function totalTakerMargin(LpSlotPosition storage self) internal view returns (uint256) {
+    function totalTakerMargin(BinPosition storage self) internal view returns (uint256) {
         return self._totalTakerMargin + self._pending.totalTakerMargin;
     }
 
     /**
-     * @notice Calculates the unrealized profit or loss for a liquidity slot position.
-     * @param self The LpSlotPosition storage struct.
+     * @notice Calculates the unrealized profit or loss for a liquidity bin position.
+     * @param self The BinPosition storage struct.
      * @param ctx The LpContext data struct.
      * @return int256 The unrealized profit or loss.
      */
     function unrealizedPnl(
-        LpSlotPosition storage self,
+        BinPosition storage self,
         LpContext memory ctx
     ) internal view returns (int256) {
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
@@ -167,26 +167,26 @@ library LpSlotPositionLib {
     }
 
     /**
-     * @dev Calculates the current interest for a liquidity slot position.
-     * @param self The LpSlotPosition storage struct.
+     * @dev Calculates the current interest for a liquidity bin position.
+     * @param self The BinPosition storage struct.
      * @param ctx The LpContext data struct.
      * @return uint256 The current interest.
      */
     function currentInterest(
-        LpSlotPosition storage self,
+        BinPosition storage self,
         LpContext memory ctx
     ) internal view returns (uint256) {
         return _currentInterest(self, ctx) + self._pending.currentInterest(ctx);
     }
 
     /**
-     * @dev Calculates the current interest for a liquidity slot position without pending position.
-     * @param self The LpSlotPosition storage struct.
+     * @dev Calculates the current interest for a liquidity bin position without pending position.
+     * @param self The BinPosition storage struct.
      * @param ctx The LpContext data struct.
      * @return uint256 The current interest.
      */
     function _currentInterest(
-        LpSlotPosition storage self,
+        BinPosition storage self,
         LpContext memory ctx
     ) private view returns (uint256) {
         return

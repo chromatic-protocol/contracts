@@ -154,25 +154,25 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
-    function getSlotLiquidities(
+    function getBinLiquidities(
         int16[] calldata tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            amounts[i] = liquidityPool.getSlotLiquidity(tradingFeeRates[i]);
+            amounts[i] = liquidityPool.getBinLiquidity(tradingFeeRates[i]);
         }
     }
 
-    function getSlotFreeLiquidities(
+    function getBinFreeLiquidities(
         int16[] calldata tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            amounts[i] = liquidityPool.getSlotFreeLiquidity(tradingFeeRates[i]);
+            amounts[i] = liquidityPool.getBinFreeLiquidity(tradingFeeRates[i]);
         }
     }
 
-    function distributeEarningToSlots(uint256 earning, uint256 marketBalance) external onlyVault {
+    function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 

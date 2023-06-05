@@ -42,15 +42,15 @@ interface ILiquidity {
 
     function withdrawLiquidity(uint256 receiptId, bytes calldata data) external;
 
-    function getSlotLiquidities(
+    function getBinLiquidities(
         int16[] memory tradingFeeRate
     ) external returns (uint256[] memory amounts);
 
-    function getSlotFreeLiquidities(
+    function getBinFreeLiquidities(
         int16[] memory tradingFeeRate
     ) external returns (uint256[] memory amounts);
 
-    function distributeEarningToSlots(uint256 earning, uint256 marketBalance) external;
+    function distributeEarningToBins(uint256 earning, uint256 marketBalance) external;
 
     function calculateCLBTokenMinting(
         int16 tradingFeeRate,

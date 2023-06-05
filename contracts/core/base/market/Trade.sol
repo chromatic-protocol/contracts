@@ -8,7 +8,7 @@ import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
+import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
@@ -32,14 +32,14 @@ abstract contract Trade is MarketBase {
         if (qty == 0) revert ZeroTargetAmount();
         if (takerMargin < factory.getMinimumTakerMargin(address(settlementToken)))
             revert TooSmallTakerMargin();
-        //TODO get slotmargin by using makerMargin
+        //TODO get binMargin by using makerMargin
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 
-        position.setSlotMargins(liquidityPool.prepareSlotMargins(position.qty, makerMargin));
+        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, makerMargin));
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
@@ -199,9 +199,9 @@ abstract contract Trade is MarketBase {
         vault.onClaimPosition(position.id, recipient, takerMargin, settlementAmount);
 
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
-        try IChromaticTradeCallback(position.owner).claimPositionCallback(position.id, data) {} catch (
-            bytes memory e /*lowLevelData*/
-        ) {
+        try
+            IChromaticTradeCallback(position.owner).claimPositionCallback(position.id, data)
+        {} catch (bytes memory e /*lowLevelData*/) {
             if (msg.sender != address(liquidator)) {
                 revert ClaimPositionCallbackError();
             }
@@ -284,7 +284,7 @@ abstract contract Trade is MarketBase {
                 closeTimestamp: 0,
                 takerMargin: takerMargin,
                 owner: msg.sender,
-                _slotMargins: new LpSlotMargin[](0)
+                _binMargins: new BinMargin[](0)
             });
     }
 

@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@chromatic/core/external/lpslot/LpSlotPosition.sol";
+import {BinPosition, BinPositionLib} from "@chromatic/core/external/lpslot/BinPosition.sol";
 import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
@@ -13,14 +13,14 @@ import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 
-contract LpSlotPositionTest is Test {
-    using LpSlotPositionLib for LpSlotPosition;
+contract BinPositionTest is Test {
+    using BinPositionLib for BinPosition;
 
     IOracleProvider provider;
     IInterestCalculator interestCalculator;
     IChromaticVault vault;
     IChromaticMarket market;
-    LpSlotPosition position;
+    BinPosition position;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
@@ -36,7 +36,7 @@ contract LpSlotPositionTest is Test {
 
         vm.mockCall(
             address(vault),
-            abi.encodeWithSelector(vault.getPendingSlotShare.selector),
+            abi.encodeWithSelector(vault.getPendingBinShare.selector),
             abi.encode(0)
         );
     }

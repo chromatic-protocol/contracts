@@ -8,10 +8,10 @@ import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
- * @title LpSlotClosingPosition
- * @dev Represents the closing position within an LpSlot.
+ * @title BinClosingPosition
+ * @dev Represents the closing position within an LiquidityBin.
  */
-struct LpSlotClosingPosition {
+struct BinClosingPosition {
     /// @dev The oracle version when the position was closed.
     uint256 closeVersion;
     /// @dev The total leveraged quantity of the closing position.
@@ -27,19 +27,19 @@ struct LpSlotClosingPosition {
 }
 
 /**
- * @title LpSlotClosingPositionLib
- * @notice A library that provides functions to manage the closing position within an LpSlot.
+ * @title BinClosingPositionLib
+ * @notice A library that provides functions to manage the closing position within an LiquidityBin.
  */
-library LpSlotClosingPositionLib {
+library BinClosingPositionLib {
     using AccruedInterestLib for AccruedInterest;
 
     /**
      * @notice Settles the accumulated interest of the closing position.
-     * @param self The LpSlotClosingPosition storage.
+     * @param self The BinClosingPosition storage.
      * @param ctx The LpContext.
      */
     function settleAccruedInterest(
-        LpSlotClosingPosition storage self,
+        BinClosingPosition storage self,
         LpContext memory ctx
     ) internal {
         self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
@@ -47,12 +47,12 @@ library LpSlotClosingPositionLib {
 
     /**
      * @notice Handles the closing of a position.
-     * @param self The LpSlotClosingPosition storage.
+     * @param self The BinClosingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.
      */
     function onClosePosition(
-        LpSlotClosingPosition storage self,
+        BinClosingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -79,12 +79,12 @@ library LpSlotClosingPositionLib {
 
     /**
      * @notice Handles the claiming of a position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.
      */
     function onClaimPosition(
-        LpSlotClosingPosition storage self,
+        BinClosingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {

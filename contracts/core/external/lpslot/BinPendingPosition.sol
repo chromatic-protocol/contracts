@@ -13,10 +13,10 @@ import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
- * @title LpSlotPendingPosition
- * @notice Represents a pending position within the LpSlot
+ * @title BinPendingPosition
+ * @notice Represents a pending position within the LiquidityBin
  */
-struct LpSlotPendingPosition {
+struct BinPendingPosition {
     /// @dev The oracle version when the position was opened.
     uint256 openVersion;
     /// @dev The total leveraged quantity of the pending position.
@@ -30,10 +30,10 @@ struct LpSlotPendingPosition {
 }
 
 /**
- * @title LpSlotPendingPositionLib
- * @notice Library for managing pending positions in the `LpSlot`
+ * @title BinPendingPositionLib
+ * @notice Library for managing pending positions in the `LiquidityBin`
  */
-library LpSlotPendingPositionLib {
+library BinPendingPositionLib {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
@@ -41,11 +41,11 @@ library LpSlotPendingPositionLib {
 
     /**
      * @notice Settles the accumulated interest of the pending position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      */
     function settleAccruedInterest(
-        LpSlotPendingPosition storage self,
+        BinPendingPosition storage self,
         LpContext memory ctx
     ) internal {
         self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
@@ -53,11 +53,11 @@ library LpSlotPendingPositionLib {
 
     /**
      * @notice Handles the opening of a position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param param The position parameters.
      */
     function onOpenPosition(
-        LpSlotPendingPosition storage self,
+        BinPendingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -82,12 +82,12 @@ library LpSlotPendingPositionLib {
 
     /**
      * @notice Handles the closing of a position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.
      */
     function onClosePosition(
-        LpSlotPendingPosition storage self,
+        BinPendingPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -108,12 +108,12 @@ library LpSlotPendingPositionLib {
 
     /**
      * @notice Calculates the unrealized profit or loss (PnL) of the pending position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @return uint256 The unrealized PnL.
      */
     function unrealizedPnl(
-        LpSlotPendingPosition storage self,
+        BinPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (int256) {
         if (self.openVersion == 0) return 0;
@@ -141,12 +141,12 @@ library LpSlotPendingPositionLib {
 
     /**
      * @notice Calculates the current accrued interest of the pending position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @return uint256 The current accrued interest.
      */
     function currentInterest(
-        LpSlotPendingPosition storage self,
+        BinPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (uint256) {
         return self.accruedInterest.calculateInterest(ctx, self.totalMakerMargin, block.timestamp);
@@ -154,12 +154,12 @@ library LpSlotPendingPositionLib {
 
     /**
      * @notice Calculates the entry price of the pending position.
-     * @param self The LpSlotPendingPosition storage.
+     * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @return UFixed18 The entry price.
      */
     function entryPrice(
-        LpSlotPendingPosition storage self,
+        BinPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (UFixed18) {
         return

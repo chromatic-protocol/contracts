@@ -38,7 +38,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     error NotEnoughBalance();
     error NotEnoughFeePaid();
     error ExistMarketEarningDistributionTask();
-    error ExistSlotEarningDistributionTask();
 
     modifier onlyFactory() {
         if (msg.sender != address(factory)) revert OnlyAccessableByFactory();
@@ -231,9 +230,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit FlashLoan(msg.sender, recipient, amount, paid, paidToTakerPool, paidToMakerPool);
     }
 
-    function getPendingSlotShare(
+    function getPendingBinShare(
         address market,
-        uint256 slotBalance
+        uint256 binBalance
     ) external view returns (uint256) {
         address token = address(IChromaticMarket(market).settlementToken());
         uint256 makerBalance = makerBalances[token];
@@ -244,7 +243,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
                 makerBalance == 0
                     ? 0
                     : pendingMakerEarnings[token].mulDiv(
-                        slotBalance,
+                        binBalance,
                         makerBalance,
                         Math.Rounding.Up
                     )
@@ -253,7 +252,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
                 marketBalance == 0
                     ? 0
                     : pendingMarketEarnings[market].mulDiv(
-                        slotBalance,
+                        binBalance,
                         marketBalance,
                         Math.Rounding.Up
                     )
@@ -345,7 +344,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         return pendingMakerEarnings[token] >= factory.getEarningDistributionThreshold(token);
     }
 
-    // gelato automate - distribute market earning to each slots
+    // gelato automate - distribute market earning to each bins
 
     function resolveMarketEarningDistribution(
         address market
@@ -414,7 +413,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         makerMarketBalances[market] += remainEarning;
         makerBalances[token] += remainEarning;
 
-        IChromaticMarket(market).distributeEarningToSlots(remainEarning, balance);
+        IChromaticMarket(market).distributeEarningToBins(remainEarning, balance);
 
         emit MarketEarningDistributed(market, earning, usedFee, balance);
     }

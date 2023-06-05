@@ -51,11 +51,11 @@ describe('market test', async function () {
     await updatePrice(1000)
 
     const amount = ethers.utils.parseEther('100')
-    const feeSlotKey = 1
+    const feeBinKey = 1
 
-    const expectedLiquidity = await market.calculateCLBTokenMinting(feeSlotKey, amount)
+    const expectedLiquidity = await market.calculateCLBTokenMinting(feeBinKey, amount)
 
-    await expect(addLiquidityTx(amount, feeSlotKey)).to.changeTokenBalance(
+    await expect(addLiquidityTx(amount, feeBinKey)).to.changeTokenBalance(
       settlementToken,
       tester.address,
       amount.mul(-1)
@@ -64,14 +64,14 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidity((await getLpReceiptIds())[0])).wait()
 
-    expect(await clbToken.totalSupply(feeSlotKey)).to.equal(expectedLiquidity)
+    expect(await clbToken.totalSupply(feeBinKey)).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
-    const expectedAmount = await market.calculateCLBTokenValue(feeSlotKey, removeLiqAmount)
+    const expectedAmount = await market.calculateCLBTokenValue(feeBinKey, removeLiqAmount)
 
     await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
-    await (await removeLiquidity(removeLiqAmount, feeSlotKey)).wait()
+    await (await removeLiquidity(removeLiqAmount, feeBinKey)).wait()
 
     await updatePrice(1000)
 
@@ -81,7 +81,7 @@ describe('market test', async function () {
       expectedAmount
     )
 
-    expect(await clbToken.totalSupply(feeSlotKey)).to.equal(removeLiqAmount)
+    expect(await clbToken.totalSupply(feeBinKey)).to.equal(removeLiqAmount)
   })
 
   it('add/remove liquidity Batch', async () => {
@@ -163,8 +163,8 @@ describe('market test', async function () {
     // }
     // logLiquidity(totals, unuseds);
 
-    const totalMargins = await testData.market.getSlotLiquidities(totalFees)
-    const unusedMargins = await testData.market.getSlotFreeLiquidities(totalFees)
+    const totalMargins = await testData.market.getBinLiquidities(totalFees)
+    const unusedMargins = await testData.market.getBinFreeLiquidities(totalFees)
 
     logLiquidity(totalMargins, unusedMargins)
   })
@@ -173,11 +173,11 @@ describe('market test', async function () {
     const { market } = testData
 
     const amount = ethers.utils.parseEther('100')
-    const feeSlotKey = 1
-    const expectedLiquidity = await market.calculateCLBTokenMinting(feeSlotKey, amount)
+    const feeBinKey = 1
+    const expectedLiquidity = await market.calculateCLBTokenMinting(feeBinKey, amount)
     expect(expectedLiquidity).to.equal(amount)
 
-    const expectedAmount = await market.calculateCLBTokenValue(feeSlotKey, amount)
+    const expectedAmount = await market.calculateCLBTokenValue(feeBinKey, amount)
     expect(expectedAmount).to.equal(0)
   })
 })

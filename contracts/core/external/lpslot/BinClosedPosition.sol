@@ -4,18 +4,18 @@ pragma solidity >=0.8.0 <0.9.0;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/lpslot/AccruedInterest.sol";
-import {LpSlotClosingPosition, LpSlotClosingPositionLib} from "@chromatic/core/external/lpslot/LpSlotClosingPosition.sol";
+import {BinClosingPosition, BinClosingPositionLib} from "@chromatic/core/external/lpslot/BinClosingPosition.sol";
 import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 
 /**
- * @title LpSlotClosedPosition
- * @notice Represents a closed position within an LpSlot.
+ * @title BinClosedPosition
+ * @notice Represents a closed position within an LiquidityBin.
  */
-struct LpSlotClosedPosition {
+struct BinClosedPosition {
     uint256 _totalMakerMargin;
-    LpSlotClosingPosition _closing;
+    BinClosingPosition _closing;
     EnumerableSet.UintSet _waitingVersions;
     mapping(uint256 => _ClaimWaitingPosition) _waitingPositions;
     AccruedInterest _accruedInterest;
@@ -24,7 +24,7 @@ struct LpSlotClosedPosition {
 /**
  * @title _ClaimWaitingPosition
  * @notice Represents the accumulated values of the waiting positions to be claimed
- *      for a specific version within LpSlotClosedPosition.
+ *      for a specific version within BinClosedPosition.
  */
 struct _ClaimWaitingPosition {
     int256 totalLeveragedQty;
@@ -34,23 +34,23 @@ struct _ClaimWaitingPosition {
 }
 
 /**
- * @title LpSlotClosedPositionLib
- * @notice A library that provides functions to manage the closed position within an LpSlot.
+ * @title BinClosedPositionLib
+ * @notice A library that provides functions to manage the closed position within an LiquidityBin.
  */
-library LpSlotClosedPositionLib {
+library BinClosedPositionLib {
     using EnumerableSet for EnumerableSet.UintSet;
     using AccruedInterestLib for AccruedInterest;
-    using LpSlotClosingPositionLib for LpSlotClosingPosition;
+    using BinClosingPositionLib for BinClosingPosition;
 
     /**
-     * @notice Settles the closing position within the LpSlotClosedPosition.
+     * @notice Settles the closing position within the BinClosedPosition.
      * @dev If the closeVersion is not set or is equal to the current oracle version, no action is taken.
      *      Otherwise, the waiting position is stored and the accrued interest is accumulated.
-     * @param self The LpSlotClosedPosition storage.
+     * @param self The BinClosedPosition storage.
      * @param ctx The LpContext memory.
      */
     function settleClosingPosition(
-        LpSlotClosedPosition storage self,
+        BinClosedPosition storage self,
         LpContext memory ctx
     ) internal {
         uint256 closeVersion = self._closing.closeVersion;
@@ -80,14 +80,14 @@ library LpSlotClosedPositionLib {
     }
 
     /**
-     * @notice Closes the position within the LpSlotClosedPosition.
-     * @dev Delegates the onClosePosition function call to the underlying LpSlotClosingPosition.
-     * @param self The LpSlotClosedPosition storage.
+     * @notice Closes the position within the BinClosedPosition.
+     * @dev Delegates the onClosePosition function call to the underlying BinClosingPosition.
+     * @param self The BinClosedPosition storage.
      * @param ctx The LpContext memory.
      * @param param The PositionParam memory.
      */
     function onClosePosition(
-        LpSlotClosedPosition storage self,
+        BinClosedPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -95,16 +95,16 @@ library LpSlotClosedPositionLib {
     }
 
     /**
-     * @notice Claims the position within the LpSlotClosedPosition.
-     * @dev If the closeVersion is equal to the LpSlotClosingPosition's closeVersion, the claim is made directly.
+     * @notice Claims the position within the BinClosedPosition.
+     * @dev If the closeVersion is equal to the BinClosingPosition's closeVersion, the claim is made directly.
      *      Otherwise, the claim is made from the waiting position, and if exhausted, the waiting position is removed.
      *      The accrued interest is accumulated and deducted accordingly.
-     * @param self The LpSlotClosedPosition storage.
+     * @param self The BinClosedPosition storage.
      * @param ctx The LpContext memory.
      * @param param The PositionParam memory.
      */
     function onClaimPosition(
-        LpSlotClosedPosition storage self,
+        BinClosedPosition storage self,
         LpContext memory ctx,
         PositionParam memory param
     ) internal {
@@ -129,7 +129,7 @@ library LpSlotClosedPositionLib {
     }
 
     /**
-     * @dev Claims the position from the waiting position within the LpSlotClosedPosition.
+     * @dev Claims the position from the waiting position within the BinClosedPosition.
      *      Updates the waiting position and returns whether the waiting position is exhausted.
      * @param waitingPosition The waiting position storage.
      * @param ctx The LpContext memory.
