@@ -67,5 +67,5 @@ jobs:
           base: main
           branch: develop
           path: sdk
-          add-paths: src.ts/**
+          add-paths: src/gen/**
           token: ${{ steps.generate-token.outputs.token }}
