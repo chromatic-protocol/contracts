@@ -1,7 +1,7 @@
 # This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
 # For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
 
-name: Release and Publish SDK
+name: release and export source
 
 on:
   pull_request:
@@ -28,12 +28,11 @@ jobs:
         id: semantic-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-  Publish:
+  Export:
     needs: Release
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     env:
       NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
@@ -56,7 +55,7 @@ jobs:
           ref: main
           path: sdk
           ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
-      - run: cp -r dist/src.ts sdk/src.ts
+      - run: cp -r package-build/src.ts sdk/src/gen
       - uses: tibdex/github-app-token@v1
         id: generate-token
         with:
