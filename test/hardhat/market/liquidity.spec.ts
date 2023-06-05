@@ -39,7 +39,7 @@ describe('market test', async function () {
   })
 
   it('add/remove liquidity', async () => {
-    const { market, usumRouter, tester, lpToken, settlementToken } = testData
+    const { market, chromaticRouter, tester, clbToken, settlementToken } = testData
     const {
       addLiquidityTx,
       updatePrice,
@@ -53,7 +53,7 @@ describe('market test', async function () {
     const amount = ethers.utils.parseEther('100')
     const feeSlotKey = 1
 
-    const expectedLiquidity = await market.calculateLpTokenMinting(feeSlotKey, amount)
+    const expectedLiquidity = await market.calculateCLBTokenMinting(feeSlotKey, amount)
 
     await expect(addLiquidityTx(amount, feeSlotKey)).to.changeTokenBalance(
       settlementToken,
@@ -64,12 +64,12 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidity((await getLpReceiptIds())[0])).wait()
 
-    expect(await lpToken.totalSupply(feeSlotKey)).to.equal(expectedLiquidity)
+    expect(await clbToken.totalSupply(feeSlotKey)).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
-    const expectedAmount = await market.calculateLpTokenValue(feeSlotKey, removeLiqAmount)
+    const expectedAmount = await market.calculateCLBTokenValue(feeSlotKey, removeLiqAmount)
 
-    await (await lpToken.setApprovalForAll(usumRouter.address, true)).wait()
+    await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
     await (await removeLiquidity(removeLiqAmount, feeSlotKey)).wait()
 
@@ -81,11 +81,11 @@ describe('market test', async function () {
       expectedAmount
     )
 
-    expect(await lpToken.totalSupply(feeSlotKey)).to.equal(removeLiqAmount)
+    expect(await clbToken.totalSupply(feeSlotKey)).to.equal(removeLiqAmount)
   })
 
   it('add/remove liquidity Batch', async () => {
-    const { market, usumRouter, tester, lpToken, settlementToken } = testData
+    const { market, chromaticRouter, tester, clbToken, settlementToken } = testData
     const {
       updatePrice,
       addLiquidityBatch,
@@ -99,7 +99,7 @@ describe('market test', async function () {
     const amount = ethers.utils.parseEther('100')
     const amounts = totalFees.map((_) => amount)
 
-    const expectedLiquidities = await usumRouter.calculateLpTokenMintingBatch(
+    const expectedLiquidities = await chromaticRouter.calculateCLBTokenMintingBatch(
       market.address,
       totalFees,
       amounts
@@ -113,14 +113,14 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
 
-    expect(await usumRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
+    expect(await chromaticRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
       expectedLiquidities
     )
 
     // remove begin
-    await (await lpToken.setApprovalForAll(usumRouter.address, true)).wait()
+    await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
-    const expectedAmounts = await usumRouter.calculateLpTokenValueBatch(
+    const expectedAmounts = await chromaticRouter.calculateCLBTokenValueBatch(
       market.address,
       totalFees,
       expectedLiquidities
@@ -136,7 +136,7 @@ describe('market test', async function () {
       expectedAmounts.reduce((a, b) => a.add(b))
     )
 
-    expect(await usumRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
+    expect(await chromaticRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
       totalFees.map((_) => BigNumber.from('0'))
     )
   })
@@ -169,15 +169,15 @@ describe('market test', async function () {
     logLiquidity(totalMargins, unusedMargins)
   })
 
-  it('calculate LpTokenMinting/LpTokenValue when zero liquidity', async () => {
+  it('calculate CLBTokenMinting/CLBTokenValue when zero liquidity', async () => {
     const { market } = testData
 
     const amount = ethers.utils.parseEther('100')
     const feeSlotKey = 1
-    const expectedLiquidity = await market.calculateLpTokenMinting(feeSlotKey, amount)
+    const expectedLiquidity = await market.calculateCLBTokenMinting(feeSlotKey, amount)
     expect(expectedLiquidity).to.equal(amount)
 
-    const expectedAmount = await market.calculateLpTokenValue(feeSlotKey, amount)
+    const expectedAmount = await market.calculateCLBTokenValue(feeSlotKey, amount)
     expect(expectedAmount).to.equal(0)
   })
 })

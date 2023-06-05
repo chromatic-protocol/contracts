@@ -5,13 +5,13 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
-import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
-import {ITrade} from "@usum/core/interfaces/market/ITrade.sol";
+import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
+import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
+import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
 
 abstract contract Trade is MarketBase {
     using Math for uint256;
@@ -52,7 +52,7 @@ abstract contract Trade is MarketBase {
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         uint256 protocolFee = getProtocolFee(takerMargin);
         uint256 requiredMargin = takerMargin + protocolFee + tradingFee;
-        IUSUMTradeCallback(msg.sender).openPositionCallback(
+        IChromaticTradeCallback(msg.sender).openPositionCallback(
             address(settlementToken),
             address(vault),
             requiredMargin,
@@ -199,7 +199,7 @@ abstract contract Trade is MarketBase {
         vault.onClaimPosition(position.id, recipient, takerMargin, settlementAmount);
 
         // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
-        try IUSUMTradeCallback(position.owner).claimPositionCallback(position.id, data) {} catch (
+        try IChromaticTradeCallback(position.owner).claimPositionCallback(position.id, data) {} catch (
             bytes memory e /*lowLevelData*/
         ) {
             if (msg.sender != address(liquidator)) {

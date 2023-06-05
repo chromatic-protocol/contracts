@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
-import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
+import {InterestRate} from "@chromatic/core/libraries/InterestRate.sol";
+import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic/core/external/registry/SettlementTokenRegistry.sol";
 
 contract SettlementTokenRegistryTest is Test {
     using SettlementTokenRegistryLib for SettlementTokenRegistry;

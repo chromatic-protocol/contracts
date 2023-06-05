@@ -1,9 +1,9 @@
 import {
   KeeperFeePayerMock,
-  USUMLiquidator,
-  USUMMarketFactory,
-  USUMVault
-} from '@usum/typechain-types'
+  ChromaticLiquidator,
+  ChromaticMarketFactory,
+  ChromaticVault
+} from '@chromatic/typechain-types'
 import { Contract } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
@@ -15,15 +15,15 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
   const settlementTokenRegistryLib = await deployContract<Contract>('SettlementTokenRegistryLib')
 
   const lpSlotSetLib = await deployContract<Contract>('LpSlotSetLib')
-  const lpTokenDeployerLib = await deployContract<Contract>('LpTokenDeployerLib')
+  const clbTokenDeployerLib = await deployContract<Contract>('CLBTokenDeployerLib')
   const marketDeployerLib = await deployContract<Contract>('MarketDeployerLib', {
     libraries: {
       LpSlotSetLib: lpSlotSetLib.address,
-      LpTokenDeployerLib: lpTokenDeployerLib.address
+      CLBTokenDeployerLib: clbTokenDeployerLib.address
     }
   })
 
-  const marketFactory = await deployContract<USUMMarketFactory>('USUMMarketFactory', {
+  const marketFactory = await deployContract<ChromaticMarketFactory>('ChromaticMarketFactory', {
     libraries: {
       OracleProviderRegistryLib: oracleProviderRegistryLib.address,
       SettlementTokenRegistryLib: settlementTokenRegistryLib.address,
@@ -42,12 +42,12 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
     })
   ).wait()
 
-  const vault = await deployContract<USUMVault>('USUMVault', {
+  const vault = await deployContract<ChromaticVault>('ChromaticVault', {
     args: [marketFactory.address, opsAddress, opsProxyFactory]
   })
   await (await marketFactory.setVault(vault.address)).wait()
 
-  const liquidator = await deployContract<USUMLiquidator>('USUMLiquidator', {
+  const liquidator = await deployContract<ChromaticLiquidator>('ChromaticLiquidator', {
     args: [marketFactory.address, opsAddress, opsProxyFactory]
   })
   await (await marketFactory.setLiquidator(liquidator.address)).wait()

@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { logDeployed } from '../log-utils'
-import { OracleProviderMock } from '@usum/typechain-types'
+import { OracleProviderMock } from '@chromatic/typechain-types'
 import { deployContract } from '../utils'
 
 export async function deploy(): Promise<OracleProviderMock> {

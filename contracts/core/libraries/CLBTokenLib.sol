@@ -7,15 +7,15 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 uint256 constant DIRECTION_PRECISION = 10 ** 10;
 
 /**
- * @title LpTokenLib
- * @notice Provides utility functions for working with LP tokens.
+ * @title CLBTokenLib
+ * @notice Provides utility functions for working with CLB tokens.
  */
-library LpTokenLib {
+library CLBTokenLib {
     using SignedMath for int256;
     using SafeCast for uint256;
 
     /**
-     * @notice Encode the LP token ID of ERC1155 token type
+     * @notice Encode the CLB token ID of ERC1155 token type
      * @dev If `tradingFeeRate` is negative, it adds `DIRECTION_PRECISION` to the absolute fee rate.
      *      Otherwise it returns the fee rate directly.
      * @return id The ID of ERC1155 token
@@ -26,7 +26,7 @@ library LpTokenLib {
     }
 
     /**
-     * @notice Decode the trading fee rate from the LP token ID of ERC1155 token type
+     * @notice Decode the trading fee rate from the CLB token ID of ERC1155 token type
      * @dev If `id` is greater than or equal to `DIRECTION_PRECISION`,
      *      then it substracts `DIRECTION_PRECISION` from `id`
      *      and returns the negation of the substracted value.

@@ -12,16 +12,16 @@ import {
   IOracleProvider__factory,
   ISwapRouter,
   ISwapRouter__factory,
-  IUSUMMarket,
-  IUSUMMarketFactory,
-  IUSUMMarketFactory__factory,
-  IUSUMMarket__factory,
-  IUSUMRouter,
-  IUSUMRouter__factory,
+  IChromaticMarket,
+  IChromaticMarketFactory,
+  IChromaticMarketFactory__factory,
+  IChromaticMarket__factory,
+  IChromaticRouter,
+  IChromaticRouter__factory,
   IWETH9,
   IWETH9__factory
 } from '../typechain-types'
-import { PositionStructOutput } from './../typechain-types/contracts/core/interfaces/IUSUMMarket'
+import { PositionStructOutput } from './../typechain-types/contracts/core/interfaces/IChromaticMarket'
 
 const QTY_DECIMALS = 4
 const LEVERAGE_DECIMALS = 2
@@ -48,13 +48,13 @@ export class ReplWallet {
     const usdc = IERC20Metadata__factory.connect(addresses.usdc, signer)
     const swapRouter = ISwapRouter__factory.connect(addresses.swapRouter, signer)
     const oracleProvider = IOracleProvider__factory.connect(addresses.oracleProvider, signer)
-    const marketFactory = IUSUMMarketFactory__factory.connect(addresses.marketFactory, signer)
+    const marketFactory = IChromaticMarketFactory__factory.connect(addresses.marketFactory, signer)
     const accountFactory = IAccountFactory__factory.connect(addresses.accountFactory, signer)
-    const router = IUSUMRouter__factory.connect(addresses.router, signer)
+    const router = IChromaticRouter__factory.connect(addresses.router, signer)
 
     const marketAddress = await marketFactory.getMarkets()
 
-    const market = IUSUMMarket__factory.connect(marketAddress[0], signer)
+    const market = IChromaticMarket__factory.connect(marketAddress[0], signer)
 
     const w = new ReplWallet(
       signer,
@@ -81,9 +81,9 @@ export class ReplWallet {
     public readonly USDC: IERC20Metadata,
     public readonly SwapRouter: ISwapRouter,
     public readonly OracleProvider: IOracleProvider,
-    public readonly USUMMarketFactory: IUSUMMarketFactory,
-    public readonly USUMMarket: IUSUMMarket,
-    public readonly USUMRouter: IUSUMRouter,
+    public readonly ChromaticMarketFactory: IChromaticMarketFactory,
+    public readonly ChromaticMarket: IChromaticMarket,
+    public readonly ChromaticRouter: IChromaticRouter,
     public readonly AccountFactory: IAccountFactory
   ) {
     this.address = signer.address
@@ -123,8 +123,8 @@ export class ReplWallet {
   }
 
   async positions(): Promise<PositionStructOutput[]> {
-    const positionIds = await this.Account.getPositionIds(this.USUMMarket.address)
-    return await this.USUMMarket.getPositions(positionIds)
+    const positionIds = await this.Account.getPositionIds(this.ChromaticMarket.address)
+    return await this.ChromaticMarket.getPositions(positionIds)
   }
 
   async openPosition(qty: number, leverage: number, takerMargin: number, makerMargin: number) {
@@ -132,8 +132,8 @@ export class ReplWallet {
     const _takerMargin = parseUnits(takerMargin.toString(), decimals)
     const _makerMargin = parseUnits(makerMargin.toString(), decimals)
 
-    await this.USUMRouter.openPosition(
-      this.USUMMarket.address,
+    await this.ChromaticRouter.openPosition(
+      this.ChromaticMarket.address,
       parseUnits(qty.toString(), QTY_DECIMALS),
       parseUnits(leverage.toString(), LEVERAGE_DECIMALS),
       _takerMargin,
@@ -143,13 +143,13 @@ export class ReplWallet {
   }
 
   async closePosition(positionId: number) {
-    await this.USUMRouter.closePosition(this.USUMMarket.address, BigNumber.from(positionId))
+    await this.ChromaticRouter.closePosition(this.ChromaticMarket.address, BigNumber.from(positionId))
   }
 
   async addLiquidity(feeRate: number, amount: number) {
     const decimals = await this.USDC.decimals()
-    await this.USUMRouter.addLiquidity(
-      this.USUMMarket.address,
+    await this.ChromaticRouter.addLiquidity(
+      this.ChromaticMarket.address,
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(amount.toString(), decimals),
       this.address
@@ -157,20 +157,20 @@ export class ReplWallet {
   }
 
   async claimLiquidity(receiptId: number) {
-    await this.USUMRouter.claimLiquidity(this.USUMMarket.address, receiptId)
+    await this.ChromaticRouter.claimLiquidity(this.ChromaticMarket.address, receiptId)
   }
 
-  async removeLiquidity(feeRate: number, lpTokenAmount: number) {
+  async removeLiquidity(feeRate: number, clbTokenAmount: number) {
     const decimals = await this.USDC.decimals()
-    await this.USUMRouter.removeLiquidity(
-      this.USUMMarket.address,
+    await this.ChromaticRouter.removeLiquidity(
+      this.ChromaticMarket.address,
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
-      parseUnits(lpTokenAmount.toString(), decimals),
+      parseUnits(clbTokenAmount.toString(), decimals),
       this.address
     )
   }
 
   async withdrawLiquidity(receiptId: number) {
-    await this.USUMRouter.withdrawLiquidity(this.USUMMarket.address, receiptId)
+    await this.ChromaticRouter.withdrawLiquidity(this.ChromaticMarket.address, receiptId)
   }
 }

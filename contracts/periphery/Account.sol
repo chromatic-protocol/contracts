@@ -3,11 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {IAccount} from "@usum/periphery/interfaces/IAccount.sol";
-import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {IAccount} from "@chromatic/periphery/interfaces/IAccount.sol";
+import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
 
 contract Account is IAccount, VerifyCallback {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -85,7 +85,7 @@ contract Account is IAccount, VerifyCallback {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
     ) external onlyRouter returns (Position memory position) {
-        position = IUSUMMarket(marketAddress).openPosition(
+        position = IChromaticMarket(marketAddress).openPosition(
             qty,
             leverage,
             takerMargin,
@@ -99,13 +99,13 @@ contract Account is IAccount, VerifyCallback {
     function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        IUSUMMarket(marketAddress).closePosition(positionId);
+        IChromaticMarket(marketAddress).closePosition(positionId);
     }
 
     function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        IUSUMMarket(marketAddress).claimPosition(positionId, address(this), bytes(""));
+        IChromaticMarket(marketAddress).claimPosition(positionId, address(this), bytes(""));
     }
 
     function openPositionCallback(

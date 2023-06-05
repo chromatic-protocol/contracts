@@ -5,16 +5,16 @@ import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@usum/core/external/lpslot/LpSlotPendingPosition.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
+import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpSlotPendingPosition, LpSlotPendingPositionLib} from "@chromatic/core/external/lpslot/LpSlotPendingPosition.sol";
+import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {CLBToken} from "@chromatic/core/CLBToken.sol";
 
 contract LpSlotPendingPositionTest is Test {
     using SafeCast for uint256;
@@ -22,17 +22,17 @@ contract LpSlotPendingPositionTest is Test {
 
     IOracleProvider provider;
     IInterestCalculator interestCalculator;
-    IUSUMVault vault;
-    IUSUMMarket market;
-    IUSUMLpToken lpToken;
+    IChromaticVault vault;
+    IChromaticMarket market;
+    ICLBToken clbToken;
     LpSlotPendingPosition pending;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
         interestCalculator = IInterestCalculator(address(2));
-        vault = IUSUMVault(address(3));
-        market = IUSUMMarket(address(4));
-        lpToken = new USUMLpToken();
+        vault = IChromaticVault(address(3));
+        market = IChromaticMarket(address(4));
+        clbToken = new CLBToken();
 
         vm.mockCall(
             address(interestCalculator),
@@ -173,7 +173,7 @@ contract LpSlotPendingPositionTest is Test {
                 oracleProvider: provider,
                 interestCalculator: interestCalculator,
                 vault: vault,
-                lpToken: lpToken,
+                clbToken: clbToken,
                 market: address(market),
                 settlementToken: address(0),
                 tokenPrecision: 1e6,

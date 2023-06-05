@@ -5,18 +5,18 @@ import {Test} from "forge-std/Test.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {QTY_PRECISION, LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {QTY_PRECISION, LEVERAGE_PRECISION} from "@chromatic/core/libraries/PositionUtil.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
+import {LpSlot, LpSlotLib} from "@chromatic/core/external/lpslot/LpSlot.sol";
+import {LpSlotSet} from "@chromatic/core/external/lpslot/LpSlotSet.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {CLBToken} from "@chromatic/core/CLBToken.sol";
 
 contract LpSlotSetTest is Test {
     using SafeCast for uint256;
@@ -24,17 +24,17 @@ contract LpSlotSetTest is Test {
 
     IOracleProvider provider;
     IInterestCalculator interestCalculator;
-    IUSUMVault vault;
-    IUSUMMarket market;
-    IUSUMLpToken lpToken;
+    IChromaticVault vault;
+    IChromaticMarket market;
+    ICLBToken clbToken;
     LpSlotSet slotSet;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
         interestCalculator = IInterestCalculator(address(2));
-        vault = IUSUMVault(address(3));
-        market = IUSUMMarket(address(4));
-        lpToken = new USUMLpToken();
+        vault = IChromaticVault(address(3));
+        market = IChromaticMarket(address(4));
+        clbToken = new CLBToken();
 
         vm.mockCall(
             address(interestCalculator),
@@ -65,8 +65,8 @@ contract LpSlotSetTest is Test {
         slotSet._longSlots[1]._liquidity.total = 1000 ether;
         slotSet._longSlots[2]._liquidity.total = 1000 ether;
 
-        lpToken.mint(address(market), 1, 1000 ether, bytes(""));
-        lpToken.mint(address(market), 2, 1000 ether, bytes(""));
+        clbToken.mint(address(market), 1, 1000 ether, bytes(""));
+        clbToken.mint(address(market), 2, 1000 ether, bytes(""));
     }
 
     function testPrepareSlotMargins() public {
@@ -198,7 +198,7 @@ contract LpSlotSetTest is Test {
                 oracleProvider: provider,
                 interestCalculator: interestCalculator,
                 vault: vault,
-                lpToken: lpToken,
+                clbToken: clbToken,
                 market: address(market),
                 settlementToken: address(0),
                 tokenPrecision: 1e18,

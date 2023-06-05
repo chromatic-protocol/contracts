@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 
 /**
  * @dev The LpAction enum represents the types of LP actions that can be performed.
@@ -22,7 +22,7 @@ struct LpReceipt {
     uint256 oracleVersion;
     /// @dev The amount involved in the action,
     ///      when the action is `ADD_LIQUIDITY`, this value represents the amount of settlement tokens
-    ///      when the action is `REMOVE_LIQUIDITY`, this value represents the amount of lp tokens
+    ///      when the action is `REMOVE_LIQUIDITY`, this value represents the amount of CLB tokens
     uint256 amount;
     /// @dev The address of the recipient of the action
     address recipient;
@@ -40,11 +40,11 @@ using LpReceiptLib for LpReceipt global;
  */
 library LpReceiptLib {
     /**
-     * @notice Computes the ID of the USUMLpToken contract based on the trading fee rate.
+     * @notice Computes the ID of the CLBToken contract based on the trading fee rate.
      * @param self The LpReceipt struct.
-     * @return The ID of the USUMLpToken contract.
+     * @return The ID of the CLBToken contract.
      */
-    function lpTokenId(LpReceipt memory self) internal pure returns (uint256) {
-        return LpTokenLib.encodeId(self.tradingFeeRate);
+    function clbTokenId(LpReceipt memory self) internal pure returns (uint256) {
+        return CLBTokenLib.encodeId(self.tradingFeeRate);
     }
 }

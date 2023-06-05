@@ -2,9 +2,9 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ITaskTreasuryUpgradable, ModuleData} from "@usum/core/base/gelato/Types.sol";
-import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {ITaskTreasuryUpgradable, ModuleData} from "@chromatic/core/base/gelato/Types.sol";
+import {AutomateReady} from "@chromatic/core/base/gelato/AutomateReady.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
  * @dev Inherit this contract to allow your smart contract

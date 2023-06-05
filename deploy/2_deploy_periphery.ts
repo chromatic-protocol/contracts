@@ -7,14 +7,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const { address: routerAddress } = await deploy("USUMRouter", {
+  const { address: routerAddress } = await deploy("ChromaticRouter", {
     from: deployer,
   })
-  console.log(chalk.yellow(`✨ USUMRouter: ${routerAddress}`))
+  console.log(chalk.yellow(`✨ ChromaticRouter: ${routerAddress}`))
 
 
   const { address: marketFactoryAddress } = await deployments.get(
-    "USUMMarketFactory"
+    "ChromaticMarketFactory"
   )
 
 
@@ -24,12 +24,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ AccountFactory: ${accountFactoryAddress}`))
 
-  const Router = await ethers.getContractFactory("USUMRouter")
+  const Router = await ethers.getContractFactory("ChromaticRouter")
   const router = Router.attach(routerAddress)
   await router.initialize(accountFactoryAddress, marketFactoryAddress, {
     from: deployer,
   })
-  console.log(chalk.yellow("✨ Initialize USUMRouter"))
+  console.log(chalk.yellow("✨ Initialize ChromaticRouter"))
 }
 
 export default func

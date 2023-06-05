@@ -3,7 +3,7 @@ import { deploy as gelatoDeploy } from './gelato/deploy'
 import { deploy as marketFactoryDeploy } from './market_factory/deploy'
 import { deploy as oracleProviderDeploy } from './oracle_provider/deploy'
 import { deployContract, hardhatErrorPrettyPrint } from './utils'
-import { Token, AccountFactory, USUMRouter } from '../../typechain-types'
+import { Token, AccountFactory, ChromaticRouter } from '../../typechain-types'
 import { BigNumber } from 'ethers'
 import { parseUnits } from 'ethers/lib/utils'
 import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
@@ -42,14 +42,14 @@ export async function deploy() {
     const marketAddress = marketCreatedEvents[0].args.market
     console.log('market create result ', marketAddress)
 
-    const market = await ethers.getContractAt('USUMMarket', marketAddress)
+    const market = await ethers.getContractAt('ChromaticMarket', marketAddress)
 
-    const usumRouter = await deployContract<USUMRouter>('USUMRouter')
+    const chromaticRouter = await deployContract<ChromaticRouter>('ChromaticRouter')
     const accountFactory = await deployContract<AccountFactory>('AccountFactory', {
-      args: [usumRouter.address, marketFactory.address]
+      args: [chromaticRouter.address, marketFactory.address]
     })
 
-    await (await usumRouter.initialize(accountFactory.address, marketFactory.address)).wait()
+    await (await chromaticRouter.initialize(accountFactory.address, marketFactory.address)).wait()
 
     return {
       marketFactory,
@@ -57,7 +57,7 @@ export async function deploy() {
       liquidator,
       oracleProvider,
       market,
-      usumRouter,
+      chromaticRouter,
       accountFactory,
       settlementToken,
       gelato: {

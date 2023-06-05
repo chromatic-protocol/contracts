@@ -3,13 +3,13 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import {IWETH9} from "@usum/core/interfaces/IWETH9.sol";
-import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {IWETH9} from "@chromatic/core/interfaces/IWETH9.sol";
+import {IKeeperFeePayer} from "@chromatic/core/interfaces/IKeeperFeePayer.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 contract KeeperFeePayer is IKeeperFeePayer {
-    IUSUMMarketFactory factory;
+    IChromaticMarketFactory factory;
     ISwapRouter uniswapRouter;
     IWETH9 public WETH9;
 
@@ -25,7 +25,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
         _;
     }
 
-    constructor(IUSUMMarketFactory _factory, ISwapRouter _uniswapRouter, IWETH9 _weth) {
+    constructor(IChromaticMarketFactory _factory, ISwapRouter _uniswapRouter, IWETH9 _weth) {
         factory = _factory;
         uniswapRouter = _uniswapRouter;
         WETH9 = _weth;

@@ -2,9 +2,9 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {USUMLpToken} from "@usum/core/USUMLpToken.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {CLBToken} from "@chromatic/core/CLBToken.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 
 contract OracleProviderMock is IOracleProvider {
     // add this to be excluded from coverage report
@@ -32,7 +32,7 @@ contract OracleProviderMock is IOracleProvider {
     ) external view override returns (OracleVersion[] memory) {}
 }
 
-contract USUMLpTokenTest is Test, USUMLpToken {
+contract CLBTokenTest is Test, CLBToken {
     OracleProviderMock public oracleProvider = new OracleProviderMock();
 
     function setUp() public {

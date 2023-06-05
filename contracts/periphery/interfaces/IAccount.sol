@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMTradeCallback} from "@usum/core/interfaces/callback/IUSUMTradeCallback.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
+import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
 
-interface IAccount is IUSUMTradeCallback {
+interface IAccount is IChromaticTradeCallback {
     function balance(address quote) external view returns (uint256);
 
     function withdraw(address quote, uint256 amount) external;

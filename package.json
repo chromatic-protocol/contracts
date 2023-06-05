@@ -1,5 +1,5 @@
 {
-  "name": "usum-protocol",
+  "name": "chromatic-protocol",
   "scripts": {
     "postinstall": "patch-package",
     "test": "forge test -vvv",

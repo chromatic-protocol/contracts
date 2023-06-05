@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
+import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 
-interface IUSUMLiquidity {
+interface ILiquidity {
     error TooSmallAmount();
     error OnlyAccessableByVault();
     error NotExistLpReceipt();
@@ -13,7 +13,7 @@ interface IUSUMLiquidity {
 
     event ClaimLiquidity(
         address indexed recipient,
-        uint256 indexed lpTokenAmount,
+        uint256 indexed clbTokenAmount,
         LpReceipt receipt
     );
 
@@ -22,7 +22,7 @@ interface IUSUMLiquidity {
     event WithdrawLiquidity(
         address indexed recipient,
         uint256 indexed amount,
-        uint256 indexed burnedLpTokenAmount,
+        uint256 indexed burnedCLBTokenAmount,
         LpReceipt receipt
     );
 
@@ -52,13 +52,13 @@ interface IUSUMLiquidity {
 
     function distributeEarningToSlots(uint256 earning, uint256 marketBalance) external;
 
-    function calculateLpTokenMinting(
+    function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount
     ) external view returns (uint256);
 
-    function calculateLpTokenValue(
+    function calculateCLBTokenValue(
         int16 tradingFeeRate,
-        uint256 lpTokenAmount
+        uint256 clbTokenAmount
     ) external view returns (uint256);
 }

@@ -19,9 +19,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
   const { address: marketFactoryAddress, libraries: marketFactoryLibaries } =
-    await deployments.get("USUMMarketFactory")
+    await deployments.get("ChromaticMarketFactory")
 
-  const MarketFactory = await ethers.getContractFactory("USUMMarketFactory", {
+  const MarketFactory = await ethers.getContractFactory("ChromaticMarketFactory", {
     libraries: marketFactoryLibaries,
   })
   const marketFactory = MarketFactory.attach(marketFactoryAddress)

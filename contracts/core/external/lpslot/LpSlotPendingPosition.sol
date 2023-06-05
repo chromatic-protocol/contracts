@@ -5,12 +5,12 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {AccruedInterest, AccruedInterestLib} from "@usum/core/external/lpslot/AccruedInterest.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/lpslot/AccruedInterest.sol";
+import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
  * @title LpSlotPendingPosition

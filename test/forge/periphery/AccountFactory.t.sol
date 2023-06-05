@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
-import {IAccountFactory} from "@usum/periphery/interfaces/IAccountFactory.sol";
+import {AccountFactory} from "@chromatic/periphery/AccountFactory.sol";
+import {IAccountFactory} from "@chromatic/periphery/interfaces/IAccountFactory.sol";
 
 contract AccountFactoryMock is Test {
     AccountFactory public accountFactory = new AccountFactory(address(this), address(0)); // router, marketFactory

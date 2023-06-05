@@ -3,21 +3,21 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {LpSlotLiquidity, LpSlotLiquidityLib} from "@usum/core/external/lpslot/LpSlotLiquidity.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
-import {LpSlotClosedPosition, LpSlotClosedPositionLib} from "@usum/core/external/lpslot/LpSlotClosedPosition.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {LpSlotLiquidity, LpSlotLiquidityLib} from "@chromatic/core/external/lpslot/LpSlotLiquidity.sol";
+import {LpSlotPosition, LpSlotPositionLib} from "@chromatic/core/external/lpslot/LpSlotPosition.sol";
+import {LpSlotClosedPosition, LpSlotClosedPositionLib} from "@chromatic/core/external/lpslot/LpSlotClosedPosition.sol";
+import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
  * @title LpSlot
  * @notice Structure representing a liquidity slot
  */
 struct LpSlot {
-    /// @dev The ID of the LP token
-    uint256 lpTokenId;
+    /// @dev The ID of the CLB token
+    uint256 clbTokenId;
     /// @dev The liquidity data for the slot
     LpSlotLiquidity _liquidity;
     /// @dev The position data for the slot
@@ -61,7 +61,7 @@ library LpSlotLib {
             ctx,
             self.value(ctx),
             self.freeLiquidity(),
-            self.lpTokenId
+            self.clbTokenId
         );
     }
 
@@ -71,7 +71,7 @@ library LpSlotLib {
      * @param tradingFeeRate The trading fee rate to set
      */
     function initialize(LpSlot storage self, int16 tradingFeeRate) internal {
-        self.lpTokenId = LpTokenLib.encodeId(tradingFeeRate);
+        self.clbTokenId = CLBTokenLib.encodeId(tradingFeeRate);
     }
 
     /**
@@ -212,7 +212,7 @@ library LpSlotLib {
      *        (should be the same as the one used in acceptAddLiquidity)
      * @param oracleVersion The oracle version used for the claim.
      *        (should be the oracle version when call acceptAddLiquidity)
-     * @return The amount of liquidity (LP tokens) received as a result of the liquidity claim.
+     * @return The amount of liquidity (CLB tokens) received as a result of the liquidity claim.
      */
     function acceptClaimLiquidity(
         LpSlot storage self,
@@ -229,14 +229,14 @@ library LpSlotLib {
      *      of the liquidity component.
      * @param self The LpSlot storage.
      * @param ctx The LpContext memory.
-     * @param lpTokenAmount The amount of LP tokens to remove.
+     * @param clbTokenAmount The amount of CLB tokens to remove.
      */
     function acceptRemoveLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
-        uint256 lpTokenAmount
+        uint256 clbTokenAmount
     ) internal _settle(self, ctx) {
-        self._liquidity.onRemoveLiquidity(lpTokenAmount, ctx.currentOracleVersion().version);
+        self._liquidity.onRemoveLiquidity(clbTokenAmount, ctx.currentOracleVersion().version);
     }
 
     /**
@@ -245,63 +245,63 @@ library LpSlotLib {
      *      of the liquidity component.
      * @param self The LpSlot storage.
      * @param ctx The LpContext memory.
-     * @param lpTokenAmount The amount of LP tokens to withdraw.
+     * @param clbTokenAmount The amount of CLB tokens to withdraw.
      *        (should be the same as the one used in acceptRemoveLiquidity)
      * @param oracleVersion The oracle version used for the withdrawal.
      *        (should be the oracle version when call acceptRemoveLiquidity)
      * @return amount The amount of liquidity withdrawn
-     * @return burnedLpTokenAmount The amount of LP tokens burned during the withdrawal.
+     * @return burnedCLBTokenAmount The amount of CLB tokens burned during the withdrawal.
      */
     function acceptWithdrawLiquidity(
         LpSlot storage self,
         LpContext memory ctx,
-        uint256 lpTokenAmount,
+        uint256 clbTokenAmount,
         uint256 oracleVersion
-    ) internal _settle(self, ctx) returns (uint256 amount, uint256 burnedLpTokenAmount) {
-        return self._liquidity.onWithdrawLiquidity(lpTokenAmount, oracleVersion);
+    ) internal _settle(self, ctx) returns (uint256 amount, uint256 burnedCLBTokenAmount) {
+        return self._liquidity.onWithdrawLiquidity(clbTokenAmount, oracleVersion);
     }
 
     /**
-     * @notice Calculates the amount of LP tokens to be minted when adding liquidity.
-     * @dev This function calculates the number of LP tokens to be minted
-     *      based on the specified amount of liquidity, the slot's current value, and the total supply of LP tokens.
+     * @notice Calculates the amount of CLB tokens to be minted when adding liquidity.
+     * @dev This function calculates the number of CLB tokens to be minted
+     *      based on the specified amount of liquidity, the slot's current value, and the total supply of CLB tokens.
      * @param self The LpSlot storage.
      * @param ctx The LpContext memory.
      * @param amount The amount of liquidity to be added.
-     * @return The amount of LP tokens to be minted.
+     * @return The amount of CLB tokens to be minted.
      */
-    function calculateLpTokenMinting(
+    function calculateCLBTokenMinting(
         LpSlot storage self,
         LpContext memory ctx,
         uint256 amount
     ) internal view returns (uint256) {
         return
-            LpSlotLiquidityLib.calculateLpTokenMinting(
+            LpSlotLiquidityLib.calculateCLBTokenMinting(
                 amount,
                 self.value(ctx),
-                ctx.lpToken.totalSupply(self.lpTokenId)
+                ctx.clbToken.totalSupply(self.clbTokenId)
             );
     }
 
     /**
-     * @notice Calculates the value of the specified amount of LP tokens.
-     * @dev This function calculates the value of the specified amount of LP tokens
-     *      based on the slot's current value and the total supply of LP tokens.
+     * @notice Calculates the value of the specified amount of CLB tokens.
+     * @dev This function calculates the value of the specified amount of CLB tokens
+     *      based on the slot's current value and the total supply of CLB tokens.
      * @param self The LpSlot storage.
      * @param ctx The LpContext memory.
-     * @param lpTokenAmount The amount of LP tokens.
-     * @return The value of the specified amount of LP tokens.
+     * @param clbTokenAmount The amount of CLB tokens.
+     * @return The value of the specified amount of CLB tokens.
      */
-    function calculateLpTokenValue(
+    function calculateCLBTokenValue(
         LpSlot storage self,
         LpContext memory ctx,
-        uint256 lpTokenAmount
+        uint256 clbTokenAmount
     ) internal view returns (uint256) {
         return
-            LpSlotLiquidityLib.calculateLpTokenValue(
-                lpTokenAmount,
+            LpSlotLiquidityLib.calculateCLBTokenValue(
+                clbTokenAmount,
                 self.value(ctx),
-                ctx.lpToken.totalSupply(self.lpTokenId)
+                ctx.clbToken.totalSupply(self.clbTokenId)
             );
     }
 }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {USUMMarket} from "@usum/core/USUMMarket.sol";
+import {ChromaticMarket} from "@chromatic/core/ChromaticMarket.sol";
 
 /**
  * @title MarketDeployer
- * @notice Storage struct for deploying a USUMMarket contract
+ * @notice Storage struct for deploying a ChromaticMarket contract
  */
 struct MarketDeployer {
     Parameters parameters;
@@ -22,15 +22,15 @@ struct Parameters {
 
 /**
  * @title MarketDeployerLib
- * @notice Library for deploying a USUMMarket contract
+ * @notice Library for deploying a ChromaticMarket contract
  */
 library MarketDeployerLib {
     /**
-     * @notice Deploys a USUMMarket contract
+     * @notice Deploys a ChromaticMarket contract
      * @param self The MarketDeployer storage
      * @param oracleProvider The address of the oracle provider
      * @param settlementToken The address of the settlement token
-     * @return market The address of the deployed USUMMarket contract
+     * @return market The address of the deployed ChromaticMarket contract
      */
     function deploy(
         MarketDeployer storage self,
@@ -42,7 +42,7 @@ library MarketDeployerLib {
             settlementToken: settlementToken
         });
         market = address(
-            new USUMMarket{salt: keccak256(abi.encode(oracleProvider, settlementToken))}()
+            new ChromaticMarket{salt: keccak256(abi.encode(oracleProvider, settlementToken))}()
         );
         delete self.parameters;
     }

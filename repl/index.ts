@@ -3,9 +3,9 @@ import { BigNumber, ethers } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
 import { lazyFunction, lazyObject } from 'hardhat/plugins'
 import {
-  IUSUMMarketFactory__factory,
+  IChromaticMarketFactory__factory,
   OracleProviderMock__factory,
-  USUMLiquidatorMock__factory
+  ChromaticLiquidatorMock__factory
 } from '../typechain-types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
@@ -33,10 +33,10 @@ extendEnvironment((hre) => {
     const signers = await hre.ethers.getSigners()
     const deployer = signers.find((s) => s.address === namedAccounts.deployer)!
 
-    const { address: marketFactory } = await deployments.get('USUMMarketFactory')
+    const { address: marketFactory } = await deployments.get('ChromaticMarketFactory')
     const { address: oracleProvider } = await deployments.get('OracleProviderMock')
     const { address: accountFactory } = await deployments.get('AccountFactory')
-    const { address: router } = await deployments.get('USUMRouter')
+    const { address: router } = await deployments.get('ChromaticRouter')
 
     // set first price
     const _oracleProvider = OracleProviderMock__factory.connect(oracleProvider, deployer)
@@ -80,15 +80,15 @@ extendEnvironment((hre) => {
     const oracleProvider = OracleProviderMock__factory.connect(oracleProviderAddress, deployer)
     await oracleProvider.increaseVersion(ethers.utils.parseUnits(price.toString(), 8))
 
-    const { address: marketFactoryAddress } = await deployments.get('USUMMarketFactory')
-    const marketFactory = IUSUMMarketFactory__factory.connect(marketFactoryAddress, deployer)
+    const { address: marketFactoryAddress } = await deployments.get('ChromaticMarketFactory')
+    const marketFactory = IChromaticMarketFactory__factory.connect(marketFactoryAddress, deployer)
 
     const marketAddress = await marketFactory.getMarket(
       oracleProvider.address,
       USDC_ARBITRUM_GOERLI.address
     )
-    const { address: liquidatorAddress } = await deployments.get('USUMLiquidatorMock')
-    const liquidator = USUMLiquidatorMock__factory.connect(liquidatorAddress, gelato)
+    const { address: liquidatorAddress } = await deployments.get('ChromaticLiquidatorMock')
+    const liquidator = ChromaticLiquidatorMock__factory.connect(liquidatorAddress, gelato)
 
     for (const signer of SIGNERS) {
       const w: ReplWallet = hre.w[signer]
@@ -96,7 +96,7 @@ extendEnvironment((hre) => {
       if (positionIds.length == 0) return
 
       for (const positionId of positionIds) {
-        const market = w.USUMMarket
+        const market = w.ChromaticMarket
         if (await market.checkLiquidation(positionId))
           await liquidator['iquidate(address,uint256,uint256)'](
             market.address,

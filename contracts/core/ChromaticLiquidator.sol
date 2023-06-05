@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
-import {Liquidator} from "@usum/core/base/Liquidator.sol";
-import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
-import {IAutomate} from "@usum/core/base/gelato/Types.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquidator.sol";
+import {Liquidator} from "@chromatic/core/base/Liquidator.sol";
+import {AutomateReady} from "@chromatic/core/base/gelato/AutomateReady.sol";
+import {IAutomate} from "@chromatic/core/base/gelato/Types.sol";
 
-contract USUMLiquidator is Liquidator, AutomateReady {
+contract ChromaticLiquidator is Liquidator, AutomateReady {
     constructor(
-        IUSUMMarketFactory _factory,
+        IChromaticMarketFactory _factory,
         address _automate,
         address opsProxyFactory
     ) Liquidator(_factory) AutomateReady(_automate, address(this), opsProxyFactory) {}
@@ -19,7 +19,7 @@ contract USUMLiquidator is Liquidator, AutomateReady {
         return automate;
     }
 
-    ///@inheritdoc IUSUMLiquidator
+    ///@inheritdoc IChromaticLiquidator
     function liquidate(
         address market,
         uint256 positionId
@@ -30,7 +30,7 @@ contract USUMLiquidator is Liquidator, AutomateReady {
         _liquidate(market, positionId, fee);
     }
 
-    ///@inheritdoc IUSUMLiquidator
+    ///@inheritdoc IChromaticLiquidator
     function claimPosition(
         address market,
         uint256 positionId
