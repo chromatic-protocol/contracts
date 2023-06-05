@@ -64,6 +64,7 @@ jobs:
           branch: develop
           path: sdk
           add-paths: src.ts/**
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # checkout copy src.ts to target
       # - uses: actions/checkout@v3
