@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
-import {IUSUMMarketLiquidate} from "@usum/core/interfaces/market/IUSUMMarketLiquidate.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
+import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquidator.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IMarketLiquidate} from "@chromatic/core/interfaces/market/IMarketLiquidate.sol";
+import {IAutomate, Module, ModuleData} from "@chromatic/core/base/gelato/Types.sol";
 
-abstract contract Liquidator is IUSUMLiquidator {
+abstract contract Liquidator is IChromaticLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 private constant LIQUIDATION_INTERVAL = 30 seconds;
     uint256 private constant CLAIM_INTERVAL = 10 minutes;
 
-    IUSUMMarketFactory factory;
+    IChromaticMarketFactory factory;
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
     mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
@@ -23,7 +23,7 @@ abstract contract Liquidator is IUSUMLiquidator {
         _;
     }
 
-    constructor(IUSUMMarketFactory _factory) {
+    constructor(IChromaticMarketFactory _factory) {
         factory = _factory;
     }
 
@@ -41,7 +41,7 @@ abstract contract Liquidator is IUSUMLiquidator {
         address _market,
         uint256 positionId
     ) external view override returns (bool canExec, bytes memory execPayload) {
-        if (IUSUMMarketLiquidate(_market).checkLiquidation(positionId)) {
+        if (IMarketLiquidate(_market).checkLiquidation(positionId)) {
             return (true, abi.encodeCall(this.liquidate, (_market, positionId)));
         }
 
@@ -49,7 +49,7 @@ abstract contract Liquidator is IUSUMLiquidator {
     }
 
     function _liquidate(address _market, uint256 positionId, uint256 fee) internal {
-        IUSUMMarketLiquidate market = IUSUMMarketLiquidate(_market);
+        IMarketLiquidate market = IMarketLiquidate(_market);
         market.liquidate(positionId, getAutomate().gelato(), fee);
     }
 
@@ -65,7 +65,7 @@ abstract contract Liquidator is IUSUMLiquidator {
         address _market,
         uint256 positionId
     ) external view override returns (bool canExec, bytes memory execPayload) {
-        if (IUSUMMarketLiquidate(_market).checkClaimPosition(positionId)) {
+        if (IMarketLiquidate(_market).checkClaimPosition(positionId)) {
             return (true, abi.encodeCall(this.claimPosition, (_market, positionId)));
         }
 
@@ -73,7 +73,7 @@ abstract contract Liquidator is IUSUMLiquidator {
     }
 
     function _claimPosition(address _market, uint256 positionId, uint256 fee) internal {
-        IUSUMMarketLiquidate market = IUSUMMarketLiquidate(_market);
+        IMarketLiquidate market = IMarketLiquidate(_market);
         market.claimPosition(positionId, getAutomate().gelato(), fee);
     }
 

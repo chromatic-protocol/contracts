@@ -1,8 +1,8 @@
-import { Module } from '@usum/test/hardhat/gelato/utils'
-import { logDeployed } from '@usum/test/hardhat/log-utils'
-import { Automate, OpsProxy, TaskTreasuryUpgradable } from '@usum/typechain-types'
+import { Module } from '@chromatic/test/hardhat/gelato/utils'
+import { logDeployed } from '@chromatic/test/hardhat/log-utils'
+import { Automate, OpsProxy, TaskTreasuryUpgradable } from '@chromatic/typechain-types'
 import { deployments, ethers, getNamedAccounts } from 'hardhat'
-import { OpsProxyFactory } from '@usum/typechain-types/contracts/mocks/gelato/opsProxy/OpsProxyFactory'
+import { OpsProxyFactory } from '@chromatic/typechain-types/contracts/mocks/gelato/opsProxy/OpsProxyFactory'
 
 async function deployTaskTreasury(gelato: string): Promise<TaskTreasuryUpgradable> {
   const factory = await ethers.getContractFactory('TaskTreasury')

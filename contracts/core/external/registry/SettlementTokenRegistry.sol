@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {InterestRate} from "@chromatic/core/libraries/InterestRate.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
  * @title SettlementTokenRegistry

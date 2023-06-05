@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@usum/*": ["./*"]
+      "@chromatic/*": ["./*"]
     },   
   },
   "include": ["./scripts", "./test", "./typechain-types", "./deploy"],

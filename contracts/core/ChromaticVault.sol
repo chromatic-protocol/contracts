@@ -4,21 +4,21 @@ pragma solidity >=0.8.0 <0.9.0;
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {IUSUMFlashLoanCallback} from "@usum/core/interfaces/callback/IUSUMFlashLoanCallback.sol";
-import {AutomateReady} from "@usum/core/base/gelato/AutomateReady.sol";
-import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
-import {BPS} from "@usum/core/libraries/Constants.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {IKeeperFeePayer} from "@chromatic/core/interfaces/IKeeperFeePayer.sol";
+import {IChromaticFlashLoanCallback} from "@chromatic/core/interfaces/callback/IChromaticFlashLoanCallback.sol";
+import {AutomateReady} from "@chromatic/core/base/gelato/AutomateReady.sol";
+import {IAutomate, Module, ModuleData} from "@chromatic/core/base/gelato/Types.sol";
+import {BPS} from "@chromatic/core/libraries/Constants.sol";
 
-contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
+contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     using Math for uint256;
 
     uint256 private constant DISTRIBUTION_INTERVAL = 1 hours;
 
-    IUSUMMarketFactory factory;
+    IChromaticMarketFactory factory;
     IKeeperFeePayer keeperFeePayer;
 
     mapping(address => uint256) public makerBalances; // settlement token => balance
@@ -51,7 +51,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     }
 
     constructor(
-        IUSUMMarketFactory _factory,
+        IChromaticMarketFactory _factory,
         address _automate,
         address opsProxyFactory
     ) AutomateReady(_automate, address(this), opsProxyFactory) {
@@ -67,7 +67,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         uint256 tradingFee,
         uint256 protocolFee
     ) external override onlyMarket {
-        IUSUMMarket market = IUSUMMarket(msg.sender);
+        IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         takerBalances[settlementToken] += takerMargin;
@@ -87,7 +87,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         uint256 takerMargin,
         uint256 settlementAmount
     ) external override onlyMarket {
-        IUSUMMarket market = IUSUMMarket(msg.sender);
+        IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         SafeERC20.safeTransfer(IERC20(settlementToken), recipient, settlementAmount);
@@ -113,7 +113,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     }
 
     function onAddLiquidity(uint256 amount) external override onlyMarket {
-        IUSUMMarket market = IUSUMMarket(msg.sender);
+        IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         pendingDeposits[settlementToken] += amount;
@@ -125,7 +125,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         uint256 pendingDeposit,
         uint256 pendingWithdrawal
     ) external override onlyMarket {
-        IUSUMMarket market = IUSUMMarket(msg.sender);
+        IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         pendingDeposits[settlementToken] -= pendingDeposit;
@@ -143,7 +143,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     }
 
     function onWithdrawLiquidity(address recipient, uint256 amount) external override onlyMarket {
-        IUSUMMarket market = IUSUMMarket(msg.sender);
+        IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
@@ -158,7 +158,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         uint256 fee,
         uint256 margin
     ) external override onlyMarket returns (uint256 usedFee) {
-        IUSUMMarket market = IUSUMMarket(msg.sender);
+        IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
         usedFee = _transferKeeperFee(settlementToken, keeper, fee, margin);
@@ -210,7 +210,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
 
         SafeERC20.safeTransfer(IERC20(token), recipient, amount);
 
-        IUSUMFlashLoanCallback(msg.sender).flashLoanCallback(fee, data);
+        IChromaticFlashLoanCallback(msg.sender).flashLoanCallback(fee, data);
 
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
 
@@ -235,7 +235,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         address market,
         uint256 slotBalance
     ) external view returns (uint256) {
-        address token = address(IUSUMMarket(market).settlementToken());
+        address token = address(IChromaticMarket(market).settlementToken());
         uint256 makerBalance = makerBalances[token];
         uint256 marketBalance = makerMarketBalances[market];
 
@@ -350,7 +350,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     function resolveMarketEarningDistribution(
         address market
     ) external view returns (bool canExec, bytes memory execPayload) {
-        address token = address(IUSUMMarket(market).settlementToken());
+        address token = address(IChromaticMarket(market).settlementToken());
         if (_marketEarningDistributable(market, token)) {
             return (true, abi.encodeCall(this.distributeMarketEarning, market));
         }
@@ -399,7 +399,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
     }
 
     function _distributeMarketEarning(address market, uint256 fee) internal {
-        address token = address(IUSUMMarket(market).settlementToken());
+        address token = address(IChromaticMarket(market).settlementToken());
         if (!_marketEarningDistributable(market, token)) return;
 
         uint256 earning = pendingMarketEarnings[market];
@@ -414,7 +414,7 @@ contract USUMVault is IUSUMVault, ReentrancyGuard, AutomateReady {
         makerMarketBalances[market] += remainEarning;
         makerBalances[token] += remainEarning;
 
-        IUSUMMarket(market).distributeEarningToSlots(remainEarning, balance);
+        IChromaticMarket(market).distributeEarningToSlots(remainEarning, balance);
 
         emit MarketEarningDistributed(market, earning, usedFee, balance);
     }

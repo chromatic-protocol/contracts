@@ -2,17 +2,17 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IMarketDeployer} from "@usum/core/interfaces/factory/IMarketDeployer.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {MarketDeployer, MarketDeployerLib, Parameters} from "@usum/core/external/deployer/MarketDeployer.sol";
-import {OracleProviderRegistry, OracleProviderRegistryLib} from "@usum/core/external/registry/OracleProviderRegistry.sol";
-import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@usum/core/external/registry/SettlementTokenRegistry.sol";
-import {InterestRate} from "@usum/core/libraries/InterestRate.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {IMarketDeployer} from "@chromatic/core/interfaces/factory/IMarketDeployer.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic/core/external/deployer/MarketDeployer.sol";
+import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic/core/external/registry/OracleProviderRegistry.sol";
+import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic/core/external/registry/SettlementTokenRegistry.sol";
+import {InterestRate} from "@chromatic/core/libraries/InterestRate.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
-contract USUMMarketFactory is IUSUMMarketFactory {
+contract ChromaticMarketFactory is IChromaticMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
     using SettlementTokenRegistryLib for SettlementTokenRegistry;
     using MarketDeployerLib for MarketDeployer;
@@ -102,7 +102,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
 
         address[] memory markets = _marketsBySettlementToken[settlementToken];
         for (uint i = 0; i < markets.length; i++) {
-            if (address(IUSUMMarket(markets[i]).oracleProvider()) == oracleProvider) {
+            if (address(IChromaticMarket(markets[i]).oracleProvider()) == oracleProvider) {
                 return markets[i];
             }
         }
@@ -128,7 +128,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
         _marketsBySettlementToken[settlementToken].push(market);
         _markets.add(market);
 
-        IUSUMVault(vault).createMarketEarningDistributionTask(market);
+        IChromaticVault(vault).createMarketEarningDistributionTask(market);
 
         emit MarketCreated(oracleProvider, settlementToken, market);
     }
@@ -185,7 +185,7 @@ contract USUMMarketFactory is IUSUMMarketFactory {
             uniswapFeeTier
         );
 
-        IUSUMVault(vault).createMakerEarningDistributionTask(token);
+        IChromaticVault(vault).createMakerEarningDistributionTask(token);
 
         emit SettlementTokenRegistered(
             token,
@@ -291,18 +291,18 @@ contract USUMMarketFactory is IUSUMMarketFactory {
     // manage vault automate
 
     function createMakerEarningDistributionTask(address token) external override onlyDao {
-        IUSUMVault(vault).createMakerEarningDistributionTask(token);
+        IChromaticVault(vault).createMakerEarningDistributionTask(token);
     }
 
     function cancelMakerEarningDistributionTask(address token) external override onlyDao {
-        IUSUMVault(vault).cancelMakerEarningDistributionTask(token);
+        IChromaticVault(vault).cancelMakerEarningDistributionTask(token);
     }
 
     function createMarketEarningDistributionTask(address market) external override onlyDao {
-        IUSUMVault(vault).createMarketEarningDistributionTask(market);
+        IChromaticVault(vault).createMarketEarningDistributionTask(market);
     }
 
     function cancelMarketEarningDistributionTask(address market) external override onlyDao {
-        IUSUMVault(vault).cancelMarketEarningDistributionTask(market);
+        IChromaticVault(vault).cancelMarketEarningDistributionTask(market);
     }
 }

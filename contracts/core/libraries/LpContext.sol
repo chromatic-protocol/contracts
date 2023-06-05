@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 
 /**
  * @title LpContext
@@ -16,10 +16,10 @@ struct LpContext {
     IOracleProvider oracleProvider;
     /// @dev The Interest Calculator contract used for interest calculations
     IInterestCalculator interestCalculator;
-    /// @dev The USUM Vault contract responsible for managing LP funds
-    IUSUMVault vault;
-    /// @dev The LP token contract that represents LP ownership in the pool
-    IUSUMLpToken lpToken;
+    /// @dev The Chromatic Vault contract responsible for managing liquidity and margin
+    IChromaticVault vault;
+    /// @dev The CLB token contract that represents LP ownership in the pool
+    ICLBToken clbToken;
     /// @dev The address of market contract
     address market;
     /// @dev The address of the settlement token used in the market

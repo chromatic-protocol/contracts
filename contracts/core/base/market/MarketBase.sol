@@ -3,29 +3,29 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
-import {IUSUMLiquidator} from "@usum/core/interfaces/IUSUMLiquidator.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IKeeperFeePayer} from "@usum/core/interfaces/IKeeperFeePayer.sol";
-import {LpTokenDeployerLib} from "@usum/core/external/deployer/LpTokenDeployer.sol";
-import {LpSlotSet} from "@usum/core/external/lpslot/LpSlotSet.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquidator.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {IKeeperFeePayer} from "@chromatic/core/interfaces/IKeeperFeePayer.sol";
+import {CLBTokenDeployerLib} from "@chromatic/core/external/deployer/CLBTokenDeployer.sol";
+import {LpSlotSet} from "@chromatic/core/external/lpslot/LpSlotSet.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
-abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
-    IUSUMMarketFactory public immutable override factory;
+abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
+    IChromaticMarketFactory public immutable override factory;
     IOracleProvider public immutable override oracleProvider;
     IERC20Metadata public immutable override settlementToken;
 
-    IUSUMLpToken public immutable override lpToken;
-    IUSUMLiquidator public immutable override liquidator;
-    IUSUMVault public immutable override vault;
+    ICLBToken public immutable override clbToken;
+    IChromaticLiquidator public immutable override liquidator;
+    IChromaticVault public immutable override vault;
     IKeeperFeePayer public immutable override keeperFeePayer;
 
     LpSlotSet internal lpSlotSet;
@@ -39,15 +39,15 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
     }
 
     constructor() {
-        factory = IUSUMMarketFactory(msg.sender);
+        factory = IChromaticMarketFactory(msg.sender);
 
         (address _oracleProvider, address _settlementToken) = factory.parameters();
 
         oracleProvider = IOracleProvider(_oracleProvider);
         settlementToken = IERC20Metadata(_settlementToken);
-        lpToken = IUSUMLpToken(LpTokenDeployerLib.deploy());
-        liquidator = IUSUMLiquidator(factory.liquidator());
-        vault = IUSUMVault(factory.vault());
+        clbToken = ICLBToken(CLBTokenDeployerLib.deploy());
+        liquidator = IChromaticLiquidator(factory.liquidator());
+        vault = IChromaticVault(factory.vault());
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
 
         lpSlotSet.initialize();
@@ -60,7 +60,7 @@ abstract contract MarketBase is IUSUMMarket, ReentrancyGuard {
                 oracleProvider: oracleProvider,
                 interestCalculator: factory,
                 vault: vault,
-                lpToken: lpToken,
+                clbToken: clbToken,
                 market: address(this),
                 settlementToken: address(settlementToken),
                 tokenPrecision: 10 ** settlementToken.decimals(),

@@ -3,10 +3,10 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
  * @title LpSlotLiquidity
@@ -27,7 +27,7 @@ struct LpSlotLiquidity {
 struct _PendingLiquidity {
     uint256 oracleVersion;
     uint256 tokenAmount;
-    uint256 lpTokenAmount;
+    uint256 clbTokenAmount;
 }
 
 /**
@@ -46,7 +46,7 @@ struct _ClaimMinting {
  *         for a specific oracle version within LpSlotLiquidity.
  */
 struct _ClaimBurning {
-    uint256 lpTokenAmount;
+    uint256 clbTokenAmount;
     uint256 burningAmount;
     uint256 tokenAmount;
 }
@@ -65,40 +65,40 @@ library LpSlotLiquidityLib {
     /**
      * @notice Settles the pending liquidity within the LpSlotLiquidity.
      * @dev If the pending oracle version is not set or is greater than or equal to the current oracle version, no action is taken.
-     *      Otherwise, the pending liquidity and burning LP tokens are settled by following steps:
+     *      Otherwise, the pending liquidity and burning CLB tokens are settled by following steps:
      *          1. Settles pending liquidity
      *              a. If there is a pending deposit,
-     *                 it calculates the minting amount of LP tokens
-     *                 based on the pending deposit, slot value, and LP token total supply.
+     *                 it calculates the minting amount of CLB tokens
+     *                 based on the pending deposit, slot value, and CLB token total supply.
      *                 It updates the total liquidity and adds the pending deposit to the claim mintings.
-     *              b. If there is a pending LP token burning,
+     *              b. If there is a pending CLB token burning,
      *                 it adds the oracle version to the burning versions list
      *                 and initializes the claim burning details.
-     *          2. Settles bunding LP tokens
+     *          2. Settles bunding CLB tokens
      *              a. It trims all completed burning versions from the burning versions list.
      *              b. For each burning version in the list,
-     *                 it calculates the pending LP token amount and the pending withdrawal amount
-     *                 based on the slot value and LP token total supply.
-     *                 - If there is sufficient free liquidity, it calculates the burning amount of LP tokens.
+     *                 it calculates the pending CLB token amount and the pending withdrawal amount
+     *                 based on the slot value and CLB token total supply.
+     *                 - If there is sufficient free liquidity, it calculates the burning amount of CLB tokens.
      *                 - If there is insufficient free liquidity, it calculates the burning amount
      *                   based on the available free liquidity and updates the pending withdrawal accordingly.
      *              c. It updates the burning amount and pending withdrawal,
      *                 and reduces the free liquidity accordingly.
      *              d. Finally, it updates the total liquidity by subtracting the pending withdrawal.
-     *      And the LP tokens are minted or burned accordingly.
+     *      And the CLB tokens are minted or burned accordingly.
      *      The pending deposit and withdrawal amounts are passed to the vault for further processing.
      * @param self The LpSlotLiquidity storage.
      * @param ctx The LpContext memory.
      * @param slotValue The current value of the slot.
      * @param freeLiquidity The amount of free liquidity available in the slot.
-     * @param lpTokenId The ID of the LP token.
+     * @param clbTokenId The ID of the CLB token.
      */
     function settlePendingLiquidity(
         LpSlotLiquidity storage self,
         LpContext memory ctx,
         uint256 slotValue,
         uint256 freeLiquidity,
-        uint256 lpTokenId
+        uint256 clbTokenId
     ) internal {
         uint256 oracleVersion = self._pending.oracleVersion;
         if (oracleVersion == 0) return;
@@ -106,16 +106,16 @@ library LpSlotLiquidityLib {
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
         if (oracleVersion >= currentVersion.version) return;
 
-        IUSUMLpToken lpToken = ctx.lpToken;
-        uint256 totalSupply = lpToken.totalSupply(lpTokenId);
+        ICLBToken clbToken = ctx.clbToken;
+        uint256 totalSupply = clbToken.totalSupply(clbTokenId);
 
         uint256 pendingDeposit = self._pending.tokenAmount;
-        uint256 pendingLpTokenAmount = self._pending.lpTokenAmount;
+        uint256 pendingCLBTokenAmount = self._pending.clbTokenAmount;
 
         uint256 mintingAmount = _settlePending(
             self,
             pendingDeposit,
-            pendingLpTokenAmount,
+            pendingCLBTokenAmount,
             slotValue,
             totalSupply,
             oracleVersion
@@ -129,9 +129,9 @@ library LpSlotLiquidityLib {
         );
 
         if (mintingAmount > burningAmount) {
-            lpToken.mint(ctx.market, lpTokenId, mintingAmount - burningAmount, bytes(""));
+            clbToken.mint(ctx.market, clbTokenId, mintingAmount - burningAmount, bytes(""));
         } else if (mintingAmount < burningAmount) {
-            lpToken.burn(ctx.market, lpTokenId, burningAmount - mintingAmount);
+            clbToken.burn(ctx.market, clbTokenId, burningAmount - mintingAmount);
         }
 
         ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
@@ -166,25 +166,25 @@ library LpSlotLiquidityLib {
     }
 
     /**
-     * @notice Claims liquidity from the LpSlotLiquidity by minting LP tokens.
+     * @notice Claims liquidity from the LpSlotLiquidity by minting CLB tokens.
      * @dev Retrieves the minting details for the specified oracle version
-     *      and calculates the LP token amount to be claimed.
-     *      Updates the claim minting details and returns the LP token amount to be claimed.
+     *      and calculates the CLB token amount to be claimed.
+     *      Updates the claim minting details and returns the CLB token amount to be claimed.
      *      If there are no more tokens remaining for the claim, it is removed from the mapping.
      * @param self The LpSlotLiquidity storage.
      * @param amount The amount of tokens to claim.
      * @param oracleVersion The oracle version associated with the claim.
-     * @return lpTokenAmount The amount of LP tokens to be claimed.
+     * @return clbTokenAmount The amount of CLB tokens to be claimed.
      */
     function onClaimLiquidity(
         LpSlotLiquidity storage self,
         uint256 amount,
         uint256 oracleVersion
-    ) internal returns (uint256 lpTokenAmount) {
+    ) internal returns (uint256 clbTokenAmount) {
         _ClaimMinting memory _cm = self._claimMintings[oracleVersion];
-        lpTokenAmount = amount.mulDiv(_cm.mintingAmount, _cm.tokenAmount);
+        clbTokenAmount = amount.mulDiv(_cm.mintingAmount, _cm.tokenAmount);
 
-        _cm.mintingAmount -= lpTokenAmount;
+        _cm.mintingAmount -= clbTokenAmount;
         _cm.tokenAmount -= amount;
         if (_cm.tokenAmount == 0) {
             delete self._claimMintings[oracleVersion];
@@ -194,16 +194,16 @@ library LpSlotLiquidityLib {
     }
 
     /**
-     * @notice Removes liquidity from the LpSlotLiquidity by setting pending LP token amount.
-     * @dev Sets the pending liquidity with the specified LP token amount and oracle version.
+     * @notice Removes liquidity from the LpSlotLiquidity by setting pending CLB token amount.
+     * @dev Sets the pending liquidity with the specified CLB token amount and oracle version.
      *      If there is already pending liquidity with a different oracle version, it reverts with an error.
      * @param self The LpSlotLiquidity storage.
-     * @param lpTokenAmount The amount of LP tokens to remove liquidity.
+     * @param clbTokenAmount The amount of CLB tokens to remove liquidity.
      * @param oracleVersion The oracle version associated with the liquidity.
      */
     function onRemoveLiquidity(
         LpSlotLiquidity storage self,
-        uint256 lpTokenAmount,
+        uint256 clbTokenAmount,
         uint256 oracleVersion
     ) internal {
         uint256 pendingOracleVersion = self._pending.oracleVersion;
@@ -213,34 +213,34 @@ library LpSlotLiquidityLib {
         );
 
         self._pending.oracleVersion = oracleVersion;
-        self._pending.lpTokenAmount += lpTokenAmount;
+        self._pending.clbTokenAmount += clbTokenAmount;
     }
 
     /**
-     * @notice Withdraws liquidity from the LpSlotLiquidity by burning LP tokens and withdrawing tokens.
+     * @notice Withdraws liquidity from the LpSlotLiquidity by burning CLB tokens and withdrawing tokens.
      * @dev Retrieves the burning details for the specified oracle version
-     *      and calculates the LP token amount and token amount to burn and withdraw, respectively.
-     *      Updates the claim burning details and returns the token amount to withdraw and the burned LP token amount.
-     *      If there are no more LP tokens remaining for the claim, it is removed from the mapping.
+     *      and calculates the CLB token amount and token amount to burn and withdraw, respectively.
+     *      Updates the claim burning details and returns the token amount to withdraw and the burned CLB token amount.
+     *      If there are no more CLB tokens remaining for the claim, it is removed from the mapping.
      * @param self The LpSlotLiquidity storage.
-     * @param lpTokenAmount The amount of LP tokens to withdraw.
+     * @param clbTokenAmount The amount of CLB tokens to withdraw.
      * @param oracleVersion The oracle version associated with the claim.
      * @return amount The amount of tokens to be withdrawn for the claim.
-     * @return burnedLpTokenAmount The amount of LP tokens to be burned for the claim.
+     * @return burnedCLBTokenAmount The amount of CLB tokens to be burned for the claim.
      */
     function onWithdrawLiquidity(
         LpSlotLiquidity storage self,
-        uint256 lpTokenAmount,
+        uint256 clbTokenAmount,
         uint256 oracleVersion
-    ) internal returns (uint256 amount, uint256 burnedLpTokenAmount) {
+    ) internal returns (uint256 amount, uint256 burnedCLBTokenAmount) {
         _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
-        amount = lpTokenAmount.mulDiv(_cb.tokenAmount, _cb.lpTokenAmount);
-        burnedLpTokenAmount = lpTokenAmount.mulDiv(_cb.burningAmount, _cb.lpTokenAmount);
+        amount = clbTokenAmount.mulDiv(_cb.tokenAmount, _cb.clbTokenAmount);
+        burnedCLBTokenAmount = clbTokenAmount.mulDiv(_cb.burningAmount, _cb.clbTokenAmount);
 
-        _cb.burningAmount -= burnedLpTokenAmount;
+        _cb.burningAmount -= burnedCLBTokenAmount;
         _cb.tokenAmount -= amount;
-        _cb.lpTokenAmount -= lpTokenAmount;
-        if (_cb.lpTokenAmount == 0) {
+        _cb.clbTokenAmount -= clbTokenAmount;
+        if (_cb.clbTokenAmount == 0) {
             delete self._claimBurnings[oracleVersion];
         } else {
             self._claimBurnings[oracleVersion] = _cb;
@@ -248,68 +248,68 @@ library LpSlotLiquidityLib {
     }
 
     /**
-     * @notice Calculates the amount of LP tokens to be minted
-     *         for a given token amount, slot value, and LP token total supply.
-     * @dev If the LP token total supply is zero, returns the token amount as is.
+     * @notice Calculates the amount of CLB tokens to be minted
+     *         for a given token amount, slot value, and CLB token total supply.
+     * @dev If the CLB token total supply is zero, returns the token amount as is.
      *      Otherwise, calculates the minting amount
-     *      based on the token amount, slot value, and LP token total supply.
+     *      based on the token amount, slot value, and CLB token total supply.
      * @param amount The amount of tokens to be minted.
      * @param slotValue The current slot value.
-     * @param lpTokenTotalSupply The total supply of LP tokens.
-     * @return The amount of LP tokens to be minted.
+     * @param clbTokenTotalSupply The total supply of CLB tokens.
+     * @return The amount of CLB tokens to be minted.
      */
-    function calculateLpTokenMinting(
+    function calculateCLBTokenMinting(
         uint256 amount,
         uint256 slotValue,
-        uint256 lpTokenTotalSupply
+        uint256 clbTokenTotalSupply
     ) internal pure returns (uint256) {
         return
-            lpTokenTotalSupply == 0
+            clbTokenTotalSupply == 0
                 ? amount
                 : amount.mulDiv(
-                    lpTokenTotalSupply,
+                    clbTokenTotalSupply,
                     slotValue < MIN_AMOUNT ? MIN_AMOUNT : slotValue
                 );
     }
 
     /**
-     * @notice Calculates the value of LP tokens
-     *         for a given LP token amount, slot value, and LP token total supply.
-     * @dev If the LP token total supply is zero, returns zero.
-     *      Otherwise, calculates the value based on the LP token amount, slot value, and LP token total supply.
-     * @param lpTokenAmount The amount of LP tokens.
+     * @notice Calculates the value of CLB tokens
+     *         for a given CLB token amount, slot value, and CLB token total supply.
+     * @dev If the CLB token total supply is zero, returns zero.
+     *      Otherwise, calculates the value based on the CLB token amount, slot value, and CLB token total supply.
+     * @param clbTokenAmount The amount of CLB tokens.
      * @param slotValue The current slot value.
-     * @param lpTokenTotalSupply The total supply of LP tokens.
-     * @return The value of the LP tokens.
+     * @param clbTokenTotalSupply The total supply of CLB tokens.
+     * @return The value of the CLB tokens.
      */
-    function calculateLpTokenValue(
-        uint256 lpTokenAmount,
+    function calculateCLBTokenValue(
+        uint256 clbTokenAmount,
         uint256 slotValue,
-        uint256 lpTokenTotalSupply
+        uint256 clbTokenTotalSupply
     ) internal pure returns (uint256) {
-        return lpTokenTotalSupply == 0 ? 0 : lpTokenAmount.mulDiv(slotValue, lpTokenTotalSupply);
+        return clbTokenTotalSupply == 0 ? 0 : clbTokenAmount.mulDiv(slotValue, clbTokenTotalSupply);
     }
 
     /**
-     * @dev Settles the pending deposit and pending LP token burning.
+     * @dev Settles the pending deposit and pending CLB token burning.
      * @param self The LpSlotLiquidity storage.
      * @param pendingDeposit The amount of pending deposit to settle.
-     * @param pendingLpTokenAmount The amount of pending LP tokens to burn.
+     * @param pendingCLBTokenAmount The amount of pending CLB tokens to burn.
      * @param slotValue The current value of the slot.
-     * @param totalSupply The total supply of LP tokens.
-     * @param oracleVersion The oracle version associated with the pending deposit and LP token burning.
-     * @return mintingAmount The calculated minting amount of LP tokens for the pending deposit.
+     * @param totalSupply The total supply of CLB tokens.
+     * @param oracleVersion The oracle version associated with the pending deposit and CLB token burning.
+     * @return mintingAmount The calculated minting amount of CLB tokens for the pending deposit.
      */
     function _settlePending(
         LpSlotLiquidity storage self,
         uint256 pendingDeposit,
-        uint256 pendingLpTokenAmount,
+        uint256 pendingCLBTokenAmount,
         uint256 slotValue,
         uint256 totalSupply,
         uint256 oracleVersion
     ) private returns (uint256 mintingAmount) {
         if (pendingDeposit > 0) {
-            mintingAmount = calculateLpTokenMinting(pendingDeposit, slotValue, totalSupply);
+            mintingAmount = calculateCLBTokenMinting(pendingDeposit, slotValue, totalSupply);
 
             self.total += pendingDeposit;
             self._claimMintings[oracleVersion] = _ClaimMinting({
@@ -318,10 +318,10 @@ library LpSlotLiquidityLib {
             });
         }
 
-        if (pendingLpTokenAmount > 0) {
+        if (pendingCLBTokenAmount > 0) {
             self._burningVersions.pushBack(bytes32(oracleVersion));
             self._claimBurnings[oracleVersion] = _ClaimBurning({
-                lpTokenAmount: pendingLpTokenAmount,
+                clbTokenAmount: pendingCLBTokenAmount,
                 burningAmount: 0,
                 tokenAmount: 0
             });
@@ -329,12 +329,12 @@ library LpSlotLiquidityLib {
     }
 
     /**
-     * @dev Settles the pending LP token burning and calculates the burning amount and pending withdrawal.
+     * @dev Settles the pending CLB token burning and calculates the burning amount and pending withdrawal.
      * @param self The LpSlotLiquidity storage.
      * @param freeLiquidity The amount of free liquidity available for burning.
      * @param slotValue The current value of the slot.
-     * @param totalSupply The total supply of LP tokens.
-     * @return burningAmount The calculated burning amount of LP tokens.
+     * @param totalSupply The total supply of CLB tokens.
+     * @return burningAmount The calculated burning amount of CLB tokens.
      * @return pendingWithdrawal The calculated pending withdrawal amount.
      */
     function _settleBurning(
@@ -347,9 +347,9 @@ library LpSlotLiquidityLib {
         while (!self._burningVersions.empty()) {
             uint256 _ov = uint256(self._burningVersions.front());
             _ClaimBurning memory _cb = self._claimBurnings[_ov];
-            if (_cb.burningAmount >= _cb.lpTokenAmount) {
+            if (_cb.burningAmount >= _cb.clbTokenAmount) {
                 self._burningVersions.popFront();
-                if (_cb.lpTokenAmount == 0) {
+                if (_cb.clbTokenAmount == 0) {
                     delete self._claimBurnings[_ov];
                 }
             } else {
@@ -362,19 +362,19 @@ library LpSlotLiquidityLib {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
 
-            uint256 _pendingLpTokenAmount = _cb.lpTokenAmount - _cb.burningAmount;
-            if (_pendingLpTokenAmount > 0) {
+            uint256 _pendingCLBTokenAmount = _cb.clbTokenAmount - _cb.burningAmount;
+            if (_pendingCLBTokenAmount > 0) {
                 uint256 _burningAmount;
-                uint256 _pendingWithdrawal = calculateLpTokenValue(
-                    _pendingLpTokenAmount,
+                uint256 _pendingWithdrawal = calculateCLBTokenValue(
+                    _pendingCLBTokenAmount,
                     slotValue,
                     totalSupply
                 );
                 if (freeLiquidity >= _pendingWithdrawal) {
-                    _burningAmount = _pendingLpTokenAmount;
+                    _burningAmount = _pendingCLBTokenAmount;
                 } else {
-                    _burningAmount = calculateLpTokenMinting(freeLiquidity, slotValue, totalSupply);
-                    require(_burningAmount < _pendingLpTokenAmount);
+                    _burningAmount = calculateCLBTokenMinting(freeLiquidity, slotValue, totalSupply);
+                    require(_burningAmount < _pendingCLBTokenAmount);
                     _pendingWithdrawal = freeLiquidity;
                 }
 

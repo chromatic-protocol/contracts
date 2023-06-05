@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-/// @title An interface for a contract that is capable of deploying USUM markets
+/// @title An interface for a contract that is capable of deploying Chromatic markets
 /// @notice A contract that constructs a market must implement this to pass arguments to the market
 /// @dev This is used to avoid having constructor arguments in the market contract, which results in the init code hash
 /// of the market being constant allowing the CREATE2 address of the market to be cheaply computed on-chain

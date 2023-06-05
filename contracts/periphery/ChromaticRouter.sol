@@ -3,22 +3,22 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-import {IUSUMRouter} from "@usum/periphery/interfaces/IUSUMRouter.sol";
-import {VerifyCallback} from "@usum/periphery/base/VerifyCallback.sol";
-import {AccountFactory} from "@usum/periphery/AccountFactory.sol";
-import {Account} from "@usum/periphery/Account.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
-import {LpTokenLib} from "@usum/core/libraries/LpTokenLib.sol";
+import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
+import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
+import {AccountFactory} from "@chromatic/periphery/AccountFactory.sol";
+import {Account} from "@chromatic/periphery/Account.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 
-contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
+contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -33,7 +33,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
 
     struct RemoveLiquidityCallbackData {
         address provider;
-        uint256 lpTokenAmount;
+        uint256 clbTokenAmount;
     }
 
     struct WithdrawLiquidityCallbackData {
@@ -76,19 +76,19 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     }
 
     function removeLiquidityCallback(
-        address lpToken,
-        uint256 lpTokenId,
+        address clbToken,
+        uint256 clbTokenId,
         bytes calldata data
     ) external override verifyCallback {
         RemoveLiquidityCallbackData memory callbackData = abi.decode(
             data,
             (RemoveLiquidityCallbackData)
         );
-        IERC1155(lpToken).safeTransferFrom(
+        IERC1155(clbToken).safeTransferFrom(
             callbackData.provider,
             msg.sender, // market
-            lpTokenId,
-            callbackData.lpTokenAmount,
+            clbTokenId,
+            callbackData.clbTokenAmount,
             bytes("")
         );
     }
@@ -140,7 +140,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         bytes memory result = _call(
             market,
             abi.encodeWithSelector(
-                IUSUMMarket(market).addLiquidity.selector,
+                IChromaticMarket(market).addLiquidity.selector,
                 recipient,
                 feeRate,
                 abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: amount}))
@@ -158,7 +158,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         _call(
             market,
             abi.encodeWithSelector(
-                IUSUMMarket(market).claimLiquidity.selector,
+                IChromaticMarket(market).claimLiquidity.selector,
                 receiptId,
                 abi.encode(ClaimLiquidityCallbackData({provider: provider}))
             )
@@ -168,19 +168,19 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     function removeLiquidity(
         address market,
         int16 feeRate,
-        uint256 lpTokenAmount,
+        uint256 clbTokenAmount,
         address recipient
     ) public override returns (LpReceipt memory receipt) {
         bytes memory result = _call(
             market,
             abi.encodeWithSelector(
-                IUSUMMarket(market).removeLiquidity.selector,
+                IChromaticMarket(market).removeLiquidity.selector,
                 recipient,
                 feeRate,
                 abi.encode(
                     RemoveLiquidityCallbackData({
                         provider: msg.sender,
-                        lpTokenAmount: lpTokenAmount
+                        clbTokenAmount: clbTokenAmount
                     })
                 )
             )
@@ -197,7 +197,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         _call(
             market,
             abi.encodeWithSelector(
-                IUSUMMarket(market).withdrawLiquidity.selector,
+                IChromaticMarket(market).withdrawLiquidity.selector,
                 receiptId,
                 abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
             )
@@ -241,16 +241,16 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
     function removeLiquidityBatch(
         address market,
         int16[] calldata feeRates,
-        uint256[] calldata lpTokenAmounts,
+        uint256[] calldata clbTokenAmounts,
         address[] calldata recipients
     ) external override returns (LpReceipt[] memory lpReceipts) {
         require(
-            feeRates.length == lpTokenAmounts.length && feeRates.length == recipients.length,
+            feeRates.length == clbTokenAmounts.length && feeRates.length == recipients.length,
             "TradeRouter: invalid arguments"
         );
         lpReceipts = new LpReceipt[](feeRates.length);
         for (uint i = 0; i < feeRates.length; i++) {
-            lpReceipts[i] = removeLiquidity(market, feeRates[i], lpTokenAmounts[i], recipients[i]);
+            lpReceipts[i] = removeLiquidity(market, feeRates[i], clbTokenAmounts[i], recipients[i]);
         }
     }
 
@@ -273,22 +273,22 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         return result;
     }
 
-    function calculateLpTokenValueBatch(
+    function calculateCLBTokenValueBatch(
         address market,
         int16[] calldata tradingFeeRates,
-        uint256[] calldata lpTokenAmounts
+        uint256[] calldata clbTokenAmounts
     ) external view override returns (uint256[] memory results) {
-        require(tradingFeeRates.length == lpTokenAmounts.length, "TradeRouter: invalid arguments");
+        require(tradingFeeRates.length == clbTokenAmounts.length, "TradeRouter: invalid arguments");
         results = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            results[i] = IUSUMMarket(market).calculateLpTokenValue(
+            results[i] = IChromaticMarket(market).calculateCLBTokenValue(
                 tradingFeeRates[i],
-                lpTokenAmounts[i]
+                clbTokenAmounts[i]
             );
         }
     }
 
-    function calculateLpTokenMintingBatch(
+    function calculateCLBTokenMintingBatch(
         address market,
         int16[] calldata tradingFeeRates,
         uint256[] calldata amounts
@@ -296,7 +296,7 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         require(tradingFeeRates.length == amounts.length, "TradeRouter: invalid arguments");
         results = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            results[i] = IUSUMMarket(market).calculateLpTokenMinting(
+            results[i] = IChromaticMarket(market).calculateCLBTokenMinting(
                 tradingFeeRates[i],
                 amounts[i]
             );
@@ -310,8 +310,8 @@ contract USUMRouter is IUSUMRouter, VerifyCallback, Ownable {
         supplies = new uint256[](tradingFeeRates.length);
 
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            supplies[i] = IUSUMLpToken(IUSUMMarket(market).lpToken()).totalSupply(
-                LpTokenLib.encodeId(tradingFeeRates[0])
+            supplies[i] = ICLBToken(IChromaticMarket(market).clbToken()).totalSupply(
+                CLBTokenLib.encodeId(tradingFeeRates[0])
             );
         }
     }

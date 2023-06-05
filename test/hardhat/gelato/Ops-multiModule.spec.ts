@@ -1,7 +1,7 @@
-// import { deploy as deployFakeTokens } from '@usum/test/hardhat/fake_token/deploy'
+// import { deploy as deployFakeTokens } from '@chromatic/test/hardhat/fake_token/deploy'
 import { Signer } from '@ethersproject/abstract-signer'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { deploy } from '@usum/test/hardhat/gelato/deploy'
+import { deploy } from '@chromatic/test/hardhat/gelato/deploy'
 import {
   encodeResolverArgs,
   encodeTimeArgs,
@@ -10,7 +10,7 @@ import {
   getTimeStampNow,
   Module,
   ModuleData
-} from '@usum/test/hardhat/gelato/utils'
+} from '@chromatic/test/hardhat/gelato/utils'
 import {
   Automate,
   CounterResolver,
@@ -18,7 +18,7 @@ import {
   IERC20Metadata,
   OpsProxy,
   Token
-} from '@usum/typechain-types'
+} from '@chromatic/typechain-types'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { hardhatErrorPrettyPrint } from '../utils'

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
-import {Position} from "@usum/core/libraries/Position.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
 
 interface ITrade {
     error ZeroTargetAmount();

@@ -5,10 +5,10 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic/core/libraries/PositionUtil.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
 
 /**
  * @title Position

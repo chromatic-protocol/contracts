@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMMarketFactory} from "@usum/core/interfaces/IUSUMMarketFactory.sol";
-import {USUMVault} from "@usum/core/USUMVault.sol";
-import {IAutomate, Module, ModuleData} from "@usum/core/base/gelato/Types.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {ChromaticVault} from "@chromatic/core/ChromaticVault.sol";
+import {IAutomate, Module, ModuleData} from "@chromatic/core/base/gelato/Types.sol";
 
-contract USUMVaultMock is USUMVault {
+contract ChromaticVaultMock is ChromaticVault {
     constructor(
-        IUSUMMarketFactory _factory,
+        IChromaticMarketFactory _factory,
         address _automate,
         address opsProxyFactory
-    ) USUMVault(_factory, _automate, opsProxyFactory) {}
+    ) ChromaticVault(_factory, _automate, opsProxyFactory) {}
 
     function distributeMakerEarning(address token, uint256 keeperFee) external {
         _distributeMakerEarning(token, keeperFee);

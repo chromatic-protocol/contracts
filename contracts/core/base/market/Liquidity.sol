@@ -3,10 +3,10 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpReceipt, LpAction} from "@usum/core/libraries/LpReceipt.sol";
-import {MarketBase} from "@usum/core/base/market/MarketBase.sol";
+import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpReceipt, LpAction} from "@chromatic/core/libraries/LpReceipt.sol";
+import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 
 abstract contract Liquidity is MarketBase, IERC1155Receiver {
     using Math for uint256;
@@ -26,7 +26,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt memory) {
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
-        IUSUMLiquidityCallback(msg.sender).addLiquidityCallback(
+        IChromaticLiquidityCallback(msg.sender).addLiquidityCallback(
             address(settlementToken),
             address(vault),
             data
@@ -62,24 +62,24 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        uint256 lpTokenAmount = lpSlotSet.acceptClaimLiquidity(
+        uint256 clbTokenAmount = lpSlotSet.acceptClaimLiquidity(
             ctx,
             receipt.tradingFeeRate,
             receipt.amount,
             receipt.oracleVersion
         );
-        lpToken.safeTransferFrom(
+        clbToken.safeTransferFrom(
             address(this),
             receipt.recipient,
-            receipt.lpTokenId(),
-            lpTokenAmount,
+            receipt.clbTokenId(),
+            clbTokenAmount,
             bytes("")
         );
 
-        IUSUMLiquidityCallback(msg.sender).claimLiquidityCallback(receipt.id, data);
+        IChromaticLiquidityCallback(msg.sender).claimLiquidityCallback(receipt.id, data);
         delete lpReceipts[receiptId];
 
-        emit ClaimLiquidity(receipt.recipient, lpTokenAmount, receipt);
+        emit ClaimLiquidity(receipt.recipient, clbTokenAmount, receipt);
     }
 
     function removeLiquidity(
@@ -98,19 +98,19 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
             tradingFeeRate
         );
 
-        uint256 lpTokenId = receipt.lpTokenId();
-        uint256 balanceBefore = lpToken.balanceOf(address(this), lpTokenId);
-        IUSUMLiquidityCallback(msg.sender).removeLiquidityCallback(
-            address(lpToken),
-            lpTokenId,
+        uint256 clbTokenId = receipt.clbTokenId();
+        uint256 balanceBefore = clbToken.balanceOf(address(this), clbTokenId);
+        IChromaticLiquidityCallback(msg.sender).removeLiquidityCallback(
+            address(clbToken),
+            clbTokenId,
             data
         );
 
-        uint256 lpTokenAmount = lpToken.balanceOf(address(this), lpTokenId) - balanceBefore;
-        if (lpTokenAmount == 0) revert TooSmallAmount();
+        uint256 clbTokenAmount = clbToken.balanceOf(address(this), clbTokenId) - balanceBefore;
+        if (clbTokenAmount == 0) revert TooSmallAmount();
 
-        lpSlotSet.acceptRemoveLiquidity(ctx, tradingFeeRate, lpTokenAmount);
-        receipt.amount = lpTokenAmount;
+        lpSlotSet.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
+        receipt.amount = clbTokenAmount;
 
         lpReceipts[receipt.id] = receipt;
 
@@ -130,28 +130,28 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         ctx.syncOracleVersion();
 
         address recipient = receipt.recipient;
-        uint256 lpTokenAmount = receipt.amount;
+        uint256 clbTokenAmount = receipt.amount;
 
-        (uint256 amount, uint256 burnedLpTokenAmount) = lpSlotSet.acceptWithdrawLiquidity(
+        (uint256 amount, uint256 burnedCLBTokenAmount) = lpSlotSet.acceptWithdrawLiquidity(
             ctx,
             receipt.tradingFeeRate,
-            lpTokenAmount,
+            clbTokenAmount,
             receipt.oracleVersion
         );
 
-        lpToken.safeTransferFrom(
+        clbToken.safeTransferFrom(
             address(this),
             recipient,
-            receipt.lpTokenId(),
-            lpTokenAmount - burnedLpTokenAmount,
+            receipt.clbTokenId(),
+            clbTokenAmount - burnedCLBTokenAmount,
             bytes("")
         );
         vault.onWithdrawLiquidity(recipient, amount);
 
-        IUSUMLiquidityCallback(msg.sender).withdrawLiquidityCallback(receipt.id, data);
+        IChromaticLiquidityCallback(msg.sender).withdrawLiquidityCallback(receipt.id, data);
         delete lpReceipts[receiptId];
 
-        emit WithdrawLiquidity(recipient, amount, burnedLpTokenAmount, receipt);
+        emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
     function getSlotLiquidities(
@@ -176,18 +176,18 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         lpSlotSet.distributeEarning(earning, marketBalance);
     }
 
-    function calculateLpTokenMinting(
+    function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount
     ) external view returns (uint256) {
-        return lpSlotSet.calculateLpTokenMinting(newLpContext(), tradingFeeRate, amount);
+        return lpSlotSet.calculateCLBTokenMinting(newLpContext(), tradingFeeRate, amount);
     }
 
-    function calculateLpTokenValue(
+    function calculateCLBTokenValue(
         int16 tradingFeeRate,
-        uint256 lpTokenAmount
+        uint256 clbTokenAmount
     ) external view returns (uint256) {
-        return lpSlotSet.calculateLpTokenValue(newLpContext(), tradingFeeRate, lpTokenAmount);
+        return lpSlotSet.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
     }
 
     function newLpReceipt(

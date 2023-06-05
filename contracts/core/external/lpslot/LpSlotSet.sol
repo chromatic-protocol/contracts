@@ -4,13 +4,13 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IUSUMLiquidity} from "@usum/core/interfaces/market/IUSUMLiquidity.sol";
-import {LpSlot, LpSlotLib} from "@usum/core/external/lpslot/LpSlot.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotMargin} from "@usum/core/libraries/LpSlotMargin.sol";
-import {Errors} from "@usum/core/libraries/Errors.sol";
+import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
+import {LpSlot, LpSlotLib} from "@chromatic/core/external/lpslot/LpSlot.sol";
+import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
+import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
  * @title LpSlotSet
@@ -394,7 +394,7 @@ library LpSlotSetLib {
      *        (should be the same as the one used in acceptAddLiquidity)
      * @param oracleVersion The oracle version used for the claim.
      *        (should be the oracle version when call acceptAddLiquidity)
-     * @return The amount of liquidity (LP tokens) received as a result of the liquidity claim.
+     * @return The amount of liquidity (CLB tokens) received as a result of the liquidity claim.
      */
     function acceptClaimLiquidity(
         LpSlotSet storage self,
@@ -417,18 +417,18 @@ library LpSlotSetLib {
      * @param self The reference to the LpSlotSet storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
-     * @param lpTokenAmount The amount of LP tokens to remove.
+     * @param clbTokenAmount The amount of CLB tokens to remove.
      */
     function acceptRemoveLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 lpTokenAmount
+        uint256 clbTokenAmount
     ) external _validTradingFeeRate(tradingFeeRate) {
         // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         // Process the remove liquidity request on the liquidity slot
-        slot.acceptRemoveLiquidity(ctx, lpTokenAmount);
+        slot.acceptRemoveLiquidity(ctx, clbTokenAmount);
     }
 
     /**
@@ -439,42 +439,42 @@ library LpSlotSetLib {
      * @param self The reference to the LpSlotSet storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
-     * @param lpTokenAmount The amount of LP tokens to withdraw.
+     * @param clbTokenAmount The amount of CLB tokens to withdraw.
      *        (should be the same as the one used in acceptRemoveLiquidity)
      * @param oracleVersion The oracle version used for the withdrawal.
      *        (should be the oracle version when call acceptRemoveLiquidity)
      * @return amount The amount of base tokens withdrawn
-     * @return burnedLpTokenAmount the amount of LP tokens burned.
+     * @return burnedCLBTokenAmount the amount of CLB tokens burned.
      */
     function acceptWithdrawLiquidity(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 lpTokenAmount,
+        uint256 clbTokenAmount,
         uint256 oracleVersion
     )
         external
         _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 amount, uint256 burnedLpTokenAmount)
+        returns (uint256 amount, uint256 burnedCLBTokenAmount)
     {
         // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
         // Process the withdraw liquidity request on the liquidity slot
-        // and get the amount of base tokens withdrawn and LP tokens burned
-        return slot.acceptWithdrawLiquidity(ctx, lpTokenAmount, oracleVersion);
+        // and get the amount of base tokens withdrawn and CLB tokens burned
+        return slot.acceptWithdrawLiquidity(ctx, clbTokenAmount, oracleVersion);
     }
 
     /**
-     * @notice Calculates the amount of LP tokens to be minted for the given amount of base tokens and trading fee rate.
+     * @notice Calculates the amount of CLB tokens to be minted for the given amount of base tokens and trading fee rate.
      * @dev This function validates the trading fee rate
-     *      and calls the calculateLpTokenMinting function on the target liquidity slot.
+     *      and calls the calculateCLBTokenMinting function on the target liquidity slot.
      * @param self The reference to the LpSlotSet storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param amount The amount of base tokens.
-     * @return The amount of LP tokens to be minted.
+     * @return The amount of CLB tokens to be minted.
      */
-    function calculateLpTokenMinting(
+    function calculateCLBTokenMinting(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
@@ -482,30 +482,30 @@ library LpSlotSetLib {
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
         // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        // Calculate the amount of LP tokens to be minted based on the given amount of base tokens
-        return slot.calculateLpTokenMinting(ctx, amount);
+        // Calculate the amount of CLB tokens to be minted based on the given amount of base tokens
+        return slot.calculateCLBTokenMinting(ctx, amount);
     }
 
     /**
-     * @notice Calculates the value of the given amount of LP tokens for the specified trading fee rate.
+     * @notice Calculates the value of the given amount of CLB tokens for the specified trading fee rate.
      * @dev This function validates the trading fee rate
-     *      and calls the calculateLpTokenValue function on the target liquidity slot.
+     *      and calls the calculateCLBTokenValue function on the target liquidity slot.
      * @param self The reference to the LpSlotSet storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
-     * @param lpTokenAmount The amount of LP tokens.
-     * @return amount The value of the LP tokens in base tokens.
+     * @param clbTokenAmount The amount of CLB tokens.
+     * @return amount The value of the CLB tokens in base tokens.
      */
-    function calculateLpTokenValue(
+    function calculateCLBTokenValue(
         LpSlotSet storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
-        uint256 lpTokenAmount
+        uint256 clbTokenAmount
     ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256 amount) {
         // Retrieve the liquidity slot based on the trading fee rate
         LpSlot storage slot = targetSlot(self, tradingFeeRate);
-        // Calculate the value of the given amount of LP tokens in base tokens
-        amount = slot.calculateLpTokenValue(ctx, lpTokenAmount);
+        // Calculate the value of the given amount of CLB tokens in base tokens
+        amount = slot.calculateCLBTokenValue(ctx, clbTokenAmount);
     }
 
     /**

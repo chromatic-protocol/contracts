@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IUSUMLiquidityCallback} from "@usum/core/interfaces/callback/IUSUMLiquidityCallback.sol";
-import {Position} from "@usum/core/libraries/Position.sol";
-import {LpReceipt} from "@usum/core/libraries/LpReceipt.sol";
+import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 
-interface IUSUMRouter is IUSUMLiquidityCallback {
+interface IChromaticRouter is IChromaticLiquidityCallback {
     function openPosition(
         address market,
         int224 qty,
@@ -31,7 +31,7 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
     function removeLiquidity(
         address market,
         int16 feeRate,
-        uint256 lpTokenAmount,
+        uint256 clbTokenAmount,
         address recipient
     ) external returns (LpReceipt memory);
 
@@ -53,19 +53,19 @@ interface IUSUMRouter is IUSUMLiquidityCallback {
     function removeLiquidityBatch(
         address market,
         int16[] calldata feeRates,
-        uint256[] calldata lpTokenAmounts,
+        uint256[] calldata clbTokenAmounts,
         address[] calldata recipients
     ) external returns (LpReceipt[] memory lpReceipts);
 
     function withdrawLiquidityBatch(address market, uint256[] calldata receiptIds) external;
 
-    function calculateLpTokenValueBatch(
+    function calculateCLBTokenValueBatch(
         address market,
         int16[] calldata tradingFeeRates,
-        uint256[] calldata lpTokenAmounts
+        uint256[] calldata clbTokenAmounts
     ) external view returns (uint256[] memory results);
 
-    function calculateLpTokenMintingBatch(
+    function calculateCLBTokenMintingBatch(
         address market,
         int16[] calldata tradingFeeRates,
         uint256[] calldata amounts

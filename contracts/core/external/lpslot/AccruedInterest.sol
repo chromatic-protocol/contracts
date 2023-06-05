@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 
 /**
  * @title AccruedInterest

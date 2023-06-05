@@ -4,29 +4,29 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
-import {LpSlotPosition, LpSlotPositionLib} from "@usum/core/external/lpslot/LpSlotPosition.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@usum/core/interfaces/IInterestCalculator.sol";
-import {IUSUMVault} from "@usum/core/interfaces/IUSUMVault.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {LpSlotPosition, LpSlotPositionLib} from "@chromatic/core/external/lpslot/LpSlotPosition.sol";
+import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
+import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 
 contract LpSlotPositionTest is Test {
     using LpSlotPositionLib for LpSlotPosition;
 
     IOracleProvider provider;
     IInterestCalculator interestCalculator;
-    IUSUMVault vault;
-    IUSUMMarket market;
+    IChromaticVault vault;
+    IChromaticMarket market;
     LpSlotPosition position;
 
     function setUp() public {
         provider = IOracleProvider(address(1));
         interestCalculator = IInterestCalculator(address(2));
-        vault = IUSUMVault(address(3));
-        market = IUSUMMarket(address(4));
+        vault = IChromaticVault(address(3));
+        market = IChromaticMarket(address(4));
 
         vm.mockCall(
             address(interestCalculator),
@@ -74,7 +74,7 @@ contract LpSlotPositionTest is Test {
                 oracleProvider: provider,
                 interestCalculator: interestCalculator,
                 vault: vault,
-                lpToken: IUSUMLpToken(address(0)),
+                clbToken: ICLBToken(address(0)),
                 market: address(market),
                 settlementToken: address(0),
                 tokenPrecision: 1e6,

@@ -1,6 +1,6 @@
-import { decodeResolverArgs, decodeResolverResponse, Module } from '@usum/test/hardhat/gelato/utils'
-import { hardhatErrorPrettyPrint } from '@usum/test/hardhat/utils'
-import { IERC20, LibEvents, Automate } from '@usum/typechain-types'
+import { decodeResolverArgs, decodeResolverResponse, Module } from '@chromatic/test/hardhat/gelato/utils'
+import { hardhatErrorPrettyPrint } from '@chromatic/test/hardhat/utils'
+import { IERC20, LibEvents, Automate } from '@chromatic/typechain-types'
 import { BigNumber, providers, Signer } from 'ethers'
 import { ethers } from 'hardhat'
 

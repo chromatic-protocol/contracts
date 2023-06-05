@@ -2,12 +2,12 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IOracleProvider} from "@usum/core/interfaces/IOracleProvider.sol";
-import {AccruedInterest, AccruedInterestLib} from "@usum/core/external/lpslot/AccruedInterest.sol";
-import {LpSlotClosingPosition, LpSlotClosingPositionLib} from "@usum/core/external/lpslot/LpSlotClosingPosition.sol";
-import {PositionParam} from "@usum/core/external/lpslot/PositionParam.sol";
-import {PositionUtil} from "@usum/core/libraries/PositionUtil.sol";
-import {LpContext} from "@usum/core/libraries/LpContext.sol";
+import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/lpslot/AccruedInterest.sol";
+import {LpSlotClosingPosition, LpSlotClosingPositionLib} from "@chromatic/core/external/lpslot/LpSlotClosingPosition.sol";
+import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
+import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 
 /**
  * @title LpSlotClosedPosition

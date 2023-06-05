@@ -2,25 +2,25 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {IAutomate, IOpsProxyFactory} from "@usum/core/base/gelato/Types.sol";
-import {IUSUMMarket} from "@usum/core/interfaces/IUSUMMarket.sol";
-import {IUSUMLpToken} from "@usum/core/interfaces/IUSUMLpToken.sol";
-import {USUMMarketFactory} from "@usum/core/USUMMarketFactory.sol";
-import {KeeperFeePayerMock} from "@usum/mocks/KeeperFeePayerMock.sol";
-import {OracleProviderMock} from "@usum/mocks/OracleProviderMock.sol";
-import {Token} from "@usum/mocks/Token.sol";
-import {USUMLiquidatorMock} from "@usum/mocks/USUMLiquidatorMock.sol";
-import {USUMVaultMock} from "@usum/mocks/USUMVaultMock.sol";
+import {IAutomate, IOpsProxyFactory} from "@chromatic/core/base/gelato/Types.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {ChromaticMarketFactory} from "@chromatic/core/ChromaticMarketFactory.sol";
+import {KeeperFeePayerMock} from "@chromatic/mocks/KeeperFeePayerMock.sol";
+import {OracleProviderMock} from "@chromatic/mocks/OracleProviderMock.sol";
+import {Token} from "@chromatic/mocks/Token.sol";
+import {ChromaticLiquidatorMock} from "@chromatic/mocks/ChromaticLiquidatorMock.sol";
+import {ChromaticVaultMock} from "@chromatic/mocks/ChromaticVaultMock.sol";
 
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;
     OracleProviderMock oracleProvider;
     Token usdc;
-    USUMMarketFactory factory;
-    USUMVaultMock vault;
-    USUMLiquidatorMock liquidator;
-    IUSUMMarket market;
-    IUSUMLpToken lpToken;
+    ChromaticMarketFactory factory;
+    ChromaticVaultMock vault;
+    ChromaticLiquidatorMock liquidator;
+    IChromaticMarket market;
+    ICLBToken clbToken;
 
     function setUp() public virtual {
         IAutomate _automate = IAutomate(address(5555));
@@ -41,15 +41,15 @@ abstract contract BaseSetup is Test {
         usdc = new Token("USDC", "USDC");
         usdc.faucet(1000000 ether);
 
-        factory = new USUMMarketFactory();
+        factory = new ChromaticMarketFactory();
 
         keeperFeePayer = new KeeperFeePayerMock(factory);
         factory.setKeeperFeePayer(address(keeperFeePayer));
 
-        vault = new USUMVaultMock(factory, address(_automate), address(_opf));
+        vault = new ChromaticVaultMock(factory, address(_automate), address(_opf));
         factory.setVault(address(vault));
 
-        liquidator = new USUMLiquidatorMock(factory, address(_automate), address(_opf));
+        liquidator = new ChromaticLiquidatorMock(factory, address(_automate), address(_opf));
         factory.setLiquidator(address(liquidator));
 
         factory.registerOracleProvider(address(oracleProvider));
@@ -63,7 +63,7 @@ abstract contract BaseSetup is Test {
         );
 
         factory.createMarket(address(oracleProvider), address(usdc));
-        market = IUSUMMarket(factory.getMarkets()[0]);
-        lpToken = market.lpToken();
+        market = IChromaticMarket(factory.getMarkets()[0]);
+        clbToken = market.clbToken();
     }
 }
