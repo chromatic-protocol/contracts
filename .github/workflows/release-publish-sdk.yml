@@ -10,7 +10,7 @@ on:
     paths:
       - contracts/**
       - deploy/**
-      - package.sdk.json
+      - package.json
       - hardhat.config.ts
       - .github/workflows/release-publish-sdk.yml
 permissions:
