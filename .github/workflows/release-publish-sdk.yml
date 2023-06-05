@@ -57,6 +57,11 @@ jobs:
           path: sdk
           ssh-key: ${{ secrets.SSH_SDK_TYPECHAIN }}
       - run: cp -r dist/src.ts sdk/src.ts
+      - uses: tibdex/github-app-token@v1
+        id: generate-token
+        with:
+          app_id: ${{ secrets.PR_ACTION_APP_ID }}
+          private_key: ${{ secrets.PR_ACTION_PRIVATE }}
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
         with:
