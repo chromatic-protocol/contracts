@@ -70,13 +70,3 @@ jobs:
           destination_repository: chromatic-protocol/sdk
           destination_branch: 'develop'
           github_token: ${{ secrets.SSH_SDK_TYPECHAIN }}
-
-      # - name: export src.ts
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     deploy_key: ${{ secrets.SSH_SDK_TYPECHAIN }}
-      #     publish_dir: ./dist/src.ts
-      #     external_repository: chromatic-protocol/sdk
-      #     destination_dir: src.ts
-      #     publish_branch: develop
-      #     enable_jekyll: true
