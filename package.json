@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
-    "@chromatic-protocol/hardhat-package": "^0.0.1-dev.13",
+    "@chromatic-protocol/hardhat-package": "^0.0.1-dev.14",
     "@equilibria/perennial-oracle": "^1.2.0",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",

@@ -64,10 +64,10 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
-"@chromatic-protocol/hardhat-package@^0.0.1-dev.13":
-  version "0.0.1-dev.13"
-  resolved "https://npm.pkg.github.com/download/@chromatic-protocol/hardhat-package/0.0.1-dev.13/fcbb65e5de3d9b3e03c356f1f5269037310e5c30#fcbb65e5de3d9b3e03c356f1f5269037310e5c30"
-  integrity sha512-69MbZp97yw/Wy9fXEvCvNKKckGJmYo/6yaMyNismYkc/rorxh3p1r53wPrGv6ry7w7UpO/hCeu3fT+NiAxygLA==
+"@chromatic-protocol/hardhat-package@^0.0.1-dev.14":
+  version "0.0.1-dev.14"
+  resolved "https://npm.pkg.github.com/download/@chromatic-protocol/hardhat-package/0.0.1-dev.14/8fe4bb39577b8f2d6dd0078637e2998059e52507#8fe4bb39577b8f2d6dd0078637e2998059e52507"
+  integrity sha512-c9YOKiKRfVjI+ObL+oBxUB/K46h8ZVq0y48k7t1FtYAhY6DlorDUzG7lhVIuc7X8dnWChEQGoXx8VayMR+Rccg==
   dependencies:
     chalk "^2.4.2"
     minimatch "^9.0.0"
