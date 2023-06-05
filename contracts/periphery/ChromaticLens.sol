@@ -108,6 +108,7 @@ contract ChromaticLens {
     ) public view returns (LpReceipt[] memory result) {
         result = new LpReceipt[](receiptIds.length);
         for (uint i = 0; i < receiptIds.length; i++) {
+            console.log("Lens lpReceipts", receiptIds[i]);
             result[i] = market.getLpReceipt(receiptIds[i]);
         }
     }
@@ -125,7 +126,9 @@ contract ChromaticLens {
         IChromaticMarket market,
         uint256[] calldata receiptIds
     ) external view returns (RemoveLiquidityInfo[] memory results) {
+        console.log("Lens removableLiquidity");
         LpReceipt[] memory reciepts = lpReceipts(market, receiptIds);
+        
         results = new RemoveLiquidityInfo[](receiptIds.length);
         for (uint i = 0; i < reciepts.length; i++) {
             (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) = market

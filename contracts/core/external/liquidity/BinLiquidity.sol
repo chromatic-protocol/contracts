@@ -7,8 +7,7 @@ import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-import "hardhat/console.sol";
-
+import 'hardhat/console.sol';
 /**
  * @title BinLiquidity
  * @notice Represents the liquidity information within an LiquidityBin.
@@ -112,7 +111,6 @@ library BinLiquidityLib {
             binValue,
             totalSupply
         );
-
         (uint256 burningAmount, uint256 pendingWithdrawal) = _settleBurning(
             self,
             freeLiquidity + pendingDeposit,
@@ -355,6 +353,7 @@ library BinLiquidityLib {
         }
 
         uint256 length = self._burningVersions.length();
+        console.log("[LpSlotLiq] _settleBurning length/freeLiquidity", length,freeLiquidity);
         for (uint256 i = 0; i < length && freeLiquidity > 0; i++) {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
@@ -367,16 +366,19 @@ library BinLiquidityLib {
                     binValue,
                     totalSupply
                 );
+                console.log("[LpSlotLiq] _pendingCLBTokenAmount",_pendingCLBTokenAmount);
+                console.log("[LpSlotLiq] freeLiquidity",freeLiquidity);
+                console.log("[LpSlotLiq] _pendingWithdrawal",_pendingWithdrawal);
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingCLBTokenAmount;
                 } else {
-                    _burningAmount = calculateCLBTokenMinting(freeLiquidity, binValue, totalSupply);
+                    _burningAmount = calculateCLBTokenMinting(freeLiquidity, slotValue, totalSupply);
+                    console.log("[LpSlotLiq] _burningAmount",_burningAmount);
                     require(_burningAmount < _pendingCLBTokenAmount);
                     _pendingWithdrawal = freeLiquidity;
                 }
 
                 _cb.burningAmount += _burningAmount;
-                console.log("_settleBurning", _cb.burningAmount);
                 _cb.tokenAmount += _pendingWithdrawal;
 
                 burningAmount += _burningAmount;
