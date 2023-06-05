@@ -9,6 +9,6 @@ contract ChromaticMarket is Trade, Liquidity {
     function settle() external override {
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
-        lpSlotSet.settle(ctx);
+        liquidityPool.settle(ctx);
     }
 }

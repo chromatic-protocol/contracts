@@ -39,7 +39,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         ctx.syncOracleVersion();
 
         vault.onAddLiquidity(amount);
-        lpSlotSet.acceptAddLiquidity(ctx, tradingFeeRate, amount);
+        liquidityPool.acceptAddLiquidity(ctx, tradingFeeRate, amount);
 
         LpReceipt memory receipt = newLpReceipt(
             ctx,
@@ -62,7 +62,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        uint256 clbTokenAmount = lpSlotSet.acceptClaimLiquidity(
+        uint256 clbTokenAmount = liquidityPool.acceptClaimLiquidity(
             ctx,
             receipt.tradingFeeRate,
             receipt.amount,
@@ -109,7 +109,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         uint256 clbTokenAmount = clbToken.balanceOf(address(this), clbTokenId) - balanceBefore;
         if (clbTokenAmount == 0) revert TooSmallAmount();
 
-        lpSlotSet.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
+        liquidityPool.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
         receipt.amount = clbTokenAmount;
 
         lpReceipts[receipt.id] = receipt;
@@ -132,7 +132,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
 
-        (uint256 amount, uint256 burnedCLBTokenAmount) = lpSlotSet.acceptWithdrawLiquidity(
+        (uint256 amount, uint256 burnedCLBTokenAmount) = liquidityPool.acceptWithdrawLiquidity(
             ctx,
             receipt.tradingFeeRate,
             clbTokenAmount,
@@ -159,7 +159,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            amounts[i] = lpSlotSet.getSlotLiquidity(tradingFeeRates[i]);
+            amounts[i] = liquidityPool.getSlotLiquidity(tradingFeeRates[i]);
         }
     }
 
@@ -168,26 +168,26 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     ) external view override returns (uint256[] memory amounts) {
         amounts = new uint256[](tradingFeeRates.length);
         for (uint i = 0; i < tradingFeeRates.length; i++) {
-            amounts[i] = lpSlotSet.getSlotFreeLiquidity(tradingFeeRates[i]);
+            amounts[i] = liquidityPool.getSlotFreeLiquidity(tradingFeeRates[i]);
         }
     }
 
     function distributeEarningToSlots(uint256 earning, uint256 marketBalance) external onlyVault {
-        lpSlotSet.distributeEarning(earning, marketBalance);
+        liquidityPool.distributeEarning(earning, marketBalance);
     }
 
     function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount
     ) external view returns (uint256) {
-        return lpSlotSet.calculateCLBTokenMinting(newLpContext(), tradingFeeRate, amount);
+        return liquidityPool.calculateCLBTokenMinting(newLpContext(), tradingFeeRate, amount);
     }
 
     function calculateCLBTokenValue(
         int16 tradingFeeRate,
         uint256 clbTokenAmount
     ) external view returns (uint256) {
-        return lpSlotSet.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
+        return liquidityPool.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
     }
 
     function newLpReceipt(

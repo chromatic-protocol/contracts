@@ -39,7 +39,7 @@ abstract contract Trade is MarketBase {
 
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 
-        position.setSlotMargins(lpSlotSet.prepareSlotMargins(position.qty, makerMargin));
+        position.setSlotMargins(liquidityPool.prepareSlotMargins(position.qty, makerMargin));
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
@@ -62,7 +62,7 @@ abstract contract Trade is MarketBase {
         if (balanceBefore + requiredMargin < settlementToken.balanceOf(address(vault)))
             revert NotEnoughMarginTransfered();
 
-        lpSlotSet.acceptOpenPosition(ctx, position); // settle()
+        liquidityPool.acceptOpenPosition(ctx, position); // settle()
 
         vault.onOpenPosition(position.id, takerMargin, tradingFee, protocolFee);
 
@@ -86,7 +86,7 @@ abstract contract Trade is MarketBase {
         position.closeVersion = ctx.currentOracleVersion().version;
         position.closeTimestamp = block.timestamp;
 
-        lpSlotSet.acceptClosePosition(ctx, position);
+        liquidityPool.acceptClosePosition(ctx, position);
         liquidator.cancelLiquidationTask(position.id);
         emit ClosePosition(position.owner, position);
 
@@ -194,7 +194,7 @@ abstract contract Trade is MarketBase {
             }
         }
 
-        lpSlotSet.acceptClaimPosition(ctx, position, realizedPnl);
+        liquidityPool.acceptClaimPosition(ctx, position, realizedPnl);
 
         vault.onClaimPosition(position.id, recipient, takerMargin, settlementAmount);
 

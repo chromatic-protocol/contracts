@@ -10,7 +10,7 @@ import {QTY_PRECISION, LEVERAGE_PRECISION} from "@chromatic/core/libraries/Posit
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
 import {LpSlot, LpSlotLib} from "@chromatic/core/external/lpslot/LpSlot.sol";
-import {LpSlotSet} from "@chromatic/core/external/lpslot/LpSlotSet.sol";
+import {LiquidityPool} from "@chromatic/core/external/lpslot/LiquidityPool.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
@@ -18,7 +18,7 @@ import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol"
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {CLBToken} from "@chromatic/core/CLBToken.sol";
 
-contract LpSlotSetTest is Test {
+contract LiquidityPoolTest is Test {
     using SafeCast for uint256;
     using LpSlotLib for LpSlot;
 
@@ -27,7 +27,7 @@ contract LpSlotSetTest is Test {
     IChromaticVault vault;
     IChromaticMarket market;
     ICLBToken clbToken;
-    LpSlotSet slotSet;
+    LiquidityPool slotSet;
 
     function setUp() public {
         provider = IOracleProvider(address(1));

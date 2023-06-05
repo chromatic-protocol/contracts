@@ -13,21 +13,21 @@ import {LpSlotMargin} from "@chromatic/core/libraries/LpSlotMargin.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 /**
- * @title LpSlotSet
+ * @title LiquidityPool
  * @notice Represents a collection of long and short liquidity slots
  */
-struct LpSlotSet {
+struct LiquidityPool {
     mapping(uint16 => LpSlot) _longSlots;
     mapping(uint16 => LpSlot) _shortSlots;
 }
 
-using LpSlotSetLib for LpSlotSet global;
+using LiquidityPoolLib for LiquidityPool global;
 
 /**
- * @title LpSlotSetLib
- * @notice Library for managing liquidity slots in an LPSlotSet
+ * @title LiquidityPoolLib
+ * @notice Library for managing liquidity slots in an LiquidityPool
  */
-library LpSlotSetLib {
+library LiquidityPoolLib {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
@@ -64,10 +64,10 @@ library LpSlotSetLib {
     }
 
     /**
-     * @notice Initializes the LpSlotSet.
-     * @param self The reference to the LpSlotSet.
+     * @notice Initializes the LiquidityPool.
+     * @param self The reference to the LiquidityPool.
      */
-    function initialize(LpSlotSet storage self) external {
+    function initialize(LiquidityPool storage self) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
@@ -77,11 +77,11 @@ library LpSlotSetLib {
     }
 
     /**
-     * @notice Settles the liquidity slots in the LpSlotSet.
-     * @param self The reference to the LpSlotSet.
+     * @notice Settles the liquidity slots in the LiquidityPool.
+     * @param self The reference to the LiquidityPool.
      * @param ctx The LpContext object.
      */
-    function settle(LpSlotSet storage self, LpContext memory ctx) external {
+    function settle(LiquidityPool storage self, LpContext memory ctx) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
@@ -102,13 +102,13 @@ library LpSlotSetLib {
      *         assigning the remaining maker margin to the slots until it is exhausted.
      *      4. Creates an array of LpSlotMargin structs
      *         containing the trading fee rate and corresponding margin amount for each slot.
-     * @param self The reference to the LpSlotSet.
+     * @param self The reference to the LiquidityPool.
      * @param qty The quantity of the position.
      * @param makerMargin The maker margin of the position.
      * @return slotMargins An array of LpSlotMargin representing the calculated slot margins.
      */
     function prepareSlotMargins(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         int224 qty,
         uint256 makerMargin
     ) external view returns (LpSlotMargin[] memory) {
@@ -160,12 +160,12 @@ library LpSlotSetLib {
      * @dev This function calculates the target liquidity slots based on the position quantity.
      *      It prepares the slot margins and divides the position parameters accordingly.
      *      Then, it opens the liquidity slots with the corresponding parameters and trading fees.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param position The Position object representing the open position.
      */
     function acceptOpenPosition(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         Position memory position
     ) external {
@@ -207,12 +207,12 @@ library LpSlotSetLib {
      *      It retrieves the maker margin and slot margins from the position.
      *      Then, it divides the position parameters to match the slot margins.
      *      Finally, it closes the liquidity slots with the provided parameters.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param position The Position object representing the close position request.
      */
     function acceptClosePosition(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         Position memory position
     ) external {
@@ -258,13 +258,13 @@ library LpSlotSetLib {
      *      Then, it divides the position parameters to match the slot margins.
      *      Depending on the value of the realized position pnl, it either claims the position fully or partially.
      *      The claimed pnl is distributed among the liquidity slots according to their respective margins.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param position The Position object representing the position to claim.
      * @param realizedPnl The realized position pnl (taker side).
      */
     function acceptClaimPosition(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         Position memory position,
         int256 realizedPnl // realized position pnl (taker side)
@@ -365,13 +365,13 @@ library LpSlotSetLib {
      *         and processes the liquidity slot corresponding to the given trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the acceptAddLiquidity function on the target liquidity slot.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param amount The amount of liquidity to add.
      */
     function acceptAddLiquidity(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
@@ -387,7 +387,7 @@ library LpSlotSetLib {
      *         and processes the liquidity slot corresponding to the given trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the acceptClaimLiquidity function on the target liquidity slot.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param amount The amount of liquidity to claim.
@@ -397,7 +397,7 @@ library LpSlotSetLib {
      * @return The amount of liquidity (CLB tokens) received as a result of the liquidity claim.
      */
     function acceptClaimLiquidity(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount,
@@ -414,13 +414,13 @@ library LpSlotSetLib {
      *         and processes the liquidity slot corresponding to the given trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the acceptRemoveLiquidity function on the target liquidity slot.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param clbTokenAmount The amount of CLB tokens to remove.
      */
     function acceptRemoveLiquidity(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 clbTokenAmount
@@ -436,7 +436,7 @@ library LpSlotSetLib {
      *         and processes the liquidity slot corresponding to the given trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the acceptWithdrawLiquidity function on the target liquidity slot.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param clbTokenAmount The amount of CLB tokens to withdraw.
@@ -447,7 +447,7 @@ library LpSlotSetLib {
      * @return burnedCLBTokenAmount the amount of CLB tokens burned.
      */
     function acceptWithdrawLiquidity(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 clbTokenAmount,
@@ -468,14 +468,14 @@ library LpSlotSetLib {
      * @notice Calculates the amount of CLB tokens to be minted for the given amount of base tokens and trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the calculateCLBTokenMinting function on the target liquidity slot.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param amount The amount of base tokens.
      * @return The amount of CLB tokens to be minted.
      */
     function calculateCLBTokenMinting(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
@@ -490,14 +490,14 @@ library LpSlotSetLib {
      * @notice Calculates the value of the given amount of CLB tokens for the specified trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the calculateCLBTokenValue function on the target liquidity slot.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @param clbTokenAmount The amount of CLB tokens.
      * @return amount The value of the CLB tokens in base tokens.
      */
     function calculateCLBTokenValue(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 clbTokenAmount
@@ -512,12 +512,12 @@ library LpSlotSetLib {
      * @notice Retrieves the total liquidity amount in base tokens for the specified trading fee rate.
      * @dev This function retrieves the liquidity slot based on the trading fee rate
      *      and calls the liquidity function on it.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @return amount The total liquidity amount in base tokens.
      */
     function getSlotLiquidity(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         int16 tradingFeeRate
     ) external view returns (uint256 amount) {
         // Retrieve the liquidity slot based on the trading fee rate
@@ -530,12 +530,12 @@ library LpSlotSetLib {
      * @notice Retrieves the free liquidity amount in base tokens for the specified trading fee rate.
      * @dev This function retrieves the liquidity slot based on the trading fee rate
      *      and calls the freeLiquidity function on it.
-     * @param self The reference to the LpSlotSet storage.
+     * @param self The reference to the LiquidityPool storage.
      * @param tradingFeeRate The trading fee rate associated with the liquidity slot.
      * @return amount The free liquidity amount in base tokens.
      */
     function getSlotFreeLiquidity(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         int16 tradingFeeRate
     ) external view returns (uint256 amount) {
         // Retrieve the liquidity slot based on the trading fee rate
@@ -547,12 +547,12 @@ library LpSlotSetLib {
     /**
      * @notice Retrieves the target slots based on the sign of the given value.
      * @dev This function retrieves the target slots mapping (short or long) based on the sign of the given value.
-     * @param self The storage reference to the LpSlotSet.
+     * @param self The storage reference to the LiquidityPool.
      * @param sign The sign of the value (-1 for negative, 1 for positive).
      * @return _slots The target slots mapping associated with the sign of the value.
      */
     function targetSlots(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         int256 sign
     ) private view returns (mapping(uint16 => LpSlot) storage) {
         return sign < 0 ? self._shortSlots : self._longSlots;
@@ -561,12 +561,12 @@ library LpSlotSetLib {
     /**
      * @notice Retrieves the target slot based on the trading fee rate.
      * @dev This function retrieves the target slot based on the sign of the trading fee rate and returns it.
-     * @param self The storage reference to the LpSlotSet.
+     * @param self The storage reference to the LiquidityPool.
      * @param tradingFeeRate The trading fee rate associated with the slot.
      * @return slot The target slot associated with the trading fee rate.
      */
     function targetSlot(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         int16 tradingFeeRate
     ) private view returns (LpSlot storage) {
         return
@@ -749,12 +749,12 @@ library LpSlotSetLib {
      *      It iterates through the trading fee rates
      *      and distributes the proportional amount of earnings to each slot
      *      based on its total balance relative to the market balance.
-     * @param self The LpSlotSet storage.
+     * @param self The LiquidityPool storage.
      * @param earning The total earnings to be distributed.
      * @param marketBalance The market balance.
      */
     function distributeEarning(
-        LpSlotSet storage self,
+        LiquidityPool storage self,
         uint256 earning,
         uint256 marketBalance
     ) external {
