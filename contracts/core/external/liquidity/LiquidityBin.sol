@@ -3,10 +3,10 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {BinLiquidity, BinLiquidityLib} from "@chromatic/core/external/lpslot/BinLiquidity.sol";
-import {BinPosition, BinPositionLib} from "@chromatic/core/external/lpslot/BinPosition.sol";
-import {BinClosedPosition, BinClosedPositionLib} from "@chromatic/core/external/lpslot/BinClosedPosition.sol";
-import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {BinLiquidity, BinLiquidityLib} from "@chromatic/core/external/liquidity/BinLiquidity.sol";
+import {BinPosition, BinPositionLib} from "@chromatic/core/external/liquidity/BinPosition.sol";
+import {BinClosedPosition, BinClosedPositionLib} from "@chromatic/core/external/liquidity/BinClosedPosition.sol";
+import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";

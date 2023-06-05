@@ -7,9 +7,9 @@ import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/lpslot/AccruedInterest.sol";
-import {BinPendingPosition, BinPendingPositionLib} from "@chromatic/core/external/lpslot/BinPendingPosition.sol";
-import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/liquidity/AccruedInterest.sol";
+import {BinPendingPosition, BinPendingPositionLib} from "@chromatic/core/external/liquidity/BinPendingPosition.sol";
+import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 
 /**

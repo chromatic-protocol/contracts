@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/lpslot/AccruedInterest.sol";
-import {PositionParam} from "@chromatic/core/external/lpslot/PositionParam.sol";
+import {AccruedInterest, AccruedInterestLib} from "@chromatic/core/external/liquidity/AccruedInterest.sol";
+import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";

@@ -6,7 +6,7 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Recei
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LiquidityBin, LiquidityBinLib} from "@chromatic/core/external/lpslot/LiquidityBin.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic/core/external/liquidity/LiquidityBin.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
