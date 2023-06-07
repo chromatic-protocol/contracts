@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
@@ -7,19 +7,35 @@ import {Liquidator} from "@chromatic/core/base/Liquidator.sol";
 import {AutomateReady} from "@chromatic/core/base/gelato/AutomateReady.sol";
 import {IAutomate} from "@chromatic/core/base/gelato/Types.sol";
 
+/**
+ * @title ChromaticLiquidator
+ * @dev A contract that handles the liquidation and claiming of positions in Chromatic markets.
+ *      It extends the Liquidator and AutomateReady contracts and implements the IChromaticLiquidator interface.
+ */
 contract ChromaticLiquidator is Liquidator, AutomateReady {
+    /**
+     * @dev Constructor function.
+     * @param _factory The address of the Chromatic Market Factory contract.
+     * @param _automate The address of the Gelato Automate contract.
+     * @param opsProxyFactory The address of the Ops Proxy Factory contract.
+     */
     constructor(
         IChromaticMarketFactory _factory,
         address _automate,
         address opsProxyFactory
     ) Liquidator(_factory) AutomateReady(_automate, address(this), opsProxyFactory) {}
 
-    ///@inheritdoc Liquidator
+    /**
+     * @inheritdoc Liquidator
+     */
     function getAutomate() internal view override returns (IAutomate) {
         return automate;
     }
 
-    ///@inheritdoc IChromaticLiquidator
+    /**
+     * @inheritdoc IChromaticLiquidator
+     * @dev Can only be called by the dedicated message sender.
+     */
     function liquidate(
         address market,
         uint256 positionId
@@ -30,7 +46,10 @@ contract ChromaticLiquidator is Liquidator, AutomateReady {
         _liquidate(market, positionId, fee);
     }
 
-    ///@inheritdoc IChromaticLiquidator
+    /**
+     * @inheritdoc IChromaticLiquidator
+     * @dev Can only be called by the dedicated message sender.
+     */
     function claimPosition(
         address market,
         uint256 positionId
