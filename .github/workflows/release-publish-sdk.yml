@@ -15,7 +15,6 @@ on:
       - .github/workflows/release-publish-sdk.yml
 permissions:
   contents: write
-  packages: write
 
 jobs:
   Release:
@@ -51,6 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     env:
       NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
