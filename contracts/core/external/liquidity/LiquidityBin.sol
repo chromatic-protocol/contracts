@@ -10,7 +10,6 @@ import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.so
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-import "hardhat/console.sol";
 
 /**
  * @title LiquidityBin
@@ -157,15 +156,6 @@ library LiquidityBinLib {
      * @return uint256 The free liquidity in the bin
      */
     function freeLiquidity(LiquidityBin storage self) internal view returns (uint256) {
-        if (self.clbTokenId == 100 || self.clbTokenId == 200 || self.clbTokenId == 300) {
-            console.log("[LpSlot freeLiquidity] tokenId, total, positionTotalMakerMargin, free");
-            console.log(
-                self.clbTokenId,
-                self._liquidity.total,
-                self._position.totalMakerMargin(),
-                self._liquidity.total - self._position.totalMakerMargin()
-            );
-        }
         return self._liquidity.total - self._position.totalMakerMargin();
     }
 
@@ -187,7 +177,10 @@ library LiquidityBinLib {
      * @param ctx The LpContext memory.
      * @return uint256 The value of the bin.
      */
-    function value(LiquidityBin storage self, LpContext memory ctx) internal view returns (uint256) {
+    function value(
+        LiquidityBin storage self,
+        LpContext memory ctx
+    ) internal view returns (uint256) {
         int256 unrealizedPnl = self._position.unrealizedPnl(ctx);
 
         uint256 absPnl = unrealizedPnl.abs();

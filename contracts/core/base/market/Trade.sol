@@ -12,7 +12,6 @@ import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
-import "hardhat/console.sol";
 
 abstract contract Trade is MarketBase {
     using Math for uint256;
@@ -44,7 +43,6 @@ abstract contract Trade is MarketBase {
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
-        console.log("tradingFee", tradingFee);
 
         if (tradingFee > maxAllowableTradingFee) {
             revert ExceedMaxAllowableTradingFee();

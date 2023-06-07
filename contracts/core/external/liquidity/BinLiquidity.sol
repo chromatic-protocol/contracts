@@ -353,7 +353,6 @@ library BinLiquidityLib {
         }
 
         uint256 length = self._burningVersions.length();
-        console.log("[LpSlotLiq] _settleBurning length/freeLiquidity", length,freeLiquidity);
         for (uint256 i = 0; i < length && freeLiquidity > 0; i++) {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
@@ -366,14 +365,14 @@ library BinLiquidityLib {
                     binValue,
                     totalSupply
                 );
-                console.log("[LpSlotLiq] _pendingCLBTokenAmount",_pendingCLBTokenAmount);
-                console.log("[LpSlotLiq] freeLiquidity",freeLiquidity);
-                console.log("[LpSlotLiq] _pendingWithdrawal",_pendingWithdrawal);
+                // console.log("[LpSlotLiq] _pendingCLBTokenAmount",_pendingCLBTokenAmount);
+                // console.log("[LpSlotLiq] freeLiquidity",freeLiquidity);
+                // console.log("[LpSlotLiq] _pendingWithdrawal",_pendingWithdrawal);
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingCLBTokenAmount;
                 } else {
                     _burningAmount = calculateCLBTokenMinting(freeLiquidity, binValue, totalSupply);
-                    console.log("[LpSlotLiq] _burningAmount",_burningAmount);
+                    // console.log("[LpSlotLiq] _burningAmount",_burningAmount);
                     require(_burningAmount < _pendingCLBTokenAmount);
                     _pendingWithdrawal = freeLiquidity;
                 }
