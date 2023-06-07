@@ -21,13 +21,30 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.semantic-release.outputs.tag }}
-      # changelog: ${{ steps.semantic-release.outputs.changelog }}
+      tag: ${{ steps.changelog.outputs.tag }}
     steps:
-      - uses: chromatic-protocol/action-semantic-release@main
-        id: semantic-release
+      - uses: actions/checkout@v3 # Checkout our working repository
+      - name: Conventional Changelog Action
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          output-file: false
+          pre-release: true
+          git-push: true
+          skip-on-empty: false
+          # skip-version-file: false
+          # skip-commit: false
+      - name: Create Release # This action will create the actual release
+        uses: actions/create-release@v1.1.4
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          release_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+          prerelease: true
   Export:
     needs: Release
     runs-on: ubuntu-latest
@@ -42,12 +59,13 @@ jobs:
           ignore-scripts: false
           node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
 
-      - name: build SDK
+      - name: generate typechain code and publish contracts
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
         run: |
           yarn clean
           yarn build
+          yarn publish
       # export src.ts to chromatic-protocol/sdk
       - uses: actions/checkout@v3
         with:
