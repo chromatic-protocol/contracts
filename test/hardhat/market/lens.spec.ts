@@ -78,7 +78,7 @@ describe('lens', async () => {
 
   it('get Slot Value', async () => {
     const { lens, market } = testData
-    const slotValue = await lens.slotValue(
+    const slotValue = await lens.liquidityBinValue(
       market.address,
       feeRates.map((v) => v.toString())
     )
@@ -99,7 +99,7 @@ describe('lens', async () => {
       makerMargin: ethers.utils.parseEther('250'),
       maxAllowFeeRate: 3
     })
-    const liquidityInfo = await lens.slotLiquidities(
+    const liquidityInfo = await lens.liquidityBins(
       market.address,
       feeRates.map((v) => v.toString())
     )
@@ -141,7 +141,7 @@ describe('lens', async () => {
     await updatePrice(1000)
     // check user's CLB tokens
 
-    console.log('Free Liq before open', await lens.slotLiquidities(market.address, [100, 200, 300]))
+    console.log('Free Liq before open', await lens.liquidityBins(market.address, [100, 200, 300]))
     // consume all liquidity
     for (let i = 0; i < 6; i++) {
       await openPosition({
@@ -153,21 +153,14 @@ describe('lens', async () => {
       })
     }
 
-    console.log('Free Liq after open', await lens.slotLiquidities(market.address, [100, 200, 300]))
+    console.log('Free Liq after open', await lens.liquidityBins(market.address, [100, 200, 300]))
 
-    // await openPosition({
-    //       qty: 50 * 10 ** 4,
-    //       leverage: 100,
-    //       takerMargin: ethers.utils.parseEther('50'),
-    //       makerMargin: ethers.utils.parseEther('50'),
-    //       maxAllowFeeRate: 3
-    //     })
     await updatePrice(1000)
 
     const positionIds = await traderAccount.getPositionIds(market.address)
     console.log('positionIds', positionIds)
 
-    console.log('slot values', await lens.slotValue(market.address, feeRates))
+    console.log('slot values', await lens.liquidityBinValue(market.address, feeRates))
     const receipts: LpReceiptStructOutput[] = []
     // market.on(market.filters.RemoveLiquidity(), (_, receipt) => {
     //   console.log('receive receipt event', receipt)
@@ -179,11 +172,6 @@ describe('lens', async () => {
     const startBlock = await time.latestBlock()
     await awaitTx(removeLiquidity(ethers.utils.parseEther('50'), 100))
 
-    // console.log('receipt.status', receipt.status)
-
-    // 50000000000000000000
-    // 1000000000000000000
-    // 990098991250000164
 
     // next oracle round
     await updatePrice(1000)
@@ -226,11 +214,13 @@ describe('lens', async () => {
       market.address,
       receipts.map((r) => r.id)
     )
+
+    // expect increse removable amount
     console.log(
       'after tranding fee 1% 50 ether position closed (1)',
       formatRemoveLiquidityValue(removableLiquidity)
     )
-    // await sleep(15000)
+    
 
     console.log('close position id: ', positionIds[1])
     await awaitTx(closePosition(positionIds[1]))
@@ -238,10 +228,9 @@ describe('lens', async () => {
     await updatePrice(1000)
     await awaitTx(claimPosition(positionIds[1]))
     await settle()
-    console.log(
-      'Free Liq after close 1',
-      await lens.slotLiquidities(market.address, [100, 200, 300])
-    )
+
+    // expect increse removable amount
+    console.log('Free Liq after close 1', await lens.liquidityBins(market.address, [100, 200, 300]))
     removableLiquidity = await lens.removableLiquidity(
       market.address,
       receipts.map((r) => r.id)
@@ -251,22 +240,23 @@ describe('lens', async () => {
       'after tranding fee 1% 50 ether position closed (2) ',
       formatRemoveLiquidityValue(removableLiquidity)
     )
+    // console.log('ids', await chromaticRouter.connect(tester).getLpReceiptIds(market.address))
+    // console.log('clb balance before wl', await clbToken.balanceOf(tester.address,100))
 
-    await awaitTx(withdrawLiquidity(receipts[0].id))
+    // await awaitTx(withdrawLiquidity(receipts[0].id))
 
-    
+    // // 49999999990100000298
+    // // 0.000000009899999702
+    // console.log('clb balance after wl', await clbToken.balanceOf(tester.address,100))
 
-    const ids = await  chromaticRouter.connect(tester).getLpReceiptIds(market.address)
-    console.log(ids);
-    removableLiquidity = await lens.removableLiquidity(
-      market.address,
-      ids
-    )
+    // const ids = await chromaticRouter.connect(tester).getLpReceiptIds(market.address)
+    // console.log('ids', await chromaticRouter.connect(tester).getLpReceiptIds(market.address))
+    // removableLiquidity = await lens.removableLiquidity(market.address, ids)
 
-    console.log(
-      'after tranding fee 1% 50 ether withdraw',
-      formatRemoveLiquidityValue(removableLiquidity)
-    )
+    // console.log(
+    //   'after tranding fee 1% 50 ether withdraw',
+    //   formatRemoveLiquidityValue(removableLiquidity)
+    // )
 
     // close
 
