@@ -1,5 +1,6 @@
 {
   "name": "@chromatic-protocol/contracts",
+  "version": "0.0.1-rc.60",
   "scripts": {
     "postinstall": "patch-package",
     "test": "forge test -vvv",
@@ -62,6 +63,5 @@
     "typescript": ">=4.5.0",
     "watch-cli": "^0.2.3"
   },
-  "dependencies": {},
-  "version": "0.1.0-rc.0"
+  "dependencies": {}
 }
