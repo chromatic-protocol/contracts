@@ -58,10 +58,10 @@ jobs:
           scope: '@chromatic-protocol'
           ignore-scripts: false
           node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
-
       - name: generate typechain code and publish contracts
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           yarn clean
           yarn build
