@@ -1,17 +1,24 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {IMarketDeployer} from "@chromatic/core/interfaces/factory/IMarketDeployer.sol";
+import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
+import {IMarketDeployer} from "@chromatic/core/interfaces/factory/IMarketDeployer.sol";
+import {IOracleProviderRegistry} from "@chromatic/core/interfaces/factory/IOracleProviderRegistry.sol";
+import {ISettlementTokenRegistry} from "@chromatic/core/interfaces/factory/ISettlementTokenRegistry.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic/core/external/deployer/MarketDeployer.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic/core/external/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic/core/libraries/InterestRate.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
+/**
+ * @title ChromaticMarketFactory
+ * @dev Contract for managing the creation and registration of Chromatic markets.
+ */
 contract ChromaticMarketFactory is IChromaticMarketFactory {
     using OracleProviderRegistryLib for OracleProviderRegistry;
     using SettlementTokenRegistryLib for SettlementTokenRegistry;
@@ -41,28 +48,44 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     error WrongTokenAddress();
     error ExistMarket();
 
+    /**
+     * @dev Modifier to restrict access to only the DAO address
+     */
     modifier onlyDao() {
         require(msg.sender == dao, Errors.ONLY_DAO_CAN_ACCESS);
         _;
     }
 
+    /**
+     * @dev Initializes the ChromaticMarketFactory contract.
+     */
     constructor() {
         dao = msg.sender;
         treasury = dao;
     }
 
-    // set DAO address
-    /// @param _dao new DAO address to set
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function updateDao(address _dao) external override onlyDao {
         dao = _dao;
         emit UpdateDao(dao);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function updateTreasury(address _treasury) external override onlyDao {
         treasury = _treasury;
         emit UpdateTreasury(treasury);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function setLiquidator(address _liquidator) external override onlyDao {
         if (liquidator != address(0)) revert AlreadySetLiquidator();
 
@@ -70,6 +93,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit SetLiquidator(liquidator);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function setVault(address _vault) external override onlyDao {
         if (vault != address(0)) revert AlreadySetVault();
 
@@ -77,6 +104,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit SetVault(vault);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
         if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
 
@@ -84,16 +115,25 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit SetKeeperFeePayer(keeperFeePayer);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     */
     function getMarkets() external view override returns (address[] memory) {
         return _markets.values();
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     */
     function getMarketsBySettlmentToken(
         address settlementToken
     ) external view override returns (address[] memory) {
         return _marketsBySettlementToken[settlementToken];
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     */
     function getMarket(
         address oracleProvider,
         address settlementToken
@@ -109,10 +149,16 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         return address(0);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     */
     function isRegisteredMarket(address market) external view override returns (bool) {
         return _markets.contains(market);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     */
     function createMarket(address oracleProvider, address settlementToken) external override {
         if (!_oracleProviderRegistry.isRegistered(oracleProvider))
             revert NotRegisteredOracleProvider();
@@ -133,7 +179,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit MarketCreated(oracleProvider, settlementToken, market);
     }
 
-    ///@inheritdoc IMarketDeployer
+    /**
+     * @inheritdoc IMarketDeployer
+     */
     function parameters()
         external
         view
@@ -146,20 +194,34 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     // implement IOracleProviderRegistry
 
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function registerOracleProvider(address oracleProvider) external override onlyDao {
         _oracleProviderRegistry.register(oracleProvider);
         emit OracleProviderRegistered(oracleProvider);
     }
 
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function unregisterOracleProvider(address oracleProvider) external override onlyDao {
         _oracleProviderRegistry.unregister(oracleProvider);
         emit OracleProviderUnregistered(oracleProvider);
     }
 
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     */
     function registeredOracleProviders() external view override returns (address[] memory) {
         return _oracleProviderRegistry.oracleProviders();
     }
 
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     */
     function isRegisteredOracleProvider(
         address oracleProvider
     ) external view override returns (bool) {
@@ -168,6 +230,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     // implement ISettlementTokenRegistry
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function registerSettlementToken(
         address token,
         uint256 minimumTakerMargin,
@@ -197,36 +263,63 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         );
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function registeredSettlementTokens() external view override returns (address[] memory) {
         return _settlementTokenRegistry.settlementTokens();
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function isRegisteredSettlementToken(address token) external view override returns (bool) {
         return _settlementTokenRegistry.isRegistered(token);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function getMinimumTakerMargin(address token) external view returns (uint256) {
         return _settlementTokenRegistry.getMinimumTakerMargin(token);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function setMinimumTakerMargin(address token, uint256 minimumTakerMargin) external onlyDao {
         _settlementTokenRegistry.setMinimumTakerMargin(token, minimumTakerMargin);
         emit SetMinimumTakerMargin(token, minimumTakerMargin);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function getFlashLoanFeeRate(address token) external view returns (uint256) {
         return _settlementTokenRegistry.getFlashLoanFeeRate(token);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function setFlashLoanFeeRate(address token, uint256 flashLoanFeeRate) external onlyDao {
         _settlementTokenRegistry.setFlashLoanFeeRate(token, flashLoanFeeRate);
         emit SetFlashLoanFeeRate(token, flashLoanFeeRate);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function getEarningDistributionThreshold(address token) external view returns (uint256) {
         return _settlementTokenRegistry.getEarningDistributionThreshold(token);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function setEarningDistributionThreshold(
         address token,
         uint256 earningDistributionThreshold
@@ -238,15 +331,26 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit SetEarningDistributionThreshold(token, earningDistributionThreshold);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function getUniswapFeeTier(address token) external view returns (uint24) {
         return _settlementTokenRegistry.getUniswapFeeTier(token);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function setUniswapFeeTier(address token, uint24 uniswapFeeTier) external onlyDao {
         _settlementTokenRegistry.setUniswapFeeTier(token, uniswapFeeTier);
         emit SetUniswapFeeTier(token, uniswapFeeTier);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function appendInterestRateRecord(
         address token,
         uint256 annualRateBPS,
@@ -256,6 +360,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit InterestRateRecordAppended(token, annualRateBPS, beginTimestamp);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
     function removeLastInterestRateRecord(address token) external override onlyDao {
         (bool removed, InterestRate.Record memory record) = _settlementTokenRegistry
             .removeLastInterestRateRecord(token);
@@ -265,12 +373,18 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         }
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function getInterestRateRecords(
         address token
     ) external view returns (InterestRate.Record[] memory) {
         return _settlementTokenRegistry.getInterestRateRecords(token);
     }
 
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
     function currentInterestRate(
         address token
     ) external view override returns (uint256 annualRateBPS) {
@@ -279,6 +393,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     // implement IInterestCalculator
 
+    /**
+     * @inheritdoc IInterestCalculator
+     */
     function calculateInterest(
         address token,
         uint256 amount,
@@ -290,18 +407,34 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     // manage vault automate
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function createMakerEarningDistributionTask(address token) external override onlyDao {
         IChromaticVault(vault).createMakerEarningDistributionTask(token);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function cancelMakerEarningDistributionTask(address token) external override onlyDao {
         IChromaticVault(vault).cancelMakerEarningDistributionTask(token);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function createMarketEarningDistributionTask(address market) external override onlyDao {
         IChromaticVault(vault).createMarketEarningDistributionTask(market);
     }
 
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
     function cancelMarketEarningDistributionTask(address market) external override onlyDao {
         IChromaticVault(vault).cancelMarketEarningDistributionTask(market);
     }
