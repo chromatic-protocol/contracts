@@ -64,9 +64,11 @@ library BinLiquidityLib {
 
     /**
      * @notice Settles the pending liquidity within the BinLiquidity.
-     * @dev If the pending oracle version is not set or is greater than or equal to the current oracle version, no action is taken.
-     *      Otherwise, the pending liquidity and burning CLB tokens are settled by following steps:
-     *          1. Settles pending liquidity
+     * @dev This function settles pending liquidity in the BinLiquidity storage by performing the following steps:
+     *      1. Settles pending liquidity
+     *          - If the pending oracle version is not set or is greater than or equal to the current oracle version,
+     *            no action is taken.
+     *          - Otherwise, the pending liquidity and burning CLB tokens are settled by following steps:
      *              a. If there is a pending deposit,
      *                 it calculates the minting amount of CLB tokens
      *                 based on the pending deposit, bin value, and CLB token total supply.
@@ -74,17 +76,17 @@ library BinLiquidityLib {
      *              b. If there is a pending CLB token burning,
      *                 it adds the oracle version to the burning versions list
      *                 and initializes the claim burning details.
-     *          2. Settles bunding CLB tokens
-     *              a. It trims all completed burning versions from the burning versions list.
-     *              b. For each burning version in the list,
-     *                 it calculates the pending CLB token amount and the pending withdrawal amount
-     *                 based on the bin value and CLB token total supply.
-     *                 - If there is sufficient free liquidity, it calculates the burning amount of CLB tokens.
-     *                 - If there is insufficient free liquidity, it calculates the burning amount
-     *                   based on the available free liquidity and updates the pending withdrawal accordingly.
-     *              c. It updates the burning amount and pending withdrawal,
-     *                 and reduces the free liquidity accordingly.
-     *              d. Finally, it updates the total liquidity by subtracting the pending withdrawal.
+     *      2. Settles bunding CLB tokens
+     *          a. It trims all completed burning versions from the burning versions list.
+     *          b. For each burning version in the list,
+     *             it calculates the pending CLB token amount and the pending withdrawal amount
+     *             based on the bin value and CLB token total supply.
+     *             - If there is sufficient free liquidity, it calculates the burning amount of CLB tokens.
+     *             - If there is insufficient free liquidity, it calculates the burning amount
+     *               based on the available free liquidity and updates the pending withdrawal accordingly.
+     *          c. It updates the burning amount and pending withdrawal,
+     *             and reduces the free liquidity accordingly.
+     *          d. Finally, it updates the total liquidity by subtracting the pending withdrawal.
      *      And the CLB tokens are minted or burned accordingly.
      *      The pending deposit and withdrawal amounts are passed to the vault for further processing.
      * @param self The BinLiquidity storage.
@@ -100,25 +102,14 @@ library BinLiquidityLib {
         uint256 freeLiquidity,
         uint256 clbTokenId
     ) internal {
-        uint256 oracleVersion = self._pending.oracleVersion;
-        if (oracleVersion == 0) return;
-
-        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        if (oracleVersion >= currentVersion.version) return;
-
         ICLBToken clbToken = ctx.clbToken;
         uint256 totalSupply = clbToken.totalSupply(clbTokenId);
 
-        uint256 pendingDeposit = self._pending.tokenAmount;
-        uint256 pendingCLBTokenAmount = self._pending.clbTokenAmount;
-
-        uint256 mintingAmount = _settlePending(
+        (uint256 pendingDeposit, uint256 mintingAmount) = _settlePending(
             self,
-            pendingDeposit,
-            pendingCLBTokenAmount,
+            ctx,
             binValue,
-            totalSupply,
-            oracleVersion
+            totalSupply
         );
 
         (uint256 burningAmount, uint256 pendingWithdrawal) = _settleBurning(
@@ -134,9 +125,9 @@ library BinLiquidityLib {
             clbToken.burn(ctx.market, clbTokenId, burningAmount - mintingAmount);
         }
 
-        ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
-
-        delete self._pending;
+        if (pendingDeposit > 0 || pendingWithdrawal > 0) {
+            ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
+        }
     }
 
     /**
@@ -266,10 +257,7 @@ library BinLiquidityLib {
         return
             clbTokenTotalSupply == 0
                 ? amount
-                : amount.mulDiv(
-                    clbTokenTotalSupply,
-                    binValue < MIN_AMOUNT ? MIN_AMOUNT : binValue
-                );
+                : amount.mulDiv(clbTokenTotalSupply, binValue < MIN_AMOUNT ? MIN_AMOUNT : binValue);
     }
 
     /**
@@ -293,21 +281,27 @@ library BinLiquidityLib {
     /**
      * @dev Settles the pending deposit and pending CLB token burning.
      * @param self The BinLiquidity storage.
-     * @param pendingDeposit The amount of pending deposit to settle.
-     * @param pendingCLBTokenAmount The amount of pending CLB tokens to burn.
+     * @param ctx The LpContext.
      * @param binValue The current value of the bin.
      * @param totalSupply The total supply of CLB tokens.
-     * @param oracleVersion The oracle version associated with the pending deposit and CLB token burning.
+     * @return pendingDeposit The amount of pending deposit to be settled.
      * @return mintingAmount The calculated minting amount of CLB tokens for the pending deposit.
      */
     function _settlePending(
         BinLiquidity storage self,
-        uint256 pendingDeposit,
-        uint256 pendingCLBTokenAmount,
+        LpContext memory ctx,
         uint256 binValue,
-        uint256 totalSupply,
-        uint256 oracleVersion
-    ) private returns (uint256 mintingAmount) {
+        uint256 totalSupply
+    ) private returns (uint256 pendingDeposit, uint256 mintingAmount) {
+        uint256 oracleVersion = self._pending.oracleVersion;
+        if (oracleVersion == 0) return (0, 0);
+
+        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
+        if (oracleVersion >= currentVersion.version) return (0, 0);
+
+        pendingDeposit = self._pending.tokenAmount;
+        uint256 pendingCLBTokenAmount = self._pending.clbTokenAmount;
+
         if (pendingDeposit > 0) {
             mintingAmount = calculateCLBTokenMinting(pendingDeposit, binValue, totalSupply);
 
@@ -326,6 +320,8 @@ library BinLiquidityLib {
                 tokenAmount: 0
             });
         }
+
+        delete self._pending;
     }
 
     /**
