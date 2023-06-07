@@ -12,7 +12,12 @@ import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
+import {IMarketLiquidate} from "@chromatic/core/interfaces/market/IMarketLiquidate.sol";
 
+/**
+ * @title Trade
+ * @dev A contract that manages trading positions and liquidations.
+ */
 abstract contract Trade is MarketBase {
     using Math for uint256;
     using SafeCast for uint256;
@@ -20,7 +25,9 @@ abstract contract Trade is MarketBase {
 
     uint256 internal _positionId;
 
-    ///@inheritdoc ITrade
+    /**
+     * @inheritdoc ITrade
+     */
     function openPosition(
         int224 qty,
         uint32 leverage,
@@ -75,6 +82,9 @@ abstract contract Trade is MarketBase {
         return position;
     }
 
+    /**
+     * @inheritdoc ITrade
+     */
     function closePosition(uint256 positionId) external override {
         Position storage position = positions[positionId];
         if (position.id == 0) revert NotExistPosition();
@@ -98,6 +108,9 @@ abstract contract Trade is MarketBase {
         }
     }
 
+    /**
+     * @inheritdoc ITrade
+     */
     function claimPosition(
         uint256 positionId,
         address recipient, // EOA or account contract
@@ -117,6 +130,9 @@ abstract contract Trade is MarketBase {
         liquidator.cancelClaimPositionTask(position.id);
     }
 
+    /**
+     * @inheritdoc IMarketLiquidate
+     */
     function claimPosition(
         uint256 positionId,
         address keeper,
@@ -136,6 +152,9 @@ abstract contract Trade is MarketBase {
         liquidator.cancelClaimPositionTask(position.id);
     }
 
+    /**
+     * @inheritdoc IMarketLiquidate
+     */
     function liquidate(
         uint256 positionId,
         address keeper,
@@ -158,6 +177,15 @@ abstract contract Trade is MarketBase {
         emit Liquidate(position.owner, usedKeeperFee, position);
     }
 
+    /**
+     * @dev Internal function for claiming a position.
+     * @param ctx The LpContext containing the current oracle version and synchronization information.
+     * @param position The Position object representing the position to be claimed.
+     * @param pnl The profit or loss amount of the position.
+     * @param usedKeeperFee The amount of the keeper fee used.
+     * @param recipient The address of the recipient (EOA or account contract) receiving the settlement.
+     * @param data Additional data for the claim position callback.
+     */
     function _claimPosition(
         LpContext memory ctx,
         Position memory position,
@@ -170,16 +198,21 @@ abstract contract Trade is MarketBase {
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
         uint256 settlementAmount = takerMargin;
 
+        // Calculate the interest based on the maker margin and the time difference
+        // between the open timestamp and the current block timestamp
         uint256 interest = ctx.calculateInterest(
             makerMargin,
             position.openTimestamp,
             block.timestamp
         );
+        // Calculate the realized profit or loss by subtracting the interest from the total pnl
         int256 realizedPnl = pnl - interest.toInt256();
 
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0) {
             if (absRealizedPnl > makerMargin) {
+                // If the absolute value of the realized pnl is greater than the maker margin,
+                // set the realized pnl to the maker margin and add the maker margin to the settlement
                 realizedPnl = makerMargin.toInt256();
                 settlementAmount += makerMargin;
             } else {
@@ -187,6 +220,8 @@ abstract contract Trade is MarketBase {
             }
         } else {
             if (absRealizedPnl > takerMargin) {
+                // If the absolute value of the realized pnl is greater than the taker margin,
+                // set the realized pnl to the negative taker margin and set the settlement amount to 0
                 realizedPnl = -(takerMargin.toInt256());
                 settlementAmount = 0;
             } else {
@@ -194,11 +229,14 @@ abstract contract Trade is MarketBase {
             }
         }
 
+        // Accept the claim position in the liquidity pool
         liquidityPool.acceptClaimPosition(ctx, position, realizedPnl);
 
+        // Call the onClaimPosition function in the vault to handle the settlement
         vault.onClaimPosition(position.id, recipient, takerMargin, settlementAmount);
 
-        // TODO keeper == msg.sender => revert 시 정상처리 (강제청산)
+        // Call the claim position callback function on the position owner's contract
+        // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator
         try
             IChromaticTradeCallback(position.owner).claimPositionCallback(position.id, data)
         {} catch (bytes memory e /*lowLevelData*/) {
@@ -206,11 +244,15 @@ abstract contract Trade is MarketBase {
                 revert ClaimPositionCallbackError();
             }
         }
+        // Delete the claimed position from the positions mapping
         delete positions[position.id];
 
         emit ClaimPosition(position.owner, pnl, interest, position);
     }
 
+    /**
+     * @inheritdoc IMarketLiquidate
+     */
     function checkLiquidation(uint256 positionId) external view returns (bool _liquidate) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
@@ -218,6 +260,13 @@ abstract contract Trade is MarketBase {
         (_liquidate, ) = _checkLiquidation(newLpContext(), position);
     }
 
+    /**
+     * @dev Internal function for checking if a position should be liquidated.
+     * @param ctx The LpContext containing the current oracle version and synchronization information.
+     * @param position The Position object representing the position to be checked.
+     * @return _liquidate A boolean indicating whether the position should be liquidated.
+     * @return _pnl The profit or loss amount of the position.
+     */
     function _checkLiquidation(
         LpContext memory ctx,
         Position memory position
@@ -246,6 +295,9 @@ abstract contract Trade is MarketBase {
         }
     }
 
+    /**
+     * @inheritdoc IMarketLiquidate
+     */
     function checkClaimPosition(uint256 positionId) external view returns (bool) {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
@@ -253,6 +305,12 @@ abstract contract Trade is MarketBase {
         return _checkClaimPosition(position, newLpContext());
     }
 
+    /**
+     * @dev Internal function for checking if a position can be claimed.
+     * @param position The Position object representing the position to be checked.
+     * @param ctx The LpContext containing the current oracle version and synchronization information.
+     * @return A boolean indicating whether the position can be claimed.
+     */
     function _checkClaimPosition(
         Position memory position,
         LpContext memory ctx
@@ -267,6 +325,14 @@ abstract contract Trade is MarketBase {
         return 0;
     }
 
+    /**
+     * @dev Creates a new position.
+     * @param ctx The LP context.
+     * @param qty The quantity of the position.
+     * @param leverage The leverage of the position.
+     * @param takerMargin The margin provided by the taker.
+     * @return The newly created position.
+     */
     function newPosition(
         LpContext memory ctx,
         int224 qty,
@@ -288,6 +354,9 @@ abstract contract Trade is MarketBase {
             });
     }
 
+    /**
+     * @inheritdoc ITrade
+     */
     function getPositions(
         uint256[] calldata positionIds
     ) external view returns (Position[] memory _positions) {

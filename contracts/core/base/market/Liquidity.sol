@@ -1,13 +1,19 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
+import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic/core/libraries/LpReceipt.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 
+/**
+ * @title Liquidity
+ * @dev Contract for managing liquidity in a market.
+ */
 abstract contract Liquidity is MarketBase, IERC1155Receiver {
     using Math for uint256;
 
@@ -15,11 +21,17 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
 
     uint256 internal _lpReceiptId;
 
+    /**
+     * @dev Modifier to restrict a function to be called only by the vault contract.
+     */
     modifier onlyVault() {
         if (msg.sender != address(vault)) revert OnlyAccessableByVault();
         _;
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function addLiquidity(
         address recipient,
         int16 tradingFeeRate,
@@ -54,6 +66,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return receipt;
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function claimLiquidity(uint256 receiptId, bytes calldata data) external override nonReentrant {
         LpReceipt memory receipt = lpReceipts[receiptId];
         if (receipt.id == 0) revert NotExistLpReceipt();
@@ -82,6 +97,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         emit ClaimLiquidity(receipt.recipient, clbTokenAmount, receipt);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function removeLiquidity(
         address recipient,
         int16 tradingFeeRate,
@@ -118,6 +136,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return receipt;
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function withdrawLiquidity(
         uint256 receiptId,
         bytes calldata data
@@ -154,6 +175,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function getBinLiquidities(
         int16[] calldata tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
@@ -163,6 +187,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         }
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function getBinFreeLiquidities(
         int16[] calldata tradingFeeRates
     ) external view override returns (uint256[] memory amounts) {
@@ -172,10 +199,16 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         }
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount
@@ -183,6 +216,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return liquidityPool.calculateCLBTokenMinting(newLpContext(), tradingFeeRate, amount);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function calculateCLBTokenValue(
         int16 tradingFeeRate,
         uint256 clbTokenAmount
@@ -190,6 +226,15 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return liquidityPool.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
     }
 
+    /**
+     * @dev Creates a new liquidity receipt.
+     * @param ctx The liquidity context.
+     * @param action The liquidity action.
+     * @param amount The amount of liquidity.
+     * @param recipient The address to receive the liquidity.
+     * @param tradingFeeRate The trading fee rate for the liquidity.
+     * @return The new liquidity receipt.
+     */
     function newLpReceipt(
         LpContext memory ctx,
         LpAction action,
@@ -210,6 +255,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
 
     // implement IERC1155Receiver
 
+    /**
+     * @inheritdoc IERC1155Receiver
+     */
     function onERC1155Received(
         address operator,
         address from,
@@ -220,6 +268,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return this.onERC1155Received.selector;
     }
 
+    /**
+     * @inheritdoc IERC1155Receiver
+     */
     function onERC1155BatchReceived(
         address operator,
         address from,
@@ -230,6 +281,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return this.onERC1155BatchReceived.selector;
     }
 
+    /**
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceID) external view returns (bool) {
         return
             interfaceID == this.supportsInterface.selector || // ERC165

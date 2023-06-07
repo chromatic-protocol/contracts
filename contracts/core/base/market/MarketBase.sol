@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -18,6 +18,10 @@ import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
+/**
+ * @title MarketBase
+ * @dev Base contract for Chromatic markets.
+ */
 abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
     IChromaticMarketFactory public immutable override factory;
     IOracleProvider public immutable override oracleProvider;
@@ -33,11 +37,17 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
     mapping(uint256 => Position) internal positions;
     mapping(uint256 => LpReceipt) internal lpReceipts;
 
+    /**
+     * @dev Modifier to restrict access to only the liquidator contract.
+     */
     modifier onlyLiquidator() {
         require(msg.sender == address(liquidator), Errors.ONLY_LIQUIDATOR_CAN_ACCESS);
         _;
     }
 
+    /**
+     * @dev Initializes the market contract.
+     */
     constructor() {
         factory = IChromaticMarketFactory(msg.sender);
 
@@ -53,6 +63,10 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
         liquidityPool.initialize();
     }
 
+    /**
+     * @dev Creates a new LP context.
+     * @return The LP context.
+     */
     function newLpContext() internal view returns (LpContext memory) {
         IOracleProvider.OracleVersion memory _currentVersionCache;
         return
