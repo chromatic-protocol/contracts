@@ -12,4 +12,10 @@ interface ICLBToken is IERC1155, IERC1155MetadataURI {
     function burn(address from, uint256 id, uint256 amount) external;
 
     function decimals() external view returns (uint8);
+
+    function name(uint256 id) external view returns (string memory);
+    
+    function description(uint256 id) external view returns (string memory);
+    
+    function image(uint256 id) external view returns (string memory);
 }
