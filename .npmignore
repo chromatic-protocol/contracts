@@ -29,3 +29,10 @@ package-build/
 
 # hardhat-deploy
 deployments
+
+# .github
+.github
+
+# foundry related
+lib/
+out/

@@ -1,5 +1,5 @@
 {
-  "name": "chromatic-protocol",
+  "name": "@chromatic-protocol/contracts",
   "scripts": {
     "postinstall": "patch-package",
     "test": "forge test -vvv",
