@@ -1,41 +1,64 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
 import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
 import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "@chromatic/periphery/AccountFactory.sol";
 import {Account} from "@chromatic/periphery/Account.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 
+/**
+ * @title ChromaticRouter
+ * @dev A router contract that facilitates liquidity provision and trading on Chromatic.
+ */
 contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
     using SignedMath for int256;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    /**
+     * @dev Struct representing the data for an addLiquidity callback.
+     * @param provider The address of the liquidity provider.
+     * @param amount The amount of tokens being added as liquidity.
+     */
     struct AddLiquidityCallbackData {
         address provider;
         uint256 amount;
     }
 
+    /**
+     * @dev Struct representing the data for a claimLiquidity callback.
+     * @param provider The address of the liquidity provider.
+     */
     struct ClaimLiquidityCallbackData {
         address provider;
     }
 
+    /**
+     * @dev Struct representing the data for a removeLiquidity callback.
+     * @param provider The address of the liquidity provider.
+     * @param clbTokenAmount The amount of CLB tokens being removed.
+     */
     struct RemoveLiquidityCallbackData {
         address provider;
         uint256 clbTokenAmount;
     }
 
+    /**
+     * @dev Struct representing the data for a withdrawLiquidity callback.
+     * @param provider The address of the liquidity provider.
+     */
     struct WithdrawLiquidityCallbackData {
         address provider;
     }
@@ -45,11 +68,19 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
 
     error NotExistLpReceipt();
 
+    /**
+     * @dev Initializes the ChromaticRouter contract.
+     * @param _accountFactory The address of the AccountFactory contract.
+     * @param _marketFactory The address of the ChromaticMarketFactory contract.
+     */
     function initialize(AccountFactory _accountFactory, address _marketFactory) external onlyOwner {
         accountFactory = _accountFactory;
         marketFactory = _marketFactory;
     }
 
+    /**
+     * @inheritdoc IChromaticLiquidityCallback
+     */
     function addLiquidityCallback(
         address settlementToken,
         address vault,
@@ -64,6 +95,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         );
     }
 
+    /**
+     * @inheritdoc IChromaticLiquidityCallback
+     */
     function claimLiquidityCallback(
         uint256 receiptId,
         bytes calldata data
@@ -75,6 +109,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
+    /**
+     * @inheritdoc IChromaticLiquidityCallback
+     */
     function removeLiquidityCallback(
         address clbToken,
         uint256 clbTokenId,
@@ -93,6 +130,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         );
     }
 
+    /**
+     * @inheritdoc IChromaticLiquidityCallback
+     */
     function withdrawLiquidityCallback(
         uint256 receiptId,
         bytes calldata data
@@ -104,6 +144,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function openPosition(
         address market,
         int224 qty,
@@ -123,14 +166,23 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
             );
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function closePosition(address market, uint256 positionId) external override {
         _getAccount(msg.sender).closePosition(market, positionId);
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function claimPosition(address market, uint256 positionId) external override {
         _getAccount(msg.sender).claimPosition(market, positionId);
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function addLiquidity(
         address market,
         int16 feeRate,
@@ -151,6 +203,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function claimLiquidity(address market, uint256 receiptId) public override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
@@ -165,6 +220,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         );
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function removeLiquidity(
         address market,
         int16 feeRate,
@@ -190,6 +248,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function withdrawLiquidity(address market, uint256 receiptId) public override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
@@ -204,18 +265,32 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         );
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function getAccount() external view override returns (address) {
         return accountFactory.getAccount(msg.sender);
     }
 
+    /**
+     * @dev Retrieves the account of the specified owner.
+     * @param owner The owner of the account.
+     * @return The account address.
+     */
     function _getAccount(address owner) internal view returns (Account) {
         return Account(accountFactory.getAccount(owner));
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function getLpReceiptIds(address market) external view override returns (uint256[] memory) {
         return receiptIds[market][msg.sender].values();
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function addLiquidityBatch(
         address market,
         int16[] calldata feeRates,
@@ -232,12 +307,18 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         }
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function claimLiquidityBatch(address market, uint256[] calldata _receiptIds) external override {
         for (uint i = 0; i < _receiptIds.length; i++) {
             claimLiquidity(market, _receiptIds[i]);
         }
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function removeLiquidityBatch(
         address market,
         int16[] calldata feeRates,
@@ -254,6 +335,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         }
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function withdrawLiquidityBatch(
         address market,
         uint256[] calldata _receiptIds
@@ -273,6 +357,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         return result;
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function calculateCLBTokenValueBatch(
         address market,
         int16[] calldata tradingFeeRates,
@@ -288,6 +375,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         }
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function calculateCLBTokenMintingBatch(
         address market,
         int16[] calldata tradingFeeRates,
@@ -303,6 +393,9 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         }
     }
 
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function totalSupplies(
         address market,
         int16[] calldata tradingFeeRates
