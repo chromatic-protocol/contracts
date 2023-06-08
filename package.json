@@ -1,6 +1,6 @@
 {
   "name": "@chromatic-protocol/contracts",
-  "version": "0.0.1-rc.67",
+  "version": "0.0.1-rc.68",
   "scripts": {
     "postinstall": "patch-package",
     "test": "forge test -vvv",
