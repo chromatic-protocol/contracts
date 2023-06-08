@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -8,11 +8,18 @@ import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMark
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic/core/interfaces/IKeeperFeePayer.sol";
+import {ILendingPool} from "@chromatic/core/interfaces/vault/ILendingPool.sol";
+import {IVault} from "@chromatic/core/interfaces/vault/IVault.sol";
 import {IChromaticFlashLoanCallback} from "@chromatic/core/interfaces/callback/IChromaticFlashLoanCallback.sol";
 import {AutomateReady} from "@chromatic/core/base/gelato/AutomateReady.sol";
 import {IAutomate, Module, ModuleData} from "@chromatic/core/base/gelato/Types.sol";
 import {BPS} from "@chromatic/core/libraries/Constants.sol";
 
+/**
+ * @title ChromaticVault
+ * @dev A contract that implements the ChromaticVault interface
+ *      and provides functionality for managing positions, liquidity, and fees in Chromatic markets.
+ */
 contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     using Math for uint256;
 
@@ -39,16 +46,28 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     error NotEnoughFeePaid();
     error ExistMarketEarningDistributionTask();
 
+    /**
+     * @dev Modifier to restrict access to only the Factory contract.
+     */
     modifier onlyFactory() {
         if (msg.sender != address(factory)) revert OnlyAccessableByFactory();
         _;
     }
 
+    /**
+     * @dev Modifier to restrict access to only the Market contract.
+     */
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
         _;
     }
 
+    /**
+     * @dev Constructs a new ChromaticVault instance.
+     * @param _factory The address of the Chromatic Market Factory contract.
+     * @param _automate The address of the Gelato Automate contract.
+     * @param opsProxyFactory The address of the OpsProxyFactory contract.
+     */
     constructor(
         IChromaticMarketFactory _factory,
         address _automate,
@@ -60,6 +79,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     // implement IVault
 
+    /**
+     * @inheritdoc IVault
+     * @dev This function can only be called by a market contract.
+     */
     function onOpenPosition(
         uint256 positionId,
         uint256 takerMargin,
@@ -80,6 +103,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit OnOpenPosition(address(market), positionId, takerMargin, tradingFee, protocolFee);
     }
 
+    /**
+     * @inheritdoc IVault
+     * @dev This function can only be called by a market contract.
+     */
     function onClaimPosition(
         uint256 positionId,
         address recipient,
@@ -111,6 +138,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit OnClaimPosition(address(market), positionId, recipient, takerMargin, settlementAmount);
     }
 
+    /**
+     * @inheritdoc IVault
+     * @dev This function can only be called by a market contract.
+     */
     function onAddLiquidity(uint256 amount) external override onlyMarket {
         IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
@@ -120,6 +151,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit OnAddLiquidity(address(market), amount);
     }
 
+    /**
+     * @inheritdoc IVault
+     * @dev This function can only be called by a market contract.
+     */
     function onSettlePendingLiquidity(
         uint256 pendingDeposit,
         uint256 pendingWithdrawal
@@ -141,6 +176,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit OnSettlePendingLiquidity(address(market), pendingDeposit, pendingWithdrawal);
     }
 
+    /**
+     * @inheritdoc IVault
+     * @dev This function can only be called by a market contract.
+     */
     function onWithdrawLiquidity(address recipient, uint256 amount) external override onlyMarket {
         IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
@@ -152,6 +191,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit OnWithdrawLiquidity(address(market), amount, recipient);
     }
 
+    /**
+     * @inheritdoc IVault
+     * @dev This function can only be called by a market contract.
+     */
     function transferKeeperFee(
         address keeper,
         uint256 fee,
@@ -168,6 +211,14 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit TransferKeeperFee(address(market), fee, usedFee);
     }
 
+    /**
+     * @notice Internal function to transfer the keeper fee.
+     * @param token The address of the settlement token.
+     * @param keeper The address of the keeper to receive the fee.
+     * @param fee The amount of the fee to transfer as native token.
+     * @param margin The margin amount used for the fee payment.
+     * @return usedFee The actual settlement token amount of fee used for the transfer.
+     */
     function _transferKeeperFee(
         address token,
         address keeper,
@@ -180,6 +231,13 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         return keeperFeePayer.payKeeperFee(token, fee, keeper);
     }
 
+    /**
+     * @notice Transfers the protocol fee to the DAO treasury address.
+     * @param market The address of the market contract.
+     * @param settlementToken The address of the settlement token.
+     * @param positionId The ID of the position.
+     * @param amount The amount of the protocol fee to transfer.
+     */
     function transferProtocolFee(
         address market,
         address settlementToken,
@@ -194,6 +252,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     // implement ILendingPool
 
+    /**
+     * @inheritdoc ILendingPool
+     */
     function flashLoan(
         address token,
         uint256 amount,
@@ -202,34 +263,46 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     ) external nonReentrant {
         uint256 balance = IERC20(token).balanceOf(address(this));
 
+        // Ensure that the loan amount does not exceed the available balance
+        // after considering pending deposits and withdrawals
         if (amount > balance - pendingDeposits[token] - pendingWithdrawals[token])
             revert NotEnoughBalance();
 
+        // Calculate the fee for the flash loan based on the loan amount and the flash loan fee rate of the token
         uint256 fee = amount.mulDiv(factory.getFlashLoanFeeRate(token), BPS, Math.Rounding.Up);
 
         SafeERC20.safeTransfer(IERC20(token), recipient, amount);
 
+        // Invoke the flash loan callback function on the sender contract to process the loan
         IChromaticFlashLoanCallback(msg.sender).flashLoanCallback(fee, data);
 
         uint256 balanceAfter = IERC20(token).balanceOf(address(this));
 
+        // Ensure that the fee has been paid by the recipient
         if (balanceAfter < balance + fee) revert NotEnoughFeePaid();
 
         uint256 paid = balanceAfter - balance;
 
+        // Calculate the amounts to be distributed to the taker pool and maker pool
         uint256 takerBalance = takerBalances[token];
         uint256 makerBalance = makerBalances[token];
         uint256 paidToTakerPool = paid.mulDiv(takerBalance, takerBalance + makerBalance);
         uint256 paidToMakerPool = paid - paidToTakerPool;
 
+        // Transfer the amount paid to the taker pool to the DAO treasury address
         if (paidToTakerPool > 0) {
             SafeERC20.safeTransfer(IERC20(token), factory.treasury(), paidToTakerPool);
         }
+        // Add the amount paid to the maker pool to the pending maker earnings
         pendingMakerEarnings[token] += paidToMakerPool;
 
         emit FlashLoan(msg.sender, recipient, amount, paid, paidToTakerPool, paidToMakerPool);
     }
 
+    /**
+     * @inheritdoc ILendingPool
+     * @dev The pending share of earnings is calculated based on the bin balance, maker balances, and market balances.
+     */
     function getPendingBinShare(
         address market,
         uint256 binBalance
@@ -240,15 +313,13 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
         return
             (
+                // Calculate the pending share of earnings for the bin based on the maker balances and bin balance
                 makerBalance == 0
                     ? 0
-                    : pendingMakerEarnings[token].mulDiv(
-                        binBalance,
-                        makerBalance,
-                        Math.Rounding.Up
-                    )
+                    : pendingMakerEarnings[token].mulDiv(binBalance, makerBalance, Math.Rounding.Up)
             ) +
             (
+                // Calculate the pending share of earnings for the bin based on the market balances and bin balance
                 marketBalance == 0
                     ? 0
                     : pendingMarketEarnings[market].mulDiv(
@@ -261,6 +332,12 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     // gelato automate - distribute maker earning to each markets
 
+    /**
+     * @notice Resolves the maker earning distribution for a specific token.
+     * @param token The address of the settlement token.
+     * @return canExec True if the distribution can be executed, otherwise False.
+     * @return execPayload The payload for executing the distribution.
+     */
     function resolveMakerEarningDistribution(
         address token
     ) external view returns (bool canExec, bytes memory execPayload) {
@@ -271,11 +348,18 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         return (false, "");
     }
 
+    /**
+     * @notice Distributes the maker earning for a token to the each markets.
+     * @param token The address of the settlement token.
+     */
     function distributeMakerEarning(address token) external onlyDedicatedMsgSender {
         (uint256 fee, ) = _getFeeDetails();
         _distributeMakerEarning(token, fee);
     }
 
+    /**
+     * @inheritdoc IChromaticVault
+     */
     function createMakerEarningDistributionTask(
         address token
     ) external virtual override onlyFactory {
@@ -301,6 +385,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         );
     }
 
+    /**
+     * @inheritdoc IChromaticVault
+     */
     function cancelMakerEarningDistributionTask(
         address token
     ) external virtual override onlyFactory {
@@ -311,6 +398,11 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         }
     }
 
+    /**
+     * @dev Internal function to distribute the maker earning for a token to the each markets.
+     * @param token The address of the settlement token.
+     * @param fee The keeper fee amount.
+     */
     function _distributeMakerEarning(address token, uint256 fee) internal {
         if (!_makerEarningDistributable(token)) return;
 
@@ -340,12 +432,23 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit MakerEarningDistributed(token, earning, usedFee);
     }
 
+    /**
+     * @dev Private function to check if the maker earning is distributable for a token.
+     * @param token The address of the settlement token.
+     * @return True if the maker earning is distributable, False otherwise.
+     */
     function _makerEarningDistributable(address token) private view returns (bool) {
         return pendingMakerEarnings[token] >= factory.getEarningDistributionThreshold(token);
     }
 
     // gelato automate - distribute market earning to each bins
 
+    /**
+     * @notice Resolves the market earning distribution for a market.
+     * @param market The address of the market.
+     * @return canExec True if the distribution can be executed.
+     * @return execPayload The payload for executing the distribution.
+     */
     function resolveMarketEarningDistribution(
         address market
     ) external view returns (bool canExec, bytes memory execPayload) {
@@ -357,11 +460,18 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         return (false, "");
     }
 
+    /**
+     * @notice Distributes the market earning for a market to the each bins.
+     * @param market The address of the market.
+     */
     function distributeMarketEarning(address market) external onlyDedicatedMsgSender {
         (uint256 fee, ) = _getFeeDetails();
         _distributeMarketEarning(market, fee);
     }
 
+    /**
+     * @inheritdoc IChromaticVault
+     */
     function createMarketEarningDistributionTask(
         address market
     ) external virtual override onlyFactory {
@@ -387,6 +497,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         );
     }
 
+    /**
+     * @inheritdoc IChromaticVault
+     */
     function cancelMarketEarningDistributionTask(
         address market
     ) external virtual override onlyFactory {
@@ -397,6 +510,11 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         }
     }
 
+    /**
+     * @dev Internal function to distribute the market earning for a market to the each bins.
+     * @param market The address of the market.
+     * @param fee The fee amount.
+     */
     function _distributeMarketEarning(address market, uint256 fee) internal {
         address token = address(IChromaticMarket(market).settlementToken());
         if (!_marketEarningDistributable(market, token)) return;
@@ -418,6 +536,12 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         emit MarketEarningDistributed(market, earning, usedFee, balance);
     }
 
+    /**
+     * @dev Private function to check if the market earning is distributable for a market.
+     * @param market The address of the market.
+     * @param token The address of the settlement token.
+     * @return True if the market earning is distributable, False otherwise.
+     */
     function _marketEarningDistributable(
         address market,
         address token
