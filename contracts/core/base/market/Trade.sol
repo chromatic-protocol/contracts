@@ -12,6 +12,7 @@ import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
+import "hardhat/console.sol";
 
 abstract contract Trade is MarketBase {
     using Math for uint256;
@@ -175,7 +176,10 @@ abstract contract Trade is MarketBase {
             position.openTimestamp,
             block.timestamp
         );
+        
         int256 realizedPnl = pnl - interest.toInt256();
+        console.log("[Trade] _claim : interest ", interest);
+        console.log("[Trade] _claim : open / block timestamp ", position.openTimestamp, block.timestamp);
 
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0) {

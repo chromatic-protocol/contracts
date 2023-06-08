@@ -126,9 +126,12 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   async function closePosition(positionId: BigNumber) {
     const closePositionTx = await traderRouter.closePosition(market.address, positionId)
     const receipt = await closePositionTx.wait()
-
+    
     return {
       receipt,
+      blockNumber:closePositionTx.blockNumber,
+      blockHash : receipt.blockHash,
+      transactionHash: closePositionTx.hash,
       timestamp: closePositionTx.timestamp
     }
   }

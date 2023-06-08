@@ -10,7 +10,7 @@ import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.so
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-
+import 'hardhat/console.sol';
 /**
  * @title LiquidityBin
  * @notice Structure representing a liquidity bin
@@ -57,10 +57,12 @@ library LiquidityBinLib {
     function settle(LiquidityBin storage self, LpContext memory ctx) internal {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settlePendingPosition(ctx);
+        uint256 freeLiq= self.freeLiquidity();
+        console.log('settle free liq', freeLiq);
         self._liquidity.settlePendingLiquidity(
             ctx,
             self.value(ctx),
-            self.freeLiquidity(),
+            freeLiq,
             self.clbTokenId
         );
     }
@@ -156,6 +158,7 @@ library LiquidityBinLib {
      * @return uint256 The free liquidity in the bin
      */
     function freeLiquidity(LiquidityBin storage self) internal view returns (uint256) {
+        console.log('free liquidity', self._liquidity.total , self._position.totalMakerMargin());
         return self._liquidity.total - self._position.totalMakerMargin();
     }
 
