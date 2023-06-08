@@ -140,4 +140,47 @@ contract ChromaticLens {
             );
         }
     }
+
+    function calculateCLBTokenValueBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata clbTokenAmounts
+    ) external view returns (uint256[] memory results) {
+        require(tradingFeeRates.length == clbTokenAmounts.length, "ChromaticLens: invalid arguments");
+        results = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            results[i] = IChromaticMarket(market).calculateCLBTokenValue(
+                tradingFeeRates[i],
+                clbTokenAmounts[i]
+            );
+        }
+    }
+
+    function calculateCLBTokenMintingBatch(
+        address market,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata amounts
+    ) external view returns (uint256[] memory results) {
+        require(tradingFeeRates.length == amounts.length, "ChromaticLens: invalid arguments");
+        results = new uint256[](tradingFeeRates.length);
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            results[i] = IChromaticMarket(market).calculateCLBTokenMinting(
+                tradingFeeRates[i],
+                amounts[i]
+            );
+        }
+    }
+
+    function totalSupplies(
+        address market,
+        int16[] calldata tradingFeeRates
+    ) external view returns (uint256[] memory supplies) {
+        supplies = new uint256[](tradingFeeRates.length);
+
+        for (uint i = 0; i < tradingFeeRates.length; i++) {
+            supplies[i] = ICLBToken(IChromaticMarket(market).clbToken()).totalSupply(
+                CLBTokenLib.encodeId(tradingFeeRates[0])
+            );
+        }
+    }
 }

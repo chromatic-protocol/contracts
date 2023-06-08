@@ -58,21 +58,4 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
     ) external returns (LpReceipt[] memory lpReceipts);
 
     function withdrawLiquidityBatch(address market, uint256[] calldata receiptIds) external;
-
-    function calculateCLBTokenValueBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata clbTokenAmounts
-    ) external view returns (uint256[] memory results);
-
-    function calculateCLBTokenMintingBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata amounts
-    ) external view returns (uint256[] memory results);
-
-    function totalSupplies(
-        address market,
-        int16[] calldata tradingFeeRates
-    ) external view returns (uint256[] memory supplies);
 }
