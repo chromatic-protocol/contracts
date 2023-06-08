@@ -14,10 +14,12 @@ In summary, Chromatic emerges as a trailblazer in the realm of DeFi, leveraging 
 
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Compilation](#compilation)
-  - [Testing](#testing)
-  - [Local Development](#local-development)
-  - [Deployment](#deployment)
+  - [Compilation](##compilation)
+  - [Testing](##testing)
+  - [Local Development](##local-development)
+  - [Deployment](##deployment)
+- [Smart Contracts](#smart-contracts)
+- [Contributing](#contributing)
 - [License](#license)
 - [Documentation](#documentation)
 - [Contact](#contact)
@@ -30,7 +32,16 @@ To install the necessary dependencies, run the following command:
 npm install
 ```
 
-## Compilation
+## Usage
+
+To get the usage help message, run the following command:
+
+```shell
+npx hardhat help
+```
+
+
+### Compilation
 
 To compile the smart contracts, run the following command:
 
@@ -38,7 +49,7 @@ To compile the smart contracts, run the following command:
 npm complie
 ```
 
-## Testing
+### Testing
 
 To run the tests for the smart contracts, use the following command:
 
@@ -52,7 +63,7 @@ You can also generate a gas report during testing by running the following comma
 REPORT_GAS=true npx hardhat test
 ```
 
-## Local Development
+### Local Development
 
 To run a local Hardhat node for development and testing purposes, use the following command:
 
@@ -60,7 +71,7 @@ To run a local Hardhat node for development and testing purposes, use the follow
 npx hardhat node
 ```
 
-## Deployment
+### Deployment
 
 To deploy the smart contracts to the desired network, update the network configuration in the hardhat.config.js file. Then, run the deployment script:
 
@@ -69,6 +80,22 @@ npx hardhat run scripts/deploy.ts
 ```
 
 Make sure to customize the deployment script (`deploy.ts`) with any additional deployment logic or parameters specific to your project.
+
+
+## Smart Contracts
+
+여기에 core/peripheral/ 등의 구분 나누어서 정리할 필요가 있음. ( depolyed address 는 체인별로 나중에 추가 )
+
+| Contract Name    | Description                       | Source File                    | 
+| ---------------- | --------------------------------- | ------------------------------ |
+| Contract 1       | Description of Contract 1         | [Link to Contract 1](contract1.sol) |
+| Contract 2       | Description of Contract 2         | [Link to Contract 2](contract2.sol) |
+| ...              | ...                               | ...                            |
+
+
+## Contributing
+
+여기에 contribute.md 파일 링크 연결하면 될 듯. ( contribute.md 는 우리 라이센스에 맞게 적절한 거 가져와야 할 듯 )
 
 ## License
 
