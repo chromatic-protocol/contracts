@@ -6,13 +6,27 @@ import {ChainlinkFeedOracle} from "@equilibria/perennial-oracle/contracts/Chainl
 import {ChainlinkAggregator} from "@equilibria/perennial-oracle/contracts/types/ChainlinkAggregator.sol";
 import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 
+/**
+ * @title OracleProvider
+ * @dev A contract that provides Oracle functionality using Chainlink feeds.
+ */
 contract OracleProvider is ChainlinkFeedOracle, IOracleProvider {
+    /**
+     * @dev Constructs an instance of the OracleProvider contract.
+     * @param aggregator The address of the Chainlink aggregator contract.
+     */
     constructor(address aggregator) ChainlinkFeedOracle(ChainlinkAggregator.wrap(aggregator)) {}
 
+    /**
+     * @inheritdoc IOracleProvider
+     */
     function description() external view override returns (string memory) {
         return AggregatorV2V3Interface(ChainlinkAggregator.unwrap(aggregator)).description();
     }
 
+    /**
+     * @inheritdoc IOracleProvider
+     */
     function atVersions(
         uint256[] calldata versions
     ) external view returns (OracleVersion[] memory oracleVersions) {
