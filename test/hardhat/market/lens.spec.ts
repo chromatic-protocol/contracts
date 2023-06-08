@@ -142,12 +142,11 @@ describe('lens', async () => {
     console.log('Free Liq before open', await lens.liquidityBins(market.address, [100, 200, 300]))
     // consume all liquidity
 
-    const expectedMargin: any[] = []
+    const expectedMargin = []
 
     const liquidity100 = liquidityBinFor(initialLiq)(BigNumber.from('100'))
     const liquidity200 = liquidityBinFor(initialLiq)(BigNumber.from('200'))
     const liquidity300 = liquidityBinFor(initialLiq)(BigNumber.from('300'))
-    let liquidityOf100 = 100
 
     let margin100Slot = initialLiq
     for (let i = 0; i < 6; i++) {
@@ -182,13 +181,28 @@ describe('lens', async () => {
         positionId: openPositionEvent[0].args[1].id
       })
     }
+    const totalTradingFee: Record<number, BigNumber> = {
+      100: expectedMargin.reduce(
+        (acc, curr) => acc.add(curr.margin100.mul(100).div(10000)),
+        BigNumber.from(0)
+      ),
+      200: expectedMargin.reduce(
+        (acc, curr) => acc.add(curr.margin200.mul(200).div(10000)),
+        BigNumber.from(0)
+      ),
+      300: expectedMargin.reduce(
+        (acc, curr) => acc.add(curr.margin300.mul(300).div(10000)),
+        BigNumber.from(0)
+      )
+    }
+
     console.log('expected margins ', expectedMargin)
     console.log('Free Liq after open', await lens.liquidityBins(market.address, [100, 200, 300]))
 
     await updatePrice(1000)
     const positionIds = await traderAccount.getPositionIds(market.address)
     const positions = await market.getPositions(await traderAccount.getPositionIds(market.address))
-    
+
     // const positionIds = positions.map((position) => position.id)
     console.log('positionIds', positionIds)
     console.log(
@@ -246,8 +260,12 @@ describe('lens', async () => {
 
     console.log('position ids', positionIds)
     console.log('close position id: ', positionIds[0])
-    await awaitTx(closePosition(positionIds[0]))
-    await awaitTx(closePosition(positionIds[1]))
+    // const close1Tx =await closePosition(positionIds[0]);
+    for (let i = 0; i < 2; i++) {
+      const { timestamp } = await closePosition(positionIds[i])
+      console.log('close position timestamp', timestamp)
+      positions[i].closeTimestamp = BigNumber.from(timestamp)
+    }
     await updatePrice(1000)
     await awaitTx(claimPosition(positionIds[0]))
     await awaitTx(claimPosition(positionIds[1]))
@@ -266,6 +284,7 @@ describe('lens', async () => {
     )
 
     const initClbToken = ethers.utils.parseEther('100')
+
     removableLiquidity.forEach((liquidityInfo) => {
       let totalInterestFee = positions.reduce((acc, position) => {
         const bin = position._binMargins.find(
@@ -274,33 +293,38 @@ describe('lens', async () => {
         return acc.add(
           interestFee(
             bin?.amount || BigNumber.from(0),
-            currentBlockTime,
+            position.closeTimestamp?.toNumber() || currentBlockTime,
             position.openTimestamp.toNumber(),
             bin?.tradingFeeRate || 0
           )
         )
       }, BigNumber.from(0))
 
+      let tradingFee = totalTradingFee[liquidityInfo.tradingFeeRate]
       if (!liquidityInfo.tokenAmount.isZero()) {
         console.log('liquidity info', liquidityInfo)
+        console.log(' init settle  / total Settle ratio')
         console.log(
-          'settle / init settle ratio',
+          liquidityInfo.tokenAmount
+            .mul(ethers.utils.parseEther('1'))
+            .div(
+              initClbToken
+                .add(totalInterestFee)
+                .add(tradingFee)
+                .mul(liquidityInfo.burningAmount)
+                .div(liquidityInfo.clbTokenAmount)
+            )
+        )
+        console.log(' clb / initclb ratio')
+        console.log(
+          liquidityInfo.clbTokenAmount.mul(ethers.utils.parseEther('1')).div(initClbToken)
+        )
 
-          initClbToken.add(totalInterestFee).div(liquidityInfo.tokenAmount),
-          ' clb / initclb ratio',
-          initClbToken.div(liquidityInfo.clbTokenAmount)
-        )
-        console.log(' clb / initclb', liquidityInfo.clbTokenAmount, initClbToken)
-        console.log(
-          ' settle / total Settle / interest ',
-          liquidityInfo.tokenAmount,
-          initClbToken.add(totalInterestFee),
-          totalInterestFee
-          // tradingFee
-        )
+        console.log('total settle token',totalInterestFee.add(tradingFee).add(initialLiq))
+        console.log('amount',totalInterestFee.add(tradingFee).add(initialLiq).mul(liquidityInfo.burningAmount).div(initClbToken))
       }
     })
-    // 50000003973723997971
+    // 1000000022821898704
     //
 
     //  50 / 100 =  tokenAmount / initClbToken + margin100.add(interestFee(margin100, currentBlockTime, blockTime, 100))

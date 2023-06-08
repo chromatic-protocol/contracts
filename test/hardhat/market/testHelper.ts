@@ -85,7 +85,8 @@ export const prepareMarketTest = async () => {
 }
 
 export const helpers = function (testData: Awaited<ReturnType<typeof prepareMarketTest>>) {
-  const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } = testData
+  const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } =
+    testData
   async function updatePrice(price: number) {
     await (
       await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
@@ -124,8 +125,11 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
 
   async function closePosition(positionId: BigNumber) {
     const closePositionTx = await traderRouter.closePosition(market.address, positionId)
+    const receipt = await closePositionTx.wait()
+
     return {
-      receipt: await closePositionTx.wait()
+      receipt,
+      timestamp: closePositionTx.timestamp
     }
   }
 
@@ -151,7 +155,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
-  async function claimPosition(positionId : BigNumber){
+  async function claimPosition(positionId: BigNumber) {
     const claimTx = await traderRouter.claimPosition(market.address, positionId)
     return claimTx.wait()
   }
@@ -174,7 +178,9 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function removeLiquidity(clbTokenAmount: BigNumber, feeRate: number) {
-    await (await testData.clbToken.connect(tester).setApprovalForAll(chromaticRouter.address, true)).wait()
+    await (
+      await testData.clbToken.connect(tester).setApprovalForAll(chromaticRouter.address, true)
+    ).wait()
     return chromaticRouter
       .connect(tester)
       .removeLiquidity(market.address, feeRate, clbTokenAmount, tester.address)
@@ -203,7 +209,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     return response
   }
 
-  async function settle(){
+  async function settle() {
     return (await market.settle()).wait()
   }
 
