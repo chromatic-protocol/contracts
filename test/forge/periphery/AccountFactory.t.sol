@@ -8,7 +8,7 @@ import {IAccountFactory} from "@chromatic/periphery/interfaces/IAccountFactory.s
 contract AccountFactoryMock is Test {
     AccountFactory public accountFactory = new AccountFactory(address(this), address(0)); // router, marketFactory
 
-    event AccountCreated(address);
+    event AccountCreated(address indexed, address indexed);
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -20,8 +20,8 @@ contract AccountFactoryMock is Test {
 
     function testCreateAccount() public {
         // checkTopit1~3, checkData
-        vm.expectEmit(false, false, false, false);
-        emit AccountCreated(address(0));
+        vm.expectEmit(false, true, false, false);
+        emit AccountCreated(address(0), alice);
 
         vm.prank(alice);
         accountFactory.createAccount();
