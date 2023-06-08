@@ -9,6 +9,10 @@ import {Position} from "@chromatic/core/libraries/Position.sol";
 import {IAccount} from "@chromatic/periphery/interfaces/IAccount.sol";
 import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
 
+/**
+ * @title Account
+ * @dev This contract manages user accounts and positions.
+ */
 contract Account is IAccount, VerifyCallback {
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -24,16 +28,25 @@ contract Account is IAccount, VerifyCallback {
     error NotEnoughBalance();
     error NotExistPosition();
 
+    /**
+     * @dev Modifier that allows only the router to call a function.
+     */
     modifier onlyRouter() {
         if (msg.sender != router) revert NotRouter();
         _;
     }
 
+    /**
+     * @dev Modifier that allows only the owner to call a function.
+     */
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
         _;
     }
 
+    /**
+     * @inheritdoc IAccount
+     */
     function initialize(address _owner, address _router, address _marketFactory) external {
         if (isInitialized) revert AlreadyInitialized();
         owner = _owner;
@@ -42,23 +55,19 @@ contract Account is IAccount, VerifyCallback {
         marketFactory = _marketFactory;
     }
 
-    function balance(address quote) public view returns (uint256) {
-        return IERC20(quote).balanceOf(address(this));
+    /**
+     * @inheritdoc IAccount
+     */
+    function balance(address token) public view returns (uint256) {
+        return IERC20(token).balanceOf(address(this));
     }
 
-    function withdraw(address quote, uint256 amount) external onlyOwner {
-        if (balance(quote) < amount) revert NotEnoughBalance();
-        SafeERC20.safeTransfer(IERC20(quote), owner, amount);
-    }
-
-    function transferMargin(
-        uint256 marginRequired,
-        address marketAddress,
-        address settlementToken
-    ) external onlyRouter {
-        if (balance(settlementToken) < marginRequired) revert NotEnoughBalance();
-
-        SafeERC20.safeTransfer(IERC20(settlementToken), marketAddress, marginRequired);
+    /**
+     * @inheritdoc IAccount
+     */
+    function withdraw(address token, uint256 amount) external onlyOwner {
+        if (balance(token) < amount) revert NotEnoughBalance();
+        SafeERC20.safeTransfer(IERC20(token), owner, amount);
     }
 
     function addPositionId(address market, uint256 positionId) internal {
@@ -69,14 +78,23 @@ contract Account is IAccount, VerifyCallback {
         positionIds[market].remove(positionId);
     }
 
+    /**
+     * @inheritdoc IAccount
+     */
     function hasPositionId(address market, uint256 id) public view returns (bool) {
         return positionIds[market].contains(id);
     }
 
+    /**
+     * @inheritdoc IAccount
+     */
     function getPositionIds(address market) external view returns (uint256[] memory) {
         return positionIds[market].values();
     }
 
+    /**
+     * @inheritdoc IAccount
+     */
     function openPosition(
         address marketAddress,
         int224 qty,
@@ -96,18 +114,27 @@ contract Account is IAccount, VerifyCallback {
         addPositionId(marketAddress, position.id);
     }
 
+    /**
+     * @inheritdoc IAccount
+     */
     function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
         IChromaticMarket(marketAddress).closePosition(positionId);
     }
 
+    /**
+     * @inheritdoc IAccount
+     */
     function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
         IChromaticMarket(marketAddress).claimPosition(positionId, address(this), bytes(""));
     }
 
+    /**
+     * @inheritdoc IChromaticTradeCallback
+     */
     function openPositionCallback(
         address settlementToken,
         address vault,
@@ -119,6 +146,9 @@ contract Account is IAccount, VerifyCallback {
         SafeERC20.safeTransfer(IERC20(settlementToken), vault, marginRequired);
     }
 
+    /**
+     * @inheritdoc IChromaticTradeCallback
+     */
     function claimPositionCallback(
         uint256 positionId,
         bytes calldata data
