@@ -12,6 +12,11 @@ import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol"
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {BPS} from "@chromatic/core/libraries/Constants.sol";
 
+/**
+ * @title CLBToken
+ * @dev CLBToken is an ERC1155 token contract that represents Liquidity Bin tokens.
+ *      CLBToken allows minting and burning of tokens by the Chromatic Market contract.
+ */
 contract CLBToken is ERC1155Supply, ICLBToken {
     using Strings for uint256;
     using Strings for uint128;
@@ -24,21 +29,37 @@ contract CLBToken is ERC1155Supply, ICLBToken {
 
     error OnlyAccessableByMarket();
 
+    /**
+     * @dev Modifier to restrict access to the Chromatic Market contract.
+     *      Only the market contract is allowed to call functions with this modifier.
+     *      Reverts with an error if the caller is not the market contract.
+     */
     modifier onlyMarket() {
         if (address(market) != (msg.sender)) revert OnlyAccessableByMarket();
         _;
     }
 
+    /**
+     * @dev Initializes the CLBToken contract.
+     *      The constructor sets the market contract address as the caller.
+     */
     constructor() ERC1155("") {
         market = IChromaticMarket(msg.sender);
     }
 
+    /**
+     * @inheritdoc ICLBToken
+     */
     function totalSupply(
         uint256 id
     ) public view virtual override(ERC1155Supply, ICLBToken) returns (uint256) {
         return super.totalSupply(id);
     }
 
+    /**
+     * @inheritdoc ICLBToken
+     * @dev This function can only be called by the Chromatic Market contract.
+     */
     function mint(
         address to,
         uint256 id,
@@ -48,14 +69,24 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         _mint(to, id, amount, data);
     }
 
+    /**
+     * @inheritdoc ICLBToken
+     * @dev This function can only be called by the Chromatic Market contract.
+     */
     function burn(address from, uint256 id, uint256 amount) external override onlyMarket {
         _burn(from, id, amount);
     }
 
+    /**
+     * @inheritdoc ICLBToken
+     */
     function name(uint256 id) public view override returns (string memory) {
         return string(abi.encodePacked("CLB - ", description(id)));
     }
 
+    /**
+     * @inheritdoc ICLBToken
+     */
     function description(uint256 id) public view override returns (string memory) {
         return
             string(
@@ -69,6 +100,9 @@ contract CLBToken is ERC1155Supply, ICLBToken {
             );
     }
 
+    /**
+     * @inheritdoc ICLBToken
+     */
     function image(uint256 id) public view override returns (string memory) {
         int16 tradingFeeRate = decodeId(id);
         return
@@ -87,6 +121,9 @@ contract CLBToken is ERC1155Supply, ICLBToken {
             );
     }
 
+    /**
+     * @inheritdoc IERC1155MetadataURI
+     */
     function uri(
         uint256 id
     ) public view override(ERC1155, IERC1155MetadataURI) returns (string memory) {
@@ -106,22 +143,45 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(metadata)));
     }
 
+    /**
+     * @dev Encodes a trading fee rate into a token ID.
+     * @param tradingFeeRate The trading fee rate to encode.
+     * @return id The encoded token ID.
+     */
     function encodeId(int16 tradingFeeRate) internal pure returns (uint256 id) {
         id = CLBTokenLib.encodeId(tradingFeeRate);
     }
 
+    /**
+     * @dev Decodes a token ID into a trading fee rate.
+     * @param id The token ID to decode.
+     * @return tradingFeeRate The decoded trading fee rate.
+     */
     function decodeId(uint256 id) internal pure returns (int16 tradingFeeRate) {
         tradingFeeRate = CLBTokenLib.decodeId(id);
     }
 
+    /**
+     * @dev Retrieves the symbol of the settlement token.
+     * @return The symbol of the settlement token.
+     */
     function _tokenSymbol() private view returns (string memory) {
         return market.settlementToken().symbol();
     }
 
+    /**
+     * @dev Retrieves the name of the index.
+     * @return The name of the index.
+     */
     function _indexName() private view returns (string memory) {
         return market.oracleProvider().description();
     }
 
+    /**
+     * @dev Formats a fee rate into a human-readable string.
+     * @param feeRate The fee rate to format.
+     * @return The formatted fee rate as a bytes array.
+     */
     function _formatedFeeRate(int16 feeRate) private pure returns (bytes memory) {
         uint256 absFeeRate = uint16(feeRate < 0 ? -(feeRate) : feeRate);
 
@@ -138,6 +198,11 @@ contract CLBToken is ERC1155Supply, ICLBToken {
             );
     }
 
+    /**
+     * @dev Retrieves the color associated with a fee rate.
+     * @param feeRate The fee rate for which to retrieve the color.
+     * @return The color associated with the fee rate.
+     */
     function _color(int16 feeRate) private pure returns (string memory) {
         uint256 absFeeRate = uint16(feeRate < 0 ? -(feeRate) : feeRate);
 
@@ -158,8 +223,16 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         return "#000000";
     }
 
+    /**
+     * @dev Generates an SVG image representing a token.
+     * @param formatedFeeRate The formated fee rate.
+     * @param symbol The symbol of the token.
+     * @param index The name of the index associated with the token.
+     * @param color The color to use for the token.
+     * @return The generated SVG image as a bytes array.
+     */
     function _svg(
-        bytes memory humanReadableId,
+        bytes memory formatedFeeRate,
         string memory symbol,
         string memory index,
         string memory color
@@ -227,7 +300,7 @@ contract CLBToken is ERC1155Supply, ICLBToken {
             ),
             "</g>"
             '<text transform="matrix(1 0 0 1 245.9107 90.1792)" style="fill:#FFFFFF; font-size:64px;">',
-            humanReadableId,
+            formatedFeeRate,
             "</text>"
             "<g>"
             '<text transform="matrix(1 0 0 1 194.9673 146.5815)" style="fill:#FFFFFF; font-size:32px;">',
