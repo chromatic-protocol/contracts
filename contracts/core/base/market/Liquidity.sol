@@ -131,7 +131,6 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         receipt.amount = clbTokenAmount;
 
         lpReceipts[receipt.id] = receipt;
-
         emit RemoveLiquidity(recipient, receipt);
         return receipt;
     }
@@ -175,28 +174,16 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
-    /**
-     * @inheritdoc ILiquidity
-     */
-    function getBinLiquidities(
-        int16[] calldata tradingFeeRates
-    ) external view override returns (uint256[] memory amounts) {
-        amounts = new uint256[](tradingFeeRates.length);
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            amounts[i] = liquidityPool.getBinLiquidity(tradingFeeRates[i]);
-        }
+    function getBinLiquidity(
+        int16  tradingFeeRate
+    ) external view override returns (uint256 amount) {
+        amount = liquidityPool.getBinLiquidity(tradingFeeRate);
     }
 
-    /**
-     * @inheritdoc ILiquidity
-     */
-    function getBinFreeLiquidities(
-        int16[] calldata tradingFeeRates
-    ) external view override returns (uint256[] memory amounts) {
-        amounts = new uint256[](tradingFeeRates.length);
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            amounts[i] = liquidityPool.getBinFreeLiquidity(tradingFeeRates[i]);
-        }
+    function getBinFreeLiquidity(
+        int16 tradingFeeRate
+    ) external view override returns (uint256 amount) {
+        amount = liquidityPool.getBinFreeLiquidity(tradingFeeRate);
     }
 
     /**
@@ -206,9 +193,12 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 
-    /**
-     * @inheritdoc ILiquidity
-     */
+    function getBinValue(
+        int16 tradingFeeRate
+    ) external view override returns (uint256 value) {
+        value = liquidityPool.binValue(tradingFeeRate, newLpContext());
+    }
+
     function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount
@@ -288,5 +278,16 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return
             interfaceID == this.supportsInterface.selector || // ERC165
             interfaceID == this.onERC1155Received.selector ^ this.onERC1155BatchReceived.selector; // IERC1155Receiver
+    }
+
+    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
+        receipt = lpReceipts[receiptId];
+        if (receipt.id == 0) revert NotExistLpReceipt();
+    }
+
+    function getClaimBurning(
+        LpReceipt memory receipt
+    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        return liquidityPool.getClaimBurning(receipt.tradingFeeRate, receipt.oracleVersion);
     }
 }

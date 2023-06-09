@@ -93,23 +93,17 @@ interface ILiquidity {
      */
     function withdrawLiquidity(uint256 receiptId, bytes calldata data) external;
 
-    /**
-     * @dev Retrieves the bin liquidities for the given trading fee rates.
-     * @param tradingFeeRates The trading fee rates to retrieve bin liquidities for.
-     * @return amounts An array of bin liquidities corresponding to the trading fee rates.
-     */
-    function getBinLiquidities(
-        int16[] memory tradingFeeRates
-    ) external returns (uint256[] memory amounts);
+    function getBinLiquidity(
+        int16  tradingFeeRate
+    ) external view returns (uint256 amount);
 
-    /**
-     * @dev Retrieves the bin free liquidities for the given trading fee rates.
-     * @param tradingFeeRates The trading fee rates to retrieve bin free liquidities for.
-     * @return amounts An array of bin free liquidities corresponding to the trading fee rates.
-     */
-    function getBinFreeLiquidities(
-        int16[] memory tradingFeeRates
-    ) external returns (uint256[] memory amounts);
+    function getBinFreeLiquidity(
+        int16 tradingFeeRate
+    ) external view returns (uint256 amount);
+
+    function getBinValue(
+        int16 tradingFeeRate
+    ) external view returns (uint256 value);
 
     /**
      * @dev Distributes earning to the liquidity bins.
@@ -139,4 +133,10 @@ interface ILiquidity {
         int16 tradingFeeRate,
         uint256 clbTokenAmount
     ) external view returns (uint256);
+
+    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory);
+
+    function getClaimBurning(
+        LpReceipt memory reciept
+    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount);
 }

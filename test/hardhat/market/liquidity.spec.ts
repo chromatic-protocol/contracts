@@ -85,7 +85,7 @@ describe('market test', async function () {
   })
 
   it('add/remove liquidity Batch', async () => {
-    const { market, chromaticRouter, tester, clbToken, settlementToken } = testData
+    const { market, chromaticRouter, tester, clbToken, settlementToken, lens } = testData
     const {
       updatePrice,
       addLiquidityBatch,
@@ -99,7 +99,7 @@ describe('market test', async function () {
     const amount = ethers.utils.parseEther('100')
     const amounts = totalFees.map((_) => amount)
 
-    const expectedLiquidities = await chromaticRouter.calculateCLBTokenMintingBatch(
+    const expectedLiquidities = await lens.calculateCLBTokenMintingBatch(
       market.address,
       totalFees,
       amounts
@@ -113,14 +113,12 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
 
-    expect(await chromaticRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
-      expectedLiquidities
-    )
+    expect(await lens.totalSupplies(market.address, totalFees)).to.deep.equal(expectedLiquidities)
 
     // remove begin
     await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
-    const expectedAmounts = await chromaticRouter.calculateCLBTokenValueBatch(
+    const expectedAmounts = await lens.calculateCLBTokenValueBatch(
       market.address,
       totalFees,
       expectedLiquidities
@@ -136,7 +134,7 @@ describe('market test', async function () {
       expectedAmounts.reduce((a, b) => a.add(b))
     )
 
-    expect(await chromaticRouter.totalSupplies(market.address, totalFees)).to.deep.equal(
+    expect(await lens.totalSupplies(market.address, totalFees)).to.deep.equal(
       totalFees.map((_) => BigNumber.from('0'))
     )
   })
@@ -163,8 +161,11 @@ describe('market test', async function () {
     // }
     // logLiquidity(totals, unuseds);
 
-    const totalMargins = await testData.market.getBinLiquidities(totalFees)
-    const unusedMargins = await testData.market.getBinFreeLiquidities(totalFees)
+    const bins = await testData.lens.liquidityBins(testData.market.address,totalFees)
+    
+
+    const totalMargins = bins.map(b => b.liquidity)
+    const unusedMargins = bins.map(b => b.freeVolume)
 
     logLiquidity(totalMargins, unusedMargins)
   })

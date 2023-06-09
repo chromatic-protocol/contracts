@@ -9,10 +9,7 @@ import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import "forge-std/console.sol";
 
 contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
-    function getKeyList(int16 key) internal pure returns (int16[] memory keys) {
-        keys = new int16[](1);
-        keys[0] = key;
-    }
+
 
     function setUp() public override {
         super.setUp();
@@ -36,7 +33,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(addLongAmount, usdc.balanceOf(address(vault)));
         assertEq(0, vault.makerBalances(address(usdc)));
         assertEq(0, vault.makerMarketBalances(address(market)));
-        assertEq(0, market.getBinLiquidities(getKeyList(1))[0]);
+        assertEq(0, market.getBinLiquidity(1));
         assertEq(0, clbToken.balanceOf(address(market), receipt1.clbTokenId()));
 
         // set oracle version to 2
@@ -47,7 +44,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(addLongAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
-        assertEq(addLongAmount, market.getBinLiquidities(getKeyList(1))[0]);
+        assertEq(addLongAmount, market.getBinLiquidity(1));
         assertEq(addLongAmount, clbToken.balanceOf(address(market), receipt1.clbTokenId()));
 
         // claim liquidity at oracle version 2
@@ -64,7 +61,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
-        assertEq(0, market.getBinLiquidities(getKeyList(-10))[0]);
+        assertEq(0, market.getBinLiquidity(-10));
         assertEq(0, clbToken.balanceOf(address(market), receipt2.clbTokenId()));
 
         // set oracle version to 3
@@ -75,7 +72,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
-        assertEq(addShortAmount, market.getBinLiquidities(getKeyList(-10))[0]);
+        assertEq(addShortAmount, market.getBinLiquidity(-10));
         assertEq(addShortAmount, clbToken.balanceOf(address(market), receipt2.clbTokenId()));
 
         // claim liquidity at oracle version 3
@@ -92,7 +89,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
-        assertEq(addLongAmount, market.getBinLiquidities(getKeyList(1))[0]);
+        assertEq(addLongAmount, market.getBinLiquidity(1));
         assertEq(removeLongAmount, clbToken.balanceOf(address(market), receipt3.clbTokenId()));
 
         // set oracle version to 4
@@ -109,7 +106,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             addLongAmount + addShortAmount - removeLongAmount,
             vault.makerMarketBalances(address(market))
         );
-        assertEq(addLongAmount - removeLongAmount, market.getBinLiquidities(getKeyList(1))[0]);
+        assertEq(addLongAmount - removeLongAmount, market.getBinLiquidity(1));
         assertEq(0, clbToken.balanceOf(address(market), receipt3.clbTokenId()));
 
         // withdraw liquidity at oracle version 4
@@ -138,7 +135,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             addLongAmount + addShortAmount - removeLongAmount,
             vault.makerMarketBalances(address(market))
         );
-        assertEq(addShortAmount, market.getBinLiquidities(getKeyList(-10))[0]);
+        assertEq(addShortAmount, market.getBinLiquidity(-10));
         assertEq(removeShortAmount, clbToken.balanceOf(address(market), receipt4.clbTokenId()));
 
         // set oracle version to 5
@@ -155,7 +152,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
             vault.makerMarketBalances(address(market))
         );
-        assertEq(addShortAmount - removeShortAmount, market.getBinLiquidities(getKeyList(-10))[0]);
+        assertEq(addShortAmount - removeShortAmount, market.getBinLiquidity(-10));
         assertEq(0, clbToken.balanceOf(address(market), receipt4.clbTokenId()));
 
         // withdraw liquidity at oracle version 5
@@ -216,8 +213,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             addLongAmount + addShortAmount + earning - keeperFee,
             vault.makerMarketBalances(address(market))
         );
-        assertEq(addLongAmount + 3 ether, market.getBinLiquidities(getKeyList(1))[0]);
-        assertEq(addShortAmount + 6 ether, market.getBinLiquidities(getKeyList(-10))[0]);
+        assertEq(addLongAmount + 3 ether, market.getBinLiquidity(1));
+        assertEq(addShortAmount + 6 ether, market.getBinLiquidity(-10));
     }
 
     // implement IChromaticLiquidityCallback

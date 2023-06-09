@@ -821,4 +821,26 @@ library LiquidityPoolLib {
             emit LiquidityBinEarningAccumulated(feeRate, binType, binEarning);
         }
     }
+
+    function binValue(
+        LiquidityPool storage self,
+        int16 _tradingFeeRate,
+        LpContext memory ctx
+    ) external view returns (uint256 value) {
+        value = targetBin(self, _tradingFeeRate).value(ctx);
+    }
+
+    function getClaimBurning(
+        LiquidityPool storage self,
+        int16 tradingFeeRate,
+        uint256 oracleVersion
+    )
+        external
+        view
+        _validTradingFeeRate(tradingFeeRate)
+        returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount)
+    {
+        LiquidityBin storage slot = targetBin(self, tradingFeeRate);
+        return slot.getClaimBurning(oracleVersion);
+    }
 }

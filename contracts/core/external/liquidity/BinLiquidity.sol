@@ -7,7 +7,7 @@ import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-
+import 'hardhat/console.sol';
 /**
  * @title BinLiquidity
  * @notice Represents the liquidity information within an LiquidityBin.
@@ -60,7 +60,7 @@ library BinLiquidityLib {
     using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
 
     /// @dev Minimum amount constant to prevent division by zero.
-    uint256 private constant MIN_AMOUNT = 1000;
+    uint256 private constant MIN_AMOUNT = 1;
 
     /**
      * @notice Settles the pending liquidity within the BinLiquidity.
@@ -111,7 +111,6 @@ library BinLiquidityLib {
             binValue,
             totalSupply
         );
-
         (uint256 burningAmount, uint256 pendingWithdrawal) = _settleBurning(
             self,
             freeLiquidity + pendingDeposit,
@@ -366,10 +365,14 @@ library BinLiquidityLib {
                     binValue,
                     totalSupply
                 );
+                // console.log("[LpSlotLiq] _pendingCLBTokenAmount",_pendingCLBTokenAmount);
+                // console.log("[LpSlotLiq] freeLiquidity",freeLiquidity);
+                
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingCLBTokenAmount;
                 } else {
                     _burningAmount = calculateCLBTokenMinting(freeLiquidity, binValue, totalSupply);
+                    console.log("[LpSlotLiq] _burningAmount",_burningAmount);
                     require(_burningAmount < _pendingCLBTokenAmount);
                     _pendingWithdrawal = freeLiquidity;
                 }
@@ -377,6 +380,7 @@ library BinLiquidityLib {
                 _cb.burningAmount += _burningAmount;
                 _cb.tokenAmount += _pendingWithdrawal;
 
+                console.log("[LpSlotLiq] ov, tokenAmount",_ov, _cb.tokenAmount);   
                 burningAmount += _burningAmount;
                 pendingWithdrawal += _pendingWithdrawal;
                 freeLiquidity -= _pendingWithdrawal;
@@ -384,5 +388,15 @@ library BinLiquidityLib {
         }
 
         self.total -= pendingWithdrawal;
+    }
+
+    function getClaimBurning(
+        BinLiquidity storage self,
+        uint256 oracleVersion
+    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
+        clbTokenAmount = _cb.clbTokenAmount;
+        burningAmount = _cb.burningAmount;
+        tokenAmount = _cb.tokenAmount;
     }
 }

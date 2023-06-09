@@ -22,7 +22,8 @@ export const prepareMarketTest = async () => {
     chromaticRouter,
     accountFactory,
     settlementToken,
-    gelato
+    gelato,
+    lens
   } = await loadFixture(marketDeploy)
   const [owner, tester, trader] = await ethers.getSigners()
   console.log('owner', owner.address)
@@ -76,14 +77,16 @@ export const prepareMarketTest = async () => {
     traderAccount,
     traderRouter,
     gelato,
-    clbToken
+    clbToken,
+    lens
     // addLiquidity,
     // updatePrice,
   }
 }
 
 export const helpers = function (testData: Awaited<ReturnType<typeof prepareMarketTest>>) {
-  const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } = testData
+  const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } =
+    testData
   async function updatePrice(price: number) {
     await (
       await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
@@ -120,7 +123,18 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
-  async function closePosition({}) {}
+  async function closePosition(positionId: BigNumber) {
+    const closePositionTx = await traderRouter.closePosition(market.address, positionId)
+    const receipt = await closePositionTx.wait()
+    
+    return {
+      receipt,
+      blockNumber:closePositionTx.blockNumber,
+      blockHash : receipt.blockHash,
+      transactionHash: closePositionTx.hash,
+      timestamp: closePositionTx.timestamp
+    }
+  }
 
   async function getLpReceiptIds() {
     return chromaticRouter.connect(tester).getLpReceiptIds(market.address)
@@ -144,6 +158,11 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
+  async function claimPosition(positionId: BigNumber) {
+    const claimTx = await traderRouter.claimPosition(market.address, positionId)
+    return claimTx.wait()
+  }
+
   async function addLiquidityBatch(amounts: BigNumber[], feeRates: number[]) {
     return chromaticRouter.connect(tester).addLiquidityBatch(
       market.address,
@@ -162,6 +181,9 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function removeLiquidity(clbTokenAmount: BigNumber, feeRate: number) {
+    await (
+      await testData.clbToken.connect(tester).setApprovalForAll(chromaticRouter.address, true)
+    ).wait()
     return chromaticRouter
       .connect(tester)
       .removeLiquidity(market.address, feeRate, clbTokenAmount, tester.address)
@@ -190,6 +212,10 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     return response
   }
 
+  async function settle() {
+    return (await market.settle()).wait()
+  }
+
   return {
     updatePrice,
     getLpReceiptIds,
@@ -199,11 +225,13 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     awaitTx,
     openPosition,
     closePosition,
+    claimPosition,
     claimLiquidity,
     claimLiquidityBatch,
     removeLiquidity,
     removeLiquidityBatch,
     withdrawLiquidity,
-    withdrawLiquidityBatch
+    withdrawLiquidityBatch,
+    settle
   }
 }

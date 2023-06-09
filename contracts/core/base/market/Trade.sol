@@ -12,7 +12,7 @@ import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
-import {IMarketLiquidate} from "@chromatic/core/interfaces/market/IMarketLiquidate.sol";
+import {IMarketLiquidate} from '@chromatic/core/interfaces/market/IMarketLiquidate.sol';
 
 /**
  * @title Trade
@@ -209,7 +209,6 @@ abstract contract Trade is MarketBase {
         );
         // Calculate the realized profit or loss by subtracting the interest from the total pnl
         int256 realizedPnl = pnl - interest.toInt256();
-
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0) {
             if (absRealizedPnl > makerMargin) {
