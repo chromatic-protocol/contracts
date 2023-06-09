@@ -114,8 +114,9 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
       makerMargin, // profit stop 10 token,
       makerMargin.mul(maxAllowFeeRate.toString()).div(100) // maxAllowFee (1% * makerMargin)
     )
+    const receipt = await openPositionTx.wait()
     return {
-      receipt: await openPositionTx.wait(),
+      receipt,
       makerMargin,
       takerMargin,
       qty,

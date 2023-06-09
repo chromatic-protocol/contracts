@@ -10,7 +10,7 @@ import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.so
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-import 'hardhat/console.sol';
+import "hardhat/console.sol";
 /**
  * @title LiquidityBin
  * @notice Structure representing a liquidity bin
@@ -44,7 +44,9 @@ library LiquidityBinLib {
      * @param self The LiquidityBin storage.
      * @param ctx The LpContext data struct.
      */
-    modifier _settle(LiquidityBin storage self, LpContext memory ctx) {
+    //TODO remove callerName param
+    modifier _settle(LiquidityBin storage self, LpContext memory ctx, string memory callerName) {
+        console.log('[LiquidityBinLib] executed settle by ' , callerName);
         self.settle(ctx);
         _;
     }
@@ -58,7 +60,7 @@ library LiquidityBinLib {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settlePendingPosition(ctx);
         uint256 freeLiq= self.freeLiquidity();
-        // console.log('settle free liq', freeLiq);
+        
         self._liquidity.settlePendingLiquidity(
             ctx,
             self.value(ctx),
@@ -88,7 +90,7 @@ library LiquidityBinLib {
         LpContext memory ctx,
         PositionParam memory param,
         uint256 tradingFee
-    ) internal _settle(self, ctx) {
+    ) internal _settle(self, ctx,"openPosition") {
         require(param.makerMargin <= self.freeLiquidity(), Errors.NOT_ENOUGH_FREE_LIQUIDITY);
 
         self._position.onOpenPosition(ctx, param);
@@ -105,7 +107,7 @@ library LiquidityBinLib {
         LiquidityBin storage self,
         LpContext memory ctx,
         PositionParam memory param
-    ) internal _settle(self, ctx) {
+    ) internal _settle(self, ctx,"closePosition") {
         self._position.onClosePosition(ctx, param);
         if (param.closeVersion > param.openVersion) {
             self._closedPosition.onClosePosition(ctx, param);
@@ -127,7 +129,8 @@ library LiquidityBinLib {
         LpContext memory ctx,
         PositionParam memory param,
         int256 takerPnl
-    ) internal _settle(self, ctx) {
+    ) internal _settle(self, ctx,"claimPosition") {
+        
         if (param.closeVersion == 0) {
             // called when liquidate
             self._position.onClosePosition(ctx, param);
@@ -158,7 +161,6 @@ library LiquidityBinLib {
      * @return uint256 The free liquidity in the bin
      */
     function freeLiquidity(LiquidityBin storage self) internal view returns (uint256) {
-        // console.log('free liquidity', self._liquidity.total , self._position.totalMakerMargin());
         return self._liquidity.total - self._position.totalMakerMargin();
     }
 
@@ -190,10 +192,7 @@ library LiquidityBinLib {
 
         uint256 _liquidity = self.liquidity();
         uint256 _value = unrealizedPnl < 0 ? _liquidity - absPnl : _liquidity + absPnl;
-        return
-            _value +
-            self._closedPosition.currentInterest(ctx) +
-            ctx.vault.getPendingBinShare(ctx.market, _liquidity);
+        return _value + ctx.vault.getPendingBinShare(ctx.market, _liquidity);
     }
 
     /**
@@ -208,7 +207,7 @@ library LiquidityBinLib {
         LiquidityBin storage self,
         LpContext memory ctx,
         uint256 amount
-    ) internal _settle(self, ctx) {
+    ) internal _settle(self, ctx,"acceptAddLiquidity") {
         self._liquidity.onAddLiquidity(amount, ctx.currentOracleVersion().version);
     }
 
@@ -229,7 +228,8 @@ library LiquidityBinLib {
         LpContext memory ctx,
         uint256 amount,
         uint256 oracleVersion
-    ) internal _settle(self, ctx) returns (uint256) {
+    ) internal _settle(self, ctx,"acceptClaimLiquidity") returns (uint256) {
+        
         return self._liquidity.onClaimLiquidity(amount, oracleVersion);
     }
 
@@ -245,7 +245,7 @@ library LiquidityBinLib {
         LiquidityBin storage self,
         LpContext memory ctx,
         uint256 clbTokenAmount
-    ) internal _settle(self, ctx) {
+    ) internal _settle(self, ctx,"acceptRemoveLiquidity") {
         self._liquidity.onRemoveLiquidity(clbTokenAmount, ctx.currentOracleVersion().version);
     }
 
@@ -267,7 +267,7 @@ library LiquidityBinLib {
         LpContext memory ctx,
         uint256 clbTokenAmount,
         uint256 oracleVersion
-    ) internal _settle(self, ctx) returns (uint256 amount, uint256 burnedCLBTokenAmount) {
+    ) internal _settle(self, ctx,"acceptWithdrawLiquidity") returns (uint256 amount, uint256 burnedCLBTokenAmount) {
         return self._liquidity.onWithdrawLiquidity(clbTokenAmount, oracleVersion);
     }
 
