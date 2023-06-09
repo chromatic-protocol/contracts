@@ -129,7 +129,7 @@ const config: HardhatUserConfig = {
     excludeBytecode: true
   },
   docgen: {
-    pages: 'items',
+    pages: 'files',
     exclude: ['mocks']
   }
 }
