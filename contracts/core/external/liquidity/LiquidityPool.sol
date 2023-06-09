@@ -110,7 +110,8 @@ library LiquidityPoolLib {
     function prepareBinMargins(
         LiquidityPool storage self,
         int224 qty,
-        uint256 makerMargin
+        uint256 makerMargin,
+        uint256 minimumBinMargin
     ) external view returns (BinMargin[] memory) {
         // Retrieve the target liquidity bins based on the position quantity
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, qty);
@@ -125,7 +126,7 @@ library LiquidityPoolLib {
             if (remain == 0) break;
 
             uint256 freeLiquidity = _bins[_tradingFeeRates[to]].freeLiquidity();
-            if (freeLiquidity > 0) {
+            if (freeLiquidity >= minimumBinMargin) {
                 if (remain <= freeLiquidity) {
                     _binMargins[to] = remain;
                     remain = 0;

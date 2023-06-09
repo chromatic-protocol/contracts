@@ -12,7 +12,7 @@ interface ISettlementTokenRegistry {
     /**
      * @dev Emitted when a new settlement token is registered.
      * @param token The address of the registered settlement token.
-     * @param minimumTakerMargin The minimum taker margin for the markets using this settlement token.
+     * @param minimumMargin The minimum margin for the markets using this settlement token.
      * @param interestRate The interest rate for the settlement token.
      * @param flashLoanFeeRate The flash loan fee rate for the settlement token.
      * @param earningDistributionThreshold The earning distribution threshold for the settlement token.
@@ -20,7 +20,7 @@ interface ISettlementTokenRegistry {
      */
     event SettlementTokenRegistered(
         address indexed token,
-        uint256 indexed minimumTakerMargin,
+        uint256 indexed minimumMargin,
         uint256 indexed interestRate,
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
@@ -28,11 +28,11 @@ interface ISettlementTokenRegistry {
     );
 
     /**
-     * @dev Emitted when the minimum taker margin for a settlement token is set.
+     * @dev Emitted when the minimum margin for a settlement token is set.
      * @param token The address of the settlement token.
-     * @param minimumTakerMargin The new minimum taker margin for the settlement token.
+     * @param minimumMargin The new minimum margin for the settlement token.
      */
-    event SetMinimumTakerMargin(address indexed token, uint256 indexed minimumTakerMargin);
+    event SetMinimumMargin(address indexed token, uint256 indexed minimumMargin);
 
     /**
      * @dev Emitted when the flash loan fee rate for a settlement token is set.
@@ -85,7 +85,7 @@ interface ISettlementTokenRegistry {
     /**
      * @notice Registers a new settlement token.
      * @param token The address of the settlement token to register.
-     * @param minimumTakerMargin The minimum taker margin for the settlement token.
+     * @param minimumMargin The minimum margin for the settlement token.
      * @param interestRate The interest rate for the settlement token.
      * @param flashLoanFeeRate The flash loan fee rate for the settlement token.
      * @param earningDistributionThreshold The earning distribution threshold for the settlement token.
@@ -93,7 +93,7 @@ interface ISettlementTokenRegistry {
      */
     function registerSettlementToken(
         address token,
-        uint256 minimumTakerMargin,
+        uint256 minimumMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
@@ -114,18 +114,20 @@ interface ISettlementTokenRegistry {
     function isRegisteredSettlementToken(address token) external view returns (bool);
 
     /**
-     * @notice Gets the minimum taker margin for a settlement token.
+     * @notice Gets the minimum margin for a settlement token.
+     * @dev The minimumMargin is used as the minimum value for the taker margin of a position
+     *      or as the minimum value for the maker margin of each bin.
      * @param token The address of the settlement token.
-     * @return The minimum taker margin for the settlement token.
+     * @return The minimum margin for the settlement token.
      */
-    function getMinimumTakerMargin(address token) external view returns (uint256);
+    function getMinimumMargin(address token) external view returns (uint256);
 
     /**
-     * @notice Sets the minimum taker margin for a settlement token.
+     * @notice Sets the minimum margin for a settlement token.
      * @param token The address of the settlement token.
-     * @param minimumTakerMargin The new minimum taker margin for the settlement token.
+     * @param minimumMargin The new minimum margin for the settlement token.
      */
-    function setMinimumTakerMargin(address token, uint256 minimumTakerMargin) external;
+    function setMinimumMargin(address token, uint256 minimumMargin) external;
 
     /**
      * @notice Gets the flash loan fee rate for a settlement token.
