@@ -236,7 +236,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function registerSettlementToken(
         address token,
-        uint256 minimumTakerMargin,
+        uint256 minimumMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
@@ -244,7 +244,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     ) external override onlyDao {
         _settlementTokenRegistry.register(
             token,
-            minimumTakerMargin,
+            minimumMargin,
             interestRate,
             flashLoanFeeRate,
             earningDistributionThreshold,
@@ -255,7 +255,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         emit SettlementTokenRegistered(
             token,
-            minimumTakerMargin,
+            minimumMargin,
             interestRate,
             flashLoanFeeRate,
             earningDistributionThreshold,
@@ -280,17 +280,17 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc ISettlementTokenRegistry
      */
-    function getMinimumTakerMargin(address token) external view returns (uint256) {
-        return _settlementTokenRegistry.getMinimumTakerMargin(token);
+    function getMinimumMargin(address token) external view returns (uint256) {
+        return _settlementTokenRegistry.getMinimumMargin(token);
     }
 
     /**
      * @inheritdoc ISettlementTokenRegistry
      * @dev This function can only be called by the DAO address.
      */
-    function setMinimumTakerMargin(address token, uint256 minimumTakerMargin) external onlyDao {
-        _settlementTokenRegistry.setMinimumTakerMargin(token, minimumTakerMargin);
-        emit SetMinimumTakerMargin(token, minimumTakerMargin);
+    function setMinimumMargin(address token, uint256 minimumMargin) external onlyDao {
+        _settlementTokenRegistry.setMinimumMargin(token, minimumMargin);
+        emit SetMinimumMargin(token, minimumMargin);
     }
 
     /**

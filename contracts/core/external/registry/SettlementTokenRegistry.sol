@@ -14,8 +14,8 @@ struct SettlementTokenRegistry {
     EnumerableSet.AddressSet _tokens;
     /// @dev Mapping of settlement tokens to their interest rate records
     mapping(address => InterestRate.Record[]) _interestRateRecords;
-    /// @dev Mapping of settlement tokens to their minimum taker margins
-    mapping(address => uint256) _minimumTakerMargins;
+    /// @dev Mapping of settlement tokens to their minimum margins
+    mapping(address => uint256) _minimumMargins;
     /// @dev Mapping of settlement tokens to their flash loan fee rates
     mapping(address => uint256) _flashLoanFeeRates;
     /// @dev Mapping of settlement tokens to their earning distribution thresholds
@@ -48,7 +48,7 @@ library SettlementTokenRegistryLib {
      * @dev Throws an error if the token is already registered.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the token to register.
-     * @param minimumTakerMargin The minimum taker margin for the token.
+     * @param minimumMargin The minimum margin for the token.
      * @param interestRate The initial interest rate for the token.
      * @param flashLoanFeeRate The flash loan fee rate for the token.
      * @param earningDistributionThreshold The earning distribution threshold for the token.
@@ -57,7 +57,7 @@ library SettlementTokenRegistryLib {
     function register(
         SettlementTokenRegistry storage self,
         address token,
-        uint256 minimumTakerMargin,
+        uint256 minimumMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
@@ -66,7 +66,7 @@ library SettlementTokenRegistryLib {
         require(self._tokens.add(token), Errors.ALREADY_REGISTERED_TOKEN);
 
         self._interestRateRecords[token].initialize(interestRate);
-        self._minimumTakerMargins[token] = minimumTakerMargin;
+        self._minimumMargins[token] = minimumMargin;
         self._flashLoanFeeRates[token] = flashLoanFeeRate;
         self._earningDistributionThresholds[token] = earningDistributionThreshold;
         self._uniswapFeeTiers[token] = uniswapFeeTier;
@@ -97,30 +97,30 @@ library SettlementTokenRegistryLib {
     }
 
     /**
-     * @notice Retrieves the minimum taker margin for a asettlement token.
+     * @notice Retrieves the minimum margin for a asettlement token.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the asettlement token.
-     * @return uint256 The minimum taker margin for the asettlement token.
+     * @return uint256 The minimum margin for the asettlement token.
      */
-    function getMinimumTakerMargin(
+    function getMinimumMargin(
         SettlementTokenRegistry storage self,
         address token
     ) external view returns (uint256) {
-        return self._minimumTakerMargins[token];
+        return self._minimumMargins[token];
     }
 
     /**
-     * @notice Sets the minimum taker margin for asettlement token.
+     * @notice Sets the minimum margin for asettlement token.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the settlement token.
-     * @param minimumTakerMargin The new minimum taker margin for the settlement token.
+     * @param minimumMargin The new minimum margin for the settlement token.
      */
-    function setMinimumTakerMargin(
+    function setMinimumMargin(
         SettlementTokenRegistry storage self,
         address token,
-        uint256 minimumTakerMargin
+        uint256 minimumMargin
     ) external {
-        self._minimumTakerMargins[token] = minimumTakerMargin;
+        self._minimumMargins[token] = minimumMargin;
     }
 
     /**

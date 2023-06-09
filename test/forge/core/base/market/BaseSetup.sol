@@ -55,7 +55,7 @@ abstract contract BaseSetup is Test {
         factory.registerOracleProvider(address(oracleProvider));
         factory.registerSettlementToken(
             address(usdc),
-            1 ether, // minimumTakerMargin
+            1 ether, // minimumMargin
             1000, // interestRate, 10%
             500, // flashLoanFeeRate, 5%
             10 ether, // earningDistributionThreshold, $10

@@ -33,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await marketFactory.registerSettlementToken(
     USDC_ARBITRUM_GOERLI.address,
-    parseUnits("10", USDC_ARBITRUM_GOERLI.decimals), // minimumTakerMargin
+    parseUnits("10", USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
     BigNumber.from("1000"), // interestRate, 10%
     BigNumber.from("500"), // flashLoanFeeRate, 5%
     parseUnits("1000", USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000

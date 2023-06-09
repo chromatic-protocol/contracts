@@ -37,16 +37,18 @@ abstract contract Trade is MarketBase {
         bytes calldata data
     ) external override nonReentrant returns (Position memory) {
         if (qty == 0) revert ZeroTargetAmount();
-        if (takerMargin < factory.getMinimumTakerMargin(address(settlementToken)))
-            revert TooSmallTakerMargin();
-        //TODO get binMargin by using makerMargin
+
+        uint256 minMargin = factory.getMinimumMargin(address(settlementToken));
+        if (takerMargin < minMargin) revert TooSmallTakerMargin();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 
-        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, makerMargin));
+        position.setBinMargins(
+            liquidityPool.prepareBinMargins(position.qty, makerMargin, minMargin)
+        );
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
