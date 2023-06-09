@@ -29,3 +29,6 @@ package-build/
 
 # hardhat-deploy
 deployments
+
+# generated docs
+docs/

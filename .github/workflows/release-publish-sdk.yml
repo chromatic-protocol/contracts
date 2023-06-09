@@ -67,12 +67,12 @@ jobs:
           yarn clean
           yarn build
           yarn publish
-      # export src.ts to chromatic-protocol/sdk
       - uses: chromatic-protocol/action-github-app-token@v1
         id: generate-token
         with:
           app_id: ${{ secrets.PR_ACTION_APP_ID }}
           private_key: ${{ secrets.PR_ACTION_PRIVATE }}
+      # make a PR to chromatic-protocol/sdk
       - uses: actions/checkout@v3
         with:
           repository: chromatic-protocol/sdk
@@ -87,5 +87,24 @@ jobs:
           branch: develop
           path: sdk
           add-paths: src/gen/**
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: ${{ github.event.pull_request.title }}
+      # make a PR to chromatic-protocol/docs
+      - uses: actions/checkout@v3
+        with:
+          repository: chromatic-protocol/docs
+          ref: main
+          path: docs-repo
+          token: ${{ steps.generate-token.outputs.token }}
+      - run: |
+          yarn docs
+          cp -r docs/* docs-repo/docs/contracts/reference/
+      - name: pull-request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          base: main
+          branch: docs/contracts
+          path: docs-repo
+          add-paths: docs/contracts/reference/**
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: ${{ github.event.pull_request.title }}

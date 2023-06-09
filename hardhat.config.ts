@@ -1,100 +1,101 @@
-import "@chromatic-protocol/hardhat-package"
-import "@nomicfoundation/hardhat-foundry"
-import "@nomicfoundation/hardhat-toolbox"
-import "@nomiclabs/hardhat-ethers"
-import * as dotenv from "dotenv"
-import "hardhat-contract-sizer"
-import "hardhat-deploy"
-import { HardhatUserConfig } from "hardhat/config"
-import "tsconfig-paths/register"
+import '@chromatic-protocol/hardhat-package'
+import '@nomicfoundation/hardhat-foundry'
+import '@nomicfoundation/hardhat-toolbox'
+import '@nomiclabs/hardhat-ethers'
+import * as dotenv from 'dotenv'
+import 'hardhat-contract-sizer'
+import 'hardhat-deploy'
+import { HardhatUserConfig } from 'hardhat/config'
+import 'solidity-docgen'
+import 'tsconfig-paths/register'
+
 dotenv.config()
 
-const MNEMONIC_JUNK =
-  "test test test test test test test test test test test junk"
+const MNEMONIC_JUNK = 'test test test test test test test test test test test junk'
 
 const common = {
   accounts: {
     mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK,
-    count: 10,
-  },
+    count: 10
+  }
 }
 
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.15",
+        version: '0.8.15',
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
-          },
-        },
+            runs: 200
+          }
+        }
       },
       {
-        version: "0.8.17",
+        version: '0.8.17',
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
-          },
-        },
-      },
-    ],
+            runs: 200
+          }
+        }
+      }
+    ]
   },
-  defaultNetwork: "hardhat",
+  defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       // localhost anvil
       forking: {
         url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 18064747,
+        blockNumber: 18064747
       },
       ...common,
       accounts: {
         ...common.accounts,
-        mnemonic: MNEMONIC_JUNK,
+        mnemonic: MNEMONIC_JUNK
       },
       saveDeployments: false,
-      allowUnlimitedContractSize: true,
+      allowUnlimitedContractSize: true
     },
     anvil: {
       // localhost anvil
       ...common,
       accounts: {
         ...common.accounts,
-        mnemonic: MNEMONIC_JUNK,
+        mnemonic: MNEMONIC_JUNK
       },
-      url: "http://127.0.0.1:8545",
+      url: 'http://127.0.0.1:8545',
       chainId: 31337,
-      tags: ["mockup", "core"],
-      allowUnlimitedContractSize: true,
+      tags: ['mockup', 'core'],
+      allowUnlimitedContractSize: true
     },
     arbitrum_nova: {
       // mainnet AnyTrust chain
       ...common,
-      url: "https://nova.arbitrum.io/rpc",
+      url: 'https://nova.arbitrum.io/rpc',
       chainId: 42170,
-      tags: ["core"],
+      tags: ['core']
     },
     arbitrum_one_goerli: {
       // testnet
       ...common,
-      url: "https://goerli-rollup.arbitrum.io/rpc",
+      url: 'https://goerli-rollup.arbitrum.io/rpc',
       chainId: 421613,
-      tags: ["core"],
+      tags: ['core']
     },
     arbitrum_one: {
       // mainnet
       ...common,
-      url: "https://arb1.arbitrum.io/rpc",
+      url: 'https://arb1.arbitrum.io/rpc',
       chainId: 42161,
-      tags: ["core"],
-    },
+      tags: ['core']
+    }
   },
   namedAccounts: {
     deployer: {
-      default: 0,
+      default: 0
     },
     gelato: 1,
     alice: 2,
@@ -104,29 +105,33 @@ const config: HardhatUserConfig = {
     eve: 6,
     frank: 7,
     grace: 8,
-    heidi: 9,
+    heidi: 9
   },
   package: {
     includes: [
-      "OracleProvider",
-      "ChromaticMarket",
-      "ChromaticMarketFactory",
-      "ChromaticVault",
-      "Account",
-      "AccountFactory",
-      "ChromaticRouter",
+      'OracleProvider',
+      'ChromaticMarket',
+      'ChromaticMarketFactory',
+      'ChromaticVault',
+      'Account',
+      'AccountFactory',
+      'ChromaticRouter',
       'CLBToken',
-      "AggregatorV3Interface",
-      "**/IERC20.sol/*",
-      "**/IERC20Metadata.sol/*",
-      "**/IERC1155.sol/*",
+      'AggregatorV3Interface',
+      '**/IERC20.sol/*',
+      '**/IERC20Metadata.sol/*',
+      '**/IERC1155.sol/*'
     ],
-    excludes: ["**/*Lib", "**/*Mock"],
+    excludes: ['**/*Lib', '**/*Mock'],
     includeDeployed: true,
     artifactFromDeployment: true,
-    excludesFromDeployed: ["KeeperFeePayer", "*Lib", "*Mock"],
-    excludeBytecode: true,
+    excludesFromDeployed: ['KeeperFeePayer', '*Lib', '*Mock'],
+    excludeBytecode: true
   },
+  docgen: {
+    pages: 'items',
+    exclude: ['mocks']
+  }
 }
 
 export default config

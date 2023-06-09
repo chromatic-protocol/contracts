@@ -36,3 +36,7 @@ deployments
 # foundry related
 lib/
 out/
+
+# generated docs
+docs/
+
