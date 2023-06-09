@@ -58,7 +58,7 @@ library LiquidityBinLib {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settlePendingPosition(ctx);
         uint256 freeLiq= self.freeLiquidity();
-        console.log('settle free liq', freeLiq);
+        // console.log('settle free liq', freeLiq);
         self._liquidity.settlePendingLiquidity(
             ctx,
             self.value(ctx),
@@ -158,7 +158,7 @@ library LiquidityBinLib {
      * @return uint256 The free liquidity in the bin
      */
     function freeLiquidity(LiquidityBin storage self) internal view returns (uint256) {
-        console.log('free liquidity', self._liquidity.total , self._position.totalMakerMargin());
+        // console.log('free liquidity', self._liquidity.total , self._position.totalMakerMargin());
         return self._liquidity.total - self._position.totalMakerMargin();
     }
 
