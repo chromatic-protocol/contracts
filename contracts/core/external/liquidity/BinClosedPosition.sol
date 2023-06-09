@@ -49,10 +49,7 @@ library BinClosedPositionLib {
      * @param self The BinClosedPosition storage.
      * @param ctx The LpContext memory.
      */
-    function settleClosingPosition(
-        BinClosedPosition storage self,
-        LpContext memory ctx
-    ) internal {
+    function settleClosingPosition(BinClosedPosition storage self, LpContext memory ctx) internal {
         uint256 closeVersion = self._closing.closeVersion;
         if (closeVersion == 0) return;
 
@@ -152,5 +149,32 @@ library BinClosedPositionLib {
         waitingPosition.totalTakerMargin -= param.takerMargin;
 
         return false;
+    }
+
+    /**
+     * @dev Calculates the current interest for a liquidity bin closed position.
+     * @param self The BinClosedPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @return uint256 The current interest.
+     */
+    function currentInterest(
+        BinClosedPosition storage self,
+        LpContext memory ctx
+    ) internal view returns (uint256) {
+        return _currentInterest(self, ctx) + self._closing.currentInterest(ctx);
+    }
+
+    /**
+     * @dev Calculates the current interest for a liquidity bin closed position without closing position.
+     * @param self The BinClosedPosition storage struct.
+     * @param ctx The LpContext data struct.
+     * @return uint256 The current interest.
+     */
+    function _currentInterest(
+        BinClosedPosition storage self,
+        LpContext memory ctx
+    ) private view returns (uint256) {
+        return
+            self._accruedInterest.calculateInterest(ctx, self._totalMakerMargin, block.timestamp);
     }
 }

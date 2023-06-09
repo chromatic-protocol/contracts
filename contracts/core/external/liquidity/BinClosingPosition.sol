@@ -38,10 +38,7 @@ library BinClosingPositionLib {
      * @param self The BinClosingPosition storage.
      * @param ctx The LpContext.
      */
-    function settleAccruedInterest(
-        BinClosingPosition storage self,
-        LpContext memory ctx
-    ) internal {
+    function settleAccruedInterest(BinClosingPosition storage self, LpContext memory ctx) internal {
         self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
     }
 
@@ -102,5 +99,18 @@ library BinClosingPositionLib {
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;
         self.accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
+    }
+
+    /**
+     * @notice Calculates the current accrued interest of the closing position.
+     * @param self The BinClosingPosition storage.
+     * @param ctx The LpContext.
+     * @return uint256 The current accrued interest.
+     */
+    function currentInterest(
+        BinClosingPosition storage self,
+        LpContext memory ctx
+    ) internal view returns (uint256) {
+        return self.accruedInterest.calculateInterest(ctx, self.totalMakerMargin, block.timestamp);
     }
 }

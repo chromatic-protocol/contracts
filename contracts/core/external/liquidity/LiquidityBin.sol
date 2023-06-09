@@ -183,7 +183,10 @@ library LiquidityBinLib {
 
         uint256 _liquidity = self.liquidity();
         uint256 _value = unrealizedPnl < 0 ? _liquidity - absPnl : _liquidity + absPnl;
-        return _value + ctx.vault.getPendingBinShare(ctx.market, _liquidity);
+        return
+            _value +
+            self._closedPosition.currentInterest(ctx) +
+            ctx.vault.getPendingBinShare(ctx.market, _liquidity);
     }
 
     /**
