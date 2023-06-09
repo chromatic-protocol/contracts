@@ -160,9 +160,9 @@ library BinPositionLib {
         uint256 absPnl = pnl.abs();
 
         if (pnl >= 0) {
-            return Math.min(absPnl, self._totalTakerMargin).toInt256();
+            return Math.min(absPnl, totalTakerMargin(self)).toInt256();
         } else {
-            return -(Math.min(absPnl, self._totalMakerMargin).toInt256());
+            return -(Math.min(absPnl, totalMakerMargin(self)).toInt256());
         }
     }
 
