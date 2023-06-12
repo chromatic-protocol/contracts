@@ -257,27 +257,27 @@ describe('lens', async () => {
     await settle()
 
 
-    let removableLiquidity = await lens.removableLiquidity(
+    let removeLiquidtyStatus = await lens.removeLiquidtyStatus(
       market.address,
       removeLiqReceiptIds
     )
-    console.log('remove liquidity status (1)', removableLiquidity)
+    console.log('remove liquidity status (1)', removeLiquidtyStatus)
     await time.increase(3600*60*365);
   
    
-    removableLiquidity = await lens.removableLiquidity(
+    removeLiquidtyStatus = await lens.removeLiquidtyStatus(
       market.address,
       removeLiqReceiptIds
     )
-    console.log('remove liquidity status (2)', removableLiquidity)
+    console.log('remove liquidity status (2)', removeLiquidtyStatus)
     // expect increse removable amount
     const currentBlockTime = await time.latest()
     console.log(
       'after tranding fee 1% 50 ether position closed (1)',
-      formatRemoveLiquidityValue(removableLiquidity)
+      formatRemoveLiquidityValue(removeLiquidtyStatus)
     )
 
-    removableLiquidity.forEach(async (liquidityInfo) => {
+    removeLiquidtyStatus.forEach(async (liquidityInfo) => {
       console.log('liquidity bin tradingFeeRate:', liquidityInfo.tradingFeeRate)
       let liquidityBinInterestFee = interestFeeRoundUp(positions
         .reduce((acc, position) => {

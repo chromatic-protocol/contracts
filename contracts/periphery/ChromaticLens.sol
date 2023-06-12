@@ -118,8 +118,7 @@ contract ChromaticLens {
         uint256 tokenAmount;
     }
 
-    // LpReceipt 에 대해서 settlement token 을 claim을 할 수 있는 진행정도를 구하기 위한 값..
-    function removableLiquidity(
+    function removeLiquidtyStatus(
         IChromaticMarket market,
         uint256[] calldata receiptIds
     ) external view returns (RemoveLiquidityInfo[] memory results) {
@@ -128,7 +127,7 @@ contract ChromaticLens {
         results = new RemoveLiquidityInfo[](receiptIds.length);
         for (uint i = 0; i < reciepts.length; i++) {
             (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) = market
-                .getClaimBurning(reciepts[i]);
+                .getClaimBurning(reciepts[i].tradingFeeRate, reciepts[i].oracleVersion);
 
             results[i] = RemoveLiquidityInfo(
                 reciepts[i].id,

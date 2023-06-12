@@ -117,6 +117,7 @@ const config: HardhatUserConfig = {
       'AccountFactory',
       'ChromaticRouter',
       'CLBToken',
+      'ChromaticLens',
       'AggregatorV3Interface',
       '**/IERC20.sol/*',
       '**/IERC20Metadata.sol/*',

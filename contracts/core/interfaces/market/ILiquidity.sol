@@ -137,6 +137,7 @@ interface ILiquidity {
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory);
 
     function getClaimBurning(
-        LpReceipt memory reciept
+        int16 tradingFeeRate,
+        uint256 oracleVersion
     ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount);
 }
