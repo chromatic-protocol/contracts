@@ -40,7 +40,7 @@ describe('lens', async () => {
   it('get CBL Value', async () => {
     const { lens, market, trader } = testData
     const { openPosition, updatePrice, closePosition, claimPosition } = helpers(testData)
-    let clbValue = await lens.CLBValues(
+    let clbValue = await lens.getCLBValues(
       market.address,
       feeRates.map((v) => v.toString())
     )
@@ -62,7 +62,7 @@ describe('lens', async () => {
     await closePosition(positionId)
     await updatePrice(500)
     await claimPosition(positionId)
-    clbValue = await lens.CLBValues(
+    clbValue = await lens.getCLBValues(
       market.address,
       feeRates.map((v) => v.toString())
     )
@@ -223,7 +223,7 @@ describe('lens', async () => {
       )
     )
     console.log('slot values', await lens.liquidityBinValue(market.address, feeRates))
-    const receipts: LpReceiptStructOutput[] = []
+    let receipts: LpReceiptStructOutput[] = []
     // Retrieve some liqudity
     console.log('remove liquidity from 100')
 
@@ -240,47 +240,58 @@ describe('lens', async () => {
       await settle()
     }
        
-    await time.increase(3600*60*365);
-
-    for (let i = 0; i < 2; i++) {
-      console.log('close position id : ', positionIds[i])
-      await closePosition(positionIds[i])
-    }
-    await updatePrice(1000)
-    for (let i = 0; i < 2; i++) {
-      await awaitTx(claimPosition(positionIds[i]))
-      const closedTime = await time.latest()
-      positions[i] = { ...positions[i], closeTimestamp: BigNumber.from(closedTime) }
-    }
-    await settle()
-
-    await time.increase(3600*60*365);
-    for (let i = 2; i < 3; i++) {
-      console.log('close position id : ', positionIds[i])
-      await closePosition(positionIds[i])
-    }
-    await updatePrice(1000)
-    for (let i = 2; i < 3; i++) {
-      await awaitTx(claimPosition(positionIds[i]))
-      const closedTime = await time.latest()
-      positions[i] = { ...positions[i], closeTimestamp: BigNumber.from(closedTime) }
-    }
-    await settle()
- 
-
     const removeLiquidityEvent = await market.queryFilter(
       market.filters.RemoveLiquidity(),
       eventSubStartBlock
     )
-    receipts.push(...removeLiquidityEvent.map((e) => e.args[1]))
+    receipts = [...removeLiquidityEvent.map((e) => e.args[1])]
     let removeLiqReceiptIds = receipts.map((r=>r.id));
-    console.log('remove Liquidity Receipt Ids', removeLiqReceiptIds)
-    console.log('before lens call timestamp ', await time.latest())
+    
+    await time.increase(3600*60*365);
+
+    for (let i = 0; i < 2; i++) {
+      console.log('close position id : ', positionIds[i])
+      await closePosition(positionIds[i])
+    }
+    await updatePrice(1000)
+    for (let i = 0; i < 2; i++) {
+      await awaitTx(claimPosition(positionIds[i]))
+      const closedTime = await time.latest()
+      positions[i] = { ...positions[i], closeTimestamp: BigNumber.from(closedTime) }
+    }
+    await settle()
+
+
     let removableLiquidity = await lens.removableLiquidity(
       market.address,
       removeLiqReceiptIds
     )
+    console.log('remove liquidity status (1)', removableLiquidity)
+    await time.increase(3600*60*365);
+    // for (let i = 2; i < 3; i++) {
+    //   console.log('close position id : ', positionIds[i])
+    //   await closePosition(positionIds[i])
+    // }
+    // await updatePrice(1000)
+    // for (let i = 2; i < 3; i++) {
+    //   await awaitTx(claimPosition(positionIds[i]))
+    //   const closedTime = await time.latest()
+    //   positions[i] = { ...positions[i], closeTimestamp: BigNumber.from(closedTime) }
+    // }
+    // await settle()
+ 
 
+    // const removeLiquidityEvent = await market.queryFilter(
+    //   market.filters.RemoveLiquidity(),
+    //   eventSubStartBlock
+    // )
+  
+   
+    removableLiquidity = await lens.removableLiquidity(
+      market.address,
+      removeLiqReceiptIds
+    )
+    console.log('remove liquidity status (2)', removableLiquidity)
     // expect increse removable amount
     const currentBlockTime = await time.latest()
     console.log(
@@ -347,6 +358,20 @@ describe('lens', async () => {
     })
   })
 })
+
+
+// add 100 Liq
+// open position 100
+// remove 100 Liq
+// close position 50
+// interest fee rate 1000% 
+// how to calc interest fee for 50?
+// clbToken : 50 , burning 50 , tokenAmount : 50?
+
+
+
+
+
 const liquidityBinFor = (volume: BigNumber) => (feeRate: BigNumber) => (amount: BigNumber) => {
   if (amount.gt(volume)) {
     amount = volume

@@ -52,7 +52,7 @@ contract ChromaticLens {
         }
     }
 
-    function CLBValues(
+    function getCLBValues(
         IChromaticMarket market,
         int16[] calldata tradingFeeRates
     ) external view returns (CLBValue[] memory results) {
