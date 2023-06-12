@@ -11,8 +11,11 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {BPS} from "@chromatic/core/libraries/Constants.sol";
 import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 
+/**
+ * @title ChromaticLens
+ * @dev A contract that provides utility functions for interacting with Chromatic markets.
+ */
 contract ChromaticLens {
-    //
     using Math for uint256;
 
     struct LiquidityBinValue {
@@ -34,16 +37,25 @@ contract ChromaticLens {
         uint256 tokenAmount;
     }
 
+    /**
+     * @dev Retrieves the Oracle versions for the specified oracle versions in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param oracleVersions An array of Oracle versions.
+     * @return results An array of OracleVersion containing the Oracle versions for each oracle version.
+     */
     function oracleAtVersions(
         IChromaticMarket market,
         uint256[] calldata oracleVersions
     ) external view returns (IOracleProvider.OracleVersion[] memory results) {
-        return market
-            .oracleProvider()
-            .atVersions(oracleVersions);
+        return market.oracleProvider().atVersions(oracleVersions);
     }
 
-    // get liquidity bin value with unrealized pnl
+    /**
+     * @dev Retrieves the liquidity bin values for the specified trading fee rates in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param tradingFeeRates An array of trading fee rates.
+     * @return results An array of LiquidityBinValue containing the liquidity bin values for each trading fee rate.
+     */
     function liquidityBinValue(
         IChromaticMarket market,
         int16[] calldata tradingFeeRates
@@ -56,7 +68,10 @@ contract ChromaticLens {
     }
 
     /**
-     * get Liquidity information for each slot
+     * @dev Retrieves the liquidity information for each liquidity bin specified by the trading fee rates and Oracle versions in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param params An array of LiquidityBinsParam containing the trading fee rates and Oracle versions.
+     * @return results An array of LiquidityBin containing the liquidity information for each trading fee rate and Oracle version.
      */
     function liquidityBins(
         IChromaticMarket market,
@@ -79,6 +94,12 @@ contract ChromaticLens {
         }
     }
 
+    /**
+     * @dev Retrieves the LP receipts for the specified receipt IDs in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param receiptIds An array of receipt IDs.
+     * @return result An array of LpReceipt containing the LP receipts for each receipt ID.
+     */
     function lpReceipts(
         IChromaticMarket market,
         uint256[] calldata receiptIds
@@ -89,6 +110,13 @@ contract ChromaticLens {
         }
     }
 
+    /**
+     * @dev Calculates the value of CLB tokens for each trading fee rate and CLB token amount in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param tradingFeeRates An array of trading fee rates.
+     * @param clbTokenAmounts An array of CLB token amounts.
+     * @return results An array of uint256 containing the calculated CLB token values for each trading fee rate and CLB token amount.
+     */
     function calculateCLBTokenValueBatch(
         address market,
         int16[] calldata tradingFeeRates,
@@ -107,6 +135,13 @@ contract ChromaticLens {
         }
     }
 
+    /**
+     * @dev Calculates the amount of CLB tokens to be minted for each trading fee rate and specified amount in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param tradingFeeRates An array of trading fee rates.
+     * @param amounts An array of specified amounts.
+     * @return results An array of uint256 containing the calculated CLB token minting amounts for each trading fee rate and specified amount.
+     */
     function calculateCLBTokenMintingBatch(
         address market,
         int16[] calldata tradingFeeRates,
@@ -122,6 +157,12 @@ contract ChromaticLens {
         }
     }
 
+    /**
+     * @dev Retrieves the total supply of CLB tokens for each trading fee rate in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param tradingFeeRates An array of trading fee rates.
+     * @return supplies An array of uint256 containing the total supply of CLB tokens for each trading fee rate.
+     */
     function totalSupplies(
         address market,
         int16[] calldata tradingFeeRates
