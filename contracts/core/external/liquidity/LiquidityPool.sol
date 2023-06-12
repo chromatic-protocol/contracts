@@ -822,6 +822,13 @@ library LiquidityPoolLib {
         }
     }
 
+    /**
+     * @dev Retrieves the value of a specific bin in the LiquidityPool storage for the provided trading fee rate.
+     * @param self The reference to the LiquidityPool storage.
+     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
+     * @param ctx The LP context containing relevant information for the calculation.
+     * @return value The value of the specified bin.
+     */
     function binValue(
         LiquidityPool storage self,
         int16 _tradingFeeRate,
@@ -830,6 +837,15 @@ library LiquidityPoolLib {
         value = targetBin(self, _tradingFeeRate).value(ctx);
     }
 
+    /**
+     * @dev Retrieves the claim burning details for a specific trading fee rate and oracle version from the LiquidityPool storage.
+     * @param self The reference to the LiquidityPool storage.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the claim burning details.
+     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
+     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified trading fee rate and oracle version.
+     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified trading fee rate and oracle version.
+     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity for the specified trading fee rate and oracle version.
+     */
     function getClaimBurning(
         LiquidityPool storage self,
         int16 tradingFeeRate,
