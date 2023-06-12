@@ -130,7 +130,9 @@ const config: HardhatUserConfig = {
   },
   docgen: {
     pages: 'files',
-    exclude: ['mocks']
+    templates: 'docs/templates',
+    exclude: ['mocks'],
+    outputDir: 'docs/out'
   }
 }
 
