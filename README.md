@@ -12,17 +12,21 @@ In summary, Chromatic emerges as a trailblazer in the realm of DeFi, leveraging 
 
 ## Table of Contents
 
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Compilation](##compilation)
-  - [Testing](##testing)
-  - [Local Development](##local-development)
-  - [Deployment](##deployment)
-- [Smart Contracts](#smart-contracts)
-- [Contributing](#contributing)
-- [License](#license)
-- [Documentation](#documentation)
-- [Contact](#contact)
+- [Chromatic Protocol](#chromatic-protocol)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Compilation](#compilation)
+    - [Testing](#testing)
+    - [Local Development](#local-development)
+    - [Deployment](#deployment)
+  - [Smart Contracts](#smart-contracts)
+    - [core](#core)
+    - [periphery](#periphery)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Documentation](#documentation)
+  - [Contact](#contact)
 
 ## Installation
 
@@ -92,27 +96,27 @@ Make sure to customize the deployment script (`deploy/*.ts`) with any additional
 
 ## Smart Contracts
 
-여기에 core/periphery/ 등의 구분 나누어서 정리할 필요가 있음. ( depolyed address 는 체인별로 나중에 추가 )
+<!-- 여기에 core/periphery/ 등의 구분 나누어서 정리할 필요가 있음. ( depolyed address 는 체인별로 나중에 추가 ) -->
 
 ### core
 
-| Contract Name          | Description                           | Source File                    | 
-| ---------------------- | ------------------------------------- | ------------------------------ |
-| OracleProvider         | A contract that provides Oracle functionality using Chainlink feeds.| [Link to OracleProvider](contracts/core/OracleProvider.sol) |
-| KeeperFeePayer         | A contract that pays keeper fees using a Uniswap router. | [Link to KeeperFeePayer](contracts/core/KeeperFeePayer.sol) |
-| ChromaticLiquidator    | A contract that handles the liquidation and claiming of positions in Chromatic markets. | [Link to ChromaticLiquidator](contracts/core/ChromaticLiquidator.sol) |
-| ChromaticVault         | A contract that provides functionality for managing positions, liquidity, and fees in Chromatic markets. | [Link to ChromaticVault](contracts/core/ChromaticVault.sol) |
-| ChromaticMarketFactory | A contract for managing the creation and registration of Chromatic markets. | [Link to ChromaticMarketFactory](contracts/core/ChromaticMarketFactory.sol) |
-| ChromaticMarket        | A contract that represents a Chromatic market, combining trade and liquidity functionalities. | [Link to ChromaticMarket](contracts/core/ChromaticMarket.sol) |
-| CLBToken               | A contract that represents Liquidity Bin tokens. | [Link to CLBToken](contracts/core/CLBToken.sol) |
+| Contract Name                                                         | Description                                                                                              |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [`OracleProvider`](contracts/core/OracleProvider.sol)                 | A contract that provides Oracle functionality using Chainlink feeds.                                     |
+| [`KeeperFeePayer`](contracts/core/KeeperFeePayer.sol)                 | A contract that pays keeper fees using a Uniswap router.                                                 |
+| [`ChromaticLiquidator`](contracts/core/ChromaticLiquidator.sol)       | A contract that handles the liquidation and claiming of positions in Chromatic markets.                  |
+| [`ChromaticVault`](contracts/core/ChromaticVault.sol)                 | A contract that provides functionality for managing positions, liquidity, and fees in Chromatic markets. |
+| [`ChromaticMarketFactory`](contracts/core/ChromaticMarketFactory.sol) | A contract for managing the creation and registration of Chromatic markets.                              |
+| [`ChromaticMarket`](contracts/core/ChromaticMarket.sol)               | A contract that represents a Chromatic market, combining trade and liquidity functionalities.            |
+| [`CLBToken`](contracts/core/CLBToken.sol)                             | A contract that represents Liquidity Bin tokens.                                                         |
 
-### peripery
+### periphery
 
-| Contract Name          | Description                           | Source File                    | 
-| ---------------------- | ------------------------------------- | ------------------------------ |
-| ChromaticRouter        | A contract that facilitates liquidity provision and trading on Chromatic. | [Link to ChromaticRouter](contracts/core/ChromaticRouter.sol) |
-| AccountFactory         | A contract for creating and managing user accounts. | [Link to AccountFactory](contracts/core/AccountFactory.sol) |
-| Account                | A contract manages user accounts and positions. | [Link to Account](contracts/core/Account.sol) |
+| Contract Name                                                | Description                                                               |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| [`ChromaticRouter`](contracts/periphery/ChromaticRouter.sol) | A contract that facilitates liquidity provision and trading on Chromatic. |
+| [`AccountFactory`](contracts/periphery/AccountFactory.sol)   | A contract for creating and managing user accounts.                       |
+| [`Account`](contracts/periphery/Account.sol)                 | A contract manages user accounts and positions.                           |
 
 ## Contributing
 
@@ -124,7 +128,7 @@ Make sure to customize the deployment script (`deploy/*.ts`) with any additional
 
 ## Documentation
 
-Official documentation for Chromatic Protocol can be found [here](https://docs.chromatic.finance).
+Official documentation for Chromatic Protocol can be found [here](https://chromatic-protocol.github.io/docs-preview).
 
 ## Contact
 
