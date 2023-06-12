@@ -31,4 +31,4 @@ package-build/
 deployments
 
 # generated docs
-docs/
+docs/out

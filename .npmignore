@@ -37,6 +37,6 @@ deployments
 lib/
 out/
 
-# generated docs
+# docs
 docs/
 

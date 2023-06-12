@@ -98,7 +98,7 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
       - run: |
           yarn docs
-          cp -r docs/* docs-repo/docs/contracts/reference/
+          cp -r docs/out/* docs-repo/docs/contracts/reference/
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
         with:
