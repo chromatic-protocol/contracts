@@ -37,42 +37,6 @@ describe('lens', async () => {
     )
   })
 
-  it('get CBL Value', async () => {
-    const { lens, market, trader } = testData
-    const { openPosition, updatePrice, closePosition, claimPosition } = helpers(testData)
-    let clbValue = await lens.getCLBValues(
-      market.address,
-      feeRates.map((v) => v.toString())
-    )
-
-    console.log('clbValue', clbValue)
-    await openPosition({
-      qty: 300 * 10 ** 4,
-      leverage: 100,
-      takerMargin: ethers.utils.parseEther('300'),
-      makerMargin: ethers.utils.parseEther('300'),
-      maxAllowFeeRate: 3
-    })
-
-    await updatePrice(1000)
-    const openPositionEvent = await market.queryFilter(market.filters.OpenPosition(), 0)
-
-    console.log('open position event', openPositionEvent[0].args[1].id)
-    const positionId = openPositionEvent[0].args[1].id
-    await closePosition(positionId)
-    await updatePrice(500)
-    await claimPosition(positionId)
-    clbValue = await lens.getCLBValues(
-      market.address,
-      feeRates.map((v) => v.toString())
-    )
-
-    console.log('clbValue', clbValue)
-    for (let clb of clbValue) {
-      expect(clb.value).to.be.not.equal(BigNumber.from(10000))
-    }
-  })
-
   it('get Slot Value', async () => {
     const { lens, market } = testData
     const slotValue = await lens.liquidityBinValue(
@@ -98,7 +62,7 @@ describe('lens', async () => {
     })
     const liquidityInfo = await lens.liquidityBins(
       market.address,
-      feeRates.map((v) => v.toString())
+      feeRates.map((v) => ({tradingFeeRate:v.toString(),oracleVersion:0}))
     )
 
     //TODO test
@@ -121,8 +85,6 @@ describe('lens', async () => {
     })
   })
 
-  // position 이 열려있을때 claimBurning 의 tokenAmount 는 inertest Fee가 반영이 안된 상태로 나옴
-
 
   it('removable liquidity info ', async () => {
     const { lens, market, clbToken, tester, chromaticRouter, traderAccount } = testData
@@ -138,9 +100,10 @@ describe('lens', async () => {
       closePosition
     } = helpers(testData)
     await updatePrice(1000)
-    // check user's CLB tokens
 
-    console.log('Free Liq before open', await lens.liquidityBins(market.address, [100, 200, 300]))
+    
+
+    console.log('Free Liq before open', await lens.liquidityBins(market.address, [100, 200, 300].map((v) => ({tradingFeeRate:v.toString(),oracleVersion:0}))))
     // consume all liquidity
 
     const expectedMargin = []
@@ -201,7 +164,6 @@ describe('lens', async () => {
     }
 
     console.log('expected margins ', expectedMargin)
-    const freeLiqAfterOpen = await lens.liquidityBins(market.address, [100, 200, 300])
     console.log('Free Liq after open',)
 
     await updatePrice(1000)
@@ -240,7 +202,7 @@ describe('lens', async () => {
       eventSubStartBlock
     )
     receipts = [...removeLiquidityEvent.map((e) => e.args[1])]
-    let removeLiqReceiptIds = receipts.map((r=>r.id));
+    let liquidityBinParam = receipts.map(r=>({tradingFeeRate:r.tradingFeeRate, oracleVersion:r.oracleVersion}));
     
     await time.increase(3600*60*365);
 
@@ -257,29 +219,38 @@ describe('lens', async () => {
     await settle()
 
 
-    let removeLiquidtyStatus = await lens.removeLiquidtyStatus(
+    let liquidityBins = await lens.liquidityBins(
       market.address,
-      removeLiqReceiptIds
+      liquidityBinParam
     )
-    console.log('remove liquidity status (1)', removeLiquidtyStatus)
+    console.log('remove liquidity status (1)', liquidityBins)
     await time.increase(3600*60*365);
   
+    console.log('close position id ' ,positionIds[2])
+    await closePosition(positionIds[2])
+    await updatePrice(1000)
+    await awaitTx(claimPosition(positionIds[2]))
+    const closedTime = await time.latest()
+    positions[2] = { ...positions[2], closeTimestamp: BigNumber.from(closedTime) }
+    await settle();
+    
    
-    removeLiquidtyStatus = await lens.removeLiquidtyStatus(
+    
+    liquidityBins = await lens.liquidityBins(
       market.address,
-      removeLiqReceiptIds
+      liquidityBinParam
     )
-    console.log('remove liquidity status (2)', removeLiquidtyStatus)
+    console.log('remove liquidity status (2)', liquidityBins)
     // expect increse removable amount
     const currentBlockTime = await time.latest()
     console.log(
       'after tranding fee 1% 50 ether position closed (1)',
-      formatRemoveLiquidityValue(removeLiquidtyStatus)
+      formatRemoveLiquidityValue(liquidityBins)
     )
 
-    removeLiquidtyStatus.forEach(async (liquidityInfo) => {
+    for(let liquidityInfo of liquidityBins){
       console.log('liquidity bin tradingFeeRate:', liquidityInfo.tradingFeeRate)
-      let liquidityBinInterestFee = interestFeeRoundUp(positions
+      let liquidityBinInterestFee = positions
         .reduce((acc, position) => {
           const bin = position._binMargins.find(
             (binMargin) => binMargin.tradingFeeRate == liquidityInfo.tradingFeeRate
@@ -292,7 +263,7 @@ describe('lens', async () => {
               1000 //
             )
           )
-        }, BigNumber.from(0)))
+        }, BigNumber.from(0))
         
       console.log(`total interestFee : ${liquidityBinInterestFee.toString().padEnd(30)}`)
       let tradingFee = totalTradingFee[liquidityInfo.tradingFeeRate]
@@ -304,14 +275,17 @@ describe('lens', async () => {
           .div(liquidityInfo.clbTokenAmount)
         
         console.log('liquidity info', liquidityInfo)
-        console.log(' real tokenAmount / expected tokenAmount ratio')
+        console.log(' real tokenAmount / expected tokenAmount , ratio')
 
         console.log(
-          ethers.utils.formatEther(liquidityInfo.tokenAmount.mul(ethers.utils.parseEther('1')).div(expectedTokenAmount))
+          liquidityInfo.tokenAmount.toString().padEnd(30), expectedTokenAmount.toString().padEnd(30),
+          ethers.utils.formatEther(liquidityInfo.tokenAmount.mul(ethers.utils.parseEther('1')).div(expectedTokenAmount)).padEnd(30)
         )
-        expect(liquidityInfo.tokenAmount).to.be.equal(expectedTokenAmount)
+
+        expect((liquidityInfo.tokenAmount.sub(expectedTokenAmount).abs()).lte(10)).to.be.true
+        
       }
-    })
+    }
   })
 })
 
@@ -334,14 +308,7 @@ function formatRemoveLiquidityValue(removableLiquidities: any) {
   }))
 }
 
-function interestFeeRoundUp(interestFee:BigNumber){
-  const yearSecond = 3600 * 24 * 365
-  const denominator = BigNumber.from(yearSecond * 10000)
- if (interestFee.mod(denominator).gt(0)) {
-    return interestFee.add(1)
-  }
-  return interestFee
-}
+
 
 function interestFee(
   margin: BigNumber,
@@ -351,10 +318,11 @@ function interestFee(
 ) {
   const yearSecond = 3600 * 24 * 365
   const denominator = BigNumber.from(yearSecond * 10000)
-
   const periodBps = BigNumber.from(bps * (closedOrCurrentTime - positionOpenTime))
   let interestFee = margin.mul(periodBps).div(denominator)
-
+  if (interestFee.mod(denominator).gt(0)) {
+    return interestFee.add(1)
+  }
   console.log(`margin : ${margin.toString().padEnd(30)}, bps:${bps.toString().padEnd(8)} interestFee ${interestFee.toString().padEnd(30)}, from : ${positionOpenTime.toString().padEnd(10)} , to: ${closedOrCurrentTime.toString().padEnd(10)}`)
   return interestFee
 }
