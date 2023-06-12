@@ -17,6 +17,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     "ChromaticMarketFactory"
   )
 
+  const { address: lensAddress } = await deploy("ChromaticLens", {
+    from: deployer,
+  })
+  console.log(chalk.yellow(`✨ ChromaticLens: ${lensAddress}`))
+
 
   const { address: accountFactoryAddress } = await deploy("AccountFactory", {
     from: deployer,
@@ -30,6 +35,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
   })
   console.log(chalk.yellow("✨ Initialize ChromaticRouter"))
+
+
+
 }
 
 export default func

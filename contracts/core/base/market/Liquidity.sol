@@ -174,9 +174,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
-    function getBinLiquidity(
-        int16  tradingFeeRate
-    ) external view override returns (uint256 amount) {
+    function getBinLiquidity(int16 tradingFeeRate) external view override returns (uint256 amount) {
         amount = liquidityPool.getBinLiquidity(tradingFeeRate);
     }
 
@@ -193,9 +191,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 
-    function getBinValue(
-        int16 tradingFeeRate
-    ) external view override returns (uint256 value) {
+    function getBinValue(int16 tradingFeeRate) external view override returns (uint256 value) {
         value = liquidityPool.binValue(tradingFeeRate, newLpContext());
     }
 
@@ -286,8 +282,9 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     }
 
     function getClaimBurning(
-        LpReceipt memory receipt
-    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return liquidityPool.getClaimBurning(receipt.tradingFeeRate, receipt.oracleVersion);
+        int16 tradingFeeRate,
+        uint256 oracleVersion
+    ) external view override returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        return liquidityPool.getClaimBurning(tradingFeeRate, oracleVersion);
     }
 }
