@@ -7,7 +7,7 @@ import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-import "hardhat/console.sol";
+
 /**
  * @title BinLiquidity
  * @notice Represents the liquidity information within an LiquidityBin.
@@ -117,16 +117,6 @@ library BinLiquidityLib {
             binValue,
             totalSupply
         );
-
-        //TODO remove log block =====
-        if(clbTokenId == 100 ||clbTokenId == 200 ||clbTokenId == 300){
-            console.log("[BinLiquidity] clbTokenId",clbTokenId);
-            console.log("[BinLiquidity] freeLiquidity pendingDeposit", freeLiquidity,pendingDeposit);
-            console.log("[BinLiquidity] binValue totalSupply", binValue,totalSupply);
-            console.log("[BinLiquidity] burningAmount pendingWithdrawal", burningAmount,pendingWithdrawal);
-            console.log("[BinLiquidity] block.timestamp", block.timestamp);
-        }
-        //TODO remove log block ======
 
         if (mintingAmount > burningAmount) {
             clbToken.mint(ctx.market, clbTokenId, mintingAmount - burningAmount, bytes(""));

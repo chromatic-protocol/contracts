@@ -12,7 +12,7 @@ import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
-import {IMarketLiquidate} from '@chromatic/core/interfaces/market/IMarketLiquidate.sol';
+import {IMarketLiquidate} from "@chromatic/core/interfaces/market/IMarketLiquidate.sol";
 
 /**
  * @title Trade
