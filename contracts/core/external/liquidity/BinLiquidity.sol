@@ -60,7 +60,7 @@ library BinLiquidityLib {
     using DoubleEndedQueue for DoubleEndedQueue.Bytes32Deque;
 
     /// @dev Minimum amount constant to prevent division by zero.
-    uint256 private constant MIN_AMOUNT = 1;
+    uint256 private constant MIN_AMOUNT = 1000;
 
     /**
      * @notice Settles the pending liquidity within the BinLiquidity.
