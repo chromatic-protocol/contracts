@@ -10,7 +10,6 @@ import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.so
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
-
 /**
  * @title LiquidityBin
  * @notice Structure representing a liquidity bin
@@ -44,6 +43,7 @@ library LiquidityBinLib {
      * @param self The LiquidityBin storage.
      * @param ctx The LpContext data struct.
      */
+    //TODO remove callerName param
     modifier _settle(LiquidityBin storage self, LpContext memory ctx) {
         self.settle(ctx);
         _;
@@ -126,6 +126,7 @@ library LiquidityBinLib {
         PositionParam memory param,
         int256 takerPnl
     ) internal _settle(self, ctx) {
+        
         if (param.closeVersion == 0) {
             // called when liquidate
             self._position.onClosePosition(ctx, param);
@@ -177,8 +178,12 @@ library LiquidityBinLib {
      * @param ctx The LpContext memory.
      * @return uint256 The value of the bin.
      */
-    function value(LiquidityBin storage self, LpContext memory ctx) internal view returns (uint256) {
+    function value(
+        LiquidityBin storage self,
+        LpContext memory ctx
+    ) internal view returns (uint256) {
         int256 unrealizedPnl = self._position.unrealizedPnl(ctx);
+
         uint256 absPnl = unrealizedPnl.abs();
 
         uint256 _liquidity = self.liquidity();
@@ -223,6 +228,7 @@ library LiquidityBinLib {
         uint256 amount,
         uint256 oracleVersion
     ) internal _settle(self, ctx) returns (uint256) {
+        
         return self._liquidity.onClaimLiquidity(amount, oracleVersion);
     }
 
@@ -306,5 +312,12 @@ library LiquidityBinLib {
                 self.value(ctx),
                 ctx.clbToken.totalSupply(self.clbTokenId)
             );
+    }
+
+    function getClaimBurning(
+        LiquidityBin storage self,
+        uint256 oracleVersion
+    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        return self._liquidity.getClaimBurning(oracleVersion);
     }
 }

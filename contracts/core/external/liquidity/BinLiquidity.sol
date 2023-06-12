@@ -111,7 +111,6 @@ library BinLiquidityLib {
             binValue,
             totalSupply
         );
-
         (uint256 burningAmount, uint256 pendingWithdrawal) = _settleBurning(
             self,
             freeLiquidity + pendingDeposit,
@@ -366,6 +365,7 @@ library BinLiquidityLib {
                     binValue,
                     totalSupply
                 );
+                
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingCLBTokenAmount;
                 } else {
@@ -376,7 +376,6 @@ library BinLiquidityLib {
 
                 _cb.burningAmount += _burningAmount;
                 _cb.tokenAmount += _pendingWithdrawal;
-
                 burningAmount += _burningAmount;
                 pendingWithdrawal += _pendingWithdrawal;
                 freeLiquidity -= _pendingWithdrawal;
@@ -384,5 +383,15 @@ library BinLiquidityLib {
         }
 
         self.total -= pendingWithdrawal;
+    }
+
+    function getClaimBurning(
+        BinLiquidity storage self,
+        uint256 oracleVersion
+    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
+        clbTokenAmount = _cb.clbTokenAmount;
+        burningAmount = _cb.burningAmount;
+        tokenAmount = _cb.tokenAmount;
     }
 }

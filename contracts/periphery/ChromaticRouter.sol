@@ -357,55 +357,5 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         return result;
     }
 
-    /**
-     * @inheritdoc IChromaticRouter
-     */
-    function calculateCLBTokenValueBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata clbTokenAmounts
-    ) external view override returns (uint256[] memory results) {
-        require(tradingFeeRates.length == clbTokenAmounts.length, "TradeRouter: invalid arguments");
-        results = new uint256[](tradingFeeRates.length);
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            results[i] = IChromaticMarket(market).calculateCLBTokenValue(
-                tradingFeeRates[i],
-                clbTokenAmounts[i]
-            );
-        }
-    }
-
-    /**
-     * @inheritdoc IChromaticRouter
-     */
-    function calculateCLBTokenMintingBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata amounts
-    ) external view override returns (uint256[] memory results) {
-        require(tradingFeeRates.length == amounts.length, "TradeRouter: invalid arguments");
-        results = new uint256[](tradingFeeRates.length);
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            results[i] = IChromaticMarket(market).calculateCLBTokenMinting(
-                tradingFeeRates[i],
-                amounts[i]
-            );
-        }
-    }
-
-    /**
-     * @inheritdoc IChromaticRouter
-     */
-    function totalSupplies(
-        address market,
-        int16[] calldata tradingFeeRates
-    ) external view override returns (uint256[] memory supplies) {
-        supplies = new uint256[](tradingFeeRates.length);
-
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            supplies[i] = ICLBToken(IChromaticMarket(market).clbToken()).totalSupply(
-                CLBTokenLib.encodeId(tradingFeeRates[0])
-            );
-        }
-    }
+    
 }

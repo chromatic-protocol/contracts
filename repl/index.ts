@@ -78,7 +78,7 @@ extendEnvironment((hre) => {
 
     const { address: oracleProviderAddress } = await deployments.get('OracleProviderMock')
     const oracleProvider = OracleProviderMock__factory.connect(oracleProviderAddress, deployer)
-    await oracleProvider.increaseVersion(ethers.utils.parseUnits(price.toString(), 8))
+    await oracleProvider.increaseVersion(ethers.utils.parseUnits(price.toString(), 18))
 
     const { address: marketFactoryAddress } = await deployments.get('ChromaticMarketFactory')
     const marketFactory = IChromaticMarketFactory__factory.connect(marketFactoryAddress, deployer)

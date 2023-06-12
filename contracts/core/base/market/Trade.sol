@@ -209,7 +209,6 @@ abstract contract Trade is MarketBase {
         );
         // Calculate the realized profit or loss by subtracting the interest from the total pnl
         int256 realizedPnl = pnl - interest.toInt256();
-
         uint256 absRealizedPnl = realizedPnl.abs();
         if (realizedPnl > 0) {
             if (absRealizedPnl > makerMargin) {

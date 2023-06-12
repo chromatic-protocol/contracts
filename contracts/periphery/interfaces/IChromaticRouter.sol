@@ -143,41 +143,4 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      * @param receiptIds An array of LP receipt IDs to withdraw liquidity from.
      */
     function withdrawLiquidityBatch(address market, uint256[] calldata receiptIds) external;
-
-    /**
-     * @notice Calculates the value of CLB tokens for multiple liquidity amounts in a batch.
-     * @param market The address of the ChromaticMarket contract.
-     * @param tradingFeeRates An array of trading fee rates for each liquidity provider.
-     * @param clbTokenAmounts An array of CLB token amounts for each provider.
-     * @return results An array of CLB token values.
-     */
-    function calculateCLBTokenValueBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata clbTokenAmounts
-    ) external view returns (uint256[] memory results);
-
-    /**
-     * @notice Calculates the amount of CLB tokens to mint for multiple trading amounts in a batch.
-     * @param market The address of the ChromaticMarket contract.
-     * @param tradingFeeRates An array of trading fee rates for each liquidity provider.
-     * @param amounts An array of trading amounts for each provider.
-     * @return results An array of CLB token minting amounts.
-     */
-    function calculateCLBTokenMintingBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata amounts
-    ) external view returns (uint256[] memory results);
-
-    /**
-     * @notice Retrieves the total supplies of CLB tokens for multiple trading fee rates in a batch.
-     * @param market The address of the ChromaticMarket contract.
-     * @param tradingFeeRates An array of trading fee rates to retrieve total supplies for.
-     * @return supplies An array of total CLB token supplies.
-     */
-    function totalSupplies(
-        address market,
-        int16[] calldata tradingFeeRates
-    ) external view returns (uint256[] memory supplies);
 }

@@ -198,8 +198,7 @@ describe('position & account test', async function () {
         const y = fee.annualRateBPS.mul(period)
         const denominator = BigNumber.from(yearSecond * 10000)
         let calculatedInterestFee = x.mul(y).div(denominator)
-        // mulDiv Round.Up
-        // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/Math.sol#LL139C1-L139C1
+        
         if (x.mul(y).mod(denominator).gt(0)) {
           calculatedInterestFee = calculatedInterestFee.add(1)
         }
