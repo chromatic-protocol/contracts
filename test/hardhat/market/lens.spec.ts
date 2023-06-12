@@ -229,11 +229,6 @@ describe('lens', async () => {
 
 
     let eventSubStartBlock = await time.latestBlock();
-
-
-    // next oracle round
-
-  
     for(let i =0; i< 3; i++){
       await awaitTx(removeLiquidity(ethers.utils.parseEther('100'), 100 * (i+1)))
       await updatePrice(1000)
@@ -268,23 +263,6 @@ describe('lens', async () => {
     )
     console.log('remove liquidity status (1)', removableLiquidity)
     await time.increase(3600*60*365);
-    // for (let i = 2; i < 3; i++) {
-    //   console.log('close position id : ', positionIds[i])
-    //   await closePosition(positionIds[i])
-    // }
-    // await updatePrice(1000)
-    // for (let i = 2; i < 3; i++) {
-    //   await awaitTx(claimPosition(positionIds[i]))
-    //   const closedTime = await time.latest()
-    //   positions[i] = { ...positions[i], closeTimestamp: BigNumber.from(closedTime) }
-    // }
-    // await settle()
- 
-
-    // const removeLiquidityEvent = await market.queryFilter(
-    //   market.filters.RemoveLiquidity(),
-    //   eventSubStartBlock
-    // )
   
    
     removableLiquidity = await lens.removableLiquidity(
@@ -298,8 +276,6 @@ describe('lens', async () => {
       'after tranding fee 1% 50 ether position closed (1)',
       formatRemoveLiquidityValue(removableLiquidity)
     )
-
-    const initialCLBTokenAmount = initialLiq;
 
     removableLiquidity.forEach(async (liquidityInfo) => {
       console.log('liquidity bin tradingFeeRate:', liquidityInfo.tradingFeeRate)
@@ -320,8 +296,6 @@ describe('lens', async () => {
         
       console.log(`total interestFee : ${liquidityBinInterestFee.toString().padEnd(30)}`)
       let tradingFee = totalTradingFee[liquidityInfo.tradingFeeRate]
-      const { tradingFeeRate : slotTradingFee  ,  value : slotValue } = (await lens.liquidityBinValue(market.address,[liquidityInfo.tradingFeeRate]))[0]
-    
       if (!liquidityInfo.tokenAmount.isZero()) {
         const expectedTokenAmount = (initialLiq
           .add(liquidityBinInterestFee)
@@ -336,41 +310,10 @@ describe('lens', async () => {
           ethers.utils.formatEther(liquidityInfo.tokenAmount.mul(ethers.utils.parseEther('1')).div(expectedTokenAmount))
         )
         expect(liquidityInfo.tokenAmount).to.be.equal(expectedTokenAmount)
-        console.log(
-          'expect tokenAmount , liquidity tokenAmount, token tokenAmount',
-          expectedTokenAmount,
-          liquidityInfo.tokenAmount
-        )
-        console.log(`expected interest feeRate:${liquidityInfo.tradingFeeRate}, interest : ${liquidityBinInterestFee.toString().padEnd(30)}`)
-        console.log('liquidityBinInterestFee',liquidityInfo.tradingFeeRate,liquidityBinInterestFee)
-        console.log(
-          '100% burn expected settlement amount',
-          initialLiq
-            .add(tradingFee)
-            .add(liquidityBinInterestFee)
-            // .mul(liquidityInfo.burningAmount)
-            .mul(BigNumber.from('100000000000000000000'))
-            .div(initialCLBTokenAmount).toString().padEnd(30),
-            ' remained slot value : ', slotValue.toString().padEnd(30),
-            ' removed value ', liquidityInfo.tokenAmount.toString().padEnd(30),
-        )
       }
     })
   })
 })
-
-
-// add 100 Liq
-// open position 100
-// remove 100 Liq
-// close position 50
-// interest fee rate 1000% 
-// how to calc interest fee for 50?
-// clbToken : 50 , burning 50 , tokenAmount : 50?
-
-
-
-
 
 const liquidityBinFor = (volume: BigNumber) => (feeRate: BigNumber) => (amount: BigNumber) => {
   if (amount.gt(volume)) {
@@ -412,9 +355,6 @@ function interestFee(
   const periodBps = BigNumber.from(bps * (closedOrCurrentTime - positionOpenTime))
   let interestFee = margin.mul(periodBps).div(denominator)
 
-  // if (margin.mul(periodBps).mod(denominator).gt(0)) {
-  //   interestFee = interestFee.add(1)
-  // }
   console.log(`margin : ${margin.toString().padEnd(30)}, bps:${bps.toString().padEnd(8)} interestFee ${interestFee.toString().padEnd(30)}, from : ${positionOpenTime.toString().padEnd(10)} , to: ${closedOrCurrentTime.toString().padEnd(10)}`)
   return interestFee
 }
