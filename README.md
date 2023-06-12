@@ -26,49 +26,57 @@ In summary, Chromatic emerges as a trailblazer in the realm of DeFi, leveraging 
 
 ## Installation
 
+Install Foundry using the instructions
+[here](https://book.getfoundry.sh/getting-started/installation.html) or via
+these commands:
+
+```
+$ curl -L https://foundry.paradigm.xyz | bash
+$ foundryup
+```
+
 To install the necessary dependencies, run the following command:
 
 ```shell
-npm install
+yarn install
 ```
 
 ## Usage
 
-To get the usage help message, run the following command:
-
-```shell
-npx hardhat help
-```
-
-
 ### Compilation
 
-To compile the smart contracts, run the following command:
+To build the smart contracts, run the following command:
 
 ```shell
-npm complie
+yarn build
 ```
 
 ### Testing
 
+To run the forge unit tests for the smart contracts, use the following command:
+
+```shell
+yarn test
+```
+
 To run the tests for the smart contracts, use the following command:
 
 ```shell
-npx hardhat test
+yarn hardhat test
 ```
 
 You can also generate a gas report during testing by running the following command:
 
 ```shell
-REPORT_GAS=true npx hardhat test
+REPORT_GAS=true yarn hardhat test
 ```
 
 ### Local Development
 
-To run a local Hardhat node for development and testing purposes, use the following command:
+To run a local node for development and testing purposes, use the following command:
 
 ```shell
-npx hardhat node
+yarn chain
 ```
 
 ### Deployment
@@ -76,22 +84,35 @@ npx hardhat node
 To deploy the smart contracts to the desired network, update the network configuration in the hardhat.config.js file. Then, run the deployment script:
 
 ```shell
-npx hardhat run scripts/deploy.ts
+yarn deploy
 ```
 
-Make sure to customize the deployment script (`deploy.ts`) with any additional deployment logic or parameters specific to your project.
+Make sure to customize the deployment script (`deploy/*.ts`) with any additional deployment logic or parameters specific to your project.
 
 
 ## Smart Contracts
 
-여기에 core/peripheral/ 등의 구분 나누어서 정리할 필요가 있음. ( depolyed address 는 체인별로 나중에 추가 )
+여기에 core/periphery/ 등의 구분 나누어서 정리할 필요가 있음. ( depolyed address 는 체인별로 나중에 추가 )
 
-| Contract Name    | Description                       | Source File                    | 
-| ---------------- | --------------------------------- | ------------------------------ |
-| Contract 1       | Description of Contract 1         | [Link to Contract 1](contract1.sol) |
-| Contract 2       | Description of Contract 2         | [Link to Contract 2](contract2.sol) |
-| ...              | ...                               | ...                            |
+### core
 
+| Contract Name          | Description                           | Source File                    | 
+| ---------------------- | ------------------------------------- | ------------------------------ |
+| OracleProvider         | A contract that provides Oracle functionality using Chainlink feeds.| [Link to OracleProvider](contracts/core/OracleProvider.sol) |
+| KeeperFeePayer         | A contract that pays keeper fees using a Uniswap router. | [Link to KeeperFeePayer](contracts/core/KeeperFeePayer.sol) |
+| ChromaticLiquidator    | A contract that handles the liquidation and claiming of positions in Chromatic markets. | [Link to ChromaticLiquidator](contracts/core/ChromaticLiquidator.sol) |
+| ChromaticVault         | A contract that provides functionality for managing positions, liquidity, and fees in Chromatic markets. | [Link to ChromaticVault](contracts/core/ChromaticVault.sol) |
+| ChromaticMarketFactory | A contract for managing the creation and registration of Chromatic markets. | [Link to ChromaticMarketFactory](contracts/core/ChromaticMarketFactory.sol) |
+| ChromaticMarket        | A contract that represents a Chromatic market, combining trade and liquidity functionalities. | [Link to ChromaticMarket](contracts/core/ChromaticMarket.sol) |
+| CLBToken               | A contract that represents Liquidity Bin tokens. | [Link to CLBToken](contracts/core/CLBToken.sol) |
+
+### peripery
+
+| Contract Name          | Description                           | Source File                    | 
+| ---------------------- | ------------------------------------- | ------------------------------ |
+| ChromaticRouter        | A contract that facilitates liquidity provision and trading on Chromatic. | [Link to ChromaticRouter](contracts/core/ChromaticRouter.sol) |
+| AccountFactory         | A contract for creating and managing user accounts. | [Link to AccountFactory](contracts/core/AccountFactory.sol) |
+| Account                | A contract manages user accounts and positions. | [Link to Account](contracts/core/Account.sol) |
 
 ## Contributing
 
