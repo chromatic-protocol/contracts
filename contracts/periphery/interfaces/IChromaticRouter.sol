@@ -11,6 +11,13 @@ import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
  */
 interface IChromaticRouter is IChromaticLiquidityCallback {
     /**
+     * @dev Emitted when a new account is created.
+     * @param account The address of the created account.
+     * @param owner The address of the owner of the created account.
+     */
+    event AccountCreated(address indexed account, address indexed owner);
+
+    /**
      * @dev Opens a new position in a ChromaticMarket contract.
      * @param market The address of the ChromaticMarket contract.
      * @param qty The quantity of the position.
@@ -86,6 +93,13 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      * @param receiptId The ID of the LP receipt.
      */
     function withdrawLiquidity(address market, uint256 receiptId) external;
+
+    /**
+     * @notice Creates a new user account.
+     * @dev Only one account can be created per user.
+     *      Emits an `AccountCreated` event upon successful creation.
+     */
+    function createAccount() external;
 
     /**
      * @notice Retrieves the account of the caller.

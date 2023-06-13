@@ -15,15 +15,15 @@ import {Position} from "@chromatic/core/libraries/Position.sol";
 import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 
 import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
+import {AccountFactory} from "@chromatic/periphery/base/AccountFactory.sol";
 import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
-import {AccountFactory} from "@chromatic/periphery/AccountFactory.sol";
 import {ChromaticAccount} from "@chromatic/periphery/ChromaticAccount.sol";
 
 /**
  * @title ChromaticRouter
  * @dev A router contract that facilitates liquidity provision and trading on Chromatic.
  */
-contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
+contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
     using SignedMath for int256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -63,18 +63,15 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         address provider;
     }
 
-    AccountFactory accountFactory;
     mapping(address => mapping(address => EnumerableSet.UintSet)) private receiptIds; // market => provider => receiptIds
 
     error NotExistLpReceipt();
 
     /**
      * @dev Initializes the ChromaticRouter contract.
-     * @param _accountFactory The address of the AccountFactory contract.
      * @param _marketFactory The address of the ChromaticMarketFactory contract.
      */
-    function initialize(AccountFactory _accountFactory, address _marketFactory) external onlyOwner {
-        accountFactory = _accountFactory;
+    constructor(address _marketFactory) onlyOwner AccountFactory(_marketFactory) {
         marketFactory = _marketFactory;
     }
 
@@ -266,19 +263,12 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
     }
 
     /**
-     * @inheritdoc IChromaticRouter
-     */
-    function getAccount() external view override returns (address) {
-        return accountFactory.getAccount(msg.sender);
-    }
-
-    /**
      * @dev Retrieves the account of the specified owner.
      * @param owner The owner of the account.
      * @return The account address.
      */
     function _getAccount(address owner) internal view returns (ChromaticAccount) {
-        return ChromaticAccount(accountFactory.getAccount(owner));
+        return ChromaticAccount(getAccount(owner));
     }
 
     /**
@@ -356,6 +346,4 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
         }
         return result;
     }
-
-    
 }

@@ -115,7 +115,6 @@ const config: HardhatUserConfig = {
       'ChromaticMarketFactory',
       'ChromaticVault',
       'ChromaticAccount',
-      'AccountFactory',
       'ChromaticRouter',
       'CLBToken',
       'ChromaticLens',

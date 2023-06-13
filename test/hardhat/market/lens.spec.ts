@@ -1,10 +1,10 @@
-import { ethers } from 'hardhat'
-import { prepareMarketTest, helpers } from './testHelper'
-import { BigNumber } from 'ethers'
-import { expect } from 'chai'
-import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { LpReceiptStructOutput } from '@chromatic/typechain-types/contracts/core/ChromaticMarket'
+import { time } from '@nomicfoundation/hardhat-network-helpers'
+import { expect } from 'chai'
+import { BigNumber } from 'ethers'
+import { ethers } from 'hardhat'
 import util from 'util'
+import { helpers, prepareMarketTest } from './testHelper'
 describe('lens', async () => {
   const initialLiq = ethers.utils.parseEther('100')
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
@@ -62,7 +62,7 @@ describe('lens', async () => {
     })
     const liquidityInfo = await lens.liquidityBins(
       market.address,
-      feeRates.map((v) => ({tradingFeeRate:v.toString(),oracleVersion:0}))
+      feeRates.map((v) => ({ tradingFeeRate: v.toString(), oracleVersion: 0 }))
     )
 
     //TODO test
@@ -76,15 +76,14 @@ describe('lens', async () => {
     ]
     const exepectedFreeLiquidities = [0, 0, 50]
 
-    liquidityInfo.forEach(({ freeVolume, liquidity }, i) => {
+    liquidityInfo.forEach(({ freeLiquidity, liquidity }, i) => {
       const expectedFreeLiquidity = ethers.utils
         .parseEther(exepectedFreeLiquidities[i].toString())
         .add(tradingFees[i])
-      expect(freeVolume).to.equal(expectedFreeLiquidity)
+      expect(freeLiquidity).to.equal(expectedFreeLiquidity)
       expect(liquidity).to.equal(amounts[i].add(tradingFees[i]))
     })
   })
-
 
   it('removable liquidity info ', async () => {
     const { lens, market, clbToken, tester, chromaticRouter, traderAccount } = testData
@@ -101,9 +100,13 @@ describe('lens', async () => {
     } = helpers(testData)
     await updatePrice(1000)
 
-    
-
-    console.log('Free Liq before open', await lens.liquidityBins(market.address, [100, 200, 300].map((v) => ({tradingFeeRate:v.toString(),oracleVersion:0}))))
+    console.log(
+      'Free Liq before open',
+      await lens.liquidityBins(
+        market.address,
+        [100, 200, 300].map((v) => ({ tradingFeeRate: v.toString(), oracleVersion: 0 }))
+      )
+    )
     // consume all liquidity
 
     const expectedMargin = []
@@ -113,12 +116,12 @@ describe('lens', async () => {
     const liquidity300 = liquidityBinFor(initialLiq)(BigNumber.from('300'))
 
     let margin100Slot = initialLiq
-    //TODO 
+    //TODO
     for (let i = 0; i < 3; i++) {
       const blockStart = await time.latestBlock()
       console.log('open position block number', blockStart)
       const makerMargin = ethers.utils.parseEther('100')
-      const takerMargin = makerMargin;
+      const takerMargin = makerMargin
       await openPosition({
         qty: 100 * 10 ** 4,
         leverage: 100,
@@ -128,7 +131,11 @@ describe('lens', async () => {
       })
 
       const openPositionEvent = await market.queryFilter(market.filters.OpenPosition(), blockStart)
-      console.log('position opened Event ', openPositionEvent.length, openPositionEvent.map(e=>e.args[1]))
+      console.log(
+        'position opened Event ',
+        openPositionEvent.length,
+        openPositionEvent.map((e) => e.args[1])
+      )
 
       const margin100 = liquidity100(makerMargin)
       let margin200 = BigNumber.from('0')
@@ -164,7 +171,7 @@ describe('lens', async () => {
     }
 
     console.log('expected margins ', expectedMargin)
-    console.log('Free Liq after open',)
+    console.log('Free Liq after open')
 
     await updatePrice(1000)
     const positionIds = await traderAccount.getPositionIds(market.address)
@@ -189,22 +196,24 @@ describe('lens', async () => {
     // Retrieve some liqudity
     console.log('remove liquidity from 100')
 
-
-    let eventSubStartBlock = await time.latestBlock();
-    for(let i =0; i< 3; i++){
-      await awaitTx(removeLiquidity(ethers.utils.parseEther('100'), 100 * (i+1)))
+    let eventSubStartBlock = await time.latestBlock()
+    for (let i = 0; i < 3; i++) {
+      await awaitTx(removeLiquidity(ethers.utils.parseEther('100'), 100 * (i + 1)))
       await updatePrice(1000)
       await settle()
     }
-       
+
     const removeLiquidityEvent = await market.queryFilter(
       market.filters.RemoveLiquidity(),
       eventSubStartBlock
     )
     receipts = [...removeLiquidityEvent.map((e) => e.args[1])]
-    let liquidityBinParam = receipts.map(r=>({tradingFeeRate:r.tradingFeeRate, oracleVersion:r.oracleVersion}));
-    
-    await time.increase(3600*60*365);
+    let liquidityBinParam = receipts.map((r) => ({
+      tradingFeeRate: r.tradingFeeRate,
+      oracleVersion: r.oracleVersion
+    }))
+
+    await time.increase(3600 * 60 * 365)
 
     for (let i = 0; i < 2; i++) {
       console.log('close position id : ', positionIds[i])
@@ -218,28 +227,19 @@ describe('lens', async () => {
     }
     await settle()
 
-
-    let liquidityBins = await lens.liquidityBins(
-      market.address,
-      liquidityBinParam
-    )
+    let liquidityBins = await lens.liquidityBins(market.address, liquidityBinParam)
     console.log('remove liquidity status (1)', liquidityBins)
-    await time.increase(3600*60*365);
-  
-    console.log('close position id ' ,positionIds[2])
+    await time.increase(3600 * 60 * 365)
+
+    console.log('close position id ', positionIds[2])
     await closePosition(positionIds[2])
     await updatePrice(1000)
     await awaitTx(claimPosition(positionIds[2]))
     const closedTime = await time.latest()
     positions[2] = { ...positions[2], closeTimestamp: BigNumber.from(closedTime) }
-    await settle();
-    
-   
-    
-    liquidityBins = await lens.liquidityBins(
-      market.address,
-      liquidityBinParam
-    )
+    await settle()
+
+    liquidityBins = await lens.liquidityBins(market.address, liquidityBinParam)
     console.log('remove liquidity status (2)', liquidityBins)
     // expect increse removable amount
     const currentBlockTime = await time.latest()
@@ -248,42 +248,45 @@ describe('lens', async () => {
       formatRemoveLiquidityValue(liquidityBins)
     )
 
-    for(let liquidityInfo of liquidityBins){
+    for (let liquidityInfo of liquidityBins) {
       console.log('liquidity bin tradingFeeRate:', liquidityInfo.tradingFeeRate)
-      let liquidityBinInterestFee = positions
-        .reduce((acc, position) => {
-          const bin = position._binMargins.find(
-            (binMargin) => binMargin.tradingFeeRate == liquidityInfo.tradingFeeRate
+      let liquidityBinInterestFee = positions.reduce((acc, position) => {
+        const bin = position._binMargins.find(
+          (binMargin) => binMargin.tradingFeeRate == liquidityInfo.tradingFeeRate
+        )
+        return acc.add(
+          interestFee(
+            bin?.amount || BigNumber.from(0),
+            position.closeTimestamp?.toNumber() || currentBlockTime,
+            position.openTimestamp.toNumber(),
+            1000 //
           )
-          return acc.add(
-            interestFee(
-              bin?.amount || BigNumber.from(0),
-              position.closeTimestamp?.toNumber() || currentBlockTime,
-              position.openTimestamp.toNumber(),
-              1000 //
-            )
-          )
-        }, BigNumber.from(0))
-        
+        )
+      }, BigNumber.from(0))
+
       console.log(`total interestFee : ${liquidityBinInterestFee.toString().padEnd(30)}`)
       let tradingFee = totalTradingFee[liquidityInfo.tradingFeeRate]
       if (!liquidityInfo.tokenAmount.isZero()) {
-        const expectedTokenAmount = (initialLiq
+        const expectedTokenAmount = initialLiq
           .add(liquidityBinInterestFee)
-          .add(tradingFee))
+          .add(tradingFee)
           .mul(liquidityInfo.burningAmount)
           .div(liquidityInfo.clbTokenAmount)
-        
+
         console.log('liquidity info', liquidityInfo)
         console.log(' real tokenAmount / expected tokenAmount , ratio')
 
         console.log(
-          liquidityInfo.tokenAmount.toString().padEnd(30), expectedTokenAmount.toString().padEnd(30),
-          ethers.utils.formatEther(liquidityInfo.tokenAmount.mul(ethers.utils.parseEther('1')).div(expectedTokenAmount)).padEnd(30)
+          liquidityInfo.tokenAmount.toString().padEnd(30),
+          expectedTokenAmount.toString().padEnd(30),
+          ethers.utils
+            .formatEther(
+              liquidityInfo.tokenAmount.mul(ethers.utils.parseEther('1')).div(expectedTokenAmount)
+            )
+            .padEnd(30)
         )
 
-        expect((liquidityInfo.tokenAmount.sub(expectedTokenAmount).abs()).lte(10)).to.be.true
-        
+        expect(liquidityInfo.tokenAmount.sub(expectedTokenAmount).abs().lte(10)).to.be.true
       }
     }
   })
@@ -308,8 +311,6 @@ function formatRemoveLiquidityValue(removableLiquidities: any) {
   }))
 }
 
-
-
 function interestFee(
   margin: BigNumber,
   closedOrCurrentTime: number,
@@ -323,6 +324,12 @@ function interestFee(
   if (interestFee.mod(denominator).gt(0)) {
     return interestFee.add(1)
   }
-  console.log(`margin : ${margin.toString().padEnd(30)}, bps:${bps.toString().padEnd(8)} interestFee ${interestFee.toString().padEnd(30)}, from : ${positionOpenTime.toString().padEnd(10)} , to: ${closedOrCurrentTime.toString().padEnd(10)}`)
+  console.log(
+    `margin : ${margin.toString().padEnd(30)}, bps:${bps
+      .toString()
+      .padEnd(8)} interestFee ${interestFee.toString().padEnd(30)}, from : ${positionOpenTime
+      .toString()
+      .padEnd(10)} , to: ${closedOrCurrentTime.toString().padEnd(10)}`
+  )
   return interestFee
 }

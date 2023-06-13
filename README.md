@@ -115,7 +115,6 @@ Make sure to customize the deployment script (`deploy/*.ts`) with any additional
 | Contract Name                                                  | Description                                                               |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | [`ChromaticRouter`](contracts/periphery/ChromaticRouter.sol)   | A contract that facilitates liquidity provision and trading on Chromatic. |
-| [`AccountFactory`](contracts/periphery/AccountFactory.sol)     | A contract for creating and managing user accounts.                       |
 | [`ChromaticAccount`](contracts/periphery/ChromaticAccount.sol) | A contract manages user accounts and positions.                           |
 
 ## Contributing

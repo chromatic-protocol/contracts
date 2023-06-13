@@ -3,9 +3,9 @@ import { BigNumber, ethers } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
 import { lazyFunction, lazyObject } from 'hardhat/plugins'
 import {
+  ChromaticLiquidatorMock__factory,
   IChromaticMarketFactory__factory,
-  OracleProviderMock__factory,
-  ChromaticLiquidatorMock__factory
+  OracleProviderMock__factory
 } from '../typechain-types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
@@ -35,7 +35,6 @@ extendEnvironment((hre) => {
 
     const { address: marketFactory } = await deployments.get('ChromaticMarketFactory')
     const { address: oracleProvider } = await deployments.get('OracleProviderMock')
-    const { address: accountFactory } = await deployments.get('AccountFactory')
     const { address: router } = await deployments.get('ChromaticRouter')
 
     // set first price
@@ -58,7 +57,6 @@ extendEnvironment((hre) => {
               : SWAP_ROUTER_02_ADDRESSES(echainId),
           marketFactory,
           oracleProvider,
-          accountFactory,
           router
         },
         ['alice', 'bob'].includes(s)
