@@ -3,18 +3,24 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {ChromaticAccount} from "./ChromaticAccount.sol";
 import {IChromaticAccount} from "./interfaces/IChromaticAccount.sol";
-import {IAccountFactory} from "./interfaces/IAccountFactory.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 /**
  * @title AccountFactory
  * @dev Contract for creating and managing user accounts.
  */
-contract AccountFactory is IAccountFactory {
+contract AccountFactory {
     ChromaticAccount private cloneBase;
     address private router;
     address private marketFactory;
     mapping(address => address) private accounts;
+
+    /**
+     * @dev Emitted when a new account is created.
+     * @param account The address of the created account.
+     * @param owner The address of the owner of the created account.
+     */
+    event AccountCreated(address indexed account, address indexed owner);
 
     /**
      * @dev Initializes the AccountFactory contract with the provided router and market factory addresses.
@@ -36,7 +42,7 @@ contract AccountFactory is IAccountFactory {
     }
 
     /**
-     * @inheritdoc IAccountFactory
+     * @notice Creates a new user account.
      * @dev Only one account can be created per user.
      *      Emits an `AccountCreated` event upon successful creation.
      */
@@ -52,14 +58,17 @@ contract AccountFactory is IAccountFactory {
     }
 
     /**
-     * @inheritdoc IAccountFactory
+     * @notice Retrieves the address of a user's account.
+     * @param accountAddress The address of the user's account.
+     * @return The address of the user's account.
      */
     function getAccount(address accountAddress) external view onlyRouter returns (address) {
         return accounts[accountAddress];
     }
 
     /**
-     * @inheritdoc IAccountFactory
+     * @notice Retrieves the address of the caller's account.
+     * @return The address of the caller's account.
      */
     function getAccount() external view returns (address) {
         return accounts[msg.sender];

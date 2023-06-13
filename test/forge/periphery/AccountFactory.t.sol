@@ -3,12 +3,12 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {AccountFactory} from "@chromatic/periphery/AccountFactory.sol";
-import {IAccountFactory} from "@chromatic/periphery/interfaces/IAccountFactory.sol";
 
-contract AccountFactoryMock is Test {
-    AccountFactory public accountFactory = new AccountFactory(address(this), address(0)); // router, marketFactory
-
-    event AccountCreated(address indexed, address indexed);
+contract AccountFactoryMock is Test, AccountFactory {
+    constructor()
+        public
+        AccountFactory(address(this), address(0)) // router, marketFactory
+    {}
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -24,21 +24,21 @@ contract AccountFactoryMock is Test {
         emit AccountCreated(address(0), alice);
 
         vm.prank(alice);
-        accountFactory.createAccount();
+        this.createAccount();
 
         vm.prank(alice);
-        emit log_named_address("Alice Account : ", accountFactory.getAccount());
+        emit log_named_address("Alice Account : ", this.getAccount());
     }
 
     function testGetAccount() public {
-        accountFactory.getAccount(alice);
+        this.getAccount(alice);
 
         vm.expectRevert(bytes("Only Router can call"));
         vm.prank(bob);
-        accountFactory.getAccount(alice);
+        this.getAccount(alice);
 
         vm.expectRevert(bytes("Only Router can call"));
         vm.prank(alice);
-        accountFactory.getAccount(alice);
+        this.getAccount(alice);
     }
 }
