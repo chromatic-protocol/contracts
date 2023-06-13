@@ -6,14 +6,14 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
-import {IAccount} from "@chromatic/periphery/interfaces/IAccount.sol";
+import {IChromaticAccount} from "@chromatic/periphery/interfaces/IChromaticAccount.sol";
 import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
 
 /**
- * @title Account
+ * @title ChromaticAccount
  * @dev This contract manages user accounts and positions.
  */
-contract Account is IAccount, VerifyCallback {
+contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     using EnumerableSet for EnumerableSet.UintSet;
 
     address owner;
@@ -45,7 +45,7 @@ contract Account is IAccount, VerifyCallback {
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function initialize(address _owner, address _router, address _marketFactory) external {
         if (isInitialized) revert AlreadyInitialized();
@@ -56,14 +56,14 @@ contract Account is IAccount, VerifyCallback {
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function balance(address token) public view returns (uint256) {
         return IERC20(token).balanceOf(address(this));
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function withdraw(address token, uint256 amount) external onlyOwner {
         if (balance(token) < amount) revert NotEnoughBalance();
@@ -79,21 +79,21 @@ contract Account is IAccount, VerifyCallback {
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function hasPositionId(address market, uint256 id) public view returns (bool) {
         return positionIds[market].contains(id);
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function getPositionIds(address market) external view returns (uint256[] memory) {
         return positionIds[market].values();
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function openPosition(
         address marketAddress,
@@ -115,7 +115,7 @@ contract Account is IAccount, VerifyCallback {
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
@@ -124,7 +124,7 @@ contract Account is IAccount, VerifyCallback {
     }
 
     /**
-     * @inheritdoc IAccount
+     * @inheritdoc IChromaticAccount
      */
     function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();

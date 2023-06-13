@@ -5,10 +5,10 @@ import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChro
 import {Position} from "@chromatic/core/libraries/Position.sol";
 
 /**
- * @title IAccount
- * @dev Interface for the Account contract, which manages user accounts and positions.
+ * @title IChromaticAccount
+ * @dev Interface for the ChromaticAccount contract, which manages user accounts and positions.
  */
-interface IAccount is IChromaticTradeCallback {
+interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @notice Returns the balance of the specified token for the account.
      * @param token The address of the token.

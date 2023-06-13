@@ -17,7 +17,7 @@ import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
 import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
 import {AccountFactory} from "@chromatic/periphery/AccountFactory.sol";
-import {Account} from "@chromatic/periphery/Account.sol";
+import {ChromaticAccount} from "@chromatic/periphery/ChromaticAccount.sol";
 
 /**
  * @title ChromaticRouter
@@ -277,8 +277,8 @@ contract ChromaticRouter is IChromaticRouter, VerifyCallback, Ownable {
      * @param owner The owner of the account.
      * @return The account address.
      */
-    function _getAccount(address owner) internal view returns (Account) {
-        return Account(accountFactory.getAccount(owner));
+    function _getAccount(address owner) internal view returns (ChromaticAccount) {
+        return ChromaticAccount(accountFactory.getAccount(owner));
     }
 
     /**

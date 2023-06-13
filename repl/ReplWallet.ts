@@ -2,7 +2,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber, ethers } from 'ethers'
 import { parseEther, parseUnits } from 'ethers/lib/utils'
 import {
-  IAccount,
+  IChromaticAccount,
   IAccountFactory,
   IAccountFactory__factory,
   IAccount__factory,
@@ -29,7 +29,7 @@ const FEE_RATE_DECIMALS = 4
 
 export class ReplWallet {
   public readonly address: string
-  public Account: IAccount
+  public Account: IChromaticAccount
 
   static async create(
     signer: SignerWithAddress,

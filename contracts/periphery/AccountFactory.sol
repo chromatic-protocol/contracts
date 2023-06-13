@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Account} from "./Account.sol";
-import {IAccount} from "./interfaces/IAccount.sol";
+import {ChromaticAccount} from "./ChromaticAccount.sol";
+import {IChromaticAccount} from "./interfaces/IChromaticAccount.sol";
 import {IAccountFactory} from "./interfaces/IAccountFactory.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
@@ -11,7 +11,7 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
  * @dev Contract for creating and managing user accounts.
  */
 contract AccountFactory is IAccountFactory {
-    Account private cloneBase;
+    ChromaticAccount private cloneBase;
     address private router;
     address private marketFactory;
     mapping(address => address) private accounts;
@@ -22,7 +22,7 @@ contract AccountFactory is IAccountFactory {
      * @param _marketFactory The address of the market factory contract.
      */
     constructor(address _router, address _marketFactory) {
-        cloneBase = new Account();
+        cloneBase = new ChromaticAccount();
         router = _router;
         marketFactory = _marketFactory;
     }
@@ -44,7 +44,7 @@ contract AccountFactory is IAccountFactory {
         address owner = msg.sender;
         require(accounts[owner] == address(0));
 
-        Account newAccount = Account(Clones.clone(address(cloneBase)));
+        ChromaticAccount newAccount = ChromaticAccount(Clones.clone(address(cloneBase)));
         newAccount.initialize(owner, router, marketFactory);
         accounts[owner] = address(newAccount);
 

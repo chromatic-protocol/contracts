@@ -40,7 +40,7 @@ export const prepareMarketTest = async () => {
   await createAccountTx.wait()
 
   const traderAccountAddr = await chromaticRouter.connect(trader).getAccount()
-  const traderAccount = await ethers.getContractAt('Account', traderAccountAddr)
+  const traderAccount = await ethers.getContractAt('ChromaticAccount', traderAccountAddr)
 
   logYellow(`\ttraderAccount: ${traderAccount}`)
 
