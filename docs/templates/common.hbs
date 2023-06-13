@@ -21,9 +21,11 @@ _{{{natspec.dev}}}_
 {{/if}}
 
 {{#if natspec.returns}}
+{{#if returns}}
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {{#each returns}}
 | {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
+{{/if}}
 {{/if}}
