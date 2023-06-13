@@ -5,9 +5,10 @@ import '@nomiclabs/hardhat-ethers'
 import * as dotenv from 'dotenv'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
-import { HardhatUserConfig } from 'hardhat/config'
+import type { HardhatUserConfig } from 'hardhat/config'
 import 'solidity-docgen'
 import 'tsconfig-paths/register'
+import docgenConfig from './docs/docgen.config'
 
 dotenv.config()
 
@@ -129,12 +130,7 @@ const config: HardhatUserConfig = {
     excludesFromDeployed: ['KeeperFeePayer', '*Lib', '*Mock'],
     excludeBytecode: true
   },
-  docgen: {
-    pages: 'files',
-    templates: 'docs/templates',
-    exclude: ['mocks'],
-    outputDir: 'docs/out'
-  }
+  docgen: docgenConfig
 }
 
 export default config
