@@ -365,7 +365,7 @@ library BinLiquidityLib {
                     binValue,
                     totalSupply
                 );
-                
+
                 if (freeLiquidity >= _pendingWithdrawal) {
                     _burningAmount = _pendingCLBTokenAmount;
                 } else {
@@ -385,6 +385,15 @@ library BinLiquidityLib {
         self.total -= pendingWithdrawal;
     }
 
+    /**
+     * @dev Retrieves the claim burning details for a specific oracle version from the BinLiquidity storage.
+     *      Claim burning details represent the total amount of CLB tokens waiting to be burned, the amount that can be claimed after being burnt, and the corresponding amount of tokens obtained when claiming liquidity.
+     * @param self The reference to the BinLiquidity storage.
+     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
+     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified oracle version.
+     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified oracle version.
+     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity for the specified oracle version.
+     */
     function getClaimBurning(
         BinLiquidity storage self,
         uint256 oracleVersion

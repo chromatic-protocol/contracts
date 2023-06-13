@@ -174,10 +174,16 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function getBinLiquidity(int16 tradingFeeRate) external view override returns (uint256 amount) {
         amount = liquidityPool.getBinLiquidity(tradingFeeRate);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function getBinFreeLiquidity(
         int16 tradingFeeRate
     ) external view override returns (uint256 amount) {
@@ -191,10 +197,16 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         liquidityPool.distributeEarning(earning, marketBalance);
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function getBinValue(int16 tradingFeeRate) external view override returns (uint256 value) {
         value = liquidityPool.binValue(tradingFeeRate, newLpContext());
     }
 
+    /**
+     * @inheritdoc ILiquidity
+     */
     function calculateCLBTokenMinting(
         int16 tradingFeeRate,
         uint256 amount
@@ -210,6 +222,24 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         uint256 clbTokenAmount
     ) external view returns (uint256) {
         return liquidityPool.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
+    }
+
+    /**
+     * @inheritdoc ILiquidity
+     */
+    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
+        receipt = lpReceipts[receiptId];
+        if (receipt.id == 0) revert NotExistLpReceipt();
+    }
+
+    /**
+     * @inheritdoc ILiquidity
+     */
+    function getClaimBurning(
+        int16 tradingFeeRate,
+        uint256 oracleVersion
+    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+        return liquidityPool.getClaimBurning(tradingFeeRate, oracleVersion);
     }
 
     /**
@@ -274,17 +304,5 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         return
             interfaceID == this.supportsInterface.selector || // ERC165
             interfaceID == this.onERC1155Received.selector ^ this.onERC1155BatchReceived.selector; // IERC1155Receiver
-    }
-
-    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
-        receipt = lpReceipts[receiptId];
-        if (receipt.id == 0) revert NotExistLpReceipt();
-    }
-
-    function getClaimBurning(
-        int16 tradingFeeRate,
-        uint256 oracleVersion
-    ) external view override returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return liquidityPool.getClaimBurning(tradingFeeRate, oracleVersion);
     }
 }
