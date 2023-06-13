@@ -45,7 +45,10 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     }
 
     /**
-     * @inheritdoc IChromaticAccount
+     * @notice Initializes the account with the specified owner, router, and market factory addresses.
+     * @param _owner The address of the account owner.
+     * @param _router The address of the router contract.
+     * @param _marketFactory The address of the market factory contract.
      */
     function initialize(address _owner, address _router, address _marketFactory) external {
         if (isInitialized) revert AlreadyInitialized();

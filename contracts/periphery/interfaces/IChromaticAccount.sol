@@ -24,14 +24,6 @@ interface IChromaticAccount is IChromaticTradeCallback {
     function withdraw(address token, uint256 amount) external;
 
     /**
-     * @notice Initializes the account with the specified owner, router, and market factory addresses.
-     * @param _owner The address of the account owner.
-     * @param _router The address of the router contract.
-     * @param _marketFactory The address of the market factory contract.
-     */
-    function initialize(address _owner, address _router, address _marketFactory) external;
-
-    /**
      * @notice Checks if the specified market has the specified position ID.
      * @param marketAddress The address of the market.
      * @param positionId The ID of the position.
