@@ -95,7 +95,7 @@ contract CLBToken is ERC1155Supply, ICLBToken {
                     " - ",
                     _indexName(),
                     " ",
-                    _formatedFeeRate(decodeId(id))
+                    _formattedFeeRate(decodeId(id))
                 )
             );
     }
@@ -109,14 +109,7 @@ contract CLBToken is ERC1155Supply, ICLBToken {
             string(
                 abi.encodePacked(
                     "data:image/svg+xml;base64,",
-                    Base64.encode(
-                        _svg(
-                            _formatedFeeRate(tradingFeeRate),
-                            _tokenSymbol(),
-                            _indexName(),
-                            _color(tradingFeeRate)
-                        )
-                    )
+                    Base64.encode(_svg(tradingFeeRate, _tokenSymbol(), _indexName()))
                 )
             );
     }
@@ -182,160 +175,320 @@ contract CLBToken is ERC1155Supply, ICLBToken {
      * @param feeRate The fee rate to format.
      * @return The formatted fee rate as a bytes array.
      */
-    function _formatedFeeRate(int16 feeRate) private pure returns (bytes memory) {
+    function _formattedFeeRate(int16 feeRate) private pure returns (bytes memory) {
         uint256 absFeeRate = uint16(feeRate < 0 ? -(feeRate) : feeRate);
 
-        uint256 integerPart = absFeeRate / BPS;
-        uint256 fractionalPart = (absFeeRate % BPS) / (BPS / 100);
+        uint256 pct = BPS / 100;
+        uint256 integerPart = absFeeRate / pct;
+        uint256 fractionalPart = (absFeeRate % pct) / (pct / 100);
 
         return
             abi.encodePacked(
                 feeRate < 0 ? "-" : "+",
                 integerPart.toString(),
                 ".",
-                fractionalPart.toString(),
+                fractionalPart >= 10 ? (fractionalPart / 10).toString() : "0",
+                fractionalPart < 10 ? fractionalPart.toString() : "",
                 "%"
             );
     }
 
-    /**
-     * @dev Retrieves the color associated with a fee rate.
-     * @param feeRate The fee rate for which to retrieve the color.
-     * @return The color associated with the fee rate.
-     */
+    uint256 private constant _W = 480;
+    uint256 private constant _H = 480;
+    bytes private constant _WS = "480";
+    bytes private constant _HS = "480";
+    uint256 private constant _BARS = 9;
+
+    function _svg(
+        int16 feeRate,
+        string memory symbol,
+        string memory index
+    ) private pure returns (bytes memory) {
+        bytes memory formattedFeeRate = _formattedFeeRate(feeRate);
+        string memory color = _color(feeRate);
+        bool long = feeRate > 0;
+
+        bytes memory text = abi.encodePacked(
+            '<text class="st13 st14" font-size="64" transform="translate(440 216.852)" text-anchor="end">',
+            formattedFeeRate,
+            "</text>"
+            '<text class="st13 st16" font-size="28" transform="translate(440 64.036)" text-anchor="end">',
+            symbol,
+            "</text>"
+            '<path d="M104.38 40 80.74 51.59V40L63.91 52.17v47.66L80.74 112v-11.59L104.38 112zm-43.34 0L50.87 52.17v47.66L61.04 112zm-16.42 0L40 52.17v47.66L44.62 112z" class="st13" />'
+            '<text class="st13 st14 st18" transform="translate(440 109.356)" text-anchor="end">',
+            index,
+            " Market</text>"
+            '<path fill="none" stroke="#fff" stroke-miterlimit="10" d="M440 140H40" opacity=".5" />'
+            '<text class="st13 st14 st18" transform="translate(40 438.578)">CLB</text>'
+            '<text class="st13 st16" font-size="22" transform="translate(107.664 438.578)">Chromatic Liquidity Bin Token</text>'
+            '<text class="st13 st16" font-size="16" transform="translate(54.907 390.284)">ERC-1155</text>'
+            '<path fill="none" stroke="#fff" stroke-miterlimit="10" d="M132.27 399.77h-84c-4.42 0-8-3.58-8-8v-14c0-4.42 3.58-8 8-8h84c4.42 0 8 3.58 8 8v14c0 4.42-3.58 8-8 8z" />'
+        );
+
+        return
+            abi.encodePacked(
+                '<?xml version="1.0" encoding="utf-8"?>'
+                '<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" x="0" y="0" version="1.1" viewBox="0 0 ',
+                _WS,
+                " ",
+                _HS,
+                '">'
+                "<style>"
+                "  .st13 {"
+                "    fill: #fff"
+                "  }"
+                "  .st14 {"
+                '    font-family: "NotoSans-Bold";'
+                "  }"
+                "  .st16 {"
+                '    font-family: "NotoSans-Regular";'
+                "  }"
+                "  .st18 {"
+                "    font-size: 32px"
+                "  }"
+                "</style>",
+                _background(long),
+                _bars(long, color, _activeBar(feeRate)),
+                text,
+                "</svg>"
+            );
+    }
+
+    function _background(bool long) private pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                '<linearGradient id="bg" x1="',
+                _WS,
+                '" x2="0" y1="',
+                _HS,
+                '" y2="0" gradientUnits="userSpaceOnUse">',
+                long
+                    ? '<stop offset="0" />'
+                    '<stop offset=".3" stop-color="#010302" />'
+                    '<stop offset=".5" stop-color="#040b07" />'
+                    '<stop offset=".6" stop-color="#0a1910" />'
+                    '<stop offset=".7" stop-color="#132e1d" />'
+                    '<stop offset=".8" stop-color="#1d482e" />'
+                    '<stop offset=".9" stop-color="#2b6843" />'
+                    '<stop offset="1" stop-color="#358153" />'
+                    : '<stop offset="0" style="stop-color:#000" />'
+                    '<stop offset=".3" style="stop-color:#030101" />'
+                    '<stop offset=".4" style="stop-color:#0b0605" />'
+                    '<stop offset=".6" style="stop-color:#190f0b" />'
+                    '<stop offset=".7" style="stop-color:#2e1a13" />'
+                    '<stop offset=".8" style="stop-color:#482a1f" />'
+                    '<stop offset=".9" style="stop-color:#683c2c" />'
+                    '<stop offset="1" style="stop-color:#8e523c" />',
+                "</linearGradient>"
+                '<path fill="url(#bg)" d="M0 0h',
+                _WS,
+                "v",
+                _HS,
+                'H0z" />'
+            );
+    }
+
+    function _activeBar(int16 feeRate) private pure returns (uint256) {
+        uint256 absFeeRate = uint16(feeRate < 0 ? -(feeRate) : feeRate);
+
+        if (absFeeRate >= BPS / 10) {
+            return (absFeeRate / (BPS / 10 / 2)) - 2;
+        } else if (absFeeRate >= BPS / 100) {
+            return (absFeeRate / (BPS / 100)) - 1;
+        } else if (absFeeRate >= BPS / 1000) {
+            return (absFeeRate / (BPS / 1000)) - 1;
+        } else if (absFeeRate >= BPS / 10000) {
+            return (absFeeRate / (BPS / 10000)) - 1;
+        }
+        return 0;
+    }
+
+    function _bars(
+        bool long,
+        string memory color,
+        uint256 activeBar
+    ) private pure returns (bytes memory bars) {
+        for (uint256 i = 0; i < _BARS; i++) {
+            bars = abi.encodePacked(bars, _bar(i, long, color, i == activeBar));
+        }
+    }
+
+    function _bar(
+        uint256 barIndex,
+        bool long,
+        string memory color,
+        bool active
+    ) private pure returns (bytes memory) {
+        (uint256 pos, uint256 width, uint256 height, uint256 hDelta) = _barAttributes(
+            barIndex,
+            long
+        );
+
+        string memory gX = _gradientX(barIndex, long);
+        string memory gY = (_H - height).toString();
+
+        bytes memory stop = abi.encodePacked(
+            '<stop offset="0" stop-color="',
+            color,
+            '" stop-opacity="0"/>'
+            '<stop offset="1" stop-color="',
+            color,
+            '"/>'
+        );
+        bytes memory path = _path(barIndex, long, pos, width, height, hDelta);
+        bytes memory bar = abi.encodePacked(
+            '<linearGradient id="bar',
+            barIndex.toString(),
+            '" x1="',
+            gX,
+            '" x2="',
+            gX,
+            '" y1="',
+            gY,
+            '" y2="',
+            _HS,
+            '" gradientUnits="userSpaceOnUse">',
+            stop,
+            "</linearGradient>",
+            path
+        );
+
+        if (active) {
+            bytes memory edge = _edge(long, pos, width, height);
+            return abi.encodePacked(bar, bar, bar, edge);
+        }
+        return bar;
+    }
+
+    function _edge(
+        bool long,
+        uint256 pos,
+        uint256 width,
+        uint256 height
+    ) private pure returns (bytes memory) {
+        string memory _epos = (long ? pos + width : pos - width).toString();
+
+        bytes memory path = abi.encodePacked(
+            '<path fill="url(#edge)" d="M',
+            _epos,
+            " ",
+            _HS,
+            "h",
+            long ? "-" : "",
+            "2v-",
+            height.toString(),
+            "H",
+            _epos,
+            'z"/>'
+        );
+        return
+            abi.encodePacked(
+                '<linearGradient id="edge" x1="',
+                _epos,
+                '" x2="',
+                _epos,
+                '" y1="',
+                _HS,
+                '" y2="',
+                (_H - height).toString(),
+                '" gradientUnits="userSpaceOnUse">'
+                '<stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+                '<stop offset=".5" stop-color="#fff" stop-opacity=".5"/>'
+                '<stop offset="1" stop-color="#fff" stop-opacity="0"/>'
+                "</linearGradient>",
+                path
+            );
+    }
+
+    function _path(
+        uint256 barIndex,
+        bool long,
+        uint256 pos,
+        uint256 width,
+        uint256 height,
+        uint256 hDelta
+    ) private pure returns (bytes memory) {
+        string memory _w = width.toString();
+        bytes memory _h = abi.encodePacked("h", long ? "" : "-", _w);
+        bytes memory _l = abi.encodePacked("l", long ? "-" : "", _w, " ", hDelta.toString());
+        return
+            abi.encodePacked(
+                '<path fill="url(#bar',
+                barIndex.toString(),
+                ')" d="M',
+                pos.toString(),
+                " ",
+                _HS,
+                _h,
+                "v-",
+                height.toString(),
+                _l,
+                'z"/>'
+            );
+    }
+
+    function _barAttributes(
+        uint256 barIndex,
+        bool long
+    ) private pure returns (uint256 pos, uint256 width, uint256 height, uint256 hDelta) {
+        uint256[_BARS] memory widths = [uint256(44), 45, 48, 51, 53, 55, 58, 62, 64];
+        uint256[_BARS] memory heights = [uint256(480), 415, 309, 240, 185, 144, 111, 86, 67];
+        uint256[_BARS] memory hDeltas = [uint256(33), 27, 19, 14, 10, 8, 5, 4, 3];
+
+        width = widths[barIndex];
+        height = heights[barIndex];
+        hDelta = hDeltas[barIndex];
+        pos = long ? 0 : _W;
+        for (uint256 i = 0; i < barIndex; i++) {
+            pos = long ? pos + widths[i] : pos - widths[i];
+        }
+    }
+
+    function _gradientX(uint256 barIndex, bool long) private pure returns (string memory) {
+        string[_BARS] memory longXs = [
+            "-1778",
+            "-1733.4",
+            "-1686.6",
+            "-1637.4",
+            "-1585.7",
+            "-1531.5",
+            "-1474.6",
+            "-1414.8",
+            "-1352"
+        ];
+        string[_BARS] memory shortXs = [
+            "-12373.4",
+            "-12328.8",
+            "-12281.9",
+            "-12232.8",
+            "-12181.1",
+            "-12126.9",
+            "-12069.9",
+            "-12010.1",
+            "-11947.3"
+        ];
+
+        return long ? longXs[barIndex] : shortXs[barIndex];
+    }
+
     function _color(int16 feeRate) private pure returns (string memory) {
         uint256 absFeeRate = uint16(feeRate < 0 ? -(feeRate) : feeRate);
 
         if (absFeeRate >= BPS / 10) {
             // feeRate >= 10%  or feeRate <= -10%
-            return feeRate > 0 ? "#FFCE94" : "#8591FF";
+            return feeRate > 0 ? "#FFCE94" : "#A0DC50";
         } else if (absFeeRate >= BPS / 100) {
             // 10% > feeRate >= 1% or -1% >= feeRate > -10%
-            return feeRate > 0 ? "#FFAB5E" : "#5988FF";
+            return feeRate > 0 ? "#FFAB5E" : "#82E664";
         } else if (absFeeRate >= BPS / 1000) {
             // 1% > feeRate >= 0.1% or -0.1% >= feeRate > -1%
-            return feeRate > 0 ? "#FF975A" : "#2FB1FA";
+            return feeRate > 0 ? "#FF966E" : "#5ADC8C";
         } else if (absFeeRate >= BPS / 10000) {
             // 0.1% > feeRate >= 0.01% or -0.01% >= feeRate > -0.1%
-            return feeRate > 0 ? "#FE8B63" : "#6EC4F9";
+            return feeRate > 0 ? "#FE8264" : "#3CD2AA";
         }
         // feeRate == 0%
         return "#000000";
-    }
-
-    /**
-     * @dev Generates an SVG image representing a token.
-     * @param formatedFeeRate The formated fee rate.
-     * @param symbol The symbol of the token.
-     * @param index The name of the index associated with the token.
-     * @param color The color to use for the token.
-     * @return The generated SVG image as a bytes array.
-     */
-    function _svg(
-        bytes memory formatedFeeRate,
-        string memory symbol,
-        string memory index,
-        string memory color
-    ) private pure returns (bytes memory) {
-        bytes memory stopTags = _stopTags(color);
-        bytes memory content = abi.encodePacked(
-            "<g>",
-            abi.encodePacked(
-                '<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="120" y1="416.01" x2="120" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_1_);" points="80,480 160,480 160,63.99 80,63.99"/>'
-                '<linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="200" y1="352.03" x2="200" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_2_);" points="160,480 240,480 240,127.97 160,127.97"/>'
-                '<linearGradient id="SVGID_3_" gradientUnits="userSpaceOnUse" x1="280" y1="288.04" x2="280" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_3_);" points="240,480 320,480 320,191.96 240,191.96"/>'
-            ),
-            abi.encodePacked(
-                '<linearGradient id="SVGID_4_" gradientUnits="userSpaceOnUse" x1="360" y1="224.05" x2="360" y2="9.094947e-13" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_4_);" points="320,480 400,480 400,255.95 320,255.95"/>'
-                '<linearGradient id="SVGID_5_" gradientUnits="userSpaceOnUse" x1="440" y1="160.06" x2="440" y2="9.094947e-13" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_5_);" points="400,480 480,480 480,319.94 400,319.94"/>'
-                '<linearGradient id="SVGID_6_" gradientUnits="userSpaceOnUse" x1="40" y1="480" x2="40" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_6_);" points="0,480 80,480 80,0 0,0"/>'
-            ),
-            "</g>"
-            "<g>",
-            abi.encodePacked(
-                '<linearGradient id="SVGID_7_" gradientUnits="userSpaceOnUse" x1="140" y1="396.01" x2="140" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_7_);" points="100,480 180,480 180,83.99 100,83.99"/>'
-                '<linearGradient id="SVGID_8_" gradientUnits="userSpaceOnUse" x1="220" y1="332.03" x2="220" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_8_);" points="180,480 260,480 260,147.97 180,147.97"/>'
-                '<linearGradient id="SVGID_9_" gradientUnits="userSpaceOnUse" x1="300" y1="268.04" x2="300" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_9_);" points="260,480 340,480 340,211.96 260,211.96"/>'
-            ),
-            abi.encodePacked(
-                '<linearGradient id="SVGID_10_" gradientUnits="userSpaceOnUse" x1="380" y1="204.05" x2="380" y2="9.094947e-13" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_10_);" points="340,480 420,480 420,275.95 340,275.95"/>'
-                '<linearGradient id="SVGID_11_" gradientUnits="userSpaceOnUse" x1="450" y1="140.06" x2="450" y2="9.094947e-13" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_11_);" points="420,480 480,480 480,339.94 420,339.94"/>'
-                '<linearGradient id="SVGID_12_" gradientUnits="userSpaceOnUse" x1="50" y1="460" x2="50" y2="0" gradientTransform="matrix(1 0 0 -1 0 480)">',
-                stopTags,
-                "</linearGradient>"
-                '<polygon style="fill:url(#SVGID_12_);" points="0,480 100,480 100,20 0,20"/>'
-            ),
-            "</g>"
-            '<text transform="matrix(1 0 0 1 245.9107 90.1792)" style="fill:#FFFFFF; font-size:64px;">',
-            formatedFeeRate,
-            "</text>"
-            "<g>"
-            '<text transform="matrix(1 0 0 1 194.9673 146.5815)" style="fill:#FFFFFF; font-size:32px;">',
-            symbol,
-            " - ",
-            index,
-            "</text>"
-            "</g>"
-            "<g>"
-            '<text transform="matrix(1 0 0 1 33.314 404.23)" style="font-size:28px;">ERC-1155</text>'
-            '<text transform="matrix(1 0 0 1 33.314 443.02)" style="font-size:28px;">CHROMATIC </text>'
-            '<text transform="matrix(1 0 0 1 206.914 443.02)" style="font-size:28px;">Liquidity Bin Token</text>'
-            "</g>"
-        );
-        return
-            abi.encodePacked(
-                '<?xml version="1.0" encoding="utf-8"?>'
-                '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 480 480" style="enable-background:new 0 0 480 480;" xml:space="preserve">'
-                "<g>"
-                '<rect width="480" height="480"/>',
-                content,
-                "</g>"
-                "</svg>"
-            );
-    }
-
-    function _stopTags(string memory color) private pure returns (bytes memory) {
-        return
-            abi.encodePacked(
-                '<stop offset="0" style="stop-color:',
-                color,
-                '; stop-opacity:0"/>',
-                '<stop offset="1" style="stop-color:',
-                color,
-                '"/>'
-            );
     }
 }
