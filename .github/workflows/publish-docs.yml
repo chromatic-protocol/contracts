@@ -36,6 +36,7 @@ jobs:
           path: docs-repo
           token: ${{ steps.generate-token.outputs.token }}
       - run: |
+          yarn clean
           yarn docs
           cp -r docs/out/* docs-repo/docs/contracts/reference/
       - name: pull-request
