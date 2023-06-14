@@ -79,7 +79,9 @@ jobs:
           ref: main
           path: sdk
           token: ${{ steps.generate-token.outputs.token }}
-      - run: cp -r package-build/src.ts/* sdk/src/gen/
+      - run: |
+          rm -rf sdk/src/gen
+          cp -r package-build/src.ts/* sdk/src/gen/
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
         with:
