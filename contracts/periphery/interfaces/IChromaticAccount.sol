@@ -5,10 +5,10 @@ import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChro
 import {Position} from "@chromatic/core/libraries/Position.sol";
 
 /**
- * @title IAccount
- * @dev Interface for the Account contract, which manages user accounts and positions.
+ * @title IChromaticAccount
+ * @dev Interface for the ChromaticAccount contract, which manages user accounts and positions.
  */
-interface IAccount is IChromaticTradeCallback {
+interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @notice Returns the balance of the specified token for the account.
      * @param token The address of the token.
@@ -22,14 +22,6 @@ interface IAccount is IChromaticTradeCallback {
      * @param amount The amount of tokens to withdraw.
      */
     function withdraw(address token, uint256 amount) external;
-
-    /**
-     * @notice Initializes the account with the specified owner, router, and market factory addresses.
-     * @param _owner The address of the account owner.
-     * @param _router The address of the router contract.
-     * @param _marketFactory The address of the market factory contract.
-     */
-    function initialize(address _owner, address _router, address _marketFactory) external;
 
     /**
      * @notice Checks if the specified market has the specified position ID.

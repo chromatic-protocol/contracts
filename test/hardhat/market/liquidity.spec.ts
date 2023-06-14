@@ -1,8 +1,8 @@
 import { expect } from 'chai'
+import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { logLiquidity } from '../log-utils'
 import { helpers, prepareMarketTest } from './testHelper'
-import { BigNumber } from 'ethers'
 
 describe('market test', async function () {
   const oneEther = ethers.utils.parseEther('1')
@@ -161,11 +161,15 @@ describe('market test', async function () {
     // }
     // logLiquidity(totals, unuseds);
 
-    const bins = await testData.lens.liquidityBins(testData.market.address,totalFees)
-    
+    const oracleVersion = await testData.oracleProvider.currentVersion()
 
-    const totalMargins = bins.map(b => b.liquidity)
-    const unusedMargins = bins.map(b => b.freeVolume)
+    const bins = await testData.lens.liquidityBins(
+      testData.market.address,
+      totalFees.map((fee) => ({ tradingFeeRate: fee, oracleVersion: oracleVersion.version }))
+    )
+
+    const totalMargins = bins.map((b) => b.liquidity)
+    const unusedMargins = bins.map((b) => b.freeLiquidity)
 
     logLiquidity(totalMargins, unusedMargins)
   })

@@ -2,22 +2,20 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber, ethers } from 'ethers'
 import { parseEther, parseUnits } from 'ethers/lib/utils'
 import {
-  IAccount,
-  IAccountFactory,
-  IAccountFactory__factory,
-  IAccount__factory,
-  IERC20Metadata,
-  IERC20Metadata__factory,
-  IOracleProvider,
-  IOracleProvider__factory,
-  ISwapRouter,
-  ISwapRouter__factory,
+  IChromaticAccount,
+  IChromaticAccount__factory,
   IChromaticMarket,
   IChromaticMarketFactory,
   IChromaticMarketFactory__factory,
   IChromaticMarket__factory,
   IChromaticRouter,
   IChromaticRouter__factory,
+  IERC20Metadata,
+  IERC20Metadata__factory,
+  IOracleProvider,
+  IOracleProvider__factory,
+  ISwapRouter,
+  ISwapRouter__factory,
   IWETH9,
   IWETH9__factory
 } from '../typechain-types'
@@ -29,7 +27,7 @@ const FEE_RATE_DECIMALS = 4
 
 export class ReplWallet {
   public readonly address: string
-  public Account: IAccount
+  public Account: IChromaticAccount
 
   static async create(
     signer: SignerWithAddress,
@@ -39,7 +37,6 @@ export class ReplWallet {
       swapRouter: string
       marketFactory: string
       oracleProvider: string
-      accountFactory: string
       router: string
     },
     ensureAccount: boolean
@@ -49,7 +46,6 @@ export class ReplWallet {
     const swapRouter = ISwapRouter__factory.connect(addresses.swapRouter, signer)
     const oracleProvider = IOracleProvider__factory.connect(addresses.oracleProvider, signer)
     const marketFactory = IChromaticMarketFactory__factory.connect(addresses.marketFactory, signer)
-    const accountFactory = IAccountFactory__factory.connect(addresses.accountFactory, signer)
     const router = IChromaticRouter__factory.connect(addresses.router, signer)
 
     const marketAddress = await marketFactory.getMarkets()
@@ -64,8 +60,7 @@ export class ReplWallet {
       oracleProvider,
       marketFactory,
       market,
-      router,
-      accountFactory
+      router
     )
 
     if (ensureAccount) {
@@ -83,20 +78,19 @@ export class ReplWallet {
     public readonly OracleProvider: IOracleProvider,
     public readonly ChromaticMarketFactory: IChromaticMarketFactory,
     public readonly ChromaticMarket: IChromaticMarket,
-    public readonly ChromaticRouter: IChromaticRouter,
-    public readonly AccountFactory: IAccountFactory
+    public readonly ChromaticRouter: IChromaticRouter
   ) {
     this.address = signer.address
   }
 
   async createAccount() {
-    let accountAddress = await this.AccountFactory['getAccount()']()
+    let accountAddress = await this.ChromaticRouter['getAccount()']()
     if (accountAddress === ethers.constants.AddressZero) {
-      await this.AccountFactory.createAccount()
-      accountAddress = await this.AccountFactory['getAccount()']()
+      await this.ChromaticRouter.createAccount()
+      accountAddress = await this.ChromaticRouter['getAccount()']()
     }
     console.log(`create Account, signer: ${accountAddress}, ${this.signer.address}`)
-    this.Account = IAccount__factory.connect(accountAddress, this.signer)
+    this.Account = IChromaticAccount__factory.connect(accountAddress, this.signer)
   }
 
   async wrapEth(eth: number) {
@@ -143,7 +137,10 @@ export class ReplWallet {
   }
 
   async closePosition(positionId: number) {
-    await this.ChromaticRouter.closePosition(this.ChromaticMarket.address, BigNumber.from(positionId))
+    await this.ChromaticRouter.closePosition(
+      this.ChromaticMarket.address,
+      BigNumber.from(positionId)
+    )
   }
 
   async addLiquidity(feeRate: number, amount: number) {

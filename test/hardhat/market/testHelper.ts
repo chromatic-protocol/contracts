@@ -1,10 +1,10 @@
+import { CLBToken__factory } from '@chromatic/typechain-types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { deploy as marketDeploy } from '../deployMarket'
 import { logYellow } from '../log-utils'
-import { CLBToken__factory } from '@chromatic/typechain-types'
 
 export const prepareMarketTest = async () => {
   async function faucet(account: SignerWithAddress) {
@@ -20,7 +20,6 @@ export const prepareMarketTest = async () => {
     oracleProvider,
     market,
     chromaticRouter,
-    accountFactory,
     settlementToken,
     gelato,
     lens
@@ -36,11 +35,11 @@ export const prepareMarketTest = async () => {
   await faucet(tester)
   await faucet(trader)
 
-  const createAccountTx = await accountFactory.connect(trader).createAccount()
+  const createAccountTx = await chromaticRouter.connect(trader).createAccount()
   await createAccountTx.wait()
 
   const traderAccountAddr = await chromaticRouter.connect(trader).getAccount()
-  const traderAccount = await ethers.getContractAt('Account', traderAccountAddr)
+  const traderAccount = await ethers.getContractAt('ChromaticAccount', traderAccountAddr)
 
   logYellow(`\ttraderAccount: ${traderAccount}`)
 
@@ -67,7 +66,6 @@ export const prepareMarketTest = async () => {
     marketFactory,
     settlementToken,
     market,
-    accountFactory,
     chromaticRouter,
     owner,
     tester,
@@ -127,11 +125,11 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   async function closePosition(positionId: BigNumber) {
     const closePositionTx = await traderRouter.closePosition(market.address, positionId)
     const receipt = await closePositionTx.wait()
-    
+
     return {
       receipt,
-      blockNumber:closePositionTx.blockNumber,
-      blockHash : receipt.blockHash,
+      blockNumber: closePositionTx.blockNumber,
+      blockHash: receipt.blockHash,
       transactionHash: closePositionTx.hash,
       timestamp: closePositionTx.timestamp
     }
