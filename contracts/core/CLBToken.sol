@@ -180,23 +180,25 @@ contract CLBToken is ERC1155Supply, ICLBToken {
 
         uint256 pct = BPS / 100;
         uint256 integerPart = absFeeRate / pct;
-        uint256 fractionalPart = (absFeeRate % pct) / (pct / 100);
+        uint256 fractionalPart = absFeeRate % pct;
+        string memory fractionalPart1 = (fractionalPart / (pct / 10)).toString();
+        string memory fractionalPart2 = (fractionalPart % (pct / 10)).toString();
 
         return
             abi.encodePacked(
                 feeRate < 0 ? "-" : "+",
                 integerPart.toString(),
                 ".",
-                fractionalPart >= 10 ? (fractionalPart / 10).toString() : "0",
-                fractionalPart < 10 ? fractionalPart.toString() : "",
+                fractionalPart1,
+                fractionalPart2,
                 "%"
             );
     }
 
     uint256 private constant _W = 480;
     uint256 private constant _H = 480;
-    bytes private constant _WS = "480";
-    bytes private constant _HS = "480";
+    string private constant _WS = "480";
+    string private constant _HS = "480";
     uint256 private constant _BARS = 9;
 
     function _svg(
@@ -259,8 +261,10 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         return
             abi.encodePacked(
                 '<linearGradient id="bg" x1="',
-                _WS,
-                '" x2="0" y1="',
+                long ? "0" : _WS,
+                '" x2="',
+                long ? _WS : "0",
+                '" y1="',
                 _HS,
                 '" y2="0" gradientUnits="userSpaceOnUse">',
                 long
