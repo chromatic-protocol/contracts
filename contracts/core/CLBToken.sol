@@ -23,8 +23,6 @@ contract CLBToken is ERC1155Supply, ICLBToken {
     using SafeCast for uint256;
     using SignedMath for int256;
 
-    uint8 public constant override decimals = 18;
-
     IChromaticMarket public immutable market;
 
     error OnlyAccessableByMarket();
@@ -45,6 +43,13 @@ contract CLBToken is ERC1155Supply, ICLBToken {
      */
     constructor() ERC1155("") {
         market = IChromaticMarket(msg.sender);
+    }
+
+    /**
+     * @inheritdoc ICLBToken
+     */
+    function decimals() public view override returns (uint8) {
+        return market.settlementToken().decimals();
     }
 
     /**
@@ -126,7 +131,7 @@ contract CLBToken is ERC1155Supply, ICLBToken {
             '", "description": "',
             description(id),
             '", "decimals": "',
-            uint256(decimals).toString(),
+            uint256(decimals()).toString(),
             '", "image":"',
             image(id),
             '"',
