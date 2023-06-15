@@ -108,12 +108,14 @@ interface ILiquidity {
     function getBinFreeLiquidity(int16 tradingFeeRate) external view returns (uint256 amount);
 
     /**
-     * @dev Retrieves the value of a specific trading fee rate's bin in the liquidity pool.
+     * @dev Retrieves the values of a specific trading fee rate's bins in the liquidity pool.
      *      The value of a bin represents the total valuation of the liquidity in the bin.
-     * @param tradingFeeRate The trading fee rate for which to retrieve the bin value.
-     * @return value The value of the bin for the specified trading fee rate.
+     * @param tradingFeeRates The list of trading fee rate for which to retrieve the bin value.
+     * @return values The value list of the bins for the specified trading fee rates.
      */
-    function getBinValue(int16 tradingFeeRate) external view returns (uint256 value);
+    function getBinValues(
+        int16[] memory tradingFeeRates
+    ) external view returns (uint256[] memory values);
 
     /**
      * @dev Distributes earning to the liquidity bins.

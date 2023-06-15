@@ -200,8 +200,15 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function getBinValue(int16 tradingFeeRate) external view override returns (uint256 value) {
-        value = liquidityPool.binValue(tradingFeeRate, newLpContext());
+    function getBinValues(
+        int16[] memory tradingFeeRates
+    ) external view override returns (uint256[] memory) {
+        LpContext memory ctx = newLpContext();
+        uint256[] memory values = new uint256[](tradingFeeRates.length);
+        for (uint256 i = 0; i < tradingFeeRates.length; i++) {
+            values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
+        }
+        return values;
     }
 
     /**
