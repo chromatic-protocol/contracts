@@ -214,16 +214,6 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function calculateCLBTokenValue(
-        int16 tradingFeeRate,
-        uint256 clbTokenAmount
-    ) external view returns (uint256) {
-        return liquidityPool.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
-    }
-
-    /**
-     * @inheritdoc ILiquidity
-     */
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
         receipt = lpReceipts[receiptId];
         if (receipt.id == 0) revert NotExistLpReceipt();

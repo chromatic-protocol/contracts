@@ -68,7 +68,7 @@ describe('market test', async function () {
     expect(await clbToken.totalSupply(feeRate)).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
-    const expectedAmount = await market.calculateCLBTokenValue(feeRate, removeLiqAmount)
+    const expectedAmount = await _expectedAmount(market, clbToken, feeRate, removeLiqAmount)
 
     await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
@@ -184,7 +184,7 @@ describe('market test', async function () {
 
     expect(expectedLiquidity).to.equal(amount)
 
-    const expectedAmount = await market.calculateCLBTokenValue(feeRate, amount)
+    const expectedAmount = await _expectedAmount(market, clbToken, feeRate, amount)
     expect(expectedAmount).to.equal(0)
   })
 })
@@ -202,6 +202,17 @@ async function _expectedLiquidity(
   return totalSupply.isZero()
     ? amount
     : amount.mul(totalSupply).div(binValue.lt(MIN_AMOUNT) ? MIN_AMOUNT : binValue)
+}
+
+async function _expectedAmount(
+  market: ChromaticMarket,
+  clbToken: CLBToken,
+  feeRate: number,
+  clbAmount: BigNumber
+): Promise<BigNumber> {
+  const binValue = (await market.getBinValues([feeRate]))[0]
+  const totalSupply = await clbToken.totalSupply(_encodeId(feeRate))
+  return totalSupply.isZero() ? BigNumber.from(0) : clbAmount.mul(binValue).div(totalSupply)
 }
 
 function _encodeId(feeRate: number): BigNumberish {

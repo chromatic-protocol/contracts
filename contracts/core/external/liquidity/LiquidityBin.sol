@@ -269,28 +269,6 @@ library LiquidityBinLib {
     }
 
     /**
-     * @notice Calculates the value of the specified amount of CLB tokens.
-     * @dev This function calculates the value of the specified amount of CLB tokens
-     *      based on the bin's current value and the total supply of CLB tokens.
-     * @param self The LiquidityBin storage.
-     * @param ctx The LpContext memory.
-     * @param clbTokenAmount The amount of CLB tokens.
-     * @return The value of the specified amount of CLB tokens.
-     */
-    function calculateCLBTokenValue(
-        LiquidityBin storage self,
-        LpContext memory ctx,
-        uint256 clbTokenAmount
-    ) internal view returns (uint256) {
-        return
-            BinLiquidityLib.calculateCLBTokenValue(
-                clbTokenAmount,
-                self.value(ctx),
-                ctx.clbToken.totalSupply(self.clbTokenId)
-            );
-    }
-
-    /**
      * @dev Retrieves the claim burning details for a specific oracle version from the LiquidityBin storage.
      * Claim burning details represent the total amount of CLB tokens waiting to be burned, the amount that can be claimed after being burnt, and the corresponding amount of tokens obtained when claiming liquidity.
      * @param self The reference to the LiquidityBin storage.

@@ -125,17 +125,6 @@ interface ILiquidity {
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external;
 
     /**
-     * @dev Calculates the value of CLB tokens for the given parameters.
-     * @param tradingFeeRate The trading fee rate.
-     * @param clbTokenAmount The amount of CLB tokens.
-     * @return The value of CLB tokens.
-     */
-    function calculateCLBTokenValue(
-        int16 tradingFeeRate,
-        uint256 clbTokenAmount
-    ) external view returns (uint256);
-
-    /**
      * @dev Retrieves the liquidity receipt with the given receipt ID.
      *      It throws NotExistLpReceipt if the specified receipt ID does not exist.
      * @param receiptId The ID of the liquidity receipt to retrieve.
