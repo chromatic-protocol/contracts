@@ -269,28 +269,6 @@ library LiquidityBinLib {
     }
 
     /**
-     * @notice Calculates the amount of CLB tokens to be minted when adding liquidity.
-     * @dev This function calculates the number of CLB tokens to be minted
-     *      based on the specified amount of liquidity, the bin's current value, and the total supply of CLB tokens.
-     * @param self The LiquidityBin storage.
-     * @param ctx The LpContext memory.
-     * @param amount The amount of liquidity to be added.
-     * @return The amount of CLB tokens to be minted.
-     */
-    function calculateCLBTokenMinting(
-        LiquidityBin storage self,
-        LpContext memory ctx,
-        uint256 amount
-    ) internal view returns (uint256) {
-        return
-            BinLiquidityLib.calculateCLBTokenMinting(
-                amount,
-                self.value(ctx),
-                ctx.clbToken.totalSupply(self.clbTokenId)
-            );
-    }
-
-    /**
      * @notice Calculates the value of the specified amount of CLB tokens.
      * @dev This function calculates the value of the specified amount of CLB tokens
      *      based on the bin's current value and the total supply of CLB tokens.

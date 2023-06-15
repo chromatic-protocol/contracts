@@ -1,5 +1,6 @@
+import { CLBToken, ChromaticMarket } from '@chromatic/typechain-types'
 import { expect } from 'chai'
-import { BigNumber } from 'ethers'
+import { BigNumber, BigNumberish } from 'ethers'
 import { ethers } from 'hardhat'
 import { logLiquidity } from '../log-utils'
 import { helpers, prepareMarketTest } from './testHelper'
@@ -51,11 +52,11 @@ describe('market test', async function () {
     await updatePrice(1000)
 
     const amount = ethers.utils.parseEther('100')
-    const feeBinKey = 1
+    const feeRate = 1
 
-    const expectedLiquidity = await market.calculateCLBTokenMinting(feeBinKey, amount)
+    const expectedLiquidity = await _expectedLiquidity(market, clbToken, feeRate, amount)
 
-    await expect(addLiquidityTx(amount, feeBinKey)).to.changeTokenBalance(
+    await expect(addLiquidityTx(amount, feeRate)).to.changeTokenBalance(
       settlementToken,
       tester.address,
       amount.mul(-1)
@@ -64,14 +65,14 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidity((await getLpReceiptIds())[0])).wait()
 
-    expect(await clbToken.totalSupply(feeBinKey)).to.equal(expectedLiquidity)
+    expect(await clbToken.totalSupply(feeRate)).to.equal(expectedLiquidity)
 
     const removeLiqAmount = amount.div(2)
-    const expectedAmount = await market.calculateCLBTokenValue(feeBinKey, removeLiqAmount)
+    const expectedAmount = await market.calculateCLBTokenValue(feeRate, removeLiqAmount)
 
     await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
-    await (await removeLiquidity(removeLiqAmount, feeBinKey)).wait()
+    await (await removeLiquidity(removeLiqAmount, feeRate)).wait()
 
     await updatePrice(1000)
 
@@ -81,7 +82,7 @@ describe('market test', async function () {
       expectedAmount
     )
 
-    expect(await clbToken.totalSupply(feeBinKey)).to.equal(removeLiqAmount)
+    expect(await clbToken.totalSupply(feeRate)).to.equal(removeLiqAmount)
   })
 
   it('add/remove liquidity Batch', async () => {
@@ -99,10 +100,8 @@ describe('market test', async function () {
     const amount = ethers.utils.parseEther('100')
     const amounts = totalFees.map((_) => amount)
 
-    const expectedLiquidities = await lens.calculateCLBTokenMintingBatch(
-      market.address,
-      totalFees,
-      amounts
+    const expectedLiquidities = await Promise.all(
+      totalFees.map((fee) => _expectedLiquidity(market, clbToken, fee, amount))
     )
 
     await expect(addLiquidityBatch(amounts, totalFees)).to.changeTokenBalance(
@@ -113,7 +112,9 @@ describe('market test', async function () {
     await updatePrice(1100)
     await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
 
-    expect(await lens.totalSupplies(market.address, totalFees)).to.deep.equal(expectedLiquidities)
+    expect(await clbToken.totalSupplyBatch(totalFees.map((f) => _encodeId(f)))).to.deep.equal(
+      expectedLiquidities
+    )
 
     // remove begin
     await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
@@ -134,7 +135,7 @@ describe('market test', async function () {
       expectedAmounts.reduce((a, b) => a.add(b))
     )
 
-    expect(await lens.totalSupplies(market.address, totalFees)).to.deep.equal(
+    expect(await await clbToken.totalSupplyBatch(totalFees.map((f) => _encodeId(f)))).to.deep.equal(
       totalFees.map((_) => BigNumber.from('0'))
     )
   })
@@ -175,14 +176,34 @@ describe('market test', async function () {
   })
 
   it('calculate CLBTokenMinting/CLBTokenValue when zero liquidity', async () => {
-    const { market } = testData
+    const { market, clbToken } = testData
 
     const amount = ethers.utils.parseEther('100')
-    const feeBinKey = 1
-    const expectedLiquidity = await market.calculateCLBTokenMinting(feeBinKey, amount)
+    const feeRate = 1
+    const expectedLiquidity = await _expectedLiquidity(market, clbToken, feeRate, amount)
+
     expect(expectedLiquidity).to.equal(amount)
 
-    const expectedAmount = await market.calculateCLBTokenValue(feeBinKey, amount)
+    const expectedAmount = await market.calculateCLBTokenValue(feeRate, amount)
     expect(expectedAmount).to.equal(0)
   })
 })
+
+const MIN_AMOUNT = BigNumber.from(1000)
+
+async function _expectedLiquidity(
+  market: ChromaticMarket,
+  clbToken: CLBToken,
+  feeRate: number,
+  amount: BigNumber
+): Promise<BigNumber> {
+  const binValue = (await market.getBinValues([feeRate]))[0]
+  const totalSupply = await clbToken.totalSupply(_encodeId(feeRate))
+  return totalSupply.isZero()
+    ? amount
+    : amount.mul(totalSupply).div(binValue.lt(MIN_AMOUNT) ? MIN_AMOUNT : binValue)
+}
+
+function _encodeId(feeRate: number): BigNumberish {
+  return feeRate > 0 ? feeRate : BigNumber.from(-feeRate).add(BigNumber.from(10).pow(10))
+}

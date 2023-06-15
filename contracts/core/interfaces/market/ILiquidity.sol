@@ -125,18 +125,6 @@ interface ILiquidity {
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external;
 
     /**
-     * @dev Calculates the amount of CLB tokens to be minted for a given amount of liquidity and trading fee rate.
-     *      The CLB token minting amount represents the number of CLB tokens that will be minted when providing liquidity.
-     * @param tradingFeeRate The trading fee rate for which to calculate the CLB token minting.
-     * @param amount The amount of liquidity for which to calculate the CLB token minting.
-     * @return The amount of CLB tokens to be minted for the specified liquidity amount and trading fee rate.
-     */
-    function calculateCLBTokenMinting(
-        int16 tradingFeeRate,
-        uint256 amount
-    ) external view returns (uint256);
-
-    /**
      * @dev Calculates the value of CLB tokens for the given parameters.
      * @param tradingFeeRate The trading fee rate.
      * @param clbTokenAmount The amount of CLB tokens.

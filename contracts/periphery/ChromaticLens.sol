@@ -186,26 +186,4 @@ contract ChromaticLens is Multicall {
             );
         }
     }
-
-    /**
-     * @dev Calculates the amount of CLB tokens to be minted for each trading fee rate and specified amount in the given Chromatic market.
-     * @param market The address of the Chromatic market contract.
-     * @param tradingFeeRates An array of trading fee rates.
-     * @param amounts An array of specified amounts.
-     * @return results An array of uint256 containing the calculated CLB token minting amounts for each trading fee rate and specified amount.
-     */
-    function calculateCLBTokenMintingBatch(
-        address market,
-        int16[] calldata tradingFeeRates,
-        uint256[] calldata amounts
-    ) external view returns (uint256[] memory results) {
-        require(tradingFeeRates.length == amounts.length, "ChromaticLens: invalid arguments");
-        results = new uint256[](tradingFeeRates.length);
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            results[i] = IChromaticMarket(market).calculateCLBTokenMinting(
-                tradingFeeRates[i],
-                amounts[i]
-            );
-        }
-    }
 }

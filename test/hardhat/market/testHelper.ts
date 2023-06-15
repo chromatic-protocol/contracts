@@ -136,7 +136,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function getLpReceiptIds() {
-    return chromaticRouter.connect(tester).getLpReceiptIds(market.address)
+    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](market.address)
   }
 
   async function addLiquidityTx(amount: BigNumber, feeBinKey: number) {

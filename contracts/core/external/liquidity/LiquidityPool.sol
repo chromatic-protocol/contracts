@@ -465,28 +465,6 @@ library LiquidityPoolLib {
     }
 
     /**
-     * @notice Calculates the amount of CLB tokens to be minted for the given amount of base tokens and trading fee rate.
-     * @dev This function validates the trading fee rate
-     *      and calls the calculateCLBTokenMinting function on the target liquidity bin.
-     * @param self The reference to the LiquidityPool storage.
-     * @param ctx The LpContext object.
-     * @param tradingFeeRate The trading fee rate associated with the liquidity bin.
-     * @param amount The amount of base tokens.
-     * @return The amount of CLB tokens to be minted.
-     */
-    function calculateCLBTokenMinting(
-        LiquidityPool storage self,
-        LpContext memory ctx,
-        int16 tradingFeeRate,
-        uint256 amount
-    ) external view _validTradingFeeRate(tradingFeeRate) returns (uint256) {
-        // Retrieve the liquidity bin based on the trading fee rate
-        LiquidityBin storage bin = targetBin(self, tradingFeeRate);
-        // Calculate the amount of CLB tokens to be minted based on the given amount of base tokens
-        return bin.calculateCLBTokenMinting(ctx, amount);
-    }
-
-    /**
      * @notice Calculates the value of the given amount of CLB tokens for the specified trading fee rate.
      * @dev This function validates the trading fee rate
      *      and calls the calculateCLBTokenValue function on the target liquidity bin.

@@ -214,16 +214,6 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function calculateCLBTokenMinting(
-        int16 tradingFeeRate,
-        uint256 amount
-    ) external view returns (uint256) {
-        return liquidityPool.calculateCLBTokenMinting(newLpContext(), tradingFeeRate, amount);
-    }
-
-    /**
-     * @inheritdoc ILiquidity
-     */
     function calculateCLBTokenValue(
         int16 tradingFeeRate,
         uint256 clbTokenAmount

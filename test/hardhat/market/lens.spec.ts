@@ -39,12 +39,9 @@ describe('lens', async () => {
 
   it('get Slot Value', async () => {
     const { lens, market } = testData
-    const slotValue = await lens.liquidityBinValue(
-      market.address,
-      feeRates.map((v) => v.toString())
-    )
+    const slotValue = await market.getBinValues(feeRates)
     console.log('slotValue', slotValue)
-    slotValue.forEach(({ value }, i) => {
+    slotValue.forEach((value, i) => {
       expect(value).to.equal(amounts[i])
     })
   })
@@ -191,7 +188,7 @@ describe('lens', async () => {
         { depth: 5 }
       )
     )
-    console.log('slot values', await lens.liquidityBinValue(market.address, feeRates))
+    console.log('slot values', await market.getBinValues(feeRates))
     let receipts: LpReceiptStructOutput[] = []
     // Retrieve some liqudity
     console.log('remove liquidity from 100')
