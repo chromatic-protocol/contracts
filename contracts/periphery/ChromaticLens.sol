@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
-import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
 import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";

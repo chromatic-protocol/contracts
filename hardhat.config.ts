@@ -110,7 +110,7 @@ const config: HardhatUserConfig = {
   },
   package: {
     includes: [
-      'OracleProvider',
+      'IOracleProvider',
       'ChromaticMarket',
       'ChromaticMarketFactory',
       'ChromaticVault',

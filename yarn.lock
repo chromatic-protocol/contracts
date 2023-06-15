@@ -9,15 +9,6 @@
   dependencies:
     regenerator-runtime "^0.13.11"
 
-"@chainlink/contracts@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.5.1.tgz#68e7447ba8c1eccfbb760bacc93aced2eef60945"
-  integrity sha512-3PDBJ38Sd6Ml9h7FNK/tZQti+kTCdXUq1qzE6E59CnlzycsV9ElPvf2hTvs9Mi9C6pEx2Mmw9yhZMfBktYUInQ==
-  dependencies:
-    "@eth-optimism/contracts" "^0.5.21"
-    "@openzeppelin/contracts" "^4.3.3"
-    "@openzeppelin/contracts-v0.7" "npm:@openzeppelin/contracts@v3.4.2"
-
 "@chainlink/contracts@^0.6.1":
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.6.1.tgz#8842b57e755793cbdbcbc45277fb5d179c993e19"
@@ -85,20 +76,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@equilibria/perennial-oracle@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@equilibria/perennial-oracle/-/perennial-oracle-1.2.0.tgz#72b4ae2521e66c583f30b9d0266c9e726293fcae"
-  integrity sha512-AFcxsDD/Kzgv6TxELcjoxv7JQVQG6z4Fp95NaN0uvvgptoUW6O9woth59FbDwls71m33IUBeUSW6NxzP9Cp4Aw==
-  dependencies:
-    "@chainlink/contracts" "0.5.1"
-    "@equilibria/root" "0.2.0"
-    "@ethersproject/bignumber" "^5.5.1"
-    "@openzeppelin/contracts" "4.6.0"
-
-"@equilibria/root@0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@equilibria/root/-/root-0.2.0.tgz#0cad4d9f9b2872e4282166b950d85dbb20d27acf"
-  integrity sha512-5cfN7IyzkwgD3R9GovDoEXio21Fc15e5iuk7xcWuB5Ns9zBXYnhPFthtn8Y0JubIUvpENX1jqCz7VxfFgAZbJA==
+"@equilibria/root@^0.3.0-beta0":
+  version "0.3.0-beta0"
+  resolved "https://registry.yarnpkg.com/@equilibria/root/-/root-0.3.0-beta0.tgz#019ef52896e4f2f2da674863a73973515009eeb6"
+  integrity sha512-3A/iLPPifK9rCL6+BETuKSHuhU1h7uZCjBcp7UXotmsbH+J9N/y0ICXIpYEDyY/j8IqAJDY87B3frGBaEKTaxg==
   dependencies:
     "@openzeppelin/contracts" "4.6.0"
 
@@ -198,7 +179,7 @@
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/properties" "^5.7.0"
 
-"@ethersproject/bignumber@5.7.0", "@ethersproject/bignumber@^5.5.1", "@ethersproject/bignumber@^5.7.0":
+"@ethersproject/bignumber@5.7.0", "@ethersproject/bignumber@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/bignumber/-/bignumber-5.7.0.tgz#e2f03837f268ba655ffba03a57853e18a18dc9c2"
   integrity sha512-n1CAdIHRWjSucQO3MC1zPSVgV/6dy/fjL9pMrPP9peL+QxEg9wOsVqwD4+818B6LUEtaXzVHQiuivzRoxPxUGw==
@@ -832,7 +813,7 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.7.0.tgz#3092d70ea60e3d1835466266b1d68ad47035a2d5"
   integrity sha512-52Qb+A1DdOss8QvJrijYYPSf32GUg2pGaG/yCxtaA3cu4jduouTdg4XZSMLW9op54m1jH7J8hoajhHKOPsoJFw==
 
-"@openzeppelin/contracts@^4.3.3", "@openzeppelin/contracts@^4.8.3":
+"@openzeppelin/contracts@^4.8.3":
   version "4.8.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.8.3.tgz#cbef3146bfc570849405f59cba18235da95a252a"
   integrity sha512-bQHV8R9Me8IaJoJ2vPG4rXcL7seB7YVuskr4f+f5RyOStSZetwzkWtoqDMl5erkBJy0lDRUnIR2WIkPiC0GJlg==
