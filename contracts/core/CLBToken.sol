@@ -63,6 +63,19 @@ contract CLBToken is ERC1155Supply, ICLBToken {
 
     /**
      * @inheritdoc ICLBToken
+     */
+    function totalSupplyBatch(
+        uint256[] memory ids
+    ) public view virtual override returns (uint256[] memory) {
+        uint256[] memory supplies = new uint256[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) {
+            supplies[i] = super.totalSupply(ids[i]);
+        }
+        return supplies;
+    }
+
+    /**
+     * @inheritdoc ICLBToken
      * @dev This function can only be called by the Chromatic Market contract.
      */
     function mint(
