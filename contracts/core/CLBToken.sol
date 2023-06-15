@@ -186,18 +186,25 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         uint256 pct = BPS / 100;
         uint256 integerPart = absFeeRate / pct;
         uint256 fractionalPart = absFeeRate % pct;
-        string memory fractionalPart1 = (fractionalPart / (pct / 10)).toString();
-        string memory fractionalPart2 = (fractionalPart % (pct / 10)).toString();
 
-        return
-            abi.encodePacked(
-                feeRate < 0 ? "-" : "+",
-                integerPart.toString(),
-                ".",
-                fractionalPart1,
-                fractionalPart2,
-                "%"
-            );
+        bytes memory fraction;
+        if (fractionalPart > 0) {
+            uint256 fractionalPart1 = fractionalPart / (pct / 10);
+            uint256 fractionalPart2 = fractionalPart % (pct / 10);
+
+            fraction = bytes(".");
+            if (fractionalPart2 == 0) {
+                fraction = abi.encodePacked(fraction, fractionalPart1.toString());
+            } else {
+                fraction = abi.encodePacked(
+                    fraction,
+                    fractionalPart1.toString(),
+                    fractionalPart2.toString()
+                );
+            }
+        }
+
+        return abi.encodePacked(feeRate < 0 ? "-" : "+", integerPart.toString(), fraction, "%");
     }
 
     uint256 private constant _W = 480;
