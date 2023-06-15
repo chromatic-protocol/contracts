@@ -22,9 +22,9 @@ library CLBTokenLib {
      *      Otherwise it returns the fee rate directly.
      * @return id The ID of ERC1155 token
      */
-    function encodeId(int16 tradingFeeRate) internal pure returns (uint256 id) {
-        uint256 absFeeRate = int256(tradingFeeRate).abs();
-        id = tradingFeeRate < 0 ? absFeeRate + DIRECTION_PRECISION : absFeeRate;
+    function encodeId(int16 tradingFeeRate) internal pure returns (uint256) {
+        bool long = tradingFeeRate > 0;
+        return _encodeId(uint16(long ? tradingFeeRate : -tradingFeeRate), long);
     }
 
     /**
@@ -57,5 +57,21 @@ library CLBTokenLib {
             100, 200, 300, 400, 500, 600, 700, 800, 900, // 1% ~ 9%, step 1%
             1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000 // 10% ~ 50%, step 5%
         ];
+    }
+
+    function tokenIds() internal pure returns (uint256[] memory) {
+        uint16[FEE_RATES_LENGTH] memory feeRates = tradingFeeRates();
+
+        uint256[] memory ids = new uint256[](FEE_RATES_LENGTH * 2);
+        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+            ids[i] = _encodeId(feeRates[i], true);
+            ids[i + FEE_RATES_LENGTH] = _encodeId(feeRates[i], false);
+        }
+
+        return ids;
+    }
+
+    function _encodeId(uint16 tradingFeeRate, bool long) private pure returns (uint256 id) {
+        id = long ? tradingFeeRate : tradingFeeRate + DIRECTION_PRECISION;
     }
 }

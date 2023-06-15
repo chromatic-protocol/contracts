@@ -1,22 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
+import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {BPS} from "@chromatic/core/libraries/Constants.sol";
+import {Position} from "@chromatic/core/libraries/Position.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
+import {BPS, FEE_RATES_LENGTH} from "@chromatic/core/libraries/Constants.sol";
 
 /**
  * @title ChromaticLens
  * @dev A contract that provides utility functions for interacting with Chromatic markets.
  */
-contract ChromaticLens {
+contract ChromaticLens is Multicall {
     using Math for uint256;
+
+    struct CLBBalance {
+        uint256 tokenId;
+        uint256 balance;
+        uint256 totalSupply;
+        uint256 binValue;
+    }
 
     struct LiquidityBinValue {
         int16 tradingFeeRate;
@@ -51,20 +59,60 @@ contract ChromaticLens {
     }
 
     /**
-     * @dev Retrieves the liquidity bin values for the specified trading fee rates in the given Chromatic market.
+     * @dev Retrieves the CLB token balances for the specified owner in the given Chromatic market.
      * @param market The address of the Chromatic market contract.
-     * @param tradingFeeRates An array of trading fee rates.
-     * @return results An array of LiquidityBinValue containing the liquidity bin values for each trading fee rate.
+     * @param owner The address of the CLB token owner.
+     * @return An array of CLBBalance containing the CLB token balance information for the owner.
      */
-    function liquidityBinValue(
+    function clbBalanceOf(
         IChromaticMarket market,
-        int16[] calldata tradingFeeRates
-    ) public view returns (LiquidityBinValue[] memory results) {
-        results = new LiquidityBinValue[](tradingFeeRates.length);
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            uint256 binValue = market.getBinValue(tradingFeeRates[i]);
-            results[i] = LiquidityBinValue(tradingFeeRates[i], binValue);
+        address owner
+    ) external view returns (CLBBalance[] memory) {
+        uint256[] memory tokenIds = CLBTokenLib.tokenIds();
+        address[] memory accounts = new address[](tokenIds.length);
+        // Set all accounts to the owner's address
+        for (uint256 i = 0; i < accounts.length; i++) {
+            accounts[i] = owner;
         }
+
+        // Get balances of CLB tokens for the owner
+        uint256[] memory balances = market.clbToken().balanceOfBatch(accounts, tokenIds);
+
+        // Count the number of CLB tokens with non-zero balance
+        uint256 effectiveCnt;
+        for (uint256 i = 0; i < balances.length; i++) {
+            if (balances[i] > 0) {
+                effectiveCnt++;
+            }
+        }
+
+        uint256[] memory effectiveBalances = new uint256[](effectiveCnt);
+        uint256[] memory effectiveTokenIds = new uint256[](effectiveCnt);
+        int16[] memory effectiveFeeRates = new int16[](effectiveCnt);
+        for ((uint256 i, uint256 idx) = (0, 0); i < balances.length; i++) {
+            if (balances[i] > 0) {
+                effectiveBalances[idx] = balances[i];
+                effectiveTokenIds[idx] = tokenIds[i];
+                effectiveFeeRates[idx] = CLBTokenLib.decodeId(tokenIds[i]);
+                idx++;
+            }
+        }
+
+        uint256[] memory totalSupplies = market.clbToken().totalSupplyBatch(effectiveTokenIds);
+        uint256[] memory binValues = market.getBinValues(effectiveFeeRates);
+
+        // Populate the result array with CLB token balance information
+        CLBBalance[] memory result = new CLBBalance[](effectiveCnt);
+        for (uint256 i = 0; i < effectiveCnt; i++) {
+            result[i] = CLBBalance({
+                tokenId: effectiveTokenIds[i],
+                balance: effectiveBalances[i],
+                totalSupply: totalSupplies[i],
+                binValue: binValues[i]
+            });
+        }
+
+        return result;
     }
 
     /**
@@ -153,25 +201,6 @@ contract ChromaticLens {
             results[i] = IChromaticMarket(market).calculateCLBTokenMinting(
                 tradingFeeRates[i],
                 amounts[i]
-            );
-        }
-    }
-
-    /**
-     * @dev Retrieves the total supply of CLB tokens for each trading fee rate in the given Chromatic market.
-     * @param market The address of the Chromatic market contract.
-     * @param tradingFeeRates An array of trading fee rates.
-     * @return supplies An array of uint256 containing the total supply of CLB tokens for each trading fee rate.
-     */
-    function totalSupplies(
-        address market,
-        int16[] calldata tradingFeeRates
-    ) external view returns (uint256[] memory supplies) {
-        supplies = new uint256[](tradingFeeRates.length);
-
-        for (uint i = 0; i < tradingFeeRates.length; i++) {
-            supplies[i] = ICLBToken(IChromaticMarket(market).clbToken()).totalSupply(
-                CLBTokenLib.encodeId(tradingFeeRates[0])
             );
         }
     }
