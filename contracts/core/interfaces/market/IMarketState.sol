@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquidator.sol";
 import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";

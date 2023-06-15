@@ -6,7 +6,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
 import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
-import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
 uint256 constant QTY_DECIMALS = 4;

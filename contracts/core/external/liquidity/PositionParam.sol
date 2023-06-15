@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
-import {IOracleProvider} from "@chromatic/core/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 

@@ -2,7 +2,6 @@
   "name": "@chromatic-protocol/contracts",
   "version": "0.0.1-rc.92",
   "scripts": {
-    "postinstall": "patch-package",
     "test": "forge test -vvv",
     "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
     "coverage": "forge coverage --report lcov",
@@ -23,7 +22,7 @@
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
     "@chromatic-protocol/hardhat-package": "^0.0.1-dev.15",
-    "@equilibria/perennial-oracle": "^1.2.0",
+    "@equilibria/root": "^0.3.0-beta0",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
     "@gelatonetwork/automate-sdk": "^2.1.1",

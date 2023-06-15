@@ -102,13 +102,18 @@ Make sure to customize the deployment script (`deploy/*.ts`) with any additional
 
 | Contract Name                                                         | Description                                                                                              |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| [`OracleProvider`](contracts/core/OracleProvider.sol)                 | A contract that provides Oracle functionality using Chainlink feeds.                                     |
 | [`KeeperFeePayer`](contracts/core/KeeperFeePayer.sol)                 | A contract that pays keeper fees using a Uniswap router.                                                 |
 | [`ChromaticLiquidator`](contracts/core/ChromaticLiquidator.sol)       | A contract that handles the liquidation and claiming of positions in Chromatic markets.                  |
 | [`ChromaticVault`](contracts/core/ChromaticVault.sol)                 | A contract that provides functionality for managing positions, liquidity, and fees in Chromatic markets. |
 | [`ChromaticMarketFactory`](contracts/core/ChromaticMarketFactory.sol) | A contract for managing the creation and registration of Chromatic markets.                              |
 | [`ChromaticMarket`](contracts/core/ChromaticMarket.sol)               | A contract that represents a Chromatic market, combining trade and liquidity functionalities.            |
 | [`CLBToken`](contracts/core/CLBToken.sol)                             | A contract that represents Liquidity Bin tokens.                                                         |
+
+### oracle
+
+| Contract Name                                                     | Description                                                                                              |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [`ChainlinkFeedOracle`](contracts/oracle/ChainlinkFeedOracle.sol) | A contract that provides Oracle functionality using Chainlink feeds.                                     |
 
 ### periphery
 
