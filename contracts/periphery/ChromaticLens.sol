@@ -38,16 +38,16 @@ contract ChromaticLens {
     }
 
     /**
-     * @dev Retrieves the Oracle versions for the specified oracle versions in the given Chromatic market.
+     * @dev Retrieves the OracleVersion for the specified oracle version in the given Chromatic market.
      * @param market The address of the Chromatic market contract.
-     * @param oracleVersions An array of Oracle versions.
-     * @return results An array of OracleVersion containing the Oracle versions for each oracle version.
+     * @param version An oracle versions.
+     * @return oracleVersion The OracleVersion for the specified oracle version.
      */
-    function oracleAtVersions(
+    function oracleVersion(
         IChromaticMarket market,
-        uint256[] calldata oracleVersions
-    ) external view returns (IOracleProvider.OracleVersion[] memory results) {
-        return market.oracleProvider().atVersions(oracleVersions);
+        uint256 version
+    ) external view returns (IOracleProvider.OracleVersion memory) {
+        return market.oracleProvider().atVersion(version);
     }
 
     /**
