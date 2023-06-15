@@ -11,6 +11,7 @@ import {Position} from "@chromatic/core/libraries/Position.sol";
 import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
 import {BPS, FEE_RATES_LENGTH} from "@chromatic/core/libraries/Constants.sol";
+import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
 
 /**
  * @title ChromaticLens
@@ -24,11 +25,6 @@ contract ChromaticLens is Multicall {
         uint256 balance;
         uint256 totalSupply;
         uint256 binValue;
-    }
-
-    struct LiquidityBinValue {
-        int16 tradingFeeRate;
-        uint256 value;
     }
 
     struct LiquidityBinsParam {
@@ -45,6 +41,12 @@ contract ChromaticLens is Multicall {
         uint256 tokenAmount;
     }
 
+    IChromaticRouter router;
+
+    constructor(IChromaticRouter _router) {
+        router = _router;
+    }
+
     /**
      * @dev Retrieves the OracleVersion for the specified oracle version in the given Chromatic market.
      * @param market The address of the Chromatic market contract.
@@ -56,6 +58,24 @@ contract ChromaticLens is Multicall {
         uint256 version
     ) external view returns (IOracleProvider.OracleVersion memory) {
         return market.oracleProvider().atVersion(version);
+    }
+
+    /**
+     * @dev Retrieves the LP receipts for the specified owner in the given Chromatic market.
+     * @param market The address of the Chromatic market contract.
+     * @param owner The address of the LP token owner.
+     * @return result An array of LpReceipt containing the LP receipts for the owner.
+     */
+    function lpReceipts(
+        IChromaticMarket market,
+        address owner
+    ) public view returns (LpReceipt[] memory result) {
+        uint256[] memory receiptIds = router.getLpReceiptIds(address(market), owner);
+
+        result = new LpReceipt[](receiptIds.length);
+        for (uint i = 0; i < receiptIds.length; i++) {
+            result[i] = market.getLpReceipt(receiptIds[i]);
+        }
     }
 
     /**
@@ -139,22 +159,6 @@ contract ChromaticLens is Multicall {
                 burningAmount,
                 tokenAmount
             );
-        }
-    }
-
-    /**
-     * @dev Retrieves the LP receipts for the specified receipt IDs in the given Chromatic market.
-     * @param market The address of the Chromatic market contract.
-     * @param receiptIds An array of receipt IDs.
-     * @return result An array of LpReceipt containing the LP receipts for each receipt ID.
-     */
-    function lpReceipts(
-        IChromaticMarket market,
-        uint256[] calldata receiptIds
-    ) public view returns (LpReceipt[] memory result) {
-        result = new LpReceipt[](receiptIds.length);
-        for (uint i = 0; i < receiptIds.length; i++) {
-            result[i] = market.getLpReceipt(receiptIds[i]);
         }
     }
 

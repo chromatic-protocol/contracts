@@ -16,7 +16,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(chalk.yellow(`✨ ChromaticRouter: ${routerAddress}`))
 
   const { address: lensAddress } = await deploy('ChromaticLens', {
-    from: deployer
+    from: deployer,
+    args: [routerAddress]
   })
   console.log(chalk.yellow(`✨ ChromaticLens: ${lensAddress}`))
 }
