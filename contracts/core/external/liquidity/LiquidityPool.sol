@@ -7,8 +7,10 @@ import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
 import {LiquidityBin, LiquidityBinLib} from "@chromatic/core/external/liquidity/LiquidityBin.sol";
 import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
+import {FEE_RATES_LENGTH} from "@chromatic/core/libraries/Constants.sol";
 import {Position} from "@chromatic/core/libraries/Position.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
+import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
 import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
@@ -45,9 +47,6 @@ library LiquidityPoolLib {
         uint256 indexed earning
     );
 
-    uint256 private constant FEE_RATES_LENGTH = 36;
-    uint16 private constant MIN_FEE_RATE = 1;
-
     struct _proportionalPositionParamValue {
         int256 leveragedQty;
         uint256 takerMargin;
@@ -68,7 +67,7 @@ library LiquidityPoolLib {
      * @param self The reference to the LiquidityPool.
      */
     function initialize(LiquidityPool storage self) external {
-        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longBins[feeRate].initialize(int16(feeRate));
@@ -82,7 +81,7 @@ library LiquidityPoolLib {
      * @param ctx The LpContext object.
      */
     function settle(LiquidityPool storage self, LpContext memory ctx) external {
-        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
         for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longBins[feeRate].settle(ctx);
@@ -116,7 +115,7 @@ library LiquidityPoolLib {
         // Retrieve the target liquidity bins based on the position quantity
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, qty);
 
-        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
         uint256[FEE_RATES_LENGTH] memory _binMargins;
 
         uint256 to;
@@ -666,7 +665,7 @@ library LiquidityPoolLib {
      * @param tradingFeeRate The trading fee rate to be validated.
      */
     function validateTradingFeeRate(int16 tradingFeeRate) private pure {
-        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
 
         uint16 absFeeRate = abs(tradingFeeRate);
 
@@ -684,22 +683,6 @@ library LiquidityPoolLib {
      */
     function abs(int16 i) private pure returns (uint16) {
         return i < 0 ? uint16(-i) : uint16(i);
-    }
-
-    /**
-     * @notice Retrieves the array of supported trading fee rates.
-     * @dev This function returns the array of supported trading fee rates,
-     *      ranging from the minimum fee rate to the maximum fee rate with step increments.
-     * @return tradingFeeRates The array of supported trading fee rates.
-     */
-    function tradingFeeRates() private pure returns (uint16[FEE_RATES_LENGTH] memory) {
-        // prettier-ignore
-        return [
-            MIN_FEE_RATE, 2, 3, 4, 5, 6, 7, 8, 9, // 0.01% ~ 0.09%, step 0.01%
-            10, 20, 30, 40, 50, 60, 70, 80, 90, // 0.1% ~ 0.9%, step 0.1%
-            100, 200, 300, 400, 500, 600, 700, 800, 900, // 1% ~ 9%, step 1%
-            1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000 // 10% ~ 50%, step 5%
-        ];
     }
 
     /**
@@ -761,7 +744,7 @@ library LiquidityPoolLib {
     ) external {
         uint256 remainEarning = earning;
         uint256 remainBalance = marketBalance;
-        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = tradingFeeRates();
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
 
         (remainEarning, remainBalance) = distributeEarning(
             self._longBins,
