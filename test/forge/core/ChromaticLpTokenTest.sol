@@ -43,6 +43,11 @@ contract CLBTokenTest is Test, CLBToken {
             abi.encodeWithSelector(settlementToken.symbol.selector),
             abi.encode("USDC")
         );
+        vm.mockCall(
+            address(settlementToken),
+            abi.encodeWithSelector(settlementToken.decimals.selector),
+            abi.encode(6)
+        );
 
         vm.mockCall(
             address(market),
