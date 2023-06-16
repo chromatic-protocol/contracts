@@ -68,7 +68,7 @@ jobs:
           yarn clean
           yarn build
           npm pkg set dependencies="`npm pkg get dependencies`" --prefix ./contracts --json
-          yarn publish --new-version="${{ needs.Release.outputs.version }}" --cwd contracts
+          yarn publish --new-version="${{ needs.Release.outputs.version }}" --cwd contracts --no-git-tag-version --no-commit-hooks
       - uses: chromatic-protocol/action-github-app-token@v1
         id: generate-token
         with:
