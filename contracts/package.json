@@ -1,6 +1,6 @@
 {
   "name": "@chromatic-protocol/contracts",
-  "version": "0.0.1-rc.94",
+  "version": "0.0.1-rc.95",
   "files": [
     "**/*.sol",
     "!/mocks/**/*"
