@@ -1,7 +1,3 @@
 {
-  "name": "@chromatic-protocol/contracts",
-  "files": [
-    "**/*.sol",
-    "!/mocks/**/*"
-  ]
+  "name": "@chromatic-protocol/contracts"
 }
