@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {CLBToken} from "@chromatic/core/CLBToken.sol";
+import {CLBToken} from "@chromatic-protocol/contracts/core/CLBToken.sol";
 
 /**
  * @title CLBTokenDeployerLib

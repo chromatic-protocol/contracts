@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
-import {ChromaticLiquidator} from "@chromatic/core/ChromaticLiquidator.sol";
-import {IAutomate, Module, ModuleData} from "@chromatic/core/base/gelato/Types.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {ChromaticLiquidator} from "@chromatic-protocol/contracts/core/ChromaticLiquidator.sol";
+import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 
 contract ChromaticLiquidatorMock is ChromaticLiquidator {
     constructor(

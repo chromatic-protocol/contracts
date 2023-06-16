@@ -4,11 +4,11 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
-import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
-import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpReceipt, LpAction} from "@chromatic/core/libraries/LpReceipt.sol";
-import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
+import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
+import {MarketBase} from "@chromatic-protocol/contracts/core/base/market/MarketBase.sol";
 
 /**
  * @title Liquidity

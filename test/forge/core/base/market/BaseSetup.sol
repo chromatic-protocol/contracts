@@ -2,15 +2,15 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {IAutomate, IOpsProxyFactory} from "@chromatic/core/base/gelato/Types.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {ChromaticMarketFactory} from "@chromatic/core/ChromaticMarketFactory.sol";
-import {KeeperFeePayerMock} from "@chromatic/mocks/KeeperFeePayerMock.sol";
-import {OracleProviderMock} from "@chromatic/mocks/OracleProviderMock.sol";
-import {Token} from "@chromatic/mocks/Token.sol";
-import {ChromaticLiquidatorMock} from "@chromatic/mocks/ChromaticLiquidatorMock.sol";
-import {ChromaticVaultMock} from "@chromatic/mocks/ChromaticVaultMock.sol";
+import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/ChromaticMarketFactory.sol";
+import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
+import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProviderMock.sol";
+import {Token} from "@chromatic-protocol/contracts/mocks/Token.sol";
+import {ChromaticLiquidatorMock} from "@chromatic-protocol/contracts/mocks/ChromaticLiquidatorMock.sol";
+import {ChromaticVaultMock} from "@chromatic-protocol/contracts/mocks/ChromaticVaultMock.sol";
 
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;

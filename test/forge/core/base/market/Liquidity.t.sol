@@ -4,8 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {BaseSetup} from "./BaseSetup.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
-import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
+import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import "forge-std/console.sol";
 
 contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {

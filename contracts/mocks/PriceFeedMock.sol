@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {AggregatorProxyInterface} from "@chromatic/oracle/interfaces/AggregatorProxyInterface.sol";
+import {AggregatorProxyInterface} from "@chromatic-protocol/contracts/oracle/interfaces/AggregatorProxyInterface.sol";
 
 contract PriceFeedMock is AggregatorProxyInterface {
     uint256 private constant PHASE_OFFSET = 64;

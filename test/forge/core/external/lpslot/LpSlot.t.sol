@@ -5,14 +5,14 @@ import {Test} from "forge-std/Test.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LiquidityBin, LiquidityBinLib} from "@chromatic/core/external/liquidity/LiquidityBin.sol";
-import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
-import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {CLBToken} from "@chromatic/core/CLBToken.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityBin.sol";
+import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {CLBToken} from "@chromatic-protocol/contracts/core/CLBToken.sol";
 
 contract LiquidityBinTest is Test {
     using SafeCast for uint256;

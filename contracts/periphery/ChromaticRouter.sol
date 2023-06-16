@@ -6,18 +6,18 @@ import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeE
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {IChromaticLiquidityCallback} from "@chromatic/core/interfaces/callback/IChromaticLiquidityCallback.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 
-import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
-import {AccountFactory} from "@chromatic/periphery/base/AccountFactory.sol";
-import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
-import {ChromaticAccount} from "@chromatic/periphery/ChromaticAccount.sol";
+import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticRouter.sol";
+import {AccountFactory} from "@chromatic-protocol/contracts/periphery/base/AccountFactory.sol";
+import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
+import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
 
 /**
  * @title ChromaticRouter

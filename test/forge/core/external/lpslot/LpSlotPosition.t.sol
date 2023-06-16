@@ -4,14 +4,14 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {BinPosition, BinPositionLib} from "@chromatic/core/external/liquidity/BinPosition.sol";
-import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
-import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
-import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/external/liquidity/BinPosition.sol";
+import {PositionParam} from "@chromatic-protocol/contracts/core/external/liquidity/PositionParam.sol";
+import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 
 contract BinPositionTest is Test {
     using BinPositionLib for BinPosition;

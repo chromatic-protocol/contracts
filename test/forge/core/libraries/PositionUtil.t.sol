@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
-import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
+import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 
 contract PositionUtilTest is Test {
     function testPnl() public {

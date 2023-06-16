@@ -3,20 +3,20 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
-import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquidator.sol";
-import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
-import {IKeeperFeePayer} from "@chromatic/core/interfaces/IKeeperFeePayer.sol";
-import {CLBTokenDeployerLib} from "@chromatic/core/external/deployer/CLBTokenDeployer.sol";
-import {LiquidityPool} from "@chromatic/core/external/liquidity/LiquidityPool.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
+import {CLBTokenDeployerLib} from "@chromatic-protocol/contracts/core/external/deployer/CLBTokenDeployer.sol";
+import {LiquidityPool} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityPool.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title MarketBase

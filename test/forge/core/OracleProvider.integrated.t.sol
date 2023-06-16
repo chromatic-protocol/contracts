@@ -4,9 +4,9 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Test} from "forge-std/Test.sol";
 import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {ChainlinkAggregator} from "@chromatic/oracle/types/ChainlinkAggregator.sol";
-import {ChainlinkFeedOracle} from "@chromatic/oracle/ChainlinkFeedOracle.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {ChainlinkAggregator} from "@chromatic-protocol/contracts/oracle/types/ChainlinkAggregator.sol";
+import {ChainlinkFeedOracle} from "@chromatic-protocol/contracts/oracle/ChainlinkFeedOracle.sol";
 import {PriceFeedMock} from "contracts/mocks/PriceFeedMock.sol";
 
 // forge test --fork-url https://eth.llamarpc.com --fork-block-number 10000000 -vv

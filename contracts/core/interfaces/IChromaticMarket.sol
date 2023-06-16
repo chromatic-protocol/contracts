@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
-import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
-import {IMarketState} from "@chromatic/core/interfaces/market/IMarketState.sol";
-import {IMarketLiquidate} from "@chromatic/core/interfaces/market/IMarketLiquidate.sol";
+import {ITrade} from "@chromatic-protocol/contracts/core/interfaces/market/ITrade.sol";
+import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
+import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 
 /**
  * @title IChromaticMarket

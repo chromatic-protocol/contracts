@@ -5,14 +5,14 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 // import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
-import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
-import {BPS, FEE_RATES_LENGTH} from "@chromatic/core/libraries/Constants.sol";
-import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
+import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
+import {BPS, FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
+import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticRouter.sol";
 
 /**
  * @title ChromaticLens

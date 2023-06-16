@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 
 /**
  * @dev The LpAction enum represents the types of LP actions that can be performed.

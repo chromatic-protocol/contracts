@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ChromaticMarket} from "@chromatic/core/ChromaticMarket.sol";
+import {ChromaticMarket} from "@chromatic-protocol/contracts/core/ChromaticMarket.sol";
 
 /**
  * @title MarketDeployer

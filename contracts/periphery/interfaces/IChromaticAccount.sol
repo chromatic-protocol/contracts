@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
+import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 
 /**
  * @title IChromaticAccount

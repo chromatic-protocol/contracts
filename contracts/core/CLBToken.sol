@@ -7,10 +7,10 @@ import {ERC1155Supply, ERC1155} from "@openzeppelin/contracts/token/ERC1155/exte
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {BPS} from "@chromatic/core/libraries/Constants.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
  * @title CLBToken

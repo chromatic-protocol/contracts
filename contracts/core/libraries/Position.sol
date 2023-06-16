@@ -5,10 +5,10 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic/core/libraries/PositionUtil.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
 
 /**
  * @title Position
