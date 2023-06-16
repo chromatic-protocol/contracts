@@ -793,7 +793,44 @@ library LiquidityPoolLib {
         _validTradingFeeRate(tradingFeeRate)
         returns (ILiquidity.ClaimableLiquidity memory)
     {
-        LiquidityBin storage slot = targetBin(self, tradingFeeRate);
-        return slot.claimableLiquidity(oracleVersion);
+        LiquidityBin storage bin = targetBin(self, tradingFeeRate);
+        return bin.claimableLiquidity(oracleVersion);
+    }
+
+    /**
+     * @dev Retrieves the liquidity bin statuses for the LiquidityPool using the provided context.
+     * @param self The LiquidityPool storage instance.
+     * @param ctx The LpContext containing the necessary context for calculating the bin statuses.
+     * @return stats An array of ILiquidity.LiquidityBinStatus representing the liquidity bin statuses.
+     */
+    function liquidityBinStatuses(
+        LiquidityPool storage self,
+        LpContext memory ctx
+    ) external view returns (ILiquidity.LiquidityBinStatus[] memory) {
+        uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
+
+        ILiquidity.LiquidityBinStatus[] memory stats = new ILiquidity.LiquidityBinStatus[](
+            FEE_RATES_LENGTH * 2
+        );
+        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+            uint16 _feeRate = _tradingFeeRates[i];
+            LiquidityBin storage longBin = targetBin(self, int16(_feeRate));
+            LiquidityBin storage shortBin = targetBin(self, -int16(_feeRate));
+
+            stats[i] = ILiquidity.LiquidityBinStatus({
+                tradingFeeRate: int16(_feeRate),
+                liquidity: longBin.liquidity(),
+                freeLiquidity: longBin.freeLiquidity(),
+                binValue: longBin.value(ctx)
+            });
+            stats[i + FEE_RATES_LENGTH] = ILiquidity.LiquidityBinStatus({
+                tradingFeeRate: -int16(_feeRate),
+                liquidity: shortBin.liquidity(),
+                freeLiquidity: shortBin.freeLiquidity(),
+                binValue: shortBin.value(ctx)
+            });
+        }
+
+        return stats;
     }
 }

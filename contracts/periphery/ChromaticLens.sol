@@ -135,4 +135,15 @@ contract ChromaticLens is Multicall {
     ) external view returns (IChromaticMarket.ClaimableLiquidity memory) {
         return market.claimableLiquidity(tradingFeeRate, _oracleVersion);
     }
+
+    /**
+     * @dev Retrieves the liquidity bin statuses for the specified Chromatic Market.
+     * @param market The Chromatic Market contract for which liquidity bin statuses are retrieved.
+     * @return statuses An array of LiquidityBinStatus representing the liquidity bin statuses.
+     */
+    function liquidityBinStatuses(
+        IChromaticMarket market
+    ) external view returns (IChromaticMarket.LiquidityBinStatus[] memory) {
+        return market.liquidityBinStatuses();
+    }
 }

@@ -230,6 +230,13 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     }
 
     /**
+     * @inheritdoc ILiquidity
+     */
+    function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory) {
+        return liquidityPool.liquidityBinStatuses(newLpContext());
+    }
+
+    /**
      * @dev Creates a new liquidity receipt.
      * @param ctx The liquidity context.
      * @param action The liquidity action.

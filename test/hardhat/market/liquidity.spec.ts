@@ -119,12 +119,9 @@ describe('market test', async function () {
     // remove begin
     await (await clbToken.setApprovalForAll(chromaticRouter.address, true)).wait()
 
-    const expectedAmounts = await lens.calculateCLBTokenValueBatch(
-      market.address,
-      totalFees,
-      expectedLiquidities
+    const expectedAmounts = await Promise.all(
+      totalFees.map((fee, i) => _expectedAmount(market, clbToken, fee, expectedLiquidities[i]))
     )
-
     await (await removeLiquidityBatch(expectedLiquidities, totalFees)).wait()
 
     await updatePrice(1000)
@@ -162,12 +159,9 @@ describe('market test', async function () {
     // }
     // logLiquidity(totals, unuseds);
 
-    const oracleVersion = await testData.oracleProvider.currentVersion()
-
-    const bins = await testData.lens.liquidityBins(
-      testData.market.address,
-      totalFees.map((fee) => ({ tradingFeeRate: fee, oracleVersion: oracleVersion.version }))
-    )
+    const bins = (await testData.lens.liquidityBinStatuses(testData.market.address))
+      .slice()
+      .sort((a, b) => a.tradingFeeRate - b.tradingFeeRate)
 
     const totalMargins = bins.map((b) => b.liquidity)
     const unusedMargins = bins.map((b) => b.freeLiquidity)

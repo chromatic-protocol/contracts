@@ -24,6 +24,13 @@ interface ILiquidity {
         uint256 burningTokenAmount;
     }
 
+    struct LiquidityBinStatus {
+        uint256 liquidity;
+        uint256 freeLiquidity;
+        uint256 binValue;
+        int16 tradingFeeRate;
+    }
+
     error TooSmallAmount();
     error OnlyAccessableByVault();
     error NotExistLpReceipt();
@@ -158,4 +165,10 @@ interface ILiquidity {
         int16 tradingFeeRate,
         uint256 oracleVersion
     ) external view returns (ClaimableLiquidity memory);
+
+    /**
+     * @dev Retrieves the liquidity bin statuses for the caller's liquidity pool.
+     * @return statuses An array of LiquidityBinStatus representing the liquidity bin statuses.
+     */
+    function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory);
 }
