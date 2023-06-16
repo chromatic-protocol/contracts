@@ -1,14 +1,7 @@
 {
   "name": "@chromatic-protocol/contracts",
-  "version": "0.0.1-rc.95",
   "files": [
     "**/*.sol",
     "!/mocks/**/*"
-  ],
-  "dependencies": {
-    "@chainlink/contracts": "^0.6.1",
-    "@equilibria/root": "^0.3.0-beta0",
-    "@openzeppelin/contracts": "^4.8.3",
-    "@uniswap/v3-periphery": "^1.4.3"
-  }
+  ]
 }
