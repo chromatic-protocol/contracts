@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.changelog.outputs.tag }}
+      version: ${{ steps.changelog.outputs.version }}
     steps:
       - uses: actions/checkout@v3 # Checkout our working repository
       - name: Conventional Changelog Action
@@ -66,7 +67,7 @@ jobs:
         run: |
           yarn clean
           yarn build
-          npm pkg set version="${{ needs.Release.outputs.tag }}" --prefix ./contracts --json
+          npm pkg set version="${{ needs.Release.outputs.version }}" --prefix ./contracts --json
           npm pkg set dependencies="`npm pkg get dependencies`" --prefix ./contracts --json
           yarn publish contracts
       - uses: chromatic-protocol/action-github-app-token@v1
