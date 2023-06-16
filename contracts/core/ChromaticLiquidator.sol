@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticLiquidator} from "@chromatic/core/interfaces/IChromaticLiquidator.sol";
-import {Liquidator} from "@chromatic/core/base/Liquidator.sol";
-import {AutomateReady} from "@chromatic/core/base/gelato/AutomateReady.sol";
-import {IAutomate} from "@chromatic/core/base/gelato/Types.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
+import {Liquidator} from "@chromatic-protocol/contracts/core/base/Liquidator.sol";
+import {AutomateReady} from "@chromatic-protocol/contracts/core/base/gelato/AutomateReady.sol";
+import {IAutomate} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 
 /**
  * @title ChromaticLiquidator

@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {FEE_RATES_LENGTH} from "@chromatic/core/libraries/Constants.sol";
+import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
  * @title CLBTokenLib

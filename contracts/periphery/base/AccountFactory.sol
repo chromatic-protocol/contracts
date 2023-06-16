@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter.sol";
-import {ChromaticAccount} from "@chromatic/periphery/ChromaticAccount.sol";
+import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticRouter.sol";
+import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
 
 /**
  * @title AccountFactory

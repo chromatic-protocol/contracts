@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 
 /**
  * @title LpContext

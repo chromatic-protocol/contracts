@@ -3,11 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
-import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
-import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title BinLiquidity

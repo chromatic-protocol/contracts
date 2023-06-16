@@ -3,11 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {IChromaticAccount} from "@chromatic/periphery/interfaces/IChromaticAccount.sol";
-import {VerifyCallback} from "@chromatic/periphery/base/VerifyCallback.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {IChromaticAccount} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticAccount.sol";
+import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
 
 /**
  * @title ChromaticAccount

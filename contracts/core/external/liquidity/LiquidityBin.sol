@@ -3,14 +3,14 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
-import {BinLiquidity, BinLiquidityLib} from "@chromatic/core/external/liquidity/BinLiquidity.sol";
-import {BinPosition, BinPositionLib} from "@chromatic/core/external/liquidity/BinPosition.sol";
-import {BinClosedPosition, BinClosedPositionLib} from "@chromatic/core/external/liquidity/BinClosedPosition.sol";
-import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
-import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {BinLiquidity, BinLiquidityLib} from "@chromatic-protocol/contracts/core/external/liquidity/BinLiquidity.sol";
+import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/external/liquidity/BinPosition.sol";
+import {BinClosedPosition, BinClosedPositionLib} from "@chromatic-protocol/contracts/core/external/liquidity/BinClosedPosition.sol";
+import {PositionParam} from "@chromatic-protocol/contracts/core/external/liquidity/PositionParam.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
+import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 /**
  * @title LiquidityBin
  * @notice Structure representing a liquidity bin

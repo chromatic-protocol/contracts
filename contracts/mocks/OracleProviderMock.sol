@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
-import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 
 contract OracleProviderMock is IOracleProvider {
     mapping(uint256 => OracleVersion) oracleVersions;

@@ -5,14 +5,14 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PositionUtil} from "@chromatic/core/libraries/PositionUtil.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
-import {MarketBase} from "@chromatic/core/base/market/MarketBase.sol";
-import {IChromaticTradeCallback} from "@chromatic/core/interfaces/callback/IChromaticTradeCallback.sol";
-import {ITrade} from "@chromatic/core/interfaces/market/ITrade.sol";
-import {IMarketLiquidate} from "@chromatic/core/interfaces/market/IMarketLiquidate.sol";
+import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
+import {MarketBase} from "@chromatic-protocol/contracts/core/base/market/MarketBase.sol";
+import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {ITrade} from "@chromatic-protocol/contracts/core/interfaces/market/ITrade.sol";
+import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 
 /**
  * @title Trade

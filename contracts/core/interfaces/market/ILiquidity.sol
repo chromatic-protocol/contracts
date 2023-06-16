@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
+import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 
 /**
  * @title ILiquidity

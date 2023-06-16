@@ -2,18 +2,18 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IChromaticMarketFactory} from "@chromatic/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
-import {IInterestCalculator} from "@chromatic/core/interfaces/IInterestCalculator.sol";
-import {IChromaticVault} from "@chromatic/core/interfaces/IChromaticVault.sol";
-import {IMarketDeployer} from "@chromatic/core/interfaces/factory/IMarketDeployer.sol";
-import {IOracleProviderRegistry} from "@chromatic/core/interfaces/factory/IOracleProviderRegistry.sol";
-import {ISettlementTokenRegistry} from "@chromatic/core/interfaces/factory/ISettlementTokenRegistry.sol";
-import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic/core/external/deployer/MarketDeployer.sol";
-import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic/core/external/registry/OracleProviderRegistry.sol";
-import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic/core/external/registry/SettlementTokenRegistry.sol";
-import {InterestRate} from "@chromatic/core/libraries/InterestRate.sol";
-import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/factory/IMarketDeployer.sol";
+import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
+import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
+import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol/contracts/core/external/deployer/MarketDeployer.sol";
+import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/OracleProviderRegistry.sol";
+import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/SettlementTokenRegistry.sol";
+import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
+import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title ChromaticMarketFactory

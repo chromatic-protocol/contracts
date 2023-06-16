@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ILendingPool} from "@chromatic/core/interfaces/vault/ILendingPool.sol";
-import {IVault} from "@chromatic/core/interfaces/vault/IVault.sol";
+import {ILendingPool} from "@chromatic-protocol/contracts/core/interfaces/vault/ILendingPool.sol";
+import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 
 /**
  * @title IChromaticVault

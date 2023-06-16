@@ -4,15 +4,15 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
-import {LiquidityBin, LiquidityBinLib} from "@chromatic/core/external/liquidity/LiquidityBin.sol";
-import {PositionParam} from "@chromatic/core/external/liquidity/PositionParam.sol";
-import {FEE_RATES_LENGTH} from "@chromatic/core/libraries/Constants.sol";
-import {Position} from "@chromatic/core/libraries/Position.sol";
-import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
-import {CLBTokenLib} from "@chromatic/core/libraries/CLBTokenLib.sol";
-import {BinMargin} from "@chromatic/core/libraries/BinMargin.sol";
-import {Errors} from "@chromatic/core/libraries/Errors.sol";
+import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityBin.sol";
+import {PositionParam} from "@chromatic-protocol/contracts/core/external/liquidity/PositionParam.sol";
+import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
+import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
+import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title LiquidityPool
