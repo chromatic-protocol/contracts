@@ -2,7 +2,8 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
+// import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Fixed18, UFixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarket} from "@chromatic/core/interfaces/IChromaticMarket.sol";
@@ -17,7 +18,7 @@ import {IChromaticRouter} from "@chromatic/periphery/interfaces/IChromaticRouter
  * @title ChromaticLens
  * @dev A contract that provides utility functions for interacting with Chromatic markets.
  */
-contract ChromaticLens is Multicall {
+contract ChromaticLens {
     using Math for uint256;
 
     struct CLBBalance {
@@ -31,6 +32,14 @@ contract ChromaticLens is Multicall {
 
     constructor(IChromaticRouter _router) {
         router = _router;
+    }
+
+    function multicall(bytes[] calldata data) external view returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            results[i] = Address.functionStaticCall(address(this), data[i]);
+        }
+        return results;
     }
 
     /**
