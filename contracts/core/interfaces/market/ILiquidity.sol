@@ -8,6 +8,29 @@ import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
  * @dev The interface for liquidity operations in a market.
  */
 interface ILiquidity {
+    /**
+     * @dev A struct representing claimable liquidity information.
+     */
+    struct ClaimableLiquidity {
+        /// @dev The amount of settlement tokens requested for minting.
+        uint256 mintingTokenAmountRequested;
+        /// @dev The actual amount of CLB tokens minted.
+        uint256 mintingCLBTokenAmount;
+        /// @dev The amount of CLB tokens requested for burning.
+        uint256 burningCLBTokenAmountRequested;
+        /// @dev The actual amount of CLB tokens burned.
+        uint256 burningCLBTokenAmount;
+        /// @dev The amount of settlement tokens equal in value to the burned CLB tokens.
+        uint256 burningTokenAmount;
+    }
+
+    struct LiquidityBinStatus {
+        uint256 liquidity;
+        uint256 freeLiquidity;
+        uint256 binValue;
+        int16 tradingFeeRate;
+    }
+
     error TooSmallAmount();
     error OnlyAccessableByVault();
     error NotExistLpReceipt();
@@ -108,12 +131,14 @@ interface ILiquidity {
     function getBinFreeLiquidity(int16 tradingFeeRate) external view returns (uint256 amount);
 
     /**
-     * @dev Retrieves the value of a specific trading fee rate's bin in the liquidity pool.
+     * @dev Retrieves the values of a specific trading fee rate's bins in the liquidity pool.
      *      The value of a bin represents the total valuation of the liquidity in the bin.
-     * @param tradingFeeRate The trading fee rate for which to retrieve the bin value.
-     * @return value The value of the bin for the specified trading fee rate.
+     * @param tradingFeeRates The list of trading fee rate for which to retrieve the bin value.
+     * @return values The value list of the bins for the specified trading fee rates.
      */
-    function getBinValue(int16 tradingFeeRate) external view returns (uint256 value);
+    function getBinValues(
+        int16[] memory tradingFeeRates
+    ) external view returns (uint256[] memory values);
 
     /**
      * @dev Distributes earning to the liquidity bins.
@@ -121,29 +146,6 @@ interface ILiquidity {
      * @param marketBalance The balance of the market.
      */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external;
-
-    /**
-     * @dev Calculates the amount of CLB tokens to be minted for a given amount of liquidity and trading fee rate.
-     *      The CLB token minting amount represents the number of CLB tokens that will be minted when providing liquidity.
-     * @param tradingFeeRate The trading fee rate for which to calculate the CLB token minting.
-     * @param amount The amount of liquidity for which to calculate the CLB token minting.
-     * @return The amount of CLB tokens to be minted for the specified liquidity amount and trading fee rate.
-     */
-    function calculateCLBTokenMinting(
-        int16 tradingFeeRate,
-        uint256 amount
-    ) external view returns (uint256);
-
-    /**
-     * @dev Calculates the value of CLB tokens for the given parameters.
-     * @param tradingFeeRate The trading fee rate.
-     * @param clbTokenAmount The amount of CLB tokens.
-     * @return The value of CLB tokens.
-     */
-    function calculateCLBTokenValue(
-        int16 tradingFeeRate,
-        uint256 clbTokenAmount
-    ) external view returns (uint256);
 
     /**
      * @dev Retrieves the liquidity receipt with the given receipt ID.
@@ -154,15 +156,19 @@ interface ILiquidity {
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory);
 
     /**
-     * @dev Retrieves the claim burning details for a given liquidity receipt.
-     * @param tradingFeeRate The trading fee rate for which to retrieve the claim burning details.
-     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
-     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified trading fee rate and oracle version.
-     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified trading fee rate and oracle version.
-     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity.
+     * @dev Retrieves the claimable liquidity information for a specific trading fee rate and oracle version from the associated LiquidityPool.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
+     * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of ClaimableLiquidity representing the claimable liquidity information.
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         int16 tradingFeeRate,
         uint256 oracleVersion
-    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount);
+    ) external view returns (ClaimableLiquidity memory);
+
+    /**
+     * @dev Retrieves the liquidity bin statuses for the caller's liquidity pool.
+     * @return statuses An array of LiquidityBinStatus representing the liquidity bin statuses.
+     */
+    function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory);
 }

@@ -43,13 +43,6 @@ interface IOracleProvider {
     function atVersion(uint256 version) external view returns (OracleVersion memory);
 
     /**
-     * @notice Retrieves the Oracle Version instances at the specified versions.
-     * @param versions An array of versions for which to retrieve the Oracle Versions.
-     * @return oracleVersions An array of Oracle Version instances corresponding to the specified versions.
-     */
-    function atVersions(uint256[] calldata versions) external view returns (OracleVersion[] memory);
-
-    /**
      * @notice Retrieves the description of the Oracle Provider.
      * @return A string representing the description of the Oracle Provider.
      */

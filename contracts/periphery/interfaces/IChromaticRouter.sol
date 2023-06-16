@@ -114,6 +114,11 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      */
     function getLpReceiptIds(address market) external view returns (uint256[] memory);
 
+    function getLpReceiptIds(
+        address market,
+        address owner
+    ) external view returns (uint256[] memory);
+
     /**
      * @notice Adds liquidity to multiple ChromaticMarket contracts in a batch.
      * @param market The address of the ChromaticMarket contract.

@@ -200,28 +200,15 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function getBinValue(int16 tradingFeeRate) external view override returns (uint256 value) {
-        value = liquidityPool.binValue(tradingFeeRate, newLpContext());
-    }
-
-    /**
-     * @inheritdoc ILiquidity
-     */
-    function calculateCLBTokenMinting(
-        int16 tradingFeeRate,
-        uint256 amount
-    ) external view returns (uint256) {
-        return liquidityPool.calculateCLBTokenMinting(newLpContext(), tradingFeeRate, amount);
-    }
-
-    /**
-     * @inheritdoc ILiquidity
-     */
-    function calculateCLBTokenValue(
-        int16 tradingFeeRate,
-        uint256 clbTokenAmount
-    ) external view returns (uint256) {
-        return liquidityPool.calculateCLBTokenValue(newLpContext(), tradingFeeRate, clbTokenAmount);
+    function getBinValues(
+        int16[] memory tradingFeeRates
+    ) external view override returns (uint256[] memory) {
+        LpContext memory ctx = newLpContext();
+        uint256[] memory values = new uint256[](tradingFeeRates.length);
+        for (uint256 i = 0; i < tradingFeeRates.length; i++) {
+            values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
+        }
+        return values;
     }
 
     /**
@@ -235,11 +222,18 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         int16 tradingFeeRate,
         uint256 oracleVersion
-    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return liquidityPool.getClaimBurning(tradingFeeRate, oracleVersion);
+    ) external view returns (ClaimableLiquidity memory) {
+        return liquidityPool.claimableLiquidity(tradingFeeRate, oracleVersion);
+    }
+
+    /**
+     * @inheritdoc ILiquidity
+     */
+    function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory) {
+        return liquidityPool.liquidityBinStatuses(newLpContext());
     }
 
     /**

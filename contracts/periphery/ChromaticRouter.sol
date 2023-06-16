@@ -275,7 +275,17 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      * @inheritdoc IChromaticRouter
      */
     function getLpReceiptIds(address market) external view override returns (uint256[] memory) {
-        return receiptIds[market][msg.sender].values();
+        return getLpReceiptIds(market, msg.sender);
+    }
+
+    /**
+     * @inheritdoc IChromaticRouter
+     */
+    function getLpReceiptIds(
+        address market,
+        address owner
+    ) public view override returns (uint256[] memory) {
+        return receiptIds[market][owner].values();
     }
 
     /**

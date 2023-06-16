@@ -47,7 +47,9 @@ export async function deploy() {
     const chromaticRouter = await deployContract<ChromaticRouter>('ChromaticRouter', {
       args: [marketFactory.address]
     })
-    const lens = await deployContract<ChromaticLens>('ChromaticLens')
+    const lens = await deployContract<ChromaticLens>('ChromaticLens', {
+      args: [chromaticRouter.address]
+    })
 
     return {
       marketFactory,

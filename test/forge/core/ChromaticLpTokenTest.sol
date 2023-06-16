@@ -27,10 +27,6 @@ contract OracleProviderMock is IOracleProvider {
     function atVersion(
         uint256 oracleVersion
     ) external view override returns (IOracleProvider.OracleVersion memory) {}
-
-    function atVersions(
-        uint256[] calldata versions
-    ) external view override returns (OracleVersion[] memory) {}
 }
 
 contract CLBTokenTest is Test, CLBToken {

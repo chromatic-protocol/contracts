@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
 import {BinLiquidity, BinLiquidityLib} from "@chromatic/core/external/liquidity/BinLiquidity.sol";
 import {BinPosition, BinPositionLib} from "@chromatic/core/external/liquidity/BinPosition.sol";
 import {BinClosedPosition, BinClosedPositionLib} from "@chromatic/core/external/liquidity/BinClosedPosition.sol";
@@ -269,62 +270,15 @@ library LiquidityBinLib {
     }
 
     /**
-     * @notice Calculates the amount of CLB tokens to be minted when adding liquidity.
-     * @dev This function calculates the number of CLB tokens to be minted
-     *      based on the specified amount of liquidity, the bin's current value, and the total supply of CLB tokens.
-     * @param self The LiquidityBin storage.
-     * @param ctx The LpContext memory.
-     * @param amount The amount of liquidity to be added.
-     * @return The amount of CLB tokens to be minted.
+     * @dev Retrieves the claimable liquidity information for a specific oracle version from a LiquidityBin.
+     * @param self The reference to the LiquidityBin struct.
+     * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
-    function calculateCLBTokenMinting(
-        LiquidityBin storage self,
-        LpContext memory ctx,
-        uint256 amount
-    ) internal view returns (uint256) {
-        return
-            BinLiquidityLib.calculateCLBTokenMinting(
-                amount,
-                self.value(ctx),
-                ctx.clbToken.totalSupply(self.clbTokenId)
-            );
-    }
-
-    /**
-     * @notice Calculates the value of the specified amount of CLB tokens.
-     * @dev This function calculates the value of the specified amount of CLB tokens
-     *      based on the bin's current value and the total supply of CLB tokens.
-     * @param self The LiquidityBin storage.
-     * @param ctx The LpContext memory.
-     * @param clbTokenAmount The amount of CLB tokens.
-     * @return The value of the specified amount of CLB tokens.
-     */
-    function calculateCLBTokenValue(
-        LiquidityBin storage self,
-        LpContext memory ctx,
-        uint256 clbTokenAmount
-    ) internal view returns (uint256) {
-        return
-            BinLiquidityLib.calculateCLBTokenValue(
-                clbTokenAmount,
-                self.value(ctx),
-                ctx.clbToken.totalSupply(self.clbTokenId)
-            );
-    }
-
-    /**
-     * @dev Retrieves the claim burning details for a specific oracle version from the LiquidityBin storage.
-     * Claim burning details represent the total amount of CLB tokens waiting to be burned, the amount that can be claimed after being burnt, and the corresponding amount of tokens obtained when claiming liquidity.
-     * @param self The reference to the LiquidityBin storage.
-     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
-     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified oracle version.
-     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified oracle version.
-     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity for the specified oracle version.
-     */
-    function getClaimBurning(
+    function claimableLiquidity(
         LiquidityBin storage self,
         uint256 oracleVersion
-    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return self._liquidity.getClaimBurning(oracleVersion);
+    ) internal view returns (ILiquidity.ClaimableLiquidity memory) {
+        return self._liquidity.claimableLiquidity(oracleVersion);
     }
 }

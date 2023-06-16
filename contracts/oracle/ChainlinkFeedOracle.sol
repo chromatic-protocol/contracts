@@ -110,18 +110,6 @@ contract ChainlinkFeedOracle is IOracleProvider {
     /**
      * @inheritdoc IOracleProvider
      */
-    function atVersions(
-        uint256[] calldata versions
-    ) external view returns (OracleVersion[] memory oracleVersions) {
-        oracleVersions = new OracleVersion[](versions.length);
-        for (uint i = 0; i < versions.length; i++) {
-            oracleVersions[i] = atVersion(versions[i]);
-        }
-    }
-
-    /**
-     * @inheritdoc IOracleProvider
-     */
     function description() external view override returns (string memory) {
         return AggregatorV2V3Interface(ChainlinkAggregator.unwrap(aggregator)).description();
     }

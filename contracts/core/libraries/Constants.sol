@@ -2,3 +2,4 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 uint256 constant BPS = 10000;
+uint256 constant FEE_RATES_LENGTH = 36;
