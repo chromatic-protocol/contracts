@@ -5,6 +5,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 import {IOracleProvider} from "@chromatic/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic/core/interfaces/ICLBToken.sol";
+import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
 import {LpContext} from "@chromatic/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic/core/libraries/Errors.sol";
 
@@ -36,7 +37,7 @@ struct _PendingLiquidity {
  *         for a specific oracle version within BinLiquidity.
  */
 struct _ClaimMinting {
-    uint256 tokenAmount;
+    uint256 tokenAmountRequested;
     uint256 clbTokenAmount;
 }
 
@@ -172,11 +173,11 @@ library BinLiquidityLib {
         uint256 oracleVersion
     ) internal returns (uint256 clbTokenAmount) {
         _ClaimMinting memory _cm = self._claimMintings[oracleVersion];
-        clbTokenAmount = amount.mulDiv(_cm.clbTokenAmount, _cm.tokenAmount);
+        clbTokenAmount = amount.mulDiv(_cm.clbTokenAmount, _cm.tokenAmountRequested);
 
         _cm.clbTokenAmount -= clbTokenAmount;
-        _cm.tokenAmount -= amount;
-        if (_cm.tokenAmount == 0) {
+        _cm.tokenAmountRequested -= amount;
+        if (_cm.tokenAmountRequested == 0) {
             delete self._claimMintings[oracleVersion];
         } else {
             self._claimMintings[oracleVersion] = _cm;
@@ -309,7 +310,7 @@ library BinLiquidityLib {
 
             self.total += pendingDeposit;
             self._claimMintings[oracleVersion] = _ClaimMinting({
-                tokenAmount: pendingDeposit,
+                tokenAmountRequested: pendingDeposit,
                 clbTokenAmount: mintingAmount
             });
         }
@@ -389,21 +390,25 @@ library BinLiquidityLib {
     }
 
     /**
-     * @dev Retrieves the claim burning details for a specific oracle version from the BinLiquidity storage.
-     *      Claim burning details represent the total amount of CLB tokens waiting to be burned, the amount that can be claimed after being burnt, and the corresponding amount of tokens obtained when claiming liquidity.
-     * @param self The reference to the BinLiquidity storage.
-     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
-     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified oracle version.
-     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified oracle version.
-     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity for the specified oracle version.
+     * @dev Retrieves the claimable liquidity information for a specific oracle version.
+     * @param self The reference to the BinLiquidity struct.
+     * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         BinLiquidity storage self,
         uint256 oracleVersion
-    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
+    ) internal view returns (ILiquidity.ClaimableLiquidity memory) {
+        _ClaimMinting memory _cm = self._claimMintings[oracleVersion];
         _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
-        clbTokenAmount = _cb.clbTokenAmountRequested;
-        burningAmount = _cb.clbTokenAmount;
-        tokenAmount = _cb.tokenAmount;
+
+        return
+            ILiquidity.ClaimableLiquidity({
+                mintingTokenAmountRequested: _cm.tokenAmountRequested,
+                mintingCLBTokenAmount: _cm.clbTokenAmount,
+                burningCLBTokenAmountRequested: _cb.clbTokenAmountRequested,
+                burningCLBTokenAmount: _cb.clbTokenAmount,
+                burningTokenAmount: _cb.tokenAmount
+            });
     }
 }

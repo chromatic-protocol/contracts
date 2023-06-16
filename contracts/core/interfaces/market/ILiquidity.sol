@@ -8,6 +8,22 @@ import {LpReceipt} from "@chromatic/core/libraries/LpReceipt.sol";
  * @dev The interface for liquidity operations in a market.
  */
 interface ILiquidity {
+    /**
+     * @dev A struct representing claimable liquidity information.
+     */
+    struct ClaimableLiquidity {
+        /// @dev The amount of settlement tokens requested for minting.
+        uint256 mintingTokenAmountRequested;
+        /// @dev The actual amount of CLB tokens minted.
+        uint256 mintingCLBTokenAmount;
+        /// @dev The amount of CLB tokens requested for burning.
+        uint256 burningCLBTokenAmountRequested;
+        /// @dev The actual amount of CLB tokens burned.
+        uint256 burningCLBTokenAmount;
+        /// @dev The amount of settlement tokens equal in value to the burned CLB tokens.
+        uint256 burningTokenAmount;
+    }
+
     error TooSmallAmount();
     error OnlyAccessableByVault();
     error NotExistLpReceipt();
@@ -133,15 +149,13 @@ interface ILiquidity {
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory);
 
     /**
-     * @dev Retrieves the claim burning details for a given liquidity receipt.
-     * @param tradingFeeRate The trading fee rate for which to retrieve the claim burning details.
-     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
-     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified trading fee rate and oracle version.
-     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified trading fee rate and oracle version.
-     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity.
+     * @dev Retrieves the claimable liquidity information for a specific trading fee rate and oracle version from the associated LiquidityPool.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
+     * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of ClaimableLiquidity representing the claimable liquidity information.
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         int16 tradingFeeRate,
         uint256 oracleVersion
-    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount);
+    ) external view returns (ClaimableLiquidity memory);
 }

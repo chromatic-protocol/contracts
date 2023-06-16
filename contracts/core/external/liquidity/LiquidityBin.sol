@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import {ILiquidity} from "@chromatic/core/interfaces/market/ILiquidity.sol";
 import {BinLiquidity, BinLiquidityLib} from "@chromatic/core/external/liquidity/BinLiquidity.sol";
 import {BinPosition, BinPositionLib} from "@chromatic/core/external/liquidity/BinPosition.sol";
 import {BinClosedPosition, BinClosedPositionLib} from "@chromatic/core/external/liquidity/BinClosedPosition.sol";
@@ -269,18 +270,15 @@ library LiquidityBinLib {
     }
 
     /**
-     * @dev Retrieves the claim burning details for a specific oracle version from the LiquidityBin storage.
-     * Claim burning details represent the total amount of CLB tokens waiting to be burned, the amount that can be claimed after being burnt, and the corresponding amount of tokens obtained when claiming liquidity.
-     * @param self The reference to the LiquidityBin storage.
-     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
-     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified oracle version.
-     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified oracle version.
-     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity for the specified oracle version.
+     * @dev Retrieves the claimable liquidity information for a specific oracle version from a LiquidityBin.
+     * @param self The reference to the LiquidityBin struct.
+     * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         LiquidityBin storage self,
         uint256 oracleVersion
-    ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return self._liquidity.getClaimBurning(oracleVersion);
+    ) internal view returns (ILiquidity.ClaimableLiquidity memory) {
+        return self._liquidity.claimableLiquidity(oracleVersion);
     }
 }

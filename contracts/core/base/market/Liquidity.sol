@@ -222,11 +222,11 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         int16 tradingFeeRate,
         uint256 oracleVersion
-    ) external view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
-        return liquidityPool.getClaimBurning(tradingFeeRate, oracleVersion);
+    ) external view returns (ClaimableLiquidity memory) {
+        return liquidityPool.claimableLiquidity(tradingFeeRate, oracleVersion);
     }
 
     /**

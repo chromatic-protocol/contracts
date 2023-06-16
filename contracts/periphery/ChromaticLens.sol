@@ -27,20 +27,6 @@ contract ChromaticLens is Multicall {
         uint256 binValue;
     }
 
-    struct LiquidityBinsParam {
-        int16 tradingFeeRate;
-        uint256 oracleVersion;
-    }
-
-    struct LiquidityBin {
-        int16 tradingFeeRate;
-        uint256 liquidity;
-        uint256 freeLiquidity;
-        uint256 clbTokenAmount;
-        uint256 burningAmount;
-        uint256 tokenAmount;
-    }
-
     IChromaticRouter router;
 
     constructor(IChromaticRouter _router) {
@@ -136,29 +122,17 @@ contract ChromaticLens is Multicall {
     }
 
     /**
-     * @dev Retrieves the liquidity information for each liquidity bin specified by the trading fee rates and Oracle versions in the given Chromatic market.
-     * @param market The address of the Chromatic market contract.
-     * @param params An array of LiquidityBinsParam containing the trading fee rates and Oracle versions.
-     * @return results An array of LiquidityBin containing the liquidity information for each trading fee rate and Oracle version.
+     * @dev Retrieves the claimable liquidity information for a specific trading fee rate and oracle version from the given Chromatic Market.
+     * @param market The Chromatic Market from which to retrieve the claimable liquidity information.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
+     * @param _oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of IChromaticMarket.ClaimableLiquidity representing the claimable liquidity information.
      */
-    function liquidityBins(
+    function claimableLiquidity(
         IChromaticMarket market,
-        LiquidityBinsParam[] memory params
-    ) external view returns (LiquidityBin[] memory results) {
-        results = new LiquidityBin[](params.length);
-        for (uint i = 0; i < params.length; i++) {
-            uint256 liquidity = market.getBinLiquidity(params[i].tradingFeeRate);
-            uint256 freeLiquidity = market.getBinFreeLiquidity(params[i].tradingFeeRate);
-            (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) = market
-                .getClaimBurning(params[i].tradingFeeRate, params[i].oracleVersion);
-            results[i] = LiquidityBin(
-                params[i].tradingFeeRate,
-                liquidity,
-                freeLiquidity,
-                clbTokenAmount,
-                burningAmount,
-                tokenAmount
-            );
-        }
+        int16 tradingFeeRate,
+        uint256 _oracleVersion
+    ) external view returns (IChromaticMarket.ClaimableLiquidity memory) {
+        return market.claimableLiquidity(tradingFeeRate, _oracleVersion);
     }
 }

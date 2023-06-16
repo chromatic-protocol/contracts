@@ -777,15 +777,13 @@ library LiquidityPoolLib {
     }
 
     /**
-     * @dev Retrieves the claim burning details for a specific trading fee rate and oracle version from the LiquidityPool storage.
-     * @param self The reference to the LiquidityPool storage.
-     * @param tradingFeeRate The trading fee rate for which to retrieve the claim burning details.
-     * @param oracleVersion The oracle version for which to retrieve the claim burning details.
-     * @return clbTokenAmount The total amount of CLB tokens waiting to be burned for the specified trading fee rate and oracle version.
-     * @return burningAmount The amount of CLB tokens that can be claimed after being burnt for the specified trading fee rate and oracle version.
-     * @return tokenAmount The corresponding amount of tokens obtained when claiming liquidity for the specified trading fee rate and oracle version.
+     * @dev Retrieves the claimable liquidity information for a specific trading fee rate and oracle version from a LiquidityPool.
+     * @param self The reference to the LiquidityPool struct.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
+     * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
+     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
-    function getClaimBurning(
+    function claimableLiquidity(
         LiquidityPool storage self,
         int16 tradingFeeRate,
         uint256 oracleVersion
@@ -793,9 +791,9 @@ library LiquidityPoolLib {
         external
         view
         _validTradingFeeRate(tradingFeeRate)
-        returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount)
+        returns (ILiquidity.ClaimableLiquidity memory)
     {
         LiquidityBin storage slot = targetBin(self, tradingFeeRate);
-        return slot.getClaimBurning(oracleVersion);
+        return slot.claimableLiquidity(oracleVersion);
     }
 }
