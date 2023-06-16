@@ -1,6 +1,6 @@
 {
   "name": "@chromatic-protocol/contracts",
-  "version": "0.0.1-rc.98",
+  "version": "0.0.1-rc.99",
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
