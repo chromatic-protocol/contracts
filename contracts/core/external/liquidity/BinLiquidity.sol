@@ -37,7 +37,7 @@ struct _PendingLiquidity {
  */
 struct _ClaimMinting {
     uint256 tokenAmount;
-    uint256 mintingAmount;
+    uint256 clbTokenAmount;
 }
 
 /**
@@ -46,8 +46,8 @@ struct _ClaimMinting {
  *         for a specific oracle version within BinLiquidity.
  */
 struct _ClaimBurning {
+    uint256 clbTokenAmountRequested;
     uint256 clbTokenAmount;
-    uint256 burningAmount;
     uint256 tokenAmount;
 }
 
@@ -172,9 +172,9 @@ library BinLiquidityLib {
         uint256 oracleVersion
     ) internal returns (uint256 clbTokenAmount) {
         _ClaimMinting memory _cm = self._claimMintings[oracleVersion];
-        clbTokenAmount = amount.mulDiv(_cm.mintingAmount, _cm.tokenAmount);
+        clbTokenAmount = amount.mulDiv(_cm.clbTokenAmount, _cm.tokenAmount);
 
-        _cm.mintingAmount -= clbTokenAmount;
+        _cm.clbTokenAmount -= clbTokenAmount;
         _cm.tokenAmount -= amount;
         if (_cm.tokenAmount == 0) {
             delete self._claimMintings[oracleVersion];
@@ -224,13 +224,16 @@ library BinLiquidityLib {
         uint256 oracleVersion
     ) internal returns (uint256 amount, uint256 burnedCLBTokenAmount) {
         _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
-        amount = clbTokenAmount.mulDiv(_cb.tokenAmount, _cb.clbTokenAmount);
-        burnedCLBTokenAmount = clbTokenAmount.mulDiv(_cb.burningAmount, _cb.clbTokenAmount);
+        amount = clbTokenAmount.mulDiv(_cb.tokenAmount, _cb.clbTokenAmountRequested);
+        burnedCLBTokenAmount = clbTokenAmount.mulDiv(
+            _cb.clbTokenAmount,
+            _cb.clbTokenAmountRequested
+        );
 
-        _cb.burningAmount -= burnedCLBTokenAmount;
+        _cb.clbTokenAmount -= burnedCLBTokenAmount;
         _cb.tokenAmount -= amount;
-        _cb.clbTokenAmount -= clbTokenAmount;
-        if (_cb.clbTokenAmount == 0) {
+        _cb.clbTokenAmountRequested -= clbTokenAmount;
+        if (_cb.clbTokenAmountRequested == 0) {
             delete self._claimBurnings[oracleVersion];
         } else {
             self._claimBurnings[oracleVersion] = _cb;
@@ -307,15 +310,15 @@ library BinLiquidityLib {
             self.total += pendingDeposit;
             self._claimMintings[oracleVersion] = _ClaimMinting({
                 tokenAmount: pendingDeposit,
-                mintingAmount: mintingAmount
+                clbTokenAmount: mintingAmount
             });
         }
 
         if (pendingCLBTokenAmount > 0) {
             self._burningVersions.pushBack(bytes32(oracleVersion));
             self._claimBurnings[oracleVersion] = _ClaimBurning({
-                clbTokenAmount: pendingCLBTokenAmount,
-                burningAmount: 0,
+                clbTokenAmountRequested: pendingCLBTokenAmount,
+                clbTokenAmount: 0,
                 tokenAmount: 0
             });
         }
@@ -342,9 +345,9 @@ library BinLiquidityLib {
         while (!self._burningVersions.empty()) {
             uint256 _ov = uint256(self._burningVersions.front());
             _ClaimBurning memory _cb = self._claimBurnings[_ov];
-            if (_cb.burningAmount >= _cb.clbTokenAmount) {
+            if (_cb.clbTokenAmount >= _cb.clbTokenAmountRequested) {
                 self._burningVersions.popFront();
-                if (_cb.clbTokenAmount == 0) {
+                if (_cb.clbTokenAmountRequested == 0) {
                     delete self._claimBurnings[_ov];
                 }
             } else {
@@ -357,7 +360,7 @@ library BinLiquidityLib {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
 
-            uint256 _pendingCLBTokenAmount = _cb.clbTokenAmount - _cb.burningAmount;
+            uint256 _pendingCLBTokenAmount = _cb.clbTokenAmountRequested - _cb.clbTokenAmount;
             if (_pendingCLBTokenAmount > 0) {
                 uint256 _burningAmount;
                 uint256 _pendingWithdrawal = calculateCLBTokenValue(
@@ -374,7 +377,7 @@ library BinLiquidityLib {
                     _pendingWithdrawal = freeLiquidity;
                 }
 
-                _cb.burningAmount += _burningAmount;
+                _cb.clbTokenAmount += _burningAmount;
                 _cb.tokenAmount += _pendingWithdrawal;
                 burningAmount += _burningAmount;
                 pendingWithdrawal += _pendingWithdrawal;
@@ -399,8 +402,8 @@ library BinLiquidityLib {
         uint256 oracleVersion
     ) internal view returns (uint256 clbTokenAmount, uint256 burningAmount, uint256 tokenAmount) {
         _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
-        clbTokenAmount = _cb.clbTokenAmount;
-        burningAmount = _cb.burningAmount;
+        clbTokenAmount = _cb.clbTokenAmountRequested;
+        burningAmount = _cb.clbTokenAmount;
         tokenAmount = _cb.tokenAmount;
     }
 }
