@@ -78,10 +78,10 @@ contract LiquidityPoolTest is Test {
         assertEq(position.leveragedQty(ctx), 1500 ether);
         assertEq(position._binMargins[0].tradingFeeRate, 1);
         assertEq(position._binMargins[0].amount, 1000 ether);
-        assertEq(position._binMargins[0].tradingFee(), 0.1 ether);
+        assertEq(position._binMargins[0].tradingFee(0), 0.1 ether);
         assertEq(position._binMargins[1].tradingFeeRate, 2);
         assertEq(position._binMargins[1].amount, 500 ether);
-        assertEq(position._binMargins[1].tradingFee(), 0.1 ether);
+        assertEq(position._binMargins[1].tradingFee(0), 0.1 ether);
     }
 
     function testAcceptOpenPosition() public {
@@ -218,7 +218,8 @@ contract LiquidityPoolTest is Test {
                 openTimestamp: 1,
                 closeTimestamp: 0,
                 owner: address(0),
-                _binMargins: new BinMargin[](0)
+                _binMargins: new BinMargin[](0),
+                _feeProtocol: 0
             });
     }
 }

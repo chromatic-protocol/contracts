@@ -53,13 +53,10 @@ abstract contract Trade is MarketBase {
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
-        if (tradingFee > maxAllowableTradingFee) {
+        uint256 protocolFee = position.protocolFee();
+        if (tradingFee + protocolFee > maxAllowableTradingFee) {
             revert ExceedMaxAllowableTradingFee();
         }
-
-        // calculate protocol fee
-        uint256 protocolFee = _feeProtocol > 0 ? tradingFee / _feeProtocol : 0;
-        tradingFee -= protocolFee;
 
         // call callback
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
@@ -349,7 +346,8 @@ abstract contract Trade is MarketBase {
                 closeTimestamp: 0,
                 takerMargin: takerMargin,
                 owner: msg.sender,
-                _binMargins: new BinMargin[](0)
+                _binMargins: new BinMargin[](0),
+                _feeProtocol: _feeProtocol
             });
     }
 
