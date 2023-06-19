@@ -241,7 +241,7 @@ abstract contract Trade is MarketBase {
         // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator
         try
             IChromaticTradeCallback(position.owner).claimPositionCallback(position.id, data)
-        {} catch (bytes memory e /*lowLevelData*/) {
+        {} catch (bytes memory /* e */ /*lowLevelData*/) {
             if (msg.sender != address(liquidator)) {
                 revert ClaimPositionCallbackError();
             }

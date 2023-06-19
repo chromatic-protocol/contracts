@@ -142,7 +142,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         address settlementToken,
         address vault,
         uint256 marginRequired,
-        bytes calldata data
+        bytes calldata /* data */
     ) external override verifyCallback {
         if (balance(settlementToken) < marginRequired) revert NotEnoughBalance();
 
@@ -154,7 +154,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
      */
     function claimPositionCallback(
         uint256 positionId,
-        bytes calldata data
+        bytes calldata /* data */
     ) external override verifyCallback {
         removePositionId(msg.sender, positionId);
     }

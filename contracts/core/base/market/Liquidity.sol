@@ -269,11 +269,11 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
      * @inheritdoc IERC1155Receiver
      */
     function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
+        address /* operator */,
+        address /* from */,
+        uint256 /* id */,
+        uint256 /* value */,
+        bytes calldata /* data */
     ) external pure override returns (bytes4) {
         return this.onERC1155Received.selector;
     }
@@ -282,11 +282,11 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
      * @inheritdoc IERC1155Receiver
      */
     function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        address /* operator */,
+        address /* from */,
+        uint256[] calldata /* ids */,
+        uint256[] calldata /* values */,
+        bytes calldata /* data */
     ) external pure override returns (bytes4) {
         return this.onERC1155BatchReceived.selector;
     }
@@ -294,7 +294,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceID) external view returns (bool) {
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
         return
             interfaceID == this.supportsInterface.selector || // ERC165
             interfaceID == this.onERC1155Received.selector ^ this.onERC1155BatchReceived.selector; // IERC1155Receiver
