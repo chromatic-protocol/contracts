@@ -42,6 +42,9 @@ abstract contract Trade is MarketBase {
         uint256 minMargin = factory.getMinimumMargin(address(settlementToken));
         if (takerMargin < minMargin) revert TooSmallTakerMargin();
 
+        uint8 oracleProviderLevel = factory.getOracleProviderLevel(address(oracleProvider));
+        if (leverage > (oracleProviderLevel + 1) * 10) revert ExceedMaxAllowableLeverage();
+
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
@@ -51,6 +54,23 @@ abstract contract Trade is MarketBase {
             liquidityPool.prepareBinMargins(position.qty, makerMargin, minMargin)
         );
 
+        _openPosition(ctx, position, maxAllowableTradingFee, data);
+
+        // write position
+        position.storeTo(positions[position.id]);
+        // create keeper task
+        liquidator.createLiquidationTask(position.id);
+
+        emit OpenPosition(position.owner, position);
+        return position;
+    }
+
+    function _openPosition(
+        LpContext memory ctx,
+        Position memory position,
+        uint256 maxAllowableTradingFee,
+        bytes calldata data
+    ) private {
         // check trading fee
         uint256 tradingFee = position.tradingFee();
         uint256 protocolFee = position.protocolFee();
@@ -61,7 +81,7 @@ abstract contract Trade is MarketBase {
         // call callback
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
 
-        uint256 requiredMargin = takerMargin + protocolFee + tradingFee;
+        uint256 requiredMargin = position.takerMargin + protocolFee + tradingFee;
         IChromaticTradeCallback(msg.sender).openPositionCallback(
             address(settlementToken),
             address(vault),
@@ -74,15 +94,7 @@ abstract contract Trade is MarketBase {
 
         liquidityPool.acceptOpenPosition(ctx, position); // settle()
 
-        vault.onOpenPosition(position.id, takerMargin, tradingFee, protocolFee);
-
-        // write position
-        position.storeTo(positions[position.id]);
-        // create keeper task
-        liquidator.createLiquidationTask(position.id);
-
-        emit OpenPosition(position.owner, position);
-        return position;
+        vault.onOpenPosition(position.id, position.takerMargin, tradingFee, protocolFee);
     }
 
     /**

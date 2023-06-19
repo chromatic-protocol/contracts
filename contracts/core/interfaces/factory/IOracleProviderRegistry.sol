@@ -19,6 +19,13 @@ interface IOracleProviderRegistry {
     event OracleProviderUnregistered(address indexed oracleProvider);
 
     /**
+     * @dev Emitted when the level of an oracle provider is set.
+     * @param oracleProvider The address of the oracle provider.
+     * @param level The new level set for the oracle provider.
+     */
+    event SetOracleProviderLevel(address indexed oracleProvider, uint8 indexed level);
+
+    /**
      * @notice Registers an oracle provider.
      * @param oracleProvider The address of the oracle provider to register.
      */
@@ -42,4 +49,19 @@ interface IOracleProviderRegistry {
      * @return A boolean indicating if the oracle provider is registered.
      */
     function isRegisteredOracleProvider(address oracleProvider) external view returns (bool);
+
+    /**
+     * @notice Retrieves the level of an oracle provider in the registry.
+     * @param oracleProvider The address of the oracle provider.
+     * @return The level of the oracle provider.
+     */
+    function getOracleProviderLevel(address oracleProvider) external view returns (uint8);
+
+    /**
+     * @notice Sets the level of an oracle provider in the registry.
+     * @dev The level must be either 0 or 1, and the max leverage must be x10 for level 0 or x20 for level 1.
+     * @param oracleProvider The address of the oracle provider.
+     * @param level The new level to be set for the oracle provider.
+     */
+    function setOracleProviderLevel(address oracleProvider, uint8 level) external;
 }

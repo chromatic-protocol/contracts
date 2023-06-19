@@ -15,6 +15,7 @@ interface ITrade {
     error AlreadyClosedPosition();
     error NotClaimablePosition();
     error ExceedMaxAllowableTradingFee();
+    error ExceedMaxAllowableLeverage();
     error ClaimPositionCallbackError();
 
     /**

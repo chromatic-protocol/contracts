@@ -57,6 +57,17 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     }
 
     /**
+     * @dev Modifier to ensure that the caller is a registered oracle provider.
+     *      Throws a 'NotRegisteredOracleProvider' error if the oracle provider is not registered.
+     * @param oracleProvider The address of the oracle provider.
+     */
+    modifier onlyRegisteredOracleProvider(address oracleProvider) {
+        if (!_oracleProviderRegistry.isRegistered(oracleProvider))
+            revert NotRegisteredOracleProvider();
+        _;
+    }
+
+    /**
      * @dev Initializes the ChromaticMarketFactory contract.
      */
     constructor() {
@@ -159,10 +170,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IChromaticMarketFactory
      */
-    function createMarket(address oracleProvider, address settlementToken) external override {
-        if (!_oracleProviderRegistry.isRegistered(oracleProvider))
-            revert NotRegisteredOracleProvider();
-
+    function createMarket(
+        address oracleProvider,
+        address settlementToken
+    ) external override onlyRegisteredOracleProvider(oracleProvider) {
         if (!_settlementTokenRegistry.isRegistered(settlementToken))
             revert NotRegisteredSettlementToken();
 
@@ -226,6 +237,28 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address oracleProvider
     ) external view override returns (bool) {
         return _oracleProviderRegistry.isRegistered(oracleProvider);
+    }
+
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     */
+    function getOracleProviderLevel(
+        address oracleProvider
+    ) external view override onlyRegisteredOracleProvider(oracleProvider) returns (uint8) {
+        return _oracleProviderRegistry.getOracleProviderLevel(oracleProvider);
+    }
+
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     * @dev This function can only be called by the DAO and registered oracle providers.
+     */
+    function setOracleProviderLevel(
+        address oracleProvider,
+        uint8 level
+    ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
+        require(level <= 1);
+        _oracleProviderRegistry.setOracleProviderLevel(oracleProvider, level);
+        emit SetOracleProviderLevel(oracleProvider, level);
     }
 
     // implement ISettlementTokenRegistry
