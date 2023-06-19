@@ -61,6 +61,13 @@ interface ITrade {
     event Liquidate(address indexed account, uint256 indexed usedKeeperFee, Position position);
 
     /**
+     * @notice Emitted when the protocol fee is changed by the market
+     * @param feeProtocolOld The previous value of the protocol fee
+     * @param feeProtocolNew The updated value of the protocol fee
+     */
+    event SetFeeProtocol(uint8 feeProtocolOld, uint8 feeProtocolNew);
+
+    /**
      * @dev Opens a new position in the market.
      * @param qty The quantity of the position.
      * @param leverage The leverage of the position in basis points.
@@ -105,4 +112,10 @@ interface ITrade {
     function getPositions(
         uint256[] calldata positionIds
     ) external view returns (Position[] memory positions);
+
+    /**
+     * @notice Set the denominator of the protocol's % share of the fees
+     * @param feeProtocol new protocol fee for the market
+     */
+    function setFeeProtocol(uint8 feeProtocol) external;
 }

@@ -38,6 +38,14 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
     mapping(uint256 => LpReceipt) internal lpReceipts;
 
     /**
+     * @dev Modifier to restrict access to only the DAO.
+     */
+    modifier onlyDao() {
+        require(msg.sender == factory.dao(), Errors.ONLY_DAO_CAN_ACCESS);
+        _;
+    }
+
+    /**
      * @dev Modifier to restrict access to only the liquidator contract.
      */
     modifier onlyLiquidator() {
