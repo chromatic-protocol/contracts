@@ -20,7 +20,7 @@ contract OracleProviderMock is IOracleProvider {
         oracleVersions[latestVersion] = oracleVersion;
     }
 
-    function sync() external override returns (OracleVersion memory) {
+    function sync() external view override returns (OracleVersion memory) {
         return oracleVersions[latestVersion];
     }
 

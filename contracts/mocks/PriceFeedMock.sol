@@ -54,7 +54,7 @@ contract PriceFeedMock is AggregatorProxyInterface {
 
     function getTimestamp(uint256 roundId) external view override returns (uint256) {}
 
-    function decimals() external view override returns (uint8) {
+    function decimals() external pure override returns (uint8) {
         return 18;
     }
 
@@ -101,11 +101,11 @@ contract PriceFeedMock is AggregatorProxyInterface {
         return this.getRoundData(latestRoundId);
     }
 
-    function getStartingRoundId(uint16 phaseId) internal pure returns (uint80) {
-        return uint80(uint256(phaseId) << PHASE_OFFSET) + 1;
+    function getStartingRoundId(uint16 _phaseId) internal pure returns (uint80) {
+        return uint80(uint256(_phaseId) << PHASE_OFFSET) + 1;
     }
 
-    function phaseAggregators(uint16 phaseId) external view override returns (address) {
+    function phaseAggregators(uint16 /* phaseId */) external view override returns (address) {
         return address(this);
     }
 
