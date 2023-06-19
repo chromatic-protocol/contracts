@@ -11,6 +11,7 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 struct OracleProviderRegistry {
     /// @dev Set of registered oracle providers
     EnumerableSet.AddressSet _oracleProviders;
+    mapping(address => uint8) _oracleProviderLevels;
 }
 
 /**
@@ -66,5 +67,33 @@ library OracleProviderRegistryLib {
         address oracleProvider
     ) external view returns (bool) {
         return self._oracleProviders.contains(oracleProvider);
+    }
+
+    /**
+     * @notice Retrieves the level of an oracle provider in the registry.
+     * @param self The storage reference to the OracleProviderRegistry.
+     * @param oracleProvider The address of the oracle provider.
+     * @return The level of the oracle provider.
+     */
+    function getOracleProviderLevel(
+        OracleProviderRegistry storage self,
+        address oracleProvider
+    ) external view returns (uint8) {
+        return self._oracleProviderLevels[oracleProvider];
+    }
+
+    /**
+     * @notice Sets the level of an oracle provider in the registry.
+     * @dev The level must be either 0 or 1, and the max leverage must be x10 for level 0 or x20 for level 1.
+     * @param self The storage reference to the OracleProviderRegistry.
+     * @param oracleProvider The address of the oracle provider.
+     * @param level The new level to be set for the oracle provider.
+     */
+    function setOracleProviderLevel(
+        OracleProviderRegistry storage self,
+        address oracleProvider,
+        uint8 level
+    ) external {
+        self._oracleProviderLevels[oracleProvider] = level;
     }
 }
