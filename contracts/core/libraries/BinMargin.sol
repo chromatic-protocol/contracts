@@ -28,9 +28,32 @@ library BinMarginLib {
     /**
      * @notice Calculates the trading fee based on the margin amount and the trading fee rate.
      * @param self The BinMargin struct
+     * @param _feeProtocol The protocol fee for the market
      * @return The trading fee amount
      */
-    function tradingFee(BinMargin memory self) internal pure returns (uint256) {
-        return self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION);
+    function tradingFee(BinMargin memory self, uint8 _feeProtocol) internal pure returns (uint256) {
+        uint256 _tradingFee = self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION);
+        return _tradingFee - _protocolFee(_tradingFee, _feeProtocol);
+    }
+
+    /**
+     * @notice Calculates the protocol fee based on the margin amount and the trading fee rate.
+     * @param self The BinMargin struct
+     * @param _feeProtocol The protocol fee for the market
+     * @return The protocol fee amount
+     */
+    function protocolFee(
+        BinMargin memory self,
+        uint8 _feeProtocol
+    ) internal pure returns (uint256) {
+        return
+            _protocolFee(
+                self.amount.mulDiv(self.tradingFeeRate, TRADING_FEE_RATE_PRECISION),
+                _feeProtocol
+            );
+    }
+
+    function _protocolFee(uint256 _tradingFee, uint8 _feeProtocol) private pure returns (uint256) {
+        return _feeProtocol > 0 ? _tradingFee / _feeProtocol : 0;
     }
 }

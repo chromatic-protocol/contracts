@@ -35,6 +35,8 @@ struct Position {
     address owner;
     /// @dev The bin margins for the position, it represents the amount of collateral for each bin
     BinMargin[] _binMargins;
+    /// @dev The protocol fee for the market
+    uint8 _feeProtocol;
 }
 
 using PositionLib for Position global;
@@ -155,7 +157,18 @@ library PositionLib {
      */
     function tradingFee(Position memory self) internal pure returns (uint256 fee) {
         for (uint256 i = 0; i < self._binMargins.length; i++) {
-            fee += self._binMargins[i].tradingFee();
+            fee += self._binMargins[i].tradingFee(self._feeProtocol);
+        }
+    }
+
+    /**
+     * @notice Calculates the total protocol fee for a position.
+     * @param self The Position struct representing the position.
+     * @return fee The total protocol fee amount.
+     */
+    function protocolFee(Position memory self) internal pure returns (uint256 fee) {
+        for (uint256 i = 0; i < self._binMargins.length; i++) {
+            fee += self._binMargins[i].protocolFee(self._feeProtocol);
         }
     }
 
@@ -165,9 +178,7 @@ library PositionLib {
      * @param self The memory instance of the `Position` struct
      * @return margins The bin margins for the position
      */
-    function binMargins(
-        Position memory self
-    ) internal pure returns (BinMargin[] memory margins) {
+    function binMargins(Position memory self) internal pure returns (BinMargin[] memory margins) {
         margins = self._binMargins;
     }
 
@@ -195,6 +206,7 @@ library PositionLib {
         storedPosition.leverage = self.leverage;
         storedPosition.takerMargin = self.takerMargin;
         storedPosition.owner = self.owner;
+        storedPosition._feeProtocol = self._feeProtocol;
         // can not convert memory array to storage array
         delete storedPosition._binMargins;
         for (uint i = 0; i < self._binMargins.length; i++) {
