@@ -114,6 +114,12 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      */
     function getLpReceiptIds(address market) external view returns (uint256[] memory);
 
+    /**
+     * @notice Get the LP receipt IDs associated with a specific market and owner.
+     * @param market The address of the ChromaticMarket contract.
+     * @param owner The address of the owner.
+     * @return An array of LP receipt IDs.
+     */
     function getLpReceiptIds(
         address market,
         address owner
@@ -122,16 +128,16 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
     /**
      * @notice Adds liquidity to multiple ChromaticMarket contracts in a batch.
      * @param market The address of the ChromaticMarket contract.
+     * @param recipient The address of the recipient for each liquidity bin.
      * @param feeRates An array of fee rates for each liquidity bin.
      * @param amounts An array of amounts to add as liquidity for each bin.
-     * @param recipients An array of recipient addresses.
      * @return lpReceipts An array of LP receipts.
      */
     function addLiquidityBatch(
         address market,
+        address recipient,
         int16[] calldata feeRates,
-        uint256[] calldata amounts,
-        address[] calldata recipients
+        uint256[] calldata amounts
     ) external returns (LpReceipt[] memory lpReceipts);
 
     /**
@@ -144,16 +150,16 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
     /**
      * @notice Removes liquidity from multiple ChromaticMarket contracts in a batch.
      * @param market The address of the ChromaticMarket contract.
+     * @param recipient The address of the recipient for each liquidity bin.
      * @param feeRates An array of fee rates for each liquidity bin.
      * @param clbTokenAmounts An array of CLB token amounts to remove as liquidity for each bin.
-     * @param recipients An array of recipient addresses.
      * @return lpReceipts An array of LP receipts.
      */
     function removeLiquidityBatch(
         address market,
+        address recipient,
         int16[] calldata feeRates,
-        uint256[] calldata clbTokenAmounts,
-        address[] calldata recipients
+        uint256[] calldata clbTokenAmounts
     ) external returns (LpReceipt[] memory lpReceipts);
 
     /**

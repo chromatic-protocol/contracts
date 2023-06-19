@@ -293,17 +293,14 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      */
     function addLiquidityBatch(
         address market,
+        address recipient,
         int16[] calldata feeRates,
-        uint256[] calldata amounts,
-        address[] calldata recipients
+        uint256[] calldata amounts
     ) external override returns (LpReceipt[] memory lpReceipts) {
-        require(
-            feeRates.length == amounts.length && feeRates.length == recipients.length,
-            "TradeRouter: invalid arguments"
-        );
+        require(feeRates.length == amounts.length, "TradeRouter: invalid arguments");
         lpReceipts = new LpReceipt[](feeRates.length);
         for (uint i = 0; i < feeRates.length; i++) {
-            lpReceipts[i] = addLiquidity(market, feeRates[i], amounts[i], recipients[i]);
+            lpReceipts[i] = addLiquidity(market, feeRates[i], amounts[i], recipient);
         }
     }
 
@@ -321,17 +318,14 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      */
     function removeLiquidityBatch(
         address market,
+        address recipient,
         int16[] calldata feeRates,
-        uint256[] calldata clbTokenAmounts,
-        address[] calldata recipients
+        uint256[] calldata clbTokenAmounts
     ) external override returns (LpReceipt[] memory lpReceipts) {
-        require(
-            feeRates.length == clbTokenAmounts.length && feeRates.length == recipients.length,
-            "TradeRouter: invalid arguments"
-        );
+        require(feeRates.length == clbTokenAmounts.length, "TradeRouter: invalid arguments");
         lpReceipts = new LpReceipt[](feeRates.length);
         for (uint i = 0; i < feeRates.length; i++) {
-            lpReceipts[i] = removeLiquidity(market, feeRates[i], clbTokenAmounts[i], recipients[i]);
+            lpReceipts[i] = removeLiquidity(market, feeRates[i], clbTokenAmounts[i], recipient);
         }
     }
 
