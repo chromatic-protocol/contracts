@@ -23,6 +23,7 @@ abstract contract Trade is MarketBase {
     using SafeCast for uint256;
     using SignedMath for int256;
 
+    uint8 private _feeProtocol;
     uint256 internal _positionId;
 
     /**
@@ -52,14 +53,17 @@ abstract contract Trade is MarketBase {
 
         // check trading fee
         uint256 tradingFee = position.tradingFee();
-
         if (tradingFee > maxAllowableTradingFee) {
             revert ExceedMaxAllowableTradingFee();
         }
 
+        // calculate protocol fee
+        uint256 protocolFee = _feeProtocol > 0 ? tradingFee / _feeProtocol : 0;
+        tradingFee -= protocolFee;
+
         // call callback
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
-        uint256 protocolFee = getProtocolFee(takerMargin);
+
         uint256 requiredMargin = takerMargin + protocolFee + tradingFee;
         IChromaticTradeCallback(msg.sender).openPositionCallback(
             address(settlementToken),
@@ -320,12 +324,6 @@ abstract contract Trade is MarketBase {
             position.closeVersion > 0 && position.closeVersion < ctx.currentOracleVersion().version;
     }
 
-    function getProtocolFee(uint256 margin) public view returns (uint16) {
-        // returns (protocolFeeRate)
-        // FIXME: TBA
-        return 0;
-    }
-
     /**
      * @dev Creates a new position.
      * @param ctx The LP context.
@@ -365,5 +363,15 @@ abstract contract Trade is MarketBase {
         for (uint i = 0; i < positionIds.length; i++) {
             _positions[i] = positions[positionIds[i]];
         }
+    }
+
+    /**
+     * @inheritdoc ITrade
+     */
+    function setFeeProtocol(uint8 feeProtocol) external override onlyDao {
+        require(feeProtocol == 0 || (feeProtocol >= 4 && feeProtocol <= 10));
+        uint8 feeProtocolOld = _feeProtocol;
+        _feeProtocol = feeProtocol;
+        emit SetFeeProtocol(feeProtocolOld, feeProtocol);
     }
 }
