@@ -51,8 +51,8 @@ describe('lens', async () => {
     const { openPosition } = helpers(testData)
 
     await openPosition({
-      qty: 300 * 10 ** 4,
-      leverage: 100,
+      qty: 3000 * 10 ** 4,
+      leverage: 10,
       takerMargin: ethers.utils.parseEther('300'),
       makerMargin: ethers.utils.parseEther('250'),
       maxAllowFeeRate: 3

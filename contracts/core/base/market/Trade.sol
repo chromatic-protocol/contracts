@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
+import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
@@ -43,7 +43,8 @@ abstract contract Trade is MarketBase {
         if (takerMargin < minMargin) revert TooSmallTakerMargin();
 
         uint8 oracleProviderLevel = factory.getOracleProviderLevel(address(oracleProvider));
-        if (leverage > (oracleProviderLevel + 1) * 10) revert ExceedMaxAllowableLeverage();
+        if (leverage > (oracleProviderLevel + 1) * 10 * QTY_LEVERAGE_PRECISION)
+            revert ExceedMaxAllowableLeverage();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();

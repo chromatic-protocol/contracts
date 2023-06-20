@@ -163,12 +163,9 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function addLiquidityBatch(amounts: BigNumber[], feeRates: number[]) {
-    return chromaticRouter.connect(tester).addLiquidityBatch(
-      market.address,
-      feeRates,
-      amounts,
-      feeRates.map((_) => tester.address)
-    )
+    return chromaticRouter
+      .connect(tester)
+      .addLiquidityBatch(market.address, tester.address, feeRates, amounts)
   }
 
   async function claimLiquidity(receiptId: BigNumber) {
@@ -189,12 +186,9 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function removeLiquidityBatch(clbTokenAmounts: BigNumber[], feeRates: number[]) {
-    return chromaticRouter.connect(tester).removeLiquidityBatch(
-      market.address,
-      feeRates,
-      clbTokenAmounts,
-      feeRates.map((_) => tester.address)
-    )
+    return chromaticRouter
+      .connect(tester)
+      .removeLiquidityBatch(market.address, tester.address, feeRates, clbTokenAmounts)
   }
 
   async function withdrawLiquidity(receiptId: BigNumber) {
