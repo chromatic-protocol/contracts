@@ -1,3 +1,4 @@
 {
-  "name": "@chromatic-protocol/contracts"
+  "name": "@chromatic-protocol/contracts",
+  "license": "BUSL-1.1"
 }

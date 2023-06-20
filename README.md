@@ -22,11 +22,10 @@ In summary, Chromatic emerges as a trailblazer in the realm of DeFi, leveraging 
     - [Deployment](#deployment)
   - [Smart Contracts](#smart-contracts)
     - [core](#core)
+    - [oracle](#oracle)
     - [periphery](#periphery)
-  - [Contributing](#contributing)
-  - [License](#license)
   - [Documentation](#documentation)
-  - [Contact](#contact)
+  - [License](#license)
 
 ## Installation
 
@@ -122,18 +121,14 @@ Make sure to customize the deployment script (`deploy/*.ts`) with any additional
 | [`ChromaticRouter`](contracts/periphery/ChromaticRouter.sol)   | A contract that facilitates liquidity provision and trading on Chromatic. |
 | [`ChromaticAccount`](contracts/periphery/ChromaticAccount.sol) | A contract manages user accounts and positions.                           |
 
-## Contributing
-
-여기에 contribute.md 파일 링크 연결하면 될 듯. ( contribute.md 는 우리 라이센스에 맞게 적절한 거 가져와야 할 듯 )
-
-## License
-
-[Specify the license under which your project is released. Choose an appropriate license that suits your needs. You can include the full license text or provide a link to it.]
-
 ## Documentation
 
 Official documentation for Chromatic Protocol can be found [here](https://chromatic-protocol.github.io/docs-preview).
 
-## Contact
+## License
 
-[Provide contact information for users to reach out to you if they have questions, suggestions, or feedback about Chromatic protocol. You can include your email address, social media handles, or a link to a dedicated support channel.]
+The primary license for Chromatic Protocol is the Businiess Source License 1.1 ( `BUSL-1.1`), see [LICENSE](./LICENSE). However, solidity code files have own SPDX headers, some files are dual licensed under `MIT`.
+  - All files in `contracts/core/interfaces` and `contracts/periphery/interfaces` are licensed under `MIT`
+  - Some files in `contracts/oracle` are redistributed under `Apache-2.0` orginated from [@equilibria/root](https://github.com/equilibria-xyz/root)
+  - All files in `contracts/core/base/gelato` and `contracts/mocks/gelato` are orginated from [`@gelatodigital/automate`](https://github.com/gelatodigital/automate) under `ISC` license.
+
