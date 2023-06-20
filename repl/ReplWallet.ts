@@ -2,6 +2,8 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { BigNumber, ethers } from 'ethers'
 import { parseEther, parseUnits } from 'ethers/lib/utils'
 import {
+  ChromaticLens,
+  ChromaticLens__factory,
   IChromaticAccount,
   IChromaticAccount__factory,
   IChromaticMarket,
@@ -37,7 +39,8 @@ export class ReplWallet {
       swapRouter: string
       marketFactory: string
       oracleProvider: string
-      router: string
+      router: string,
+      lens: string
     },
     ensureAccount: boolean
   ): Promise<ReplWallet> {
@@ -47,6 +50,7 @@ export class ReplWallet {
     const oracleProvider = IOracleProvider__factory.connect(addresses.oracleProvider, signer)
     const marketFactory = IChromaticMarketFactory__factory.connect(addresses.marketFactory, signer)
     const router = IChromaticRouter__factory.connect(addresses.router, signer)
+    const lens = ChromaticLens__factory.connect(addresses.lens, signer)
 
     const marketAddress = await marketFactory.getMarkets()
 
@@ -60,7 +64,8 @@ export class ReplWallet {
       oracleProvider,
       marketFactory,
       market,
-      router
+      router,
+      lens
     )
 
     if (ensureAccount) {
@@ -78,7 +83,8 @@ export class ReplWallet {
     public readonly OracleProvider: IOracleProvider,
     public readonly ChromaticMarketFactory: IChromaticMarketFactory,
     public readonly ChromaticMarket: IChromaticMarket,
-    public readonly ChromaticRouter: IChromaticRouter
+    public readonly ChromaticRouter: IChromaticRouter,
+    public readonly ChromaticLens: ChromaticLens
   ) {
     this.address = signer.address
   }

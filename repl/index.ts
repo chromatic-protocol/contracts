@@ -36,10 +36,13 @@ extendEnvironment((hre) => {
     const { address: marketFactory } = await deployments.get('ChromaticMarketFactory')
     const { address: oracleProvider } = await deployments.get('OracleProviderMock')
     const { address: router } = await deployments.get('ChromaticRouter')
+    const { address: lens } = await deployments.get('ChromaticLens')
 
     // set first price
     const _oracleProvider = OracleProviderMock__factory.connect(oracleProvider, deployer)
-    await _oracleProvider.increaseVersion(ethers.utils.parseUnits('100', 8))
+    await _oracleProvider.increaseVersion(
+      ethers.utils.parseUnits('100', USDC_ARBITRUM_GOERLI.decimals)
+    )
 
     await SIGNERS.reduce(async (w, s) => {
       const _w = await w
@@ -57,7 +60,8 @@ extendEnvironment((hre) => {
               : SWAP_ROUTER_02_ADDRESSES(echainId),
           marketFactory,
           oracleProvider,
-          router
+          router,
+          lens
         },
         ['alice', 'bob'].includes(s)
       )
@@ -76,7 +80,9 @@ extendEnvironment((hre) => {
 
     const { address: oracleProviderAddress } = await deployments.get('OracleProviderMock')
     const oracleProvider = OracleProviderMock__factory.connect(oracleProviderAddress, deployer)
-    await oracleProvider.increaseVersion(ethers.utils.parseUnits(price.toString(), 18))
+    await oracleProvider.increaseVersion(
+      ethers.utils.parseUnits(price.toString(), USDC_ARBITRUM_GOERLI.decimals)
+    )
 
     const { address: marketFactoryAddress } = await deployments.get('ChromaticMarketFactory')
     const marketFactory = IChromaticMarketFactory__factory.connect(marketFactoryAddress, deployer)
