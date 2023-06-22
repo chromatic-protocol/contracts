@@ -1,5 +1,4 @@
 node_modules
-.env
 coverage
 coverage.json
 typechain
@@ -27,8 +26,10 @@ package-build/
 # vscode
 .vscode
 
-# hardhat-deploy
-deployments
-
 # generated docs
 docs/out
+
+# dotenv
+.env
+.env.*
+!.env.example

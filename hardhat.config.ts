@@ -9,6 +9,7 @@ import type { HardhatUserConfig } from 'hardhat/config'
 import 'solidity-docgen'
 import 'tsconfig-paths/register'
 import docgenConfig from './docs/docgen.config'
+import './hardhat/tasks'
 
 dotenv.config()
 
@@ -25,11 +26,11 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: '0.8.20',
+        version: '0.8.19',
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200
+            runs: 100
           }
         }
       }
@@ -70,7 +71,7 @@ const config: HardhatUserConfig = {
       chainId: 42170,
       tags: ['core']
     },
-    arbitrum_one_goerli: {
+    arbitrum_goerli: {
       // testnet
       ...common,
       url: 'https://goerli-rollup.arbitrum.io/rpc',

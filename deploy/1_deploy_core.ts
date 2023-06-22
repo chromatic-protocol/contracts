@@ -15,13 +15,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const echainId =
     network.name === "anvil"
-      ? config.networks.arbitrum_one_goerli.chainId!
+      ? config.networks.arbitrum_goerli.chainId!
       : network.config.chainId!
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
 
   const swapRouterAddress =
-    echainId === config.networks.arbitrum_one_goerli.chainId!
+    echainId === config.networks.arbitrum_goerli.chainId!
       ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
       : SWAP_ROUTER_02_ADDRESSES(echainId)
 

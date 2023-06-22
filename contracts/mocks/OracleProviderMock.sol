@@ -2,13 +2,19 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
+import {ChainlinkAggregator} from "@chromatic-protocol/contracts/oracle/types/ChainlinkAggregator.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 
 contract OracleProviderMock is IOracleProvider {
+    ChainlinkAggregator public immutable aggregator;
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
 
     error InvalidVersion();
+
+    constructor() {
+        aggregator = ChainlinkAggregator.wrap(address(0));
+    }
 
     function increaseVersion(Fixed18 price) public {
         latestVersion++;

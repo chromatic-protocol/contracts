@@ -6,7 +6,7 @@ import {
   ChromaticLiquidatorMock__factory,
   IChromaticMarketFactory__factory,
   OracleProviderMock__factory
-} from '../typechain-types'
+} from '../../typechain-types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
 
@@ -18,7 +18,7 @@ extendEnvironment((hre) => {
   const { config, deployments, network } = hre
   const echainId =
     network.name === 'anvil'
-      ? config.networks.arbitrum_one_goerli.chainId!
+      ? config.networks.arbitrum_goerli.chainId!
       : network.config.chainId!
 
   hre.w = lazyObject(() =>
@@ -55,7 +55,7 @@ extendEnvironment((hre) => {
           weth: WETH9[echainId].address,
           usdc: USDC_ARBITRUM_GOERLI.address,
           swapRouter:
-            echainId === config.networks.arbitrum_one_goerli.chainId!
+            echainId === config.networks.arbitrum_goerli.chainId!
               ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
               : SWAP_ROUTER_02_ADDRESSES(echainId),
           marketFactory,
