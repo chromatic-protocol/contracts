@@ -9,7 +9,6 @@ import type { HardhatUserConfig } from 'hardhat/config'
 import 'solidity-docgen'
 import 'tsconfig-paths/register'
 import docgenConfig from './docs/docgen.config'
-import './hardhat/tasks'
 
 dotenv.config()
 

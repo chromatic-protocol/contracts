@@ -1,6 +1,6 @@
 {
   "name": "@chromatic-protocol/contracts",
-  "version": "0.0.1-rc.113",
+  "version": "0.0.1-rc.114",
   "scripts": {
     "test": "forge test -vvv",
     "test:watch": "forge test --watch -vvv --no-match-path \"**/*.integrated.t.sol\"",
@@ -13,11 +13,11 @@
     "deploy:arbitrum_goerli": "yarn hardhat:arbitrum_goerli deploy --tags core,periphery",
     "chain": "yarn anvil:start & yarn hardhat deploy --network anvil --reset --tags core,periphery,mockup ; yarn hardhat typechain ; wait",
     "build": "yarn anvil:start & yarn hardhat deploy --network anvil --reset --tags core,periphery ; yarn anvil:stop && yarn hardhat package --build false",
-    "clean": "hardhat clean && rm -rf deployments && rm -rf docs/out",
+    "clean": "hardhat clean && rm -rf deployments/anvil && rm -rf docs/out",
     "anvil:start": "dotenv -- bash -c 'anvil --chain-id 31337 -f https://arb-goerli.g.alchemy.com/v2/$ALCHEMY_KEY --fork-block-number 19474553'",
     "anvil:stop": "kill -INT $(pgrep anvil)",
-    "hardhat:arbitrum_goerli": "dotenv -c staging -- yarn hardhat --network arbitrum_goerli",
-    "console:arbitrum_goerli": "yarn hardhat:arbitrum_goerli console --config hardhat.console.config.ts --no-compile",
+    "hardhat:arbitrum_goerli": "dotenv -c staging -- yarn hardhat --network arbitrum_goerli --config hardhat.typechain.config.ts",
+    "console:arbitrum_goerli": "yarn hardhat:arbitrum_goerli console --no-compile",
     "repl": "hardhat console --network anvil --config hardhat.repl.config.ts --no-compile",
     "format": "prettier --write '(contracts|test|repl|deploy)/**/*.(sol|ts)'",
     "docs": "hardhat docgen"
