@@ -20,8 +20,8 @@ import {
   ISwapRouter__factory,
   IWETH9,
   IWETH9__factory
-} from '../typechain-types'
-import { PositionStructOutput } from './../typechain-types/contracts/core/interfaces/IChromaticMarket'
+} from '../../typechain-types'
+import { PositionStructOutput } from '../../typechain-types/contracts/core/interfaces/IChromaticMarket'
 
 const QTY_DECIMALS = 4
 const LEVERAGE_DECIMALS = 2

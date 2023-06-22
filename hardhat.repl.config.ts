@@ -1,4 +1,4 @@
 import config from "./hardhat.config"
-import "./repl"
+import "./hardhat/repl"
 
 export default config
