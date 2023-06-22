@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
     excludes: ['**/*Lib', '**/*Mock'],
     includeDeployed: true,
     artifactFromDeployment: true,
-    excludesFromDeployed: ['KeeperFeePayer', '*Lib', '*Mock'],
+    excludesFromDeployed: ['KeeperFeePayer', '*Lib', '*Mock', 'ChainlinkFeedOracle'],
     excludeBytecode: true
   },
   docgen: docgenConfig
