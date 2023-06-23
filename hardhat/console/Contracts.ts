@@ -11,6 +11,8 @@ import {
   ChromaticRouter__factory,
   ChromaticVault,
   ChromaticVault__factory,
+  FlashLoanExample,
+  FlashLoanExample__factory,
   ICLBToken,
   ICLBToken__factory,
   IChromaticMarket,
@@ -119,5 +121,16 @@ export class Contracts {
 
   connectKeeperFeePayer(address: string): KeeperFeePayer {
     return KeeperFeePayer__factory.connect(address, this._signer)
+  }
+
+  async getOrDeployFlashLoanExample(): Promise<FlashLoanExample> {
+    const deployed = await this.hre.deployments.getOrNull('FlashLoanExample')
+    return deployed
+      ? this.connectFlashLoanExample(deployed.address)
+      : await new FlashLoanExample__factory(this._signer).deploy(this.vault.address)
+  }
+
+  connectFlashLoanExample(address: string): FlashLoanExample {
+    return FlashLoanExample__factory.connect(address, this._signer)
   }
 }
