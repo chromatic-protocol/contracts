@@ -132,14 +132,13 @@ abstract contract Trade is MarketBase {
         address recipient, // EOA or account contract
         bytes calldata data
     ) external override nonReentrant {
-        Position memory position = positions[positionId];
-        if (position.id == 0) revert NotExistPosition();
+        Position memory position = _getPosition(positionId);
         if (position.owner != msg.sender) revert NotPermitted();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
+        if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
 
         _claimPosition(ctx, position, position.pnl(ctx), 0, recipient, data);
 
@@ -154,13 +153,12 @@ abstract contract Trade is MarketBase {
         address keeper,
         uint256 keeperFee // native token amount
     ) external nonReentrant onlyLiquidator {
-        Position memory position = positions[positionId];
-        if (position.id == 0) revert NotExistPosition();
+        Position memory position = _getPosition(positionId);
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        if (!_checkClaimPosition(position, ctx)) revert NotClaimablePosition();
+        if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
 
         uint256 usedKeeperFee = vault.transferKeeperFee(keeper, keeperFee, position.takerMargin);
         _claimPosition(ctx, position, position.pnl(ctx), usedKeeperFee, position.owner, bytes(""));
@@ -176,8 +174,7 @@ abstract contract Trade is MarketBase {
         address keeper,
         uint256 keeperFee // native token amount
     ) external nonReentrant onlyLiquidator {
-        Position memory position = positions[positionId];
-        if (position.id == 0) revert NotExistPosition();
+        Position memory position = _getPosition(positionId);
         if (position.closeVersion != 0) revert AlreadyClosedPosition();
 
         LpContext memory ctx = newLpContext();
@@ -317,21 +314,7 @@ abstract contract Trade is MarketBase {
         Position memory position = positions[positionId];
         if (position.id == 0) return false;
 
-        return _checkClaimPosition(position, newLpContext());
-    }
-
-    /**
-     * @dev Internal function for checking if a position can be claimed.
-     * @param position The Position object representing the position to be checked.
-     * @param ctx The LpContext containing the current oracle version and synchronization information.
-     * @return A boolean indicating whether the position can be claimed.
-     */
-    function _checkClaimPosition(
-        Position memory position,
-        LpContext memory ctx
-    ) internal view returns (bool) {
-        return
-            position.closeVersion > 0 && position.closeVersion < ctx.currentOracleVersion().version;
+        return newLpContext().isPastVersion(position.closeVersion);
     }
 
     /**
@@ -384,5 +367,10 @@ abstract contract Trade is MarketBase {
         uint8 feeProtocolOld = _feeProtocol;
         _feeProtocol = feeProtocol;
         emit SetFeeProtocol(feeProtocolOld, feeProtocol);
+    }
+
+    function _getPosition(uint256 positionId) private view returns (Position memory position) {
+        position = positions[positionId];
+        if (position.id == 0) revert NotExistPosition();
     }
 }

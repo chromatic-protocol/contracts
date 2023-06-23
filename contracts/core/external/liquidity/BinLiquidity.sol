@@ -297,10 +297,7 @@ library BinLiquidityLib {
         uint256 totalSupply
     ) private returns (uint256 pendingDeposit, uint256 mintingAmount) {
         uint256 oracleVersion = self._pending.oracleVersion;
-        if (oracleVersion == 0) return (0, 0);
-
-        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        if (oracleVersion >= currentVersion.version) return (0, 0);
+        if (!ctx.isPastVersion(oracleVersion)) return (0, 0);
 
         pendingDeposit = self._pending.tokenAmount;
         uint256 pendingCLBTokenAmount = self._pending.clbTokenAmount;

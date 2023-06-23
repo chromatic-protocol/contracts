@@ -49,10 +49,7 @@ library BinPositionLib {
      */
     function settlePendingPosition(BinPosition storage self, LpContext memory ctx) internal {
         uint256 openVersion = self._pending.openVersion;
-        if (openVersion == 0) return;
-
-        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        if (openVersion >= currentVersion.version) return;
+        if (!ctx.isPastVersion(openVersion)) return;
 
         // accumulate interest before update `_totalMakerMargin`
         self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);

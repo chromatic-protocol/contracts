@@ -70,12 +70,13 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
      * @inheritdoc ILiquidity
      */
     function claimLiquidity(uint256 receiptId, bytes calldata data) external override nonReentrant {
-        LpReceipt memory receipt = lpReceipts[receiptId];
-        if (receipt.id == 0) revert NotExistLpReceipt();
+        LpReceipt memory receipt = getLpReceipt(receiptId);
         if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
+
+        if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotClaimableLpReceipt();
 
         uint256 clbTokenAmount = liquidityPool.acceptClaimLiquidity(
             ctx,
@@ -142,12 +143,13 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         uint256 receiptId,
         bytes calldata data
     ) external override nonReentrant {
-        LpReceipt memory receipt = lpReceipts[receiptId];
-        if (receipt.id == 0) revert NotExistLpReceipt();
+        LpReceipt memory receipt = getLpReceipt(receiptId);
         if (receipt.action != LpAction.REMOVE_LIQUIDITY) revert InvalidLpReceiptAction();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
+
+        if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotWithdrawableLpReceipt();
 
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
@@ -214,7 +216,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     /**
      * @inheritdoc ILiquidity
      */
-    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
+    function getLpReceipt(uint256 receiptId) public view returns (LpReceipt memory receipt) {
         receipt = lpReceipts[receiptId];
         if (receipt.id == 0) revert NotExistLpReceipt();
     }
