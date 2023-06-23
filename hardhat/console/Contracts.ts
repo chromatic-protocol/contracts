@@ -11,9 +11,13 @@ import {
   ChromaticRouter__factory,
   ChromaticVault,
   ChromaticVault__factory,
+  ICLBToken,
   ICLBToken__factory,
+  IChromaticMarket,
   IChromaticMarket__factory,
+  IERC20Metadata,
   IERC20Metadata__factory,
+  IOracleProvider,
   IOracleProvider__factory,
   KeeperFeePayer,
   KeeperFeePayer__factory
@@ -33,26 +37,16 @@ export class Contracts {
   async connect(privateKey: string | undefined) {
     const { ethers } = this.hre
 
-    const signer = privateKey
+    this._signer = privateKey
       ? new Wallet(privateKey, ethers.provider)
       : (await ethers.getSigners())[0]
 
-    this._signer = signer
-    this._factory = ChromaticMarketFactory__factory.connect(
-      await this.addressOf('ChromaticMarketFactory'),
-      signer
-    )
-    this._vault = ChromaticVault__factory.connect(await this.addressOf('ChromaticVault'), signer)
-    this._liquidator = ChromaticLiquidator__factory.connect(
-      await this.addressOf('ChromaticLiquidator'),
-      signer
-    )
-    this._router = ChromaticRouter__factory.connect(await this.addressOf('ChromaticRouter'), signer)
-    this._lens = ChromaticLens__factory.connect(await this.addressOf('ChromaticLens'), signer)
-    this._keeperFeePayer = KeeperFeePayer__factory.connect(
-      await this.addressOf('KeeperFeePayer'),
-      signer
-    )
+    this._factory = this.connectFactory(await this.addressOf('ChromaticMarketFactory'))
+    this._vault = this.connectVault(await this.addressOf('ChromaticVault'))
+    this._liquidator = this.connectLiquidator(await this.addressOf('ChromaticLiquidator'))
+    this._router = this.connectRouter(await this.addressOf('ChromaticRouter'))
+    this._lens = this.connectLens(await this.addressOf('ChromaticLens'))
+    this._keeperFeePayer = this.connectKeeperFeePayer(await this.addressOf('KeeperFeePayer'))
   }
 
   private async addressOf(name: string): Promise<string> {
@@ -87,19 +81,43 @@ export class Contracts {
     return this._keeperFeePayer
   }
 
-  oracleProvider(address: string) {
+  oracleProvider(address: string): IOracleProvider {
     return IOracleProvider__factory.connect(address, this._signer!)
   }
 
-  token(address: string) {
+  token(address: string): IERC20Metadata {
     return IERC20Metadata__factory.connect(address, this._signer!)
   }
 
-  clbToken(address: string) {
+  clbToken(address: string): ICLBToken {
     return ICLBToken__factory.connect(address, this._signer!)
   }
 
-  market(address: string) {
+  market(address: string): IChromaticMarket {
     return IChromaticMarket__factory.connect(address, this._signer!)
+  }
+
+  connectFactory(address: string): ChromaticMarketFactory {
+    return ChromaticMarketFactory__factory.connect(address, this._signer)
+  }
+
+  connectVault(address: string): ChromaticVault {
+    return ChromaticVault__factory.connect(address, this._signer)
+  }
+
+  connectLiquidator(address: string): ChromaticLiquidator {
+    return ChromaticLiquidator__factory.connect(address, this._signer)
+  }
+
+  connectRouter(address: string): ChromaticRouter {
+    return ChromaticRouter__factory.connect(address, this._signer)
+  }
+
+  connectLens(address: string): ChromaticLens {
+    return ChromaticLens__factory.connect(address, this._signer)
+  }
+
+  connectKeeperFeePayer(address: string): KeeperFeePayer {
+    return KeeperFeePayer__factory.connect(address, this._signer)
   }
 }
