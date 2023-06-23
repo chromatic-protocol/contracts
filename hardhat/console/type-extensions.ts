@@ -3,25 +3,10 @@
 // To extend one of Hardhat's types, you need to import the module where it has been defined, and redeclare it.
 import 'hardhat-deploy'
 import 'hardhat/types/runtime'
-import {
-  ChromaticLens,
-  ChromaticLiquidator,
-  ChromaticMarketFactory,
-  ChromaticRouter,
-  ChromaticVault,
-  KeeperFeePayer
-} from '../../typechain-types'
+import { Contracts } from './Contracts'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
-    c: {
-      factory: ChromaticMarketFactory | undefined
-      vault: ChromaticVault | undefined
-      liquidator: ChromaticLiquidator | undefined
-      router: ChromaticRouter | undefined
-      lens: ChromaticLens | undefined
-      keeperFeePayer: KeeperFeePayer | undefined
-    }
-    initialize?: () => Promise<void>
+    c: Contracts
   }
 }
