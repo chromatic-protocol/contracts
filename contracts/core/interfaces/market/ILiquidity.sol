@@ -34,6 +34,8 @@ interface ILiquidity {
     error TooSmallAmount();
     error OnlyAccessableByVault();
     error NotExistLpReceipt();
+    error NotClaimableLpReceipt();
+    error NotWithdrawableLpReceipt();
     error InvalidLpReceiptAction();
 
     /**

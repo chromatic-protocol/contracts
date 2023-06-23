@@ -104,4 +104,17 @@ library LpContextLib {
                 ? 0
                 : self.interestCalculator.calculateInterest(self.settlementToken, amount, from, to);
     }
+
+    /**
+     * @notice Checks if an oracle version is in the past.
+     * @param self The memory instance of the `LpContext` struct.
+     * @param oracleVersion The oracle version to check.
+     * @return A boolean value indicating whether the oracle version is in the past.
+     */
+    function isPastVersion(
+        LpContext memory self,
+        uint256 oracleVersion
+    ) internal view returns (bool) {
+        return oracleVersion > 0 && oracleVersion < self.currentOracleVersion().version;
+    }
 }

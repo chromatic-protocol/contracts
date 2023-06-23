@@ -44,10 +44,7 @@ library BinPendingPositionLib {
      * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      */
-    function settleAccruedInterest(
-        BinPendingPosition storage self,
-        LpContext memory ctx
-    ) internal {
+    function settleAccruedInterest(BinPendingPosition storage self, LpContext memory ctx) internal {
         self.accruedInterest.accumulate(ctx, self.totalMakerMargin, block.timestamp);
     }
 
@@ -116,15 +113,14 @@ library BinPendingPositionLib {
         BinPendingPosition storage self,
         LpContext memory ctx
     ) internal view returns (int256) {
-        if (self.openVersion == 0) return 0;
+        uint256 openVersion = self.openVersion;
+        if (!ctx.isPastVersion(openVersion)) return 0;
 
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        if (self.openVersion >= currentVersion.version) return 0;
-
         UFixed18 _entryPrice = PositionUtil.settlePrice(
             ctx.oracleProvider,
-            self.openVersion,
-            currentVersion
+            openVersion,
+            ctx.currentOracleVersion()
         );
         UFixed18 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 

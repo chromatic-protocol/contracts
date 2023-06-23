@@ -51,10 +51,7 @@ library BinClosedPositionLib {
      */
     function settleClosingPosition(BinClosedPosition storage self, LpContext memory ctx) internal {
         uint256 closeVersion = self._closing.closeVersion;
-        if (closeVersion == 0) return;
-
-        IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        if (closeVersion >= currentVersion.version) return;
+        if (!ctx.isPastVersion(closeVersion)) return;
 
         _ClaimWaitingPosition memory waitingPosition = _ClaimWaitingPosition({
             totalLeveragedQty: self._closing.totalLeveragedQty,
