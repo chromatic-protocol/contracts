@@ -40,17 +40,19 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     mapping(address => bytes32) public makerEarningDistributionTaskIds; // settlement token => task id
     mapping(address => bytes32) public marketEarningDistributionTaskIds; // market => task id
 
-    error OnlyAccessableByFactory();
+    error OnlyAccessableByFactoryOrDao();
     error OnlyAccessableByMarket();
+    error OnlyAccessableByDedicatedMsgSenderOrDao();
     error NotEnoughBalance();
     error NotEnoughFeePaid();
     error ExistMarketEarningDistributionTask();
 
     /**
-     * @dev Modifier to restrict access to only the Factory contract.
+     * @dev Modifier to restrict access to only the factory or the DAO.
      */
-    modifier onlyFactory() {
-        if (msg.sender != address(factory)) revert OnlyAccessableByFactory();
+    modifier onlyFactoryOrDao() {
+        if (msg.sender != address(factory) && msg.sender != factory.dao())
+            revert OnlyAccessableByFactoryOrDao();
         _;
     }
 
@@ -59,6 +61,15 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
+        _;
+    }
+
+    /**
+     * @dev Modifier to restrict access to only the dedicated message sender or the DAO.
+     */
+    modifier onlyDedicatedMsgSenderOrDao() {
+        if (msg.sender != dedicatedMsgSender && msg.sender != factory.dao())
+            revert OnlyAccessableByDedicatedMsgSenderOrDao();
         _;
     }
 
@@ -200,6 +211,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 fee,
         uint256 margin
     ) external override onlyMarket returns (uint256 usedFee) {
+        if (fee == 0) return 0;
+
         IChromaticMarket market = IChromaticMarket(msg.sender);
         address settlementToken = address(market.settlementToken());
 
@@ -225,6 +238,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 fee,
         uint256 margin
     ) internal returns (uint256 usedFee) {
+        if (fee == 0) return 0;
+
         // swap to native token
         SafeERC20.safeTransfer(IERC20(token), address(keeperFeePayer), margin);
 
@@ -352,7 +367,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @notice Distributes the maker earning for a token to the each markets.
      * @param token The address of the settlement token.
      */
-    function distributeMakerEarning(address token) external onlyDedicatedMsgSender {
+    function distributeMakerEarning(address token) external onlyDedicatedMsgSenderOrDao {
         (uint256 fee, ) = _getFeeDetails();
         _distributeMakerEarning(token, fee);
     }
@@ -362,7 +377,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     function createMakerEarningDistributionTask(
         address token
-    ) external virtual override onlyFactory {
+    ) external virtual override onlyFactoryOrDao {
         if (makerEarningDistributionTaskIds[token] != bytes32(0))
             revert ExistMarketEarningDistributionTask();
 
@@ -390,7 +405,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     function cancelMakerEarningDistributionTask(
         address token
-    ) external virtual override onlyFactory {
+    ) external virtual override onlyFactoryOrDao {
         bytes32 taskId = makerEarningDistributionTaskIds[token];
         if (taskId != bytes32(0)) {
             automate.cancelTask(taskId);
@@ -411,7 +426,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMakerEarnings[token];
         delete pendingMakerEarnings[token];
 
-        uint256 usedFee = _transferKeeperFee(token, automate.gelato(), fee, earning);
+        uint256 usedFee = fee > 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
         emit TransferKeeperFee(fee, usedFee);
 
         uint256 remainBalance = makerBalances[token];
@@ -464,7 +479,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @notice Distributes the market earning for a market to the each bins.
      * @param market The address of the market.
      */
-    function distributeMarketEarning(address market) external onlyDedicatedMsgSender {
+    function distributeMarketEarning(address market) external onlyDedicatedMsgSenderOrDao {
         (uint256 fee, ) = _getFeeDetails();
         _distributeMarketEarning(market, fee);
     }
@@ -474,7 +489,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     function createMarketEarningDistributionTask(
         address market
-    ) external virtual override onlyFactory {
+    ) external virtual override onlyFactoryOrDao {
         if (marketEarningDistributionTaskIds[market] != bytes32(0))
             revert ExistMarketEarningDistributionTask();
 
@@ -502,7 +517,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     function cancelMarketEarningDistributionTask(
         address market
-    ) external virtual override onlyFactory {
+    ) external virtual override onlyFactoryOrDao {
         bytes32 taskId = marketEarningDistributionTaskIds[market];
         if (taskId != bytes32(0)) {
             automate.cancelTask(taskId);

@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ITaskTreasuryUpgradable, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 import {AutomateReady} from "@chromatic-protocol/contracts/core/base/gelato/AutomateReady.sol";
-import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @dev Inherit this contract to allow your smart contract
@@ -30,7 +29,7 @@ abstract contract AutomateTaskCreator is AutomateReady {
      * Withdraw funds from this contract's Gelato balance to fundsOwner.
      */
     function withdrawFunds(uint256 _amount, address _token) external {
-        require(msg.sender == fundsOwner, Errors.ONLY_FUNDS_OWNER_CAN_WITHDRAW_FUNDS);
+        require(msg.sender == fundsOwner, "Only funds owner can withdraw funds");
 
         taskTreasury.withdrawFunds(payable(fundsOwner), _token, _amount);
     }

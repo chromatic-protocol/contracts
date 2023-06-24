@@ -6,7 +6,6 @@ import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRoute
 import {IWETH9} from "@chromatic-protocol/contracts/core/interfaces/IWETH9.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
-import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title KeeperFeePayer
@@ -17,13 +16,16 @@ contract KeeperFeePayer is IKeeperFeePayer {
     ISwapRouter uniswapRouter;
     IWETH9 public WETH9;
 
-    event SetRouter(address indexed);
+    error OnlyAccessableByDao();
+    error OnlyAccessableByVault();
+    error KeeperFeeTransferFailure();
+    error InvalidSwapValue();
 
     /**
      * @dev Modifier to restrict access to only the DAO.
      */
     modifier onlyDao() {
-        require(msg.sender == factory.dao(), Errors.ONLY_DAO_CAN_ACCESS);
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
         _;
     }
 
@@ -31,7 +33,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
      * @dev Modifier to restrict access to only the Vault.
      */
     modifier onlyVault() {
-        require(msg.sender == factory.vault(), Errors.ONLY_VAULT_CAN_ACCESS);
+        if (msg.sender != factory.vault()) revert OnlyAccessableByVault();
         _;
     }
 
@@ -83,9 +85,10 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
         // send eth to keeper
         (bool success, ) = keeperAddress.call{value: amountOut}("");
-        require(success, Errors.ETH_TRANSFER_FAILED);
+        if (!success) revert KeeperFeeTransferFailure();
+
         uint256 remainedBalance = IERC20(tokenIn).balanceOf(address(this));
-        require(remainedBalance + amountIn >= balance, Errors.INVALID_SWAP_VALUE);
+        if (remainedBalance + amountIn < balance) revert InvalidSwapValue();
 
         SafeERC20.safeTransfer(IERC20(tokenIn), msg.sender, remainedBalance);
     }

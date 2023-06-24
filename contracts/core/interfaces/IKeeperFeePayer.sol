@@ -6,6 +6,8 @@ pragma solidity >=0.8.0 <0.9.0;
  * @dev Interface for a contract that pays keeper fees.
  */
 interface IKeeperFeePayer {
+    event SetRouter(address indexed);
+
     /**
      * @notice Approves or revokes approval to the Uniswap router for a given token.
      * @param token The address of the token.
