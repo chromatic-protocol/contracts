@@ -13,7 +13,6 @@ import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
-import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title ChromaticMarketFactory
@@ -40,6 +39,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     mapping(address => address[]) private _marketsBySettlementToken;
     EnumerableSet.AddressSet private _markets;
 
+    error OnlyAccessableByDao();
     error AlreadySetLiquidator();
     error AlreadySetVault();
     error AlreadySetKeeperFeePayer();
@@ -52,7 +52,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @dev Modifier to restrict access to only the DAO address
      */
     modifier onlyDao() {
-        require(msg.sender == dao, Errors.ONLY_DAO_CAN_ACCESS);
+        if (msg.sender != dao) revert OnlyAccessableByDao();
         _;
     }
 
@@ -436,39 +436,5 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         uint256 to // timestamp (exclusive)
     ) external view override returns (uint256) {
         return _settlementTokenRegistry.calculateInterest(token, amount, from, to);
-    }
-
-    // manage vault automate
-
-    /**
-     * @inheritdoc IChromaticMarketFactory
-     * @dev This function can only be called by the DAO address.
-     */
-    function createMakerEarningDistributionTask(address token) external override onlyDao {
-        IChromaticVault(vault).createMakerEarningDistributionTask(token);
-    }
-
-    /**
-     * @inheritdoc IChromaticMarketFactory
-     * @dev This function can only be called by the DAO address.
-     */
-    function cancelMakerEarningDistributionTask(address token) external override onlyDao {
-        IChromaticVault(vault).cancelMakerEarningDistributionTask(token);
-    }
-
-    /**
-     * @inheritdoc IChromaticMarketFactory
-     * @dev This function can only be called by the DAO address.
-     */
-    function createMarketEarningDistributionTask(address market) external override onlyDao {
-        IChromaticVault(vault).createMarketEarningDistributionTask(market);
-    }
-
-    /**
-     * @inheritdoc IChromaticMarketFactory
-     * @dev This function can only be called by the DAO address.
-     */
-    function cancelMarketEarningDistributionTask(address market) external override onlyDao {
-        IChromaticVault(vault).cancelMarketEarningDistributionTask(market);
     }
 }

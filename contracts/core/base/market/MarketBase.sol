@@ -16,7 +16,6 @@ import {LiquidityPool} from "@chromatic-protocol/contracts/core/external/liquidi
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
-import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title MarketBase
@@ -37,11 +36,14 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
     mapping(uint256 => Position) internal positions;
     mapping(uint256 => LpReceipt) internal lpReceipts;
 
+    error OnlyAccessableByDao();
+    error OnlyAccessableByLiquidator();
+
     /**
      * @dev Modifier to restrict access to only the DAO.
      */
     modifier onlyDao() {
-        require(msg.sender == factory.dao(), Errors.ONLY_DAO_CAN_ACCESS);
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
         _;
     }
 
@@ -49,7 +51,7 @@ abstract contract MarketBase is IChromaticMarket, ReentrancyGuard {
      * @dev Modifier to restrict access to only the liquidator contract.
      */
     modifier onlyLiquidator() {
-        require(msg.sender == address(liquidator), Errors.ONLY_LIQUIDATOR_CAN_ACCESS);
+        if (msg.sender != address(liquidator)) revert OnlyAccessableByLiquidator();
         _;
     }
 

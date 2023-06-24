@@ -157,28 +157,4 @@ interface IChromaticMarketFactory is
      * @return True if the market is registered, false otherwise.
      */
     function isRegisteredMarket(address market) external view returns (bool);
-
-    /**
-     * @notice Creates a Maker earning distribution task for a token.
-     * @param token The address of the token.
-     */
-    function createMakerEarningDistributionTask(address token) external;
-
-    /**
-     * @notice Cancels a Maker earning distribution task for a token.
-     * @param token The address of the token.
-     */
-    function cancelMakerEarningDistributionTask(address token) external;
-
-    /**
-     * @notice Creates a market earning distribution task for a market.
-     * @param market The address of the market.
-     */
-    function createMarketEarningDistributionTask(address market) external;
-
-    /**
-     * @notice Cancels a market earning distribution task for a market.
-     * @param market The address of the market.
-     */
-    function cancelMarketEarningDistributionTask(address market) external;
 }

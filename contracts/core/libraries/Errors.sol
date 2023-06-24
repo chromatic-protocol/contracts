@@ -2,13 +2,6 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 library Errors {
-    string constant ONLY_DAO_CAN_ACCESS = "DAO";
-    string constant ONLY_VAULT_CAN_ACCESS = "VLT";
-    string constant ONLY_DEDICATED_MSG_SENDER_CAN_ACCESS = "DMS";
-    string constant ONLY_LIQUIDATOR_CAN_ACCESS = "LIQ";
-    string constant ONLY_FUNDS_OWNER_CAN_WITHDRAW_FUNDS = "FOW";
-    string constant ETH_TRANSFER_FAILED = "ETF";
-    string constant INVALID_SWAP_VALUE = "ISV";
     string constant NOT_ENOUGH_FREE_LIQUIDITY = "NEFL";
     string constant TOO_SMALL_AMOUNT = "TSA";
     string constant INVALID_ORACLE_VERSION = "IOV";
