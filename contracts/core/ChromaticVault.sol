@@ -42,7 +42,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     error OnlyAccessableByFactoryOrDao();
     error OnlyAccessableByMarket();
-    error OnlyAccessableByDedicatedMsgSenderOrDao();
     error NotEnoughBalance();
     error NotEnoughFeePaid();
     error ExistMarketEarningDistributionTask();
@@ -61,15 +60,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
-        _;
-    }
-
-    /**
-     * @dev Modifier to restrict access to only the dedicated message sender or the DAO.
-     */
-    modifier onlyDedicatedMsgSenderOrDao() {
-        if (msg.sender != dedicatedMsgSender && msg.sender != factory.dao())
-            revert OnlyAccessableByDedicatedMsgSenderOrDao();
         _;
     }
 
@@ -367,7 +357,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @notice Distributes the maker earning for a token to the each markets.
      * @param token The address of the settlement token.
      */
-    function distributeMakerEarning(address token) external onlyDedicatedMsgSenderOrDao {
+    function distributeMakerEarning(address token) external {
         (uint256 fee, ) = _getFeeDetails();
         _distributeMakerEarning(token, fee);
     }
@@ -479,7 +469,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @notice Distributes the market earning for a market to the each bins.
      * @param market The address of the market.
      */
-    function distributeMarketEarning(address market) external onlyDedicatedMsgSenderOrDao {
+    function distributeMarketEarning(address market) external {
         (uint256 fee, ) = _getFeeDetails();
         _distributeMarketEarning(market, fee);
     }

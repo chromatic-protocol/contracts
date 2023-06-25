@@ -6,7 +6,7 @@ import "@chromatic-protocol/contracts/core/interfaces/vault/ILendingPool.sol";
 import "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticFlashLoanCallback.sol";
 
 contract FlashLoanExample is IChromaticFlashLoanCallback {
-    ILendingPool lendingPool;
+    ILendingPool public lendingPool;
 
     struct FlashLoanCallbackData {
         address token;

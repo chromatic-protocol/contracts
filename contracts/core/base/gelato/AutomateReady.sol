@@ -17,7 +17,15 @@ abstract contract AutomateReady {
     address internal constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     address private constant OPS_PROXY_FACTORY = 0xC815dB16D4be6ddf2685C201937905aBf338F5D7;
 
-    error EtherTransferFailure();
+    /**
+     * @dev
+     * Only tasks created by _taskCreator defined in constructor can call
+     * the functions with this modifier.
+     */
+    modifier onlyDedicatedMsgSender() {
+        require(msg.sender == dedicatedMsgSender, "Only dedicated msg.sender");
+        _;
+    }
 
     /**
      * @dev
@@ -39,7 +47,7 @@ abstract contract AutomateReady {
     function _transfer(uint256 _fee, address _feeToken) internal {
         if (_feeToken == ETH) {
             (bool success, ) = _gelato.call{value: _fee}("");
-            if (!success) revert EtherTransferFailure();
+            require(success, "_transfer: ETH transfer failed");
         } else {
             SafeERC20.safeTransfer(IERC20(_feeToken), _gelato, _fee);
         }
