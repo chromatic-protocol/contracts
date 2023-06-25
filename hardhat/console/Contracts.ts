@@ -125,9 +125,14 @@ export class Contracts {
 
   async getOrDeployFlashLoanExample(): Promise<FlashLoanExample> {
     const deployed = await this.hre.deployments.getOrNull('FlashLoanExample')
-    return deployed
-      ? this.connectFlashLoanExample(deployed.address)
-      : await new FlashLoanExample__factory(this._signer).deploy(this.vault.address)
+    if (deployed) {
+      const contract = this.connectFlashLoanExample(deployed.address)
+      if ((await contract.lendingPool()) == this.vault.address) {
+        return contract
+      }
+    }
+
+    return await new FlashLoanExample__factory(this._signer).deploy(this.vault.address)
   }
 
   connectFlashLoanExample(address: string): FlashLoanExample {

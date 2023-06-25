@@ -13,17 +13,6 @@ import {IAutomate} from "@chromatic-protocol/contracts/core/base/gelato/Types.so
  *      It extends the Liquidator and AutomateReady contracts and implements the IChromaticLiquidator interface.
  */
 contract ChromaticLiquidator is Liquidator, AutomateReady {
-    error OnlyAccessableByDedicatedMsgSenderOrDao();
-
-    /**
-     * @dev Modifier to restrict access to only the dedicated message sender or the DAO.
-     */
-    modifier onlyDedicatedMsgSenderOrDao() {
-        if (msg.sender != dedicatedMsgSender && msg.sender != factory.dao())
-            revert OnlyAccessableByDedicatedMsgSenderOrDao();
-        _;
-    }
-
     /**
      * @dev Constructor function.
      * @param _factory The address of the Chromatic Market Factory contract.
@@ -45,12 +34,8 @@ contract ChromaticLiquidator is Liquidator, AutomateReady {
 
     /**
      * @inheritdoc IChromaticLiquidator
-     * @dev Can only be called by the dedicated message sender.
      */
-    function liquidate(
-        address market,
-        uint256 positionId
-    ) external override onlyDedicatedMsgSenderOrDao {
+    function liquidate(address market, uint256 positionId) external override {
         // feeToken is the native token because ETH is set as a fee token when creating task
         (uint256 fee, ) = _getFeeDetails();
         _liquidate(market, positionId, fee);
@@ -58,12 +43,8 @@ contract ChromaticLiquidator is Liquidator, AutomateReady {
 
     /**
      * @inheritdoc IChromaticLiquidator
-     * @dev Can only be called by the dedicated message sender.
      */
-    function claimPosition(
-        address market,
-        uint256 positionId
-    ) external override onlyDedicatedMsgSenderOrDao {
+    function claimPosition(address market, uint256 positionId) external override {
         // feeToken is the native token because ETH is set as a fee token when creating task
         (uint256 fee, ) = _getFeeDetails();
         _claimPosition(market, positionId, fee);
