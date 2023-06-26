@@ -1,3 +1,10 @@
+import {
+  ChainId,
+  ID_TO_CHAIN_ID,
+  SWAP_ROUTER_02_ADDRESSES,
+  USDC_ON,
+  WETH9
+} from '@uniswap/smart-order-router'
 import { Signer, Wallet } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import {
@@ -21,9 +28,15 @@ import {
   IERC20Metadata__factory,
   IOracleProvider,
   IOracleProvider__factory,
+  ISwapRouter,
+  ISwapRouter__factory,
+  IWETH9,
+  IWETH9__factory,
   KeeperFeePayer,
   KeeperFeePayer__factory
 } from '../../typechain-types'
+
+const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
 
 export class Contracts {
   private _signer: Signer
@@ -33,11 +46,17 @@ export class Contracts {
   private _router: ChromaticRouter
   private _lens: ChromaticLens
   private _keeperFeePayer: KeeperFeePayer
+  private _weth: IWETH9
+  private _usdc: IERC20Metadata
+  private _swapRouter: ISwapRouter
 
   constructor(public readonly hre: HardhatRuntimeEnvironment) {}
 
   async connect(privateKey: string | undefined) {
-    const { ethers } = this.hre
+    const { config, network, ethers } = this.hre
+    const echainId =
+      network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
+    const chainId: ChainId = ID_TO_CHAIN_ID(echainId)
 
     this._signer = privateKey
       ? new Wallet(privateKey, ethers.provider)
@@ -49,6 +68,14 @@ export class Contracts {
     this._router = this.connectRouter(await this.addressOf('ChromaticRouter'))
     this._lens = this.connectLens(await this.addressOf('ChromaticLens'))
     this._keeperFeePayer = this.connectKeeperFeePayer(await this.addressOf('KeeperFeePayer'))
+    this._weth = IWETH9__factory.connect(WETH9[chainId].address, this._signer!)
+    this._usdc = this.connectToken(USDC_ON(chainId).address)
+
+    const swapRouterAddress =
+      echainId === config.networks.arbitrum_goerli.chainId!
+        ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
+        : SWAP_ROUTER_02_ADDRESSES(echainId)
+    this._swapRouter = ISwapRouter__factory.connect(swapRouterAddress, this._signer)
   }
 
   private async addressOf(name: string): Promise<string> {
@@ -83,19 +110,31 @@ export class Contracts {
     return this._keeperFeePayer
   }
 
-  oracleProvider(address: string): IOracleProvider {
+  get weth(): IWETH9 {
+    return this._weth
+  }
+
+  get usdc(): IERC20Metadata {
+    return this._usdc
+  }
+
+  get swapRouter(): ISwapRouter {
+    return this._swapRouter
+  }
+
+  connectOracleProvider(address: string): IOracleProvider {
     return IOracleProvider__factory.connect(address, this._signer!)
   }
 
-  token(address: string): IERC20Metadata {
+  connectToken(address: string): IERC20Metadata {
     return IERC20Metadata__factory.connect(address, this._signer!)
   }
 
-  clbToken(address: string): ICLBToken {
+  connectCLBToken(address: string): ICLBToken {
     return ICLBToken__factory.connect(address, this._signer!)
   }
 
-  market(address: string): IChromaticMarket {
+  connectMarket(address: string): IChromaticMarket {
     return IChromaticMarket__factory.connect(address, this._signer!)
   }
 

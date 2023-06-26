@@ -527,7 +527,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMarketEarnings[market];
         delete pendingMarketEarnings[market];
 
-        uint256 usedFee = _transferKeeperFee(token, automate.gelato(), fee, earning);
+        uint256 usedFee = fee > 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
         emit TransferKeeperFee(market, fee, usedFee);
 
         uint256 remainEarning = earning - usedFee;

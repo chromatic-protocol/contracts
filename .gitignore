@@ -33,3 +33,5 @@ docs/out
 .env
 .env.*
 !.env.example
+
+deployments/anvil

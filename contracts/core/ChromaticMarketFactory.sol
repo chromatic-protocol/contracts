@@ -6,6 +6,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/factory/IMarketDeployer.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
@@ -284,6 +285,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             uniswapFeeTier
         );
 
+        IKeeperFeePayer(keeperFeePayer).approveToRouter(token, true);
         IChromaticVault(vault).createMakerEarningDistributionTask(token);
 
         emit SettlementTokenRegistered(
