@@ -8,11 +8,13 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 contract KeeperFeePayerMock is IKeeperFeePayer {
     IChromaticMarketFactory factory;
 
-    modifier onlyDao() {
-        require(msg.sender == factory.dao(), "only DAO can access");
+    modifier onlyFactoryOrDao() {
+        require(
+            msg.sender == address(factory) || msg.sender == factory.dao(),
+            "only factory or DAO can access"
+        );
         _;
     }
-
 
     modifier onlyVault() {
         require(msg.sender == factory.vault(), "only Vault can access");
@@ -24,7 +26,7 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
     }
 
     // this contrct doesn't have balance
-    function approveToRouter(address token, bool approve) external onlyDao {
+    function approveToRouter(address token, bool approve) external onlyFactoryOrDao {
         IERC20(token).approve(address(this), approve ? type(uint256).max : 0);
     }
 

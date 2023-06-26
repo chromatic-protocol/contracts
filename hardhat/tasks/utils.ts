@@ -7,7 +7,14 @@ import {
   IOracleProvider__factory
 } from '@chromatic/typechain-types'
 import { Token } from '@uniswap/sdk-core'
-import { ChainId, DAI_ON, ID_TO_CHAIN_ID, USDC_ON, USDT_ON } from '@uniswap/smart-order-router'
+import {
+  ChainId,
+  DAI_ON,
+  ID_TO_CHAIN_ID,
+  USDC_ON,
+  USDT_ON,
+  WETH9
+} from '@uniswap/smart-order-router'
 import { Signer, ethers } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
@@ -81,7 +88,12 @@ export async function findSettlementToken(
 const TOKEN_SYMBOLS: Record<string, (chainId: ChainId) => Token> = {
   DAI: DAI_ON,
   USDC: USDC_ON,
-  USDT: USDT_ON
+  USDT: USDT_ON,
+  WETH: (chainId) => {
+    const weth = WETH9[chainId]
+    if (weth) return weth
+    throw new Error(`Chain id: ${chainId} not supported`)
+  }
 }
 
 export function getToken(

@@ -17,7 +17,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
     IWETH9 public WETH9;
 
     error OnlyAccessableByDao();
-    error OnlyAccessableByVault();
+    error OnlyAccessableByFactoryOrDao();
     error KeeperFeeTransferFailure();
     error InvalidSwapValue();
 
@@ -30,10 +30,11 @@ contract KeeperFeePayer is IKeeperFeePayer {
     }
 
     /**
-     * @dev Modifier to restrict access to only the Vault.
+     * @dev Modifier to restrict access to only the factory or the DAO.
      */
-    modifier onlyVault() {
-        if (msg.sender != factory.vault()) revert OnlyAccessableByVault();
+    modifier onlyFactoryOrDao() {
+        if (msg.sender != address(factory) && msg.sender != factory.dao())
+            revert OnlyAccessableByFactoryOrDao();
         _;
     }
 
@@ -61,9 +62,9 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
     /**
      * @inheritdoc IKeeperFeePayer
-     * @dev Only the DAO can call this function.
+     * @dev Only the factory or the DAO can call this function.
      */
-    function approveToRouter(address token, bool approve) external onlyDao {
+    function approveToRouter(address token, bool approve) external onlyFactoryOrDao {
         IERC20(token).approve(address(uniswapRouter), approve ? type(uint256).max : 0);
     }
 
@@ -75,7 +76,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
         address tokenIn,
         uint256 amountOut,
         address keeperAddress
-    ) external onlyVault returns (uint256 amountIn) {
+    ) external returns (uint256 amountIn) {
         uint256 balance = IERC20(tokenIn).balanceOf(address(this));
 
         amountIn = swapExactOutput(tokenIn, address(this), amountOut, balance);
@@ -107,6 +108,8 @@ contract KeeperFeePayer is IKeeperFeePayer {
         uint256 amountOut,
         uint256 amountInMaximum
     ) internal returns (uint256 amountIn) {
+        if (tokenIn == address(WETH9)) return amountOut;
+
         ISwapRouter.ExactOutputSingleParams memory swapParam = ISwapRouter.ExactOutputSingleParams(
             tokenIn,
             address(WETH9),
