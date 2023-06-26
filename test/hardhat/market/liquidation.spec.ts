@@ -1,13 +1,11 @@
+import { expect } from 'chai'
 import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
-import { Keeper } from '../gelato/keeper'
-import { prepareMarketTest, helpers } from './testHelper'
-import { expect } from 'chai'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { helpers, prepareMarketTest } from './testHelper'
+
 describe('liquidation test', async () => {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
   const eth100 = ethers.utils.parseEther('100')
-  let keeper: Keeper
 
   let cnt = 1
 
@@ -31,21 +29,8 @@ describe('liquidation test', async () => {
     )
     await updatePrice(1000)
     await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
-
-    // keeper init
-    // 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-    // deployContract<Token>()
-    console.log('Automate', testData.gelato.automate.address)
-    console.log('Gelato', testData.gelato.gelato.address)
-    keeper = new Keeper(
-      testData.gelato.automate,
-      testData.gelato.gelato,
-      BigNumber.from('0'),
-      await ethers.getContractAt('ERC20', '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE')
-    )
-    await keeper.start()
-    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
+
   beforeEach(async () => {
     await init()
   })
@@ -141,9 +126,21 @@ describe('liquidation test', async () => {
     await priceChanges.reduce(async (prev, curr, index) => {
       await prev
       await updatePrice(curr)
-      console.log('keeper tasks', keeper.tasks)
-      await keeper.execute()
+
+      // call liquidate (simulate gelato task)
       let positionIds = await testData.traderAccount.getPositionIds(testData.market.address)
+      for (const positionId of positionIds) {
+        const { canExec } = await testData.liquidator.resolveLiquidation(
+          testData.market.address,
+          positionId
+        )
+        if (canExec) {
+          await testData.liquidator.liquidate(testData.market.address, positionId)
+        }
+      }
+
+      // check after liquidate
+      positionIds = await testData.traderAccount.getPositionIds(testData.market.address)
 
       const v = await testData.oracleProvider.currentVersion()
 
@@ -154,6 +151,7 @@ describe('liquidation test', async () => {
       console.log(`oracle price ${curr}, account balance : ${traderBalance}`)
       expect(positionIds.length).to.equal(expectedPreservedPositionLength[index])
     }, Promise.resolve())
+
     const afterTraderBalance = await settlementToken.balanceOf(traderAccount.address)
     if (isProfitStopCase) {
       expect(traderBalance.lt(afterTraderBalance)).to.be.true

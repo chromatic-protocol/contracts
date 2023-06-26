@@ -3,18 +3,13 @@ import { BigNumber } from 'ethers'
 import { parseUnits } from 'ethers/lib/utils'
 import { ethers } from 'hardhat'
 import { ChromaticLens, ChromaticRouter, Token } from '../../typechain-types'
-import { deploy as gelatoDeploy } from './gelato/deploy'
 import { deploy as marketFactoryDeploy } from './market_factory/deploy'
 import { deploy as oracleProviderDeploy } from './oracle_provider/deploy'
 import { deployContract, hardhatErrorPrettyPrint } from './utils'
 
 export async function deploy() {
   return hardhatErrorPrettyPrint(async () => {
-    const { gelato, taskTreasury, opsProxyFactory, automate } = await gelatoDeploy()
-    const { marketFactory, keeperFeePayer, liquidator } = await marketFactoryDeploy(
-      automate.address,
-      opsProxyFactory.address
-    )
+    const { marketFactory, keeperFeePayer, liquidator } = await marketFactoryDeploy()
     const oracleProvider = await oracleProviderDeploy()
     const settlementToken = await deployContract<Token>('Token', {
       args: ['Token', 'ST']
@@ -59,13 +54,7 @@ export async function deploy() {
       market,
       chromaticRouter,
       settlementToken,
-      lens,
-      gelato: {
-        gelato,
-        taskTreasury,
-        opsProxyFactory,
-        automate
-      }
+      lens
     }
   })
 }

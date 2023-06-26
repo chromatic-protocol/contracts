@@ -1,14 +1,15 @@
 import {
-  KeeperFeePayerMock,
   ChromaticLiquidator,
   ChromaticMarketFactory,
-  ChromaticVault
+  ChromaticVault,
+  KeeperFeePayerMock
 } from '@chromatic/typechain-types'
-import { Contract } from 'ethers'
+import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
+import { Contract, constants } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
 
-export async function deploy(opsAddress: string, opsProxyFactory: string) {
+export async function deploy() {
   const [deployer] = await ethers.getSigners()
 
   const oracleProviderRegistryLib = await deployContract<Contract>('OracleProviderRegistryLib')
@@ -43,12 +44,20 @@ export async function deploy(opsAddress: string, opsProxyFactory: string) {
   ).wait()
 
   const vault = await deployContract<ChromaticVault>('ChromaticVault', {
-    args: [marketFactory.address, opsAddress, opsProxyFactory]
+    args: [
+      marketFactory.address,
+      GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
+      constants.AddressZero
+    ]
   })
   await (await marketFactory.setVault(vault.address)).wait()
 
   const liquidator = await deployContract<ChromaticLiquidator>('ChromaticLiquidator', {
-    args: [marketFactory.address, opsAddress, opsProxyFactory]
+    args: [
+      marketFactory.address,
+      GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
+      constants.AddressZero
+    ]
   })
   await (await marketFactory.setLiquidator(liquidator.address)).wait()
 
