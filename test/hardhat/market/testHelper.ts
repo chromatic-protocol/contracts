@@ -21,7 +21,6 @@ export const prepareMarketTest = async () => {
     market,
     chromaticRouter,
     settlementToken,
-    gelato,
     lens
   } = await loadFixture(marketDeploy)
   const [owner, tester, trader] = await ethers.getSigners()
@@ -74,7 +73,6 @@ export const prepareMarketTest = async () => {
     keeperFeePayer,
     traderAccount,
     traderRouter,
-    gelato,
     clbToken,
     lens
     // addLiquidity,
