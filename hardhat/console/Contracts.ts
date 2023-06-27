@@ -33,10 +33,13 @@ import {
   IWETH9,
   IWETH9__factory,
   KeeperFeePayer,
-  KeeperFeePayer__factory
+  KeeperFeePayer__factory,
+  Token,
+  Token__factory
 } from '../../typechain-types'
 
 const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
+const ARB_GOERLI_CHRM_ADDRESS = '0x29A6AC3D416F8Ca85A3df95da209eDBfaF6E522d'
 
 export class Contracts {
   private _signer: Signer
@@ -48,6 +51,7 @@ export class Contracts {
   private _keeperFeePayer: KeeperFeePayer
   private _weth: IWETH9
   private _usdc: IERC20Metadata
+  private _chrm: Token | undefined
   private _swapRouter: ISwapRouter
 
   constructor(public readonly hre: HardhatRuntimeEnvironment) {}
@@ -70,6 +74,10 @@ export class Contracts {
     this._keeperFeePayer = this.connectKeeperFeePayer(await this.addressOf('KeeperFeePayer'))
     this._weth = IWETH9__factory.connect(WETH9[chainId].address, this._signer!)
     this._usdc = this.connectToken(USDC_ON(chainId).address)
+    this._chrm =
+      echainId === config.networks.arbitrum_goerli.chainId!
+        ? Token__factory.connect(ARB_GOERLI_CHRM_ADDRESS, this._signer)
+        : undefined
 
     const swapRouterAddress =
       echainId === config.networks.arbitrum_goerli.chainId!
@@ -116,6 +124,10 @@ export class Contracts {
 
   get usdc(): IERC20Metadata {
     return this._usdc
+  }
+
+  get chrm(): Token | undefined {
+    return this._chrm
   }
 
   get swapRouter(): ISwapRouter {
@@ -177,4 +189,8 @@ export class Contracts {
   connectFlashLoanExample(address: string): FlashLoanExample {
     return FlashLoanExample__factory.connect(address, this._signer)
   }
+
+  // async deployChrm(): Promise<Token> {
+  //   return await new Token__factory(this._signer).deploy('CHRM', 'CHRM')
+  // }
 }
