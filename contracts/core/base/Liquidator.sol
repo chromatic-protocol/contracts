@@ -12,13 +12,26 @@ import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/
  */
 abstract contract Liquidator is IChromaticLiquidator {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 private constant LIQUIDATION_INTERVAL = 30 seconds;
-    uint256 private constant CLAIM_INTERVAL = 10 minutes;
+    uint256 private constant DEFAULT_LIQUIDATION_INTERVAL = 1 minutes;
+    uint256 private constant DEFAULT_CLAIM_INTERVAL = 1 days;
 
     IChromaticMarketFactory factory;
+    uint256 public liquidationInterval;
+    uint256 public claimInterval;
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
     mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
+
+    error OnlyAccessableByDao();
+    error OnlyAccessableByMarket();
+
+    /**
+     * @dev Modifier to restrict access to only the DAO.
+     */
+    modifier onlyDao() {
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
+        _;
+    }
 
     /**
      * @dev Modifier to check if the calling contract is a registered market.
@@ -34,6 +47,8 @@ abstract contract Liquidator is IChromaticLiquidator {
      */
     constructor(IChromaticMarketFactory _factory) {
         factory = _factory;
+        liquidationInterval = DEFAULT_LIQUIDATION_INTERVAL;
+        claimInterval = DEFAULT_CLAIM_INTERVAL;
     }
 
     /**
@@ -44,10 +59,28 @@ abstract contract Liquidator is IChromaticLiquidator {
 
     /**
      * @inheritdoc IChromaticLiquidator
+     * @dev Can only be called by the DAO
+     */
+    function updateLiquidationInterval(uint256 interval) external override {
+        liquidationInterval = interval;
+        emit UpdateLiquidationInterval(interval);
+    }
+
+    /**
+     * @inheritdoc IChromaticLiquidator
+     * @dev Can only be called by the DAO
+     */
+    function updateClaimInterval(uint256 interval) external override {
+        claimInterval = interval;
+        emit UpdateClaimInterval(interval);
+    }
+
+    /**
+     * @inheritdoc IChromaticLiquidator
      * @dev Can only be called by a registered market.
      */
     function createLiquidationTask(uint256 positionId) external override onlyMarket {
-        _createTask(_liquidationTaskIds, positionId, this.resolveLiquidation, LIQUIDATION_INTERVAL);
+        _createTask(_liquidationTaskIds, positionId, this.resolveLiquidation, liquidationInterval);
     }
 
     /**
@@ -88,7 +121,7 @@ abstract contract Liquidator is IChromaticLiquidator {
      * @dev Can only be called by a registered market.
      */
     function createClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _createTask(_claimPositionTaskIds, positionId, this.resolveClaimPosition, CLAIM_INTERVAL);
+        _createTask(_claimPositionTaskIds, positionId, this.resolveClaimPosition, claimInterval);
     }
 
     /**
@@ -151,7 +184,7 @@ abstract contract Liquidator is IChromaticLiquidator {
             address(this),
             abi.encodeCall(resolve, (market, positionId))
         );
-        moduleData.args[1] = abi.encode(uint128(block.timestamp), uint128(interval));
+        moduleData.args[1] = abi.encode(uint128(block.timestamp + interval), uint128(interval));
         moduleData.args[2] = bytes("");
 
         registry[market][positionId] = getAutomate().createTask(
