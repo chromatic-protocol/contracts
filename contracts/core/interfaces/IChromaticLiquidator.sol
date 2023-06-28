@@ -7,9 +7,28 @@ pragma solidity >=0.8.0 <0.9.0;
  */
 interface IChromaticLiquidator {
     /**
-     * @dev Throws an error indicating that the function can only be accessed by a registered market.
+     * @notice Emitted when the liquidation task interval is updated.
+     * @param interval The new liquidation task interval.
      */
-    error OnlyAccessableByMarket();
+    event UpdateLiquidationInterval(uint256 indexed interval);
+
+    /**
+     * @notice Emitted when the claim task interval is updated.
+     * @param interval The new claim task interval.
+     */
+    event UpdateClaimInterval(uint256 indexed interval);
+
+    /**
+     * @notice Updates the liquidation task interval.
+     * @param interval The new liquidation task interval.
+     */
+    function updateLiquidationInterval(uint256 interval) external;
+
+    /**
+     * @notice Updates the claim task interval.
+     * @param interval The new claim task interval.
+     */
+    function updateClaimInterval(uint256 interval) external;
 
     /**
      * @notice Creates a liquidation task for a given position.
