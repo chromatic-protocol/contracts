@@ -102,7 +102,7 @@ extendEnvironment((hre) => {
       for (const positionId of positionIds) {
         const market = w.ChromaticMarket
         if (await market.checkLiquidation(positionId))
-          await liquidator['iquidate(address,uint256,uint256)'](
+          await liquidator['liquidate(address,uint256,uint256)'](
             market.address,
             positionId,
             BigNumber.from('0') // FIXME
