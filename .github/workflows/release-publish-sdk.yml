@@ -57,10 +57,6 @@ jobs:
       NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
-        with:
-          scope: '@chromatic-protocol'
-          ignore-scripts: false
-          node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
       - name: generate typechain code and publish contracts
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}

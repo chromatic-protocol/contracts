@@ -19,11 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
-        with:
-          scope: "@chromatic-protocol"
-          ignore-scripts: false
-          node-auth-token: "${{ secrets.GITHUB_TOKEN }}"
-
       # step generating a coverage report
       - name: Run coverage
         run: |
