@@ -55,6 +55,11 @@ jobs:
       packages: write
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
+        with:
+          registry-url: https://registry.npmjs.org
+          scope: '@chromatic-protocol'
+          node-auth-token: '${{ secrets.NPM_CHROMATIC }}'
+
       - name: generate typechain code and publish contracts
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
@@ -77,6 +82,7 @@ jobs:
           path: sdk
           token: ${{ steps.generate-token.outputs.token }}
       - run: |
+          rm -rf sdk/src/gen/*
           rm -rf sdk/src/gen/*
           cp -r package-build/src.ts/* sdk/src/gen/
       - name: pull-request
