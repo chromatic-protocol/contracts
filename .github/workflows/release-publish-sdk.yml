@@ -53,19 +53,17 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
       - name: generate typechain code and publish contracts
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_CHROMATIC }}
         run: |
           yarn clean
           yarn build
           npm pkg set dependencies="`npm pkg get dependencies`" --prefix ./contracts --json
-          yarn publish --new-version="${{ needs.Release.outputs.version }}" --cwd contracts --no-git-tag-version --no-commit-hooks
+          yarn publish --new-version="${{ needs.Release.outputs.version }}" --cwd contracts --no-git-tag-version --no-commit-hooks --access public
       - uses: chromatic-protocol/action-github-app-token@v1
         id: generate-token
         with:
