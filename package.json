@@ -24,7 +24,7 @@
     "docs": "hardhat docgen"
   },
   "devDependencies": {
-    "@chromatic-protocol/hardhat-package": "^0.0.1-dev.15",
+    "@chromatic-protocol/hardhat-package": "^0.0.1-dev.16",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
     "@gelatonetwork/automate-sdk": "^2.1.1",

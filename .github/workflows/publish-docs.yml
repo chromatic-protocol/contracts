@@ -19,10 +19,6 @@ jobs:
       NODE_AUTH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
     steps:
       - uses: chromatic-protocol/action-setup-foundry-yarn@v1
-        with:
-          scope: '@chromatic-protocol'
-          ignore-scripts: false
-          node-auth-token: '${{ secrets.GITHUB_TOKEN }}'
       - uses: chromatic-protocol/action-github-app-token@v1
         id: generate-token
         with:
