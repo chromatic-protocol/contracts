@@ -7,14 +7,17 @@ License text copyright (c) 2017 MariaDB Corporation Ab, All Rights Reserved.
 
 Parameters
 
-Licensor: Chromatic Protocol Team
+Licensor: Licensor: QUARKONIX PTE. LTD.
+
 
 Licensed Work: Chromatic Protocol Contracts
-               The Licensed Work is (c) 2023 Chromatic Protocol Team
+               The Licensed Work is (c) 2023 QUARKONIX PTE. LTD.
 
-Additional Use Grant: TBA
+Additional Use Grant: Any uses listed and defined at
+                      v1-core-license-grants.chromatic-protocol.eth
 
-Change Date:          4 years after release
+Change Date:          The earlier of 2025-08-01 or a date specified at
+                      v1-core-license-date.chromatic-protocol.eth
 
 Change License:       GNU General Public License v2.0 or later
 
