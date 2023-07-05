@@ -12,6 +12,8 @@ Chromatic Protocol is currently built on Arbitrum.
 
 Please refer to our GitBook at https://chromatic-protocol.gitbook.io/docs for an overview of the Chromatic Protocol.
 
+For the full documentation of the Chromatic Protocol contracts, you can refer to [the contract development documentation](https://chromatic.finance/docs/contracts/intro/). It will provide comprehensive information about the contracts, its functionalities, and usage examples.
+
 ## Table of Contents
 
 - [Chromatic Protocol](#chromatic-protocol)
