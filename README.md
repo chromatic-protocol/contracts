@@ -1,14 +1,16 @@
 # Chromatic Protocol
 
-Chromatic, a cutting-edge open-source protocol operating on the robust Arbitrum network, revolutionizes the DeFi landscape by unlocking the power of futures functionality. By facilitating the creation of two-sided markets, Chromatic empowers participants to engage in seamless trading, while amplifying their exposure to underlying price feeds.
+Chromatic Protocol is a decentralized perpetual futures protocol that provides permissionless, trustless, and unopinionated building blocks which enable participants in the DeFi ecosystem to create balanced two-sided markets exposed to oracle price feeds and trade futures in those markets using various strategies.
 
-Distinguished by its trustless and non-upgradable nature, Chromatic redefines the rules of the game by eliminating the need for intermediaries and eradicating rent extraction. This ensures a level playing field, fostering an environment of fairness and efficiency. Moreover, Chromatic places utmost importance on accessibility, capital efficiency, and censorship resistance, allowing users of all backgrounds to leverage the protocol's benefits.
+It is the very first protocol that introduces the concept of partitioned LP with dynamic fees. Chromatic Protocol provides a liquidity pool divided into multiple bins with different trading fee rates. The fee rate at which trades are executed is determined based on the dynamics of taker’s trading demand and maker’s liquidity supply. This dynamic fee system achieves a balanced maker-taker equilibrium, mitigating the inherent instability of closed systems like futures markets and significantly enhancing the sustainability of the protocol.
 
-With its minimalist, low-level, and unopinionated design philosophy, Chromatic empowers market creators and participants to unleash their creativity, optimize their strategies, and drive innovation within customizable markets. By offering a secure and optimized framework for decentralized finance, Chromatic sets the stage for transformative advancements in the industry.
+Furthermore, Chromatic Protocol is a permissionless, open-source, non-upgradable protocol that enables the creation and trading of futures markets exposed to price feeds provided by an oracle. It is characterized by a minimalist, low-level, and unopinionated design. Market creators and participants can define customizable markets supported by the protocol to optimize and innovate, fostering a secure and optimized decentralized financial ecosystem.
 
-One of the groundbreaking features of Chromatic lies in its dynamic fee system, which addresses the inherent volatility and imbalances prevalent in closed systems like futures markets. Through an ingenious mechanism based on market supply and demand, Chromatic ensures a balanced maker-taker equilibrium, fostering sustainability and equilibrium within the protocol. This dynamic fee structure serves as a cornerstone of the protocol's resilience and paves the way for a harmonious trading environment.
+Lastly, Chromatic Protocol is trustless and censorship-resistant. By eliminating trusted intermediaries and rent extraction commonly found in traditional futures markets, it ensures fair and capital-efficient trading by processing transactions based on smart contracts. Additionally, Chromatic prioritizes accessibility and censorship resistance, enabling anyone to freely participate in the decentralized financial market.
 
-In summary, Chromatic emerges as a trailblazer in the realm of DeFi, leveraging the power of Arbitrum to introduce futures functionality with unrivaled trustlessness and innovation. By prioritizing accessibility, capital efficiency, and censorship resistance, while embracing dynamic fee mechanisms, Chromatic ushers in a new era of decentralized finance, redefining the possibilities and potential of the ecosystem.
+Chromatic Protocol is currently built on Arbitrum.
+
+Please refer to our GitBook at https://chromatic-protocol.gitbook.io/docs for an overview of the Chromatic Protocol.
 
 ## Table of Contents
 
