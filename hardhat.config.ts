@@ -46,7 +46,7 @@ const config: HardhatUserConfig = {
       ...common,
       accounts: {
         ...common.accounts,
-        mnemonic: MNEMONIC_JUNK
+        mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK
       },
       saveDeployments: false,
       allowUnlimitedContractSize: true
@@ -56,7 +56,7 @@ const config: HardhatUserConfig = {
       ...common,
       accounts: {
         ...common.accounts,
-        mnemonic: MNEMONIC_JUNK
+        mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK
       },
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
