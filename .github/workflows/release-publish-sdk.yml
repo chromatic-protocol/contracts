@@ -82,15 +82,14 @@ jobs:
           path: sdk
           token: ${{ steps.generate-token.outputs.token }}
       - run: |
-          rm -rf sdk/src/gen/*
-          rm -rf sdk/src/gen/*
-          cp -r package-build/src.ts/* sdk/src/gen/
+          rm -rf sdk/packages/sdk-ethers-v5/src/gen/*
+          cp -r package-build/src.ts/* sdk/packages/sdk-ethers-v5/src/gen/
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
         with:
           base: main
           branch: develop
           path: sdk
-          add-paths: src/gen/**
+          add-paths: packages/sdk-ethers-v5/src/gen/**
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: ${{ github.event.pull_request.title }}
