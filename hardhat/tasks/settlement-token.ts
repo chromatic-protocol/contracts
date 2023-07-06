@@ -60,7 +60,7 @@ task('settlement-token', 'Show settlement token information')
 
 task('settlement-token:register', 'Register settlement token')
   .addParam('address', 'The settlement token address or symbol')
-  .addParam('minMargin', 'The minimum margin for trading', 10, types.int)
+  .addParam('minMargin', 'The minimum margin for trading', 10, types.float)
   .addParam('interestRate', 'The annual interest rate as a percentage', 10, types.int)
   .addParam('flashloanFeeRate', 'The flashloan fee rate as a percentage', 5, types.int)
   .addParam('earningDistributionThreshold', 'The earning distribution threshold', 1000, types.float)
