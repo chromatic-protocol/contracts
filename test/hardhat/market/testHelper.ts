@@ -92,7 +92,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   async function openPosition({
     takerMargin = ethers.utils.parseEther('10'),
     makerMargin = ethers.utils.parseEther('50'),
-    qty = 10 ** 4,
+    qty = 10 * 10 ** 4,
     leverage = 500, // 5 x
     maxAllowFeeRate = 1
   }: {

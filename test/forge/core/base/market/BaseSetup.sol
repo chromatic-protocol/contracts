@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/ChromaticMarketFactory.sol";
@@ -52,7 +53,16 @@ abstract contract BaseSetup is Test {
         liquidator = new ChromaticLiquidatorMock(factory, address(_automate), address(_opf));
         factory.setLiquidator(address(liquidator));
 
-        factory.registerOracleProvider(address(oracleProvider));
+        factory.registerOracleProvider(
+            address(oracleProvider),
+            IOracleProviderRegistry.OracleProviderProperties({
+                minStopLossBPS: 1000, // 10%
+                maxStopLossBPS: 10000, // 100%
+                minTakeProfitBPS: 1000, // 10%
+                maxTakeProfitBPS: 100000, // 1000%
+                leverageLevel: 0
+            })
+        );
         factory.registerSettlementToken(
             address(usdc),
             1 ether, // minimumMargin

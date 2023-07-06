@@ -15,7 +15,15 @@ export async function deploy() {
       args: ['Token', 'ST']
     })
 
-    await (await marketFactory.registerOracleProvider(oracleProvider.address)).wait()
+    await (
+      await marketFactory.registerOracleProvider(oracleProvider.address, {
+        minStopLossBPS: 1000, // 10%
+        maxStopLossBPS: 10000, // 100%
+        minTakeProfitBPS: 500, // 5%
+        maxTakeProfitBPS: 100000, // 1000%
+        leverageLevel: 0
+      })
+    ).wait()
 
     await (
       await marketFactory.registerSettlementToken(
