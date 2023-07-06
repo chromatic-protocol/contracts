@@ -21,6 +21,13 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
 
     uint256 internal _lpReceiptId;
 
+    error TooSmallAmount();
+    error OnlyAccessableByVault();
+    error NotExistLpReceipt();
+    error NotClaimableLpReceipt();
+    error NotWithdrawableLpReceipt();
+    error InvalidLpReceiptAction();
+    
     /**
      * @dev Modifier to restrict a function to be called only by the vault contract.
      */

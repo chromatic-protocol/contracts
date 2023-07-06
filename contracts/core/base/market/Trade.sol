@@ -5,14 +5,16 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
+import {PositionUtil, QTY_PRECISION, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
 import {MarketBase} from "@chromatic-protocol/contracts/core/base/market/MarketBase.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ITrade} from "@chromatic-protocol/contracts/core/interfaces/market/ITrade.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
+import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
  * @title Trade
@@ -25,6 +27,19 @@ abstract contract Trade is MarketBase {
 
     uint8 private _feeProtocol;
     uint256 internal _positionId;
+
+    error ZeroTargetAmount();
+    error TooSmallTakerMargin();
+    error NotEnoughMarginTransfered();
+    error NotExistPosition();
+    error NotPermitted();
+    error AlreadyClosedPosition();
+    error NotClaimablePosition();
+    error ExceedMaxAllowableTradingFee();
+    error ExceedMaxAllowableLeverage();
+    error NotAllowableTakerMargin();
+    error NotAllowableMakerMargin();
+    error ClaimPositionCallbackError();
 
     /**
      * @inheritdoc ITrade
@@ -42,12 +57,23 @@ abstract contract Trade is MarketBase {
         uint256 minMargin = factory.getMinimumMargin(address(settlementToken));
         if (takerMargin < minMargin) revert TooSmallTakerMargin();
 
-        uint8 oracleProviderLevel = factory.getOracleProviderLevel(address(oracleProvider));
-        if (leverage > (oracleProviderLevel + 1) * 10 * QTY_LEVERAGE_PRECISION)
+        IOracleProviderRegistry.OracleProviderProperties memory properties = factory
+            .getOracleProviderProperties(address(oracleProvider));
+        if (leverage > (properties.leverageLevel + 1) * 10 * QTY_LEVERAGE_PRECISION)
             revert ExceedMaxAllowableLeverage();
 
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
+
+        uint256 absQty = int256(qty).abs().mulDiv(ctx.tokenPrecision, QTY_PRECISION);
+        if (
+            takerMargin < absQty.mulDiv(properties.minStopLossBPS, BPS) ||
+            takerMargin > absQty.mulDiv(properties.maxStopLossBPS, BPS)
+        ) revert NotAllowableTakerMargin();
+        if (
+            makerMargin < absQty.mulDiv(properties.minTakeProfitBPS, BPS) ||
+            makerMargin > absQty.mulDiv(properties.maxTakeProfitBPS, BPS)
+        ) revert NotAllowableMakerMargin();
 
         Position memory position = newPosition(ctx, qty, leverage, takerMargin);
 

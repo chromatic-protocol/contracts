@@ -7,17 +7,6 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
  * @dev Interface for trading positions in a market.
  */
 interface ITrade {
-    error ZeroTargetAmount();
-    error TooSmallTakerMargin();
-    error NotEnoughMarginTransfered();
-    error NotExistPosition();
-    error NotPermitted();
-    error AlreadyClosedPosition();
-    error NotClaimablePosition();
-    error ExceedMaxAllowableTradingFee();
-    error ExceedMaxAllowableLeverage();
-    error ClaimPositionCallbackError();
-
     /**
      * @dev Emitted when a position is opened.
      * @param account The address of the account opening the position.

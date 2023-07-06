@@ -6,11 +6,23 @@ pragma solidity >=0.8.0 <0.9.0;
  * @dev Interface for the Oracle Provider Registry contract.
  */
 interface IOracleProviderRegistry {
+    struct OracleProviderProperties {
+        uint32 minStopLossBPS;
+        uint32 maxStopLossBPS;
+        uint32 minTakeProfitBPS;
+        uint32 maxTakeProfitBPS;
+        uint8 leverageLevel;
+    }
+
     /**
      * @dev Emitted when a new oracle provider is registered.
      * @param oracleProvider The address of the registered oracle provider.
+     * @param properties The properties of the registered oracle provider.
      */
-    event OracleProviderRegistered(address indexed oracleProvider);
+    event OracleProviderRegistered(
+        address indexed oracleProvider,
+        OracleProviderProperties properties
+    );
 
     /**
      * @dev Emitted when an oracle provider is unregistered.
@@ -19,17 +31,45 @@ interface IOracleProviderRegistry {
     event OracleProviderUnregistered(address indexed oracleProvider);
 
     /**
+     * @dev Emitted when the stop-loss basis points range of an oracle provider is updated.
+     * @param oracleProvider The address of the oracle provider.
+     * @param minStopLossBPS The new minimum stop-loss basis points.
+     * @param maxStopLossBPS The new maximum stop-loss basis points.
+     */
+    event UpdateStopLossBPSRange(
+        address indexed oracleProvider,
+        uint32 indexed minStopLossBPS,
+        uint32 indexed maxStopLossBPS
+    );
+
+    /**
+     * @dev Emitted when the take-profit basis points range of an oracle provider is updated.
+     * @param oracleProvider The address of the oracle provider.
+     * @param minTakeProfitBPS The new minimum take-profit basis points.
+     * @param maxTakeProfitBPS The new maximum take-profit basis points.
+     */
+    event UpdateTakeProfitBPSRange(
+        address indexed oracleProvider,
+        uint32 indexed minTakeProfitBPS,
+        uint32 indexed maxTakeProfitBPS
+    );
+
+    /**
      * @dev Emitted when the level of an oracle provider is set.
      * @param oracleProvider The address of the oracle provider.
      * @param level The new level set for the oracle provider.
      */
-    event SetOracleProviderLevel(address indexed oracleProvider, uint8 indexed level);
+    event UpdateLeverageLevel(address indexed oracleProvider, uint8 indexed level);
 
     /**
      * @notice Registers an oracle provider.
      * @param oracleProvider The address of the oracle provider to register.
+     * @param properties The properties of the oracle provider.
      */
-    function registerOracleProvider(address oracleProvider) external;
+    function registerOracleProvider(
+        address oracleProvider,
+        OracleProviderProperties memory properties
+    ) external;
 
     /**
      * @notice Unregisters an oracle provider.
@@ -51,17 +91,42 @@ interface IOracleProviderRegistry {
     function isRegisteredOracleProvider(address oracleProvider) external view returns (bool);
 
     /**
-     * @notice Retrieves the level of an oracle provider in the registry.
+     * @notice Retrieves the properties of an oracle provider.
      * @param oracleProvider The address of the oracle provider.
-     * @return The level of the oracle provider.
+     * @return The properties of the oracle provider.
      */
-    function getOracleProviderLevel(address oracleProvider) external view returns (uint8);
+    function getOracleProviderProperties(
+        address oracleProvider
+    ) external view returns (OracleProviderProperties memory);
 
     /**
-     * @notice Sets the level of an oracle provider in the registry.
+     * @notice Updates the stop-loss basis points range of an oracle provider.
+     * @param oracleProvider The address of the oracle provider@param minStopLossBPS The new minimum stop-loss basis points.
+     * @param maxStopLossBPS The new maximum stop-loss basis points.
+     */
+    function updateStopLossBPSRange(
+        address oracleProvider,
+        uint32 minStopLossBPS,
+        uint32 maxStopLossBPS
+    ) external;
+
+    /**
+     * @notice Updates the take-profit basis points range of an oracle provider.
+     * @param oracleProvider The address of the oracle provider.
+     * @param minTakeProfitBPS The new minimum take-profit basis points.
+     * @param maxTakeProfitBPS The new maximum take-profit basis points.
+     */
+    function updateTakeProfitBPSRange(
+        address oracleProvider,
+        uint32 minTakeProfitBPS,
+        uint32 maxTakeProfitBPS
+    ) external;
+
+    /**
+     * @notice Updates the leverage level of an oracle provider in the registry.
      * @dev The level must be either 0 or 1, and the max leverage must be x10 for level 0 or x20 for level 1.
      * @param oracleProvider The address of the oracle provider.
-     * @param level The new level to be set for the oracle provider.
+     * @param level The new leverage level to be set for the oracle provider.
      */
-    function setOracleProviderLevel(address oracleProvider, uint8 level) external;
+    function updateLeverageLevel(address oracleProvider, uint8 level) external;
 }

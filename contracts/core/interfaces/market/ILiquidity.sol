@@ -31,13 +31,6 @@ interface ILiquidity {
         int16 tradingFeeRate;
     }
 
-    error TooSmallAmount();
-    error OnlyAccessableByVault();
-    error NotExistLpReceipt();
-    error NotClaimableLpReceipt();
-    error NotWithdrawableLpReceipt();
-    error InvalidLpReceiptAction();
-
     /**
      * @dev Emitted when liquidity is added to the market.
      * @param recipient The address to receive the CLB tokens.

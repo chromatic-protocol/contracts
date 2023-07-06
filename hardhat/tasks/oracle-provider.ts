@@ -35,7 +35,15 @@ task('oracle-provider:register', 'Register oracle provider')
           chalk.blue(`Deployed new oracle provider for chainlink feed '${chainlinkAddress}'`)
         )
 
-        await (await factory.registerOracleProvider(providerAddress)).wait()
+        await (
+          await factory.registerOracleProvider(providerAddress, {
+            minStopLossBPS: 1000, // 10%
+            maxStopLossBPS: 10000, // 100%
+            minTakeProfitBPS: 1000, // 10%
+            maxTakeProfitBPS: 100000, // 1000%
+            leverageLevel: 0
+          })
+        ).wait()
 
         console.log(
           chalk.green(

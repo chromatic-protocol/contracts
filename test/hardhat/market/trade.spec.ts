@@ -38,7 +38,7 @@ describe('position & account test', async function () {
     const leverage = 200
     const makerMargin = takerMargin.mul(leverage / 100)
     const { receipt } = await openPosition({
-      qty: 10 ** 4 * Number(ethers.utils.formatEther(base)),
+      qty: 10 ** 4 * Number(ethers.utils.formatEther(base)) * 2,
       leverage,
       takerMargin,
       makerMargin
@@ -69,7 +69,7 @@ describe('position & account test', async function () {
     const makerMargin = takerMargin.mul(leverage / 100)
 
     const { receipt } = await openPosition({
-      qty: -(10 ** 4) * Number(ethers.utils.formatEther(base)),
+      qty: -(10 ** 4) * Number(ethers.utils.formatEther(base)) * 2,
       leverage,
       takerMargin,
       makerMargin

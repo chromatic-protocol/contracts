@@ -14,6 +14,7 @@ import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
+import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
  * @title ChromaticMarketFactory
@@ -210,9 +211,19 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @inheritdoc IOracleProviderRegistry
      * @dev This function can only be called by the DAO address.
      */
-    function registerOracleProvider(address oracleProvider) external override onlyDao {
-        _oracleProviderRegistry.register(oracleProvider);
-        emit OracleProviderRegistered(oracleProvider);
+    function registerOracleProvider(
+        address oracleProvider,
+        OracleProviderProperties memory properties
+    ) external override onlyDao {
+        _oracleProviderRegistry.register(
+            oracleProvider,
+            properties.minStopLossBPS,
+            properties.maxStopLossBPS,
+            properties.minTakeProfitBPS,
+            properties.maxTakeProfitBPS,
+            properties.leverageLevel
+        );
+        emit OracleProviderRegistered(oracleProvider, properties);
     }
 
     /**
@@ -243,23 +254,75 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IOracleProviderRegistry
      */
-    function getOracleProviderLevel(
+    function getOracleProviderProperties(
         address oracleProvider
-    ) external view override onlyRegisteredOracleProvider(oracleProvider) returns (uint8) {
-        return _oracleProviderRegistry.getOracleProviderLevel(oracleProvider);
+    )
+        external
+        view
+        override
+        onlyRegisteredOracleProvider(oracleProvider)
+        returns (OracleProviderProperties memory)
+    {
+        (
+            uint32 minStopLossBPS,
+            uint32 maxStopLossBPS,
+            uint32 minTakeProfitBPS,
+            uint32 maxTakeProfitBPS,
+            uint8 leverageLevel
+        ) = _oracleProviderRegistry.getOracleProviderProperties(oracleProvider);
+
+        return
+            OracleProviderProperties({
+                minStopLossBPS: minStopLossBPS,
+                maxStopLossBPS: maxStopLossBPS,
+                minTakeProfitBPS: minTakeProfitBPS,
+                maxTakeProfitBPS: maxTakeProfitBPS,
+                leverageLevel: leverageLevel
+            });
     }
 
     /**
      * @inheritdoc IOracleProviderRegistry
      * @dev This function can only be called by the DAO and registered oracle providers.
      */
-    function setOracleProviderLevel(
+    function updateStopLossBPSRange(
+        address oracleProvider,
+        uint32 minStopLossBPS,
+        uint32 maxStopLossBPS
+    ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
+        require(maxStopLossBPS <= BPS);
+        _oracleProviderRegistry.setStopLossBPSRange(oracleProvider, minStopLossBPS, maxStopLossBPS);
+        emit UpdateStopLossBPSRange(oracleProvider, minStopLossBPS, maxStopLossBPS);
+    }
+
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     * @dev This function can only be called by the DAO and registered oracle providers.
+     */
+    function updateTakeProfitBPSRange(
+        address oracleProvider,
+        uint32 minTakeProfitBPS,
+        uint32 maxTakeProfitBPS
+    ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
+        _oracleProviderRegistry.setTakeProfitBPSRange(
+            oracleProvider,
+            minTakeProfitBPS,
+            maxTakeProfitBPS
+        );
+        emit UpdateTakeProfitBPSRange(oracleProvider, minTakeProfitBPS, maxTakeProfitBPS);
+    }
+
+    /**
+     * @inheritdoc IOracleProviderRegistry
+     * @dev This function can only be called by the DAO and registered oracle providers.
+     */
+    function updateLeverageLevel(
         address oracleProvider,
         uint8 level
     ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
         require(level <= 1);
-        _oracleProviderRegistry.setOracleProviderLevel(oracleProvider, level);
-        emit SetOracleProviderLevel(oracleProvider, level);
+        _oracleProviderRegistry.setLeverageLevel(oracleProvider, level);
+        emit UpdateLeverageLevel(oracleProvider, level);
     }
 
     // implement ISettlementTokenRegistry
