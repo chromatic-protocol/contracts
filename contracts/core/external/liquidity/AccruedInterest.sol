@@ -36,7 +36,7 @@ library AccruedInterestLib {
         // check if the interest is already accumulated for the given period of time.
         if (until <= accumulatedAt) return;
 
-        if (tokenAmount > 0) {
+        if (tokenAmount != 0) {
             // calculate the interest for the given period of time and accumulate it
             self.accumulatedAmount += ctx.calculateInterest(tokenAmount, accumulatedAt, until);
         }

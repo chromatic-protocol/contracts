@@ -249,7 +249,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 positionId,
         uint256 amount
     ) internal {
-        if (amount > 0) {
+        if (amount != 0) {
             SafeERC20.safeTransfer(IERC20(settlementToken), factory.treasury(), amount);
             emit TransferProtocolFee(market, positionId, amount);
         }
@@ -295,7 +295,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 paidToMakerPool = paid - paidToTakerPool;
 
         // Transfer the amount paid to the taker pool to the DAO treasury address
-        if (paidToTakerPool > 0) {
+        if (paidToTakerPool != 0) {
             SafeERC20.safeTransfer(IERC20(token), factory.treasury(), paidToTakerPool);
         }
         // Add the amount paid to the maker pool to the pending maker earnings
@@ -416,7 +416,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMakerEarnings[token];
         delete pendingMakerEarnings[token];
 
-        uint256 usedFee = fee > 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
+        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
         emit TransferKeeperFee(fee, usedFee);
 
         uint256 remainBalance = makerBalances[token];
@@ -531,7 +531,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMarketEarnings[market];
         delete pendingMarketEarnings[market];
 
-        uint256 usedFee = fee > 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
+        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
         emit TransferKeeperFee(market, fee, usedFee);
 
         uint256 remainEarning = earning - usedFee;

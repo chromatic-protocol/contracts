@@ -223,7 +223,7 @@ library PositionLib {
         delete storedPosition._binMargins;
         for (uint i; i < self._binMargins.length; ) {
             BinMargin memory binMargin = self._binMargins[i];
-            if (binMargin.amount > 0) {
+            if (binMargin.amount != 0) {
                 storedPosition._binMargins.push(self._binMargins[i]);
             }
 

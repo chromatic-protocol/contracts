@@ -108,8 +108,10 @@ contract ChromaticLens {
         // Count the number of CLB tokens with non-zero balance
         uint256 effectiveCnt;
         for (uint256 i; i < balances.length; ) {
-            if (balances[i] > 0) {
-                effectiveCnt++;
+            if (balances[i] != 0) {
+                unchecked {
+                    effectiveCnt++;
+                }
             }
 
             unchecked {
@@ -120,12 +122,20 @@ contract ChromaticLens {
         uint256[] memory effectiveBalances = new uint256[](effectiveCnt);
         uint256[] memory effectiveTokenIds = new uint256[](effectiveCnt);
         int16[] memory effectiveFeeRates = new int16[](effectiveCnt);
-        for ((uint256 i, uint256 idx) = (0, 0); i < balances.length; i++) {
-            if (balances[i] > 0) {
+
+        uint256 idx;
+        for (uint256 i; i < balances.length; ) {
+            if (balances[i] != 0) {
                 effectiveBalances[idx] = balances[i];
                 effectiveTokenIds[idx] = tokenIds[i];
                 effectiveFeeRates[idx] = CLBTokenLib.decodeId(tokenIds[i]);
-                idx++;
+                unchecked {
+                    idx++;
+                }
+            }
+
+            unchecked {
+                i++;
             }
         }
 

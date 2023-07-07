@@ -149,11 +149,12 @@ library LiquidityPoolLib {
 
         BinMargin[] memory binMargins = new BinMargin[](cnt);
         for ((uint256 i, uint256 idx) = (0, 0); i < to; i++) {
-            if (_binMargins[i] > 0) {
+            if (_binMargins[i] != 0) {
                 binMargins[idx] = BinMargin({
                     tradingFeeRate: _tradingFeeRates[i],
                     amount: _binMargins[i]
                 });
+
                 unchecked {
                     idx++;
                 }
@@ -195,7 +196,7 @@ library LiquidityPoolLib {
         for (uint256 i; i < binMargins.length; ) {
             BinMargin memory binMargin = binMargins[i];
 
-            if (binMargin.amount > 0) {
+            if (binMargin.amount != 0) {
                 param.leveragedQty = paramValues[i].leveragedQty;
                 param.takerMargin = paramValues[i].takerMargin;
                 param.makerMargin = binMargin.amount;
@@ -250,7 +251,7 @@ library LiquidityPoolLib {
         );
 
         for (uint256 i; i < binMargins.length; ) {
-            if (binMargins[i].amount > 0) {
+            if (binMargins[i].amount != 0) {
                 LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
                 param.leveragedQty = paramValues[i].leveragedQty;
@@ -315,7 +316,7 @@ library LiquidityPoolLib {
 
         if (realizedPnl == 0) {
             for (uint256 i; i < binMargins.length; ) {
-                if (binMargins[i].amount > 0) {
+                if (binMargins[i].amount != 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
                     param.leveragedQty = paramValues[i].leveragedQty;
@@ -331,7 +332,7 @@ library LiquidityPoolLib {
             }
         } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
             for (uint256 i; i < binMargins.length; ) {
-                if (binMargins[i].amount > 0) {
+                if (binMargins[i].amount != 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
                     param.leveragedQty = paramValues[i].leveragedQty;
@@ -350,7 +351,7 @@ library LiquidityPoolLib {
             uint256 remainRealizedPnl = absRealizedPnl;
 
             for (uint256 i; i < binMargins.length; ) {
-                if (binMargins[i].amount > 0) {
+                if (binMargins[i].amount != 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
                     param.leveragedQty = paramValues[i].leveragedQty;
@@ -707,7 +708,7 @@ library LiquidityPoolLib {
         }
 
         // At this point `low` is the exclusive upper bound. We will return the inclusive upper bound.
-        if (low > 0 && array[low - 1] == element) {
+        if (low != 0 && array[low - 1] == element) {
             return low - 1;
         } else {
             return low;

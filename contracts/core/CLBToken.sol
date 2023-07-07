@@ -205,7 +205,7 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         uint256 fractionalPart = absFeeRate % pct;
 
         bytes memory fraction;
-        if (fractionalPart > 0) {
+        if (fractionalPart != 0) {
             uint256 fractionalPart1 = fractionalPart / (pct / 10);
             uint256 fractionalPart2 = fractionalPart % (pct / 10);
 
@@ -514,20 +514,21 @@ contract CLBToken is ERC1155Supply, ICLBToken {
     }
 
     function _color(int16 feeRate) private pure returns (string memory) {
+        bool long = feeRate > 0;
         uint256 absFeeRate = uint16(feeRate < 0 ? -(feeRate) : feeRate);
 
         if (absFeeRate >= BPS / 10) {
             // feeRate >= 10%  or feeRate <= -10%
-            return feeRate > 0 ? "#FFCE94" : "#A0DC50";
+            return long ? "#FFCE94" : "#A0DC50";
         } else if (absFeeRate >= BPS / 100) {
             // 10% > feeRate >= 1% or -1% >= feeRate > -10%
-            return feeRate > 0 ? "#FFAB5E" : "#82E664";
+            return long ? "#FFAB5E" : "#82E664";
         } else if (absFeeRate >= BPS / 1000) {
             // 1% > feeRate >= 0.1% or -0.1% >= feeRate > -1%
-            return feeRate > 0 ? "#FF966E" : "#5ADC8C";
+            return long ? "#FF966E" : "#5ADC8C";
         } else if (absFeeRate >= BPS / 10000) {
             // 0.1% > feeRate >= 0.01% or -0.01% >= feeRate > -0.1%
-            return feeRate > 0 ? "#FE8264" : "#3CD2AA";
+            return long ? "#FE8264" : "#3CD2AA";
         }
         // feeRate == 0%
         return "#000000";

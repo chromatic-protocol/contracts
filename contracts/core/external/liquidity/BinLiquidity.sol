@@ -125,7 +125,7 @@ library BinLiquidityLib {
             clbToken.burn(ctx.market, clbTokenId, burningAmount - mintingAmount);
         }
 
-        if (pendingDeposit > 0 || pendingWithdrawal > 0) {
+        if (pendingDeposit != 0 || pendingWithdrawal != 0) {
             ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
         }
     }
@@ -302,7 +302,7 @@ library BinLiquidityLib {
         pendingDeposit = self._pending.tokenAmount;
         uint256 pendingCLBTokenAmount = self._pending.clbTokenAmount;
 
-        if (pendingDeposit > 0) {
+        if (pendingDeposit != 0) {
             mintingAmount = calculateCLBTokenMinting(pendingDeposit, binValue, totalSupply);
 
             self.total += pendingDeposit;
@@ -312,7 +312,7 @@ library BinLiquidityLib {
             });
         }
 
-        if (pendingCLBTokenAmount > 0) {
+        if (pendingCLBTokenAmount != 0) {
             self._burningVersions.pushBack(bytes32(oracleVersion));
             self._claimBurnings[oracleVersion] = _ClaimBurning({
                 clbTokenAmountRequested: pendingCLBTokenAmount,
@@ -354,12 +354,12 @@ library BinLiquidityLib {
         }
 
         uint256 length = self._burningVersions.length();
-        for (uint256 i; i < length && freeLiquidity > 0; ) {
+        for (uint256 i; i < length && freeLiquidity != 0; ) {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
 
             uint256 _pendingCLBTokenAmount = _cb.clbTokenAmountRequested - _cb.clbTokenAmount;
-            if (_pendingCLBTokenAmount > 0) {
+            if (_pendingCLBTokenAmount != 0) {
                 uint256 _burningAmount;
                 uint256 _pendingWithdrawal = calculateCLBTokenValue(
                     _pendingCLBTokenAmount,

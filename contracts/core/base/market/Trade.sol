@@ -186,7 +186,7 @@ abstract contract Trade is MarketBase {
 
         if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
 
-        uint256 usedKeeperFee = keeperFee > 0
+        uint256 usedKeeperFee = keeperFee != 0
             ? vault.transferKeeperFee(keeper, keeperFee, position.takerMargin)
             : 0;
         _claimPosition(ctx, position, position.pnl(ctx), usedKeeperFee, position.owner, bytes(""));
@@ -211,7 +211,7 @@ abstract contract Trade is MarketBase {
         (bool _liquidate, int256 _pnl) = _checkLiquidation(ctx, position);
         if (!_liquidate) return;
 
-        uint256 usedKeeperFee = keeperFee > 0
+        uint256 usedKeeperFee = keeperFee != 0
             ? vault.transferKeeperFee(keeper, keeperFee, position.takerMargin)
             : 0;
         _claimPosition(ctx, position, _pnl, usedKeeperFee, position.owner, bytes(""));
