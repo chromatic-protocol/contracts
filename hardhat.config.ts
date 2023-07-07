@@ -9,6 +9,7 @@ import type { HardhatUserConfig } from 'hardhat/config'
 import 'solidity-docgen'
 import 'tsconfig-paths/register'
 import docgenConfig from './docs/docgen.config'
+import packageConfig from './hardhat-package.config'
 
 dotenv.config()
 
@@ -99,27 +100,7 @@ const config: HardhatUserConfig = {
     grace: 8,
     heidi: 9
   },
-  package: {
-    includes: [
-      'IOracleProvider',
-      'ChromaticMarket',
-      'ChromaticMarketFactory',
-      'ChromaticVault',
-      'ChromaticAccount',
-      'ChromaticRouter',
-      'CLBToken',
-      'ChromaticLens',
-      'AggregatorV3Interface',
-      '**/IERC20.sol/*',
-      '**/IERC20Metadata.sol/*',
-      '**/IERC1155.sol/*'
-    ],
-    excludes: ['**/*Lib', '**/*Mock'],
-    includeDeployed: true,
-    artifactFromDeployment: true,
-    excludesFromDeployed: ['KeeperFeePayer', '*Lib', '*Mock', 'ChainlinkFeedOracle'],
-    excludeBytecode: true
-  },
+  package: packageConfig,
   docgen: docgenConfig
 }
 
