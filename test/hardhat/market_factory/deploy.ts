@@ -12,9 +12,6 @@ import { deployContract } from '../utils'
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
 
-  const oracleProviderRegistryLib = await deployContract<Contract>('OracleProviderRegistryLib')
-  const settlementTokenRegistryLib = await deployContract<Contract>('SettlementTokenRegistryLib')
-
   const liquidityPoolLib = await deployContract<Contract>('LiquidityPoolLib')
   const clbTokenDeployerLib = await deployContract<Contract>('CLBTokenDeployerLib')
   const marketDeployerLib = await deployContract<Contract>('MarketDeployerLib', {
@@ -26,8 +23,6 @@ export async function deploy() {
 
   const marketFactory = await deployContract<ChromaticMarketFactory>('ChromaticMarketFactory', {
     libraries: {
-      OracleProviderRegistryLib: oracleProviderRegistryLib.address,
-      SettlementTokenRegistryLib: settlementTokenRegistryLib.address,
       MarketDeployerLib: marketDeployerLib.address
     }
   })

@@ -11,8 +11,8 @@ import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/fac
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol/contracts/core/external/deployer/MarketDeployer.sol";
-import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/OracleProviderRegistry.sol";
-import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/SettlementTokenRegistry.sol";
+import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderRegistry.sol";
+import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 

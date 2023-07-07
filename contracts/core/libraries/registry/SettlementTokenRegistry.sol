@@ -62,7 +62,7 @@ library SettlementTokenRegistryLib {
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
-    ) external {
+    ) internal {
         require(self._tokens.add(token), Errors.ALREADY_REGISTERED_TOKEN);
 
         self._interestRateRecords[token].initialize(interestRate);
@@ -79,7 +79,7 @@ library SettlementTokenRegistryLib {
      */
     function settlementTokens(
         SettlementTokenRegistry storage self
-    ) external view returns (address[] memory) {
+    ) internal view returns (address[] memory) {
         return self._tokens.values();
     }
 
@@ -92,7 +92,7 @@ library SettlementTokenRegistryLib {
     function isRegistered(
         SettlementTokenRegistry storage self,
         address token
-    ) external view returns (bool) {
+    ) internal view returns (bool) {
         return self._tokens.contains(token);
     }
 
@@ -105,7 +105,7 @@ library SettlementTokenRegistryLib {
     function getMinimumMargin(
         SettlementTokenRegistry storage self,
         address token
-    ) external view returns (uint256) {
+    ) internal view returns (uint256) {
         return self._minimumMargins[token];
     }
 
@@ -119,7 +119,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token,
         uint256 minimumMargin
-    ) external {
+    ) internal {
         self._minimumMargins[token] = minimumMargin;
     }
 
@@ -132,7 +132,7 @@ library SettlementTokenRegistryLib {
     function getFlashLoanFeeRate(
         SettlementTokenRegistry storage self,
         address token
-    ) external view returns (uint256) {
+    ) internal view returns (uint256) {
         return self._flashLoanFeeRates[token];
     }
 
@@ -146,7 +146,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token,
         uint256 flashLoanFeeRate
-    ) external {
+    ) internal {
         self._flashLoanFeeRates[token] = flashLoanFeeRate;
     }
 
@@ -159,7 +159,7 @@ library SettlementTokenRegistryLib {
     function getEarningDistributionThreshold(
         SettlementTokenRegistry storage self,
         address token
-    ) external view returns (uint256) {
+    ) internal view returns (uint256) {
         return self._earningDistributionThresholds[token];
     }
 
@@ -173,7 +173,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token,
         uint256 earningDistributionThreshold
-    ) external {
+    ) internal {
         self._earningDistributionThresholds[token] = earningDistributionThreshold;
     }
 
@@ -186,7 +186,7 @@ library SettlementTokenRegistryLib {
     function getUniswapFeeTier(
         SettlementTokenRegistry storage self,
         address token
-    ) external view returns (uint24) {
+    ) internal view returns (uint24) {
         return self._uniswapFeeTiers[token];
     }
 
@@ -200,7 +200,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token,
         uint24 uniswapFeeTier
-    ) external {
+    ) internal {
         self._uniswapFeeTiers[token] = uniswapFeeTier;
     }
 
@@ -217,7 +217,7 @@ library SettlementTokenRegistryLib {
         address token,
         uint256 annualRateBPS,
         uint256 beginTimestamp
-    ) external registeredOnly(self, token) {
+    ) internal registeredOnly(self, token) {
         getInterestRateRecords(self, token).appendRecord(annualRateBPS, beginTimestamp);
     }
 
@@ -235,7 +235,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token
     )
-        external
+        internal
         registeredOnly(self, token)
         returns (bool removed, InterestRate.Record memory record)
     {
@@ -252,7 +252,7 @@ library SettlementTokenRegistryLib {
     function currentInterestRate(
         SettlementTokenRegistry storage self,
         address token
-    ) external view registeredOnly(self, token) returns (uint256 annualRateBPS) {
+    ) internal view registeredOnly(self, token) returns (uint256 annualRateBPS) {
         (InterestRate.Record memory record, ) = getInterestRateRecords(self, token).findRecordAt(
             block.timestamp
         );
@@ -275,7 +275,7 @@ library SettlementTokenRegistryLib {
         uint256 amount,
         uint256 from, // timestamp (inclusive)
         uint256 to // timestamp (exclusive)
-    ) external view registeredOnly(self, token) returns (uint256) {
+    ) internal view registeredOnly(self, token) returns (uint256) {
         return getInterestRateRecords(self, token).calculateInterest(amount, from, to);
     }
 

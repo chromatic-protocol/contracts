@@ -44,7 +44,7 @@ library OracleProviderRegistryLib {
         uint32 minTakeProfitBPS,
         uint32 maxTakeProfitBPS,
         uint8 leverageLevel
-    ) external {
+    ) internal {
         require(
             !self._oracleProviders.contains(oracleProvider),
             Errors.ALREADY_REGISTERED_ORACLE_PROVIDER
@@ -63,7 +63,7 @@ library OracleProviderRegistryLib {
      * @param self The OracleProviderRegistry storage.
      * @param oracleProvider The address of the oracle provider to unregister.
      */
-    function unregister(OracleProviderRegistry storage self, address oracleProvider) external {
+    function unregister(OracleProviderRegistry storage self, address oracleProvider) internal {
         self._oracleProviders.remove(oracleProvider);
     }
 
@@ -74,7 +74,7 @@ library OracleProviderRegistryLib {
      */
     function oracleProviders(
         OracleProviderRegistry storage self
-    ) external view returns (address[] memory) {
+    ) internal view returns (address[] memory) {
         return self._oracleProviders.values();
     }
 
@@ -87,7 +87,7 @@ library OracleProviderRegistryLib {
     function isRegistered(
         OracleProviderRegistry storage self,
         address oracleProvider
-    ) external view returns (bool) {
+    ) internal view returns (bool) {
         return self._oracleProviders.contains(oracleProvider);
     }
 
@@ -105,7 +105,7 @@ library OracleProviderRegistryLib {
         OracleProviderRegistry storage self,
         address oracleProvider
     )
-        external
+        internal
         view
         returns (
             uint32 minStopLossBPS,
@@ -134,7 +134,7 @@ library OracleProviderRegistryLib {
         address oracleProvider,
         uint32 minStopLossBPS,
         uint32 maxStopLossBPS
-    ) external {
+    ) internal {
         self._minStopLossBPSs[oracleProvider] = minStopLossBPS;
         self._maxStopLossBPSs[oracleProvider] = maxStopLossBPS;
     }
@@ -151,7 +151,7 @@ library OracleProviderRegistryLib {
         address oracleProvider,
         uint32 minTakeProfitBPS,
         uint32 maxTakeProfitBPS
-    ) external {
+    ) internal {
         self._minTakeProfitBPSs[oracleProvider] = minTakeProfitBPS;
         self._maxTakeProfitBPSs[oracleProvider] = maxTakeProfitBPS;
     }
@@ -167,7 +167,7 @@ library OracleProviderRegistryLib {
         OracleProviderRegistry storage self,
         address oracleProvider,
         uint8 leverageLevel
-    ) external {
+    ) internal {
         self._leverageLevels[oracleProvider] = leverageLevel;
     }
 }
