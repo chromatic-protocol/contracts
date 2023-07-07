@@ -12,7 +12,7 @@ import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interface
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {CLBTokenDeployerLib} from "@chromatic-protocol/contracts/core/external/deployer/CLBTokenDeployer.sol";
-import {LiquidityPool} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityPool.sol";
+import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";

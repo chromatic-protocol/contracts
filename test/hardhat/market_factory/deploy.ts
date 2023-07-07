@@ -12,11 +12,9 @@ import { deployContract } from '../utils'
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
 
-  const liquidityPoolLib = await deployContract<Contract>('LiquidityPoolLib')
   const clbTokenDeployerLib = await deployContract<Contract>('CLBTokenDeployerLib')
   const marketDeployerLib = await deployContract<Contract>('MarketDeployerLib', {
     libraries: {
-      LiquidityPoolLib: liquidityPoolLib.address,
       CLBTokenDeployerLib: clbTokenDeployerLib.address
     }
   })

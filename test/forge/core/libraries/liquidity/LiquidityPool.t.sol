@@ -10,8 +10,8 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
 import {QTY_PRECISION, LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
-import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityBin.sol";
-import {LiquidityPool} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityPool.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
+import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";

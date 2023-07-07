@@ -22,11 +22,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
       : SWAP_ROUTER_02_ADDRESSES(echainId)
 
-  const { address: liquidityPool } = await deploy('LiquidityPoolLib', {
-    from: deployer
-  })
-  console.log(chalk.yellow(`✨ LiquidityPoolLib: ${liquidityPool}`))
-
   const { address: clbTokenDeployer } = await deploy('CLBTokenDeployerLib', {
     from: deployer
   })
@@ -35,7 +30,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { address: marketDeployer } = await deploy('MarketDeployerLib', {
     from: deployer,
     libraries: {
-      LiquidityPoolLib: liquidityPool,
       CLBTokenDeployerLib: clbTokenDeployer
     }
   })

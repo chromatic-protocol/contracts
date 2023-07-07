@@ -8,9 +8,9 @@ import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
-import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/external/liquidity/AccruedInterest.sol";
-import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/external/liquidity/BinPendingPosition.sol";
-import {PositionParam} from "@chromatic-protocol/contracts/core/external/liquidity/PositionParam.sol";
+import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/AccruedInterest.sol";
+import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPendingPosition.sol";
+import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 
 /**
  * @title BinPosition

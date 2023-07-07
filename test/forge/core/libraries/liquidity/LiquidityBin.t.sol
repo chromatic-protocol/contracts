@@ -7,7 +7,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
-import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityBin.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
 import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";

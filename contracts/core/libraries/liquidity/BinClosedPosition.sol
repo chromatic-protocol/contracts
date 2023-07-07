@@ -3,9 +3,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
-import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/external/liquidity/AccruedInterest.sol";
-import {BinClosingPosition, BinClosingPositionLib} from "@chromatic-protocol/contracts/core/external/liquidity/BinClosingPosition.sol";
-import {PositionParam} from "@chromatic-protocol/contracts/core/external/liquidity/PositionParam.sol";
+import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/AccruedInterest.sol";
+import {BinClosingPosition, BinClosingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinClosingPosition.sol";
+import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 

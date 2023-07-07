@@ -5,8 +5,8 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
-import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/external/liquidity/LiquidityBin.sol";
-import {PositionParam} from "@chromatic-protocol/contracts/core/external/liquidity/PositionParam.sol";
+import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
+import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -66,7 +66,7 @@ library LiquidityPoolLib {
      * @notice Initializes the LiquidityPool.
      * @param self The reference to the LiquidityPool.
      */
-    function initialize(LiquidityPool storage self) external {
+    function initialize(LiquidityPool storage self) internal {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
         for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
@@ -84,7 +84,7 @@ library LiquidityPoolLib {
      * @param self The reference to the LiquidityPool.
      * @param ctx The LpContext object.
      */
-    function settle(LiquidityPool storage self, LpContext memory ctx) external {
+    function settle(LiquidityPool storage self, LpContext memory ctx) internal {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
         for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
@@ -119,7 +119,7 @@ library LiquidityPoolLib {
         int224 qty,
         uint256 makerMargin,
         uint256 minimumBinMargin
-    ) external view returns (BinMargin[] memory) {
+    ) internal view returns (BinMargin[] memory) {
         // Retrieve the target liquidity bins based on the position quantity
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, qty);
 
@@ -177,7 +177,7 @@ library LiquidityPoolLib {
         LiquidityPool storage self,
         LpContext memory ctx,
         Position memory position
-    ) external {
+    ) internal {
         // Retrieve the target liquidity bins based on the position quantity
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, position.qty);
 
@@ -228,7 +228,7 @@ library LiquidityPoolLib {
         LiquidityPool storage self,
         LpContext memory ctx,
         Position memory position
-    ) external {
+    ) internal {
         // Retrieve the target liquidity bins based on the position quantity
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, position.qty);
 
@@ -285,7 +285,7 @@ library LiquidityPoolLib {
         LpContext memory ctx,
         Position memory position,
         int256 realizedPnl // realized position pnl (taker side)
-    ) external {
+    ) internal {
         uint256 absRealizedPnl = realizedPnl.abs();
         uint256 makerMargin = position.makerMargin();
         // Ensure that the realized position pnl is within the acceptable margin range
@@ -404,7 +404,7 @@ library LiquidityPoolLib {
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 amount
-    ) external _validTradingFeeRate(tradingFeeRate) {
+    ) internal _validTradingFeeRate(tradingFeeRate) {
         // Retrieve the liquidity bin based on the trading fee rate
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         // Process the add liquidity request on the liquidity bin
@@ -431,7 +431,7 @@ library LiquidityPoolLib {
         int16 tradingFeeRate,
         uint256 amount,
         uint256 oracleVersion
-    ) external _validTradingFeeRate(tradingFeeRate) returns (uint256) {
+    ) internal _validTradingFeeRate(tradingFeeRate) returns (uint256) {
         // Retrieve the liquidity bin based on the trading fee rate
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         // Process the claim liquidity request on the liquidity bin and return the actual claimed amount
@@ -453,7 +453,7 @@ library LiquidityPoolLib {
         LpContext memory ctx,
         int16 tradingFeeRate,
         uint256 clbTokenAmount
-    ) external _validTradingFeeRate(tradingFeeRate) {
+    ) internal _validTradingFeeRate(tradingFeeRate) {
         // Retrieve the liquidity bin based on the trading fee rate
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         // Process the remove liquidity request on the liquidity bin
@@ -482,7 +482,7 @@ library LiquidityPoolLib {
         uint256 clbTokenAmount,
         uint256 oracleVersion
     )
-        external
+        internal
         _validTradingFeeRate(tradingFeeRate)
         returns (uint256 amount, uint256 burnedCLBTokenAmount)
     {
@@ -504,7 +504,7 @@ library LiquidityPoolLib {
     function getBinLiquidity(
         LiquidityPool storage self,
         int16 tradingFeeRate
-    ) external view returns (uint256 amount) {
+    ) internal view returns (uint256 amount) {
         // Retrieve the liquidity bin based on the trading fee rate
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         // Get the total liquidity amount in base tokens from the liquidity bin
@@ -522,7 +522,7 @@ library LiquidityPoolLib {
     function getBinFreeLiquidity(
         LiquidityPool storage self,
         int16 tradingFeeRate
-    ) external view returns (uint256 amount) {
+    ) internal view returns (uint256 amount) {
         // Retrieve the liquidity bin based on the trading fee rate
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         // Get the free liquidity amount in base tokens from the liquidity bin
@@ -730,7 +730,7 @@ library LiquidityPoolLib {
         LiquidityPool storage self,
         uint256 earning,
         uint256 marketBalance
-    ) external {
+    ) internal {
         uint256 remainEarning = earning;
         uint256 remainBalance = marketBalance;
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
@@ -809,7 +809,7 @@ library LiquidityPoolLib {
         LiquidityPool storage self,
         int16 _tradingFeeRate,
         LpContext memory ctx
-    ) external view returns (uint256 value) {
+    ) internal view returns (uint256 value) {
         value = targetBin(self, _tradingFeeRate).value(ctx);
     }
 
@@ -825,7 +825,7 @@ library LiquidityPoolLib {
         int16 tradingFeeRate,
         uint256 oracleVersion
     )
-        external
+        internal
         view
         _validTradingFeeRate(tradingFeeRate)
         returns (ILiquidity.ClaimableLiquidity memory)
@@ -843,7 +843,7 @@ library LiquidityPoolLib {
     function liquidityBinStatuses(
         LiquidityPool storage self,
         LpContext memory ctx
-    ) external view returns (ILiquidity.LiquidityBinStatus[] memory) {
+    ) internal view returns (ILiquidity.LiquidityBinStatus[] memory) {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
 
         ILiquidity.LiquidityBinStatus[] memory stats = new ILiquidity.LiquidityBinStatus[](
