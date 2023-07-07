@@ -35,3 +35,4 @@ docs/out
 !.env.example
 
 deployments/anvil
+wagmi/
