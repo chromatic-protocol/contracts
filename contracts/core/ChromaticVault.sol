@@ -421,7 +421,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
         uint256 remainBalance = makerBalances[token];
         uint256 remainEarning = earning - usedFee;
-        for (uint256 i = 0; i < markets.length; i++) {
+        for (uint256 i; i < markets.length; ) {
             address market = markets[i];
             uint256 marketBalance = makerMarketBalances[market];
             uint256 marketEarning = remainEarning.mulDiv(marketBalance, remainBalance);
@@ -432,6 +432,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
             remainEarning -= marketEarning;
 
             emit MarketEarningAccumulated(market, marketEarning);
+
+            unchecked {
+                i++;
+            }
         }
 
         emit MakerEarningDistributed(token, earning, usedFee);

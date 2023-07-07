@@ -154,9 +154,13 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         if (!_registered[oracleProvider][settlementToken]) return address(0);
 
         address[] memory markets = _marketsBySettlementToken[settlementToken];
-        for (uint i = 0; i < markets.length; i++) {
+        for (uint i; i < markets.length; ) {
             if (address(IChromaticMarket(markets[i]).oracleProvider()) == oracleProvider) {
                 return markets[i];
+            }
+
+            unchecked {
+                i++;
             }
         }
         return address(0);

@@ -27,7 +27,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     error NotClaimableLpReceipt();
     error NotWithdrawableLpReceipt();
     error InvalidLpReceiptAction();
-    
+
     /**
      * @dev Modifier to restrict a function to be called only by the vault contract.
      */
@@ -214,8 +214,12 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     ) external view override returns (uint256[] memory) {
         LpContext memory ctx = newLpContext();
         uint256[] memory values = new uint256[](tradingFeeRates.length);
-        for (uint256 i = 0; i < tradingFeeRates.length; i++) {
+        for (uint256 i; i < tradingFeeRates.length; ) {
             values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
+
+            unchecked {
+                i++;
+            }
         }
         return values;
     }

@@ -143,8 +143,12 @@ library PositionLib {
      * @return margin The maker margin
      */
     function makerMargin(Position memory self) internal pure returns (uint256 margin) {
-        for (uint256 i = 0; i < self._binMargins.length; i++) {
+        for (uint256 i; i < self._binMargins.length; ) {
             margin += self._binMargins[i].amount;
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -156,8 +160,12 @@ library PositionLib {
      * @return fee The trading fee
      */
     function tradingFee(Position memory self) internal pure returns (uint256 fee) {
-        for (uint256 i = 0; i < self._binMargins.length; i++) {
+        for (uint256 i; i < self._binMargins.length; ) {
             fee += self._binMargins[i].tradingFee(self._feeProtocol);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -167,8 +175,12 @@ library PositionLib {
      * @return fee The total protocol fee amount.
      */
     function protocolFee(Position memory self) internal pure returns (uint256 fee) {
-        for (uint256 i = 0; i < self._binMargins.length; i++) {
+        for (uint256 i; i < self._binMargins.length; ) {
             fee += self._binMargins[i].protocolFee(self._feeProtocol);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -209,10 +221,14 @@ library PositionLib {
         storedPosition._feeProtocol = self._feeProtocol;
         // can not convert memory array to storage array
         delete storedPosition._binMargins;
-        for (uint i = 0; i < self._binMargins.length; i++) {
+        for (uint i; i < self._binMargins.length; ) {
             BinMargin memory binMargin = self._binMargins[i];
             if (binMargin.amount > 0) {
                 storedPosition._binMargins.push(self._binMargins[i]);
+            }
+
+            unchecked {
+                i++;
             }
         }
     }

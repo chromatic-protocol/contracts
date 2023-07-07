@@ -68,8 +68,12 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         uint256[] memory ids
     ) public view virtual override returns (uint256[] memory) {
         uint256[] memory supplies = new uint256[](ids.length);
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i; i < ids.length; ) {
             supplies[i] = super.totalSupply(ids[i]);
+
+            unchecked {
+                i++;
+            }
         }
         return supplies;
     }
@@ -338,8 +342,12 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         string memory color,
         uint256 activeBar
     ) private pure returns (bytes memory bars) {
-        for (uint256 i = 0; i < _BARS; i++) {
+        for (uint256 i; i < _BARS; ) {
             bars = abi.encodePacked(bars, _bar(i, long, color, i == activeBar));
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -469,8 +477,12 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         height = heights[barIndex];
         hDelta = hDeltas[barIndex];
         pos = long ? 0 : _W;
-        for (uint256 i = 0; i < barIndex; i++) {
+        for (uint256 i; i < barIndex; ) {
             pos = long ? pos + widths[i] : pos - widths[i];
+
+            unchecked {
+                i++;
+            }
         }
     }
 

@@ -36,8 +36,12 @@ contract ChromaticLens {
 
     function multicall(bytes[] calldata data) external view returns (bytes[] memory results) {
         results = new bytes[](data.length);
-        for (uint256 i = 0; i < data.length; i++) {
+        for (uint256 i; i < data.length; ) {
             results[i] = Address.functionStaticCall(address(this), data[i]);
+
+            unchecked {
+                i++;
+            }
         }
         return results;
     }
@@ -68,8 +72,12 @@ contract ChromaticLens {
         uint256[] memory receiptIds = router.getLpReceiptIds(address(market), owner);
 
         result = new LpReceipt[](receiptIds.length);
-        for (uint i = 0; i < receiptIds.length; i++) {
+        for (uint i; i < receiptIds.length; ) {
             result[i] = market.getLpReceipt(receiptIds[i]);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -86,8 +94,12 @@ contract ChromaticLens {
         uint256[] memory tokenIds = CLBTokenLib.tokenIds();
         address[] memory accounts = new address[](tokenIds.length);
         // Set all accounts to the owner's address
-        for (uint256 i = 0; i < accounts.length; i++) {
+        for (uint256 i; i < accounts.length; ) {
             accounts[i] = owner;
+
+            unchecked {
+                i++;
+            }
         }
 
         // Get balances of CLB tokens for the owner
@@ -95,9 +107,13 @@ contract ChromaticLens {
 
         // Count the number of CLB tokens with non-zero balance
         uint256 effectiveCnt;
-        for (uint256 i = 0; i < balances.length; i++) {
+        for (uint256 i; i < balances.length; ) {
             if (balances[i] > 0) {
                 effectiveCnt++;
+            }
+
+            unchecked {
+                i++;
             }
         }
 
@@ -118,13 +134,17 @@ contract ChromaticLens {
 
         // Populate the result array with CLB token balance information
         CLBBalance[] memory result = new CLBBalance[](effectiveCnt);
-        for (uint256 i = 0; i < effectiveCnt; i++) {
+        for (uint256 i; i < effectiveCnt; ) {
             result[i] = CLBBalance({
                 tokenId: effectiveTokenIds[i],
                 balance: effectiveBalances[i],
                 totalSupply: totalSupplies[i],
                 binValue: binValues[i]
             });
+
+            unchecked {
+                i++;
+            }
         }
 
         return result;

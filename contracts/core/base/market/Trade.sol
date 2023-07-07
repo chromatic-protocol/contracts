@@ -384,8 +384,12 @@ abstract contract Trade is MarketBase {
         uint256[] calldata positionIds
     ) external view returns (Position[] memory _positions) {
         _positions = new Position[](positionIds.length);
-        for (uint i = 0; i < positionIds.length; i++) {
+        for (uint i; i < positionIds.length; ) {
             _positions[i] = positions[positionIds[i]];
+
+            unchecked {
+                i++;
+            }
         }
     }
 

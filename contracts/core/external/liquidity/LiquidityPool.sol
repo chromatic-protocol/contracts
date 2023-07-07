@@ -68,10 +68,14 @@ library LiquidityPoolLib {
      */
     function initialize(LiquidityPool storage self) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
-        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+        for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longBins[feeRate].initialize(int16(feeRate));
             self._shortBins[feeRate].initialize(-int16(feeRate));
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -82,10 +86,14 @@ library LiquidityPoolLib {
      */
     function settle(LiquidityPool storage self, LpContext memory ctx) external {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
-        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+        for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longBins[feeRate].settle(ctx);
             self._shortBins[feeRate].settle(ctx);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -184,7 +192,7 @@ library LiquidityPoolLib {
         );
 
         PositionParam memory param = newPositionParam(position.openVersion, position.openTimestamp);
-        for (uint256 i = 0; i < binMargins.length; i++) {
+        for (uint256 i; i < binMargins.length; ) {
             BinMargin memory binMargin = binMargins[i];
 
             if (binMargin.amount > 0) {
@@ -197,6 +205,10 @@ library LiquidityPoolLib {
                     param,
                     binMargin.tradingFee(position._feeProtocol)
                 );
+            }
+
+            unchecked {
+                i++;
             }
         }
     }
@@ -237,7 +249,7 @@ library LiquidityPoolLib {
             position.closeTimestamp
         );
 
-        for (uint256 i = 0; i < binMargins.length; i++) {
+        for (uint256 i; i < binMargins.length; ) {
             if (binMargins[i].amount > 0) {
                 LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
@@ -246,6 +258,10 @@ library LiquidityPoolLib {
                 param.makerMargin = binMargins[i].amount;
 
                 _bin.closePosition(ctx, param);
+            }
+
+            unchecked {
+                i++;
             }
         }
     }
@@ -298,7 +314,7 @@ library LiquidityPoolLib {
         );
 
         if (realizedPnl == 0) {
-            for (uint256 i = 0; i < binMargins.length; i++) {
+            for (uint256 i; i < binMargins.length; ) {
                 if (binMargins[i].amount > 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
@@ -308,9 +324,13 @@ library LiquidityPoolLib {
 
                     _bin.claimPosition(ctx, param, 0);
                 }
+
+                unchecked {
+                    i++;
+                }
             }
         } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
-            for (uint256 i = 0; i < binMargins.length; i++) {
+            for (uint256 i; i < binMargins.length; ) {
                 if (binMargins[i].amount > 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
@@ -320,12 +340,16 @@ library LiquidityPoolLib {
 
                     _bin.claimPosition(ctx, param, param.makerMargin.toInt256());
                 }
+
+                unchecked {
+                    i++;
+                }
             }
         } else {
             uint256 remainMakerMargin = makerMargin;
             uint256 remainRealizedPnl = absRealizedPnl;
 
-            for (uint256 i = 0; i < binMargins.length; i++) {
+            for (uint256 i; i < binMargins.length; ) {
                 if (binMargins[i].amount > 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
@@ -353,6 +377,10 @@ library LiquidityPoolLib {
 
                     remainMakerMargin -= param.makerMargin;
                     remainRealizedPnl -= absTakerPnl;
+                }
+
+                unchecked {
+                    i++;
                 }
             }
 
@@ -556,7 +584,7 @@ library LiquidityPoolLib {
             binMargins.length
         );
 
-        for (uint256 i = 0; i < binMargins.length - 1; i++) {
+        for (uint256 i; i < binMargins.length - 1; ) {
             uint256 _qty = remainLeveragedQty.mulDiv(binMargins[i].amount, makerMargin);
             uint256 _takerMargin = remainTakerMargin.mulDiv(binMargins[i].amount, makerMargin);
 
@@ -567,6 +595,10 @@ library LiquidityPoolLib {
 
             remainLeveragedQty -= _qty;
             remainTakerMargin -= _takerMargin;
+
+            unchecked {
+                i++;
+            }
         }
 
         values[binMargins.length - 1] = _proportionalPositionParamValue({
@@ -743,7 +775,7 @@ library LiquidityPoolLib {
         remainBalance = marketBalance;
         remainEarning = earning;
 
-        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+        for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
             LiquidityBin storage bin = bins[feeRate];
             uint256 binLiquidity = bin.liquidity();
@@ -758,6 +790,10 @@ library LiquidityPoolLib {
             remainEarning -= binEarning;
 
             emit LiquidityBinEarningAccumulated(feeRate, binType, binEarning);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -812,7 +848,7 @@ library LiquidityPoolLib {
         ILiquidity.LiquidityBinStatus[] memory stats = new ILiquidity.LiquidityBinStatus[](
             FEE_RATES_LENGTH * 2
         );
-        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+        for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 _feeRate = _tradingFeeRates[i];
             LiquidityBin storage longBin = targetBin(self, int16(_feeRate));
             LiquidityBin storage shortBin = targetBin(self, -int16(_feeRate));
@@ -829,6 +865,10 @@ library LiquidityPoolLib {
                 freeLiquidity: shortBin.freeLiquidity(),
                 binValue: shortBin.value(ctx)
             });
+
+            unchecked {
+                i++;
+            }
         }
 
         return stats;

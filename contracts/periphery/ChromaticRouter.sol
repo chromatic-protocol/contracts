@@ -299,8 +299,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
     ) external override returns (LpReceipt[] memory lpReceipts) {
         require(feeRates.length == amounts.length, "TradeRouter: invalid arguments");
         lpReceipts = new LpReceipt[](feeRates.length);
-        for (uint i = 0; i < feeRates.length; i++) {
+        for (uint i; i < feeRates.length; ) {
             lpReceipts[i] = addLiquidity(market, feeRates[i], amounts[i], recipient);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -308,8 +312,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      * @inheritdoc IChromaticRouter
      */
     function claimLiquidityBatch(address market, uint256[] calldata _receiptIds) external override {
-        for (uint i = 0; i < _receiptIds.length; i++) {
+        for (uint i; i < _receiptIds.length; ) {
             claimLiquidity(market, _receiptIds[i]);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -324,8 +332,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
     ) external override returns (LpReceipt[] memory lpReceipts) {
         require(feeRates.length == clbTokenAmounts.length, "TradeRouter: invalid arguments");
         lpReceipts = new LpReceipt[](feeRates.length);
-        for (uint i = 0; i < feeRates.length; i++) {
+        for (uint i; i < feeRates.length; ) {
             lpReceipts[i] = removeLiquidity(market, feeRates[i], clbTokenAmounts[i], recipient);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -336,8 +348,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         address market,
         uint256[] calldata _receiptIds
     ) external override {
-        for (uint i = 0; i < _receiptIds.length; i++) {
+        for (uint i; i < _receiptIds.length; ) {
             withdrawLiquidity(market, _receiptIds[i]);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
