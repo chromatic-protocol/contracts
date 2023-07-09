@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
@@ -818,7 +818,7 @@ library LiquidityPoolLib {
      * @param self The reference to the LiquidityPool struct.
      * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
      * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
+     * @return claimableLiquidity An instance of IMarketLiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
     function claimableLiquidity(
         LiquidityPool storage self,
@@ -828,7 +828,7 @@ library LiquidityPoolLib {
         internal
         view
         _validTradingFeeRate(tradingFeeRate)
-        returns (ILiquidity.ClaimableLiquidity memory)
+        returns (IMarketLiquidity.ClaimableLiquidity memory)
     {
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         return bin.claimableLiquidity(oracleVersion);
@@ -838,15 +838,15 @@ library LiquidityPoolLib {
      * @dev Retrieves the liquidity bin statuses for the LiquidityPool using the provided context.
      * @param self The LiquidityPool storage instance.
      * @param ctx The LpContext containing the necessary context for calculating the bin statuses.
-     * @return stats An array of ILiquidity.LiquidityBinStatus representing the liquidity bin statuses.
+     * @return stats An array of IMarketLiquidity.LiquidityBinStatus representing the liquidity bin statuses.
      */
     function liquidityBinStatuses(
         LiquidityPool storage self,
         LpContext memory ctx
-    ) internal view returns (ILiquidity.LiquidityBinStatus[] memory) {
+    ) internal view returns (IMarketLiquidity.LiquidityBinStatus[] memory) {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
 
-        ILiquidity.LiquidityBinStatus[] memory stats = new ILiquidity.LiquidityBinStatus[](
+        IMarketLiquidity.LiquidityBinStatus[] memory stats = new IMarketLiquidity.LiquidityBinStatus[](
             FEE_RATES_LENGTH * 2
         );
         for (uint256 i; i < FEE_RATES_LENGTH; ) {
@@ -854,13 +854,13 @@ library LiquidityPoolLib {
             LiquidityBin storage longBin = targetBin(self, int16(_feeRate));
             LiquidityBin storage shortBin = targetBin(self, -int16(_feeRate));
 
-            stats[i] = ILiquidity.LiquidityBinStatus({
+            stats[i] = IMarketLiquidity.LiquidityBinStatus({
                 tradingFeeRate: int16(_feeRate),
                 liquidity: longBin.liquidity(),
                 freeLiquidity: longBin.freeLiquidity(),
                 binValue: longBin.value(ctx)
             });
-            stats[i + FEE_RATES_LENGTH] = ILiquidity.LiquidityBinStatus({
+            stats[i + FEE_RATES_LENGTH] = IMarketLiquidity.LiquidityBinStatus({
                 tradingFeeRate: -int16(_feeRate),
                 liquidity: shortBin.liquidity(),
                 freeLiquidity: shortBin.freeLiquidity(),

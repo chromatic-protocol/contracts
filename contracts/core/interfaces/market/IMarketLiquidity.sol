@@ -4,10 +4,10 @@ pragma solidity >=0.8.0 <0.9.0;
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 
 /**
- * @title ILiquidity
+ * @title IMarketLiquidity
  * @dev The interface for liquidity operations in a market.
  */
-interface ILiquidity {
+interface IMarketLiquidity {
     /**
      * @dev A struct representing claimable liquidity information.
      */

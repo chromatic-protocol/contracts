@@ -19,7 +19,24 @@ export async function deploy() {
     }
   })
 
+  const marketDiamondCutFacet = await deployContract<Contract>('MarketDiamondCutFacet')
+  const marketLoupeFacet = await deployContract<Contract>('DiamondLoupeFacet')
+  const marketStateFacet = await deployContract<Contract>('MarketStateFacet')
+  const marketLiquidityFacet = await deployContract<Contract>('MarketLiquidityFacet')
+  const marketTradeFacet = await deployContract<Contract>('MarketTradeFacet')
+  const marketLiquidateFacet = await deployContract<Contract>('MarketLiquidateFacet')
+  const marketSettleFacet = await deployContract<Contract>('MarketSettleFacet')
+  
   const marketFactory = await deployContract<ChromaticMarketFactory>('ChromaticMarketFactory', {
+    args: [
+      marketDiamondCutFacet.address,
+      marketLoupeFacet.address,
+      marketStateFacet.address,
+      marketLiquidityFacet.address,
+      marketTradeFacet.address,
+      marketLiquidateFacet.address,
+      marketSettleFacet.address
+    ],
     libraries: {
       MarketDeployerLib: marketDeployerLib.address
     }

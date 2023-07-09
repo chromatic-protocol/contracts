@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
+
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 
 /**
- * @title ITrade
+ * @title IMarketTrade
  * @dev Interface for trading positions in a market.
  */
-interface ITrade {
+interface IMarketTrade {
     /**
      * @dev Emitted when a position is opened.
      * @param account The address of the account opening the position.
@@ -41,21 +42,6 @@ interface ITrade {
      * @param amount The amount of fees transferred.
      */
     event TransferProtocolFee(uint256 indexed positionId, uint256 indexed amount);
-
-    /**
-     * @dev Emitted when a position is liquidated.
-     * @param account The address of the account being liquidated.
-     * @param usedKeeperFee The amount of keeper fee used for the liquidation.
-     * @param position The liquidated position.
-     */
-    event Liquidate(address indexed account, uint256 indexed usedKeeperFee, Position position);
-
-    /**
-     * @notice Emitted when the protocol fee is changed by the market
-     * @param feeProtocolOld The previous value of the protocol fee
-     * @param feeProtocolNew The updated value of the protocol fee
-     */
-    event SetFeeProtocol(uint8 feeProtocolOld, uint8 feeProtocolNew);
 
     /**
      * @dev Opens a new position in the market.
@@ -102,10 +88,4 @@ interface ITrade {
     function getPositions(
         uint256[] calldata positionIds
     ) external view returns (Position[] memory positions);
-
-    /**
-     * @notice Set the denominator of the protocol's % share of the fees
-     * @param feeProtocol new protocol fee for the market
-     */
-    function setFeeProtocol(uint8 feeProtocol) external;
 }

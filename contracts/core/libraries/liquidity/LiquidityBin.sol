@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {BinLiquidity, BinLiquidityLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinLiquidity.sol";
 import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPosition.sol";
 import {BinClosedPosition, BinClosedPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinClosedPosition.sol";
@@ -273,12 +273,12 @@ library LiquidityBinLib {
      * @dev Retrieves the claimable liquidity information for a specific oracle version from a LiquidityBin.
      * @param self The reference to the LiquidityBin struct.
      * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
+     * @return claimableLiquidity An instance of IMarketLiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
     function claimableLiquidity(
         LiquidityBin storage self,
         uint256 oracleVersion
-    ) internal view returns (ILiquidity.ClaimableLiquidity memory) {
+    ) internal view returns (IMarketLiquidity.ClaimableLiquidity memory) {
         return self._liquidity.claimableLiquidity(oracleVersion);
     }
 }

@@ -5,7 +5,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {DoubleEndedQueue} from "@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
-import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
@@ -394,17 +394,17 @@ library BinLiquidityLib {
      * @dev Retrieves the claimable liquidity information for a specific oracle version.
      * @param self The reference to the BinLiquidity struct.
      * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidity An instance of ILiquidity.ClaimableLiquidity representing the claimable liquidity information.
+     * @return claimableLiquidity An instance of IMarketLiquidity.ClaimableLiquidity representing the claimable liquidity information.
      */
     function claimableLiquidity(
         BinLiquidity storage self,
         uint256 oracleVersion
-    ) internal view returns (ILiquidity.ClaimableLiquidity memory) {
+    ) internal view returns (IMarketLiquidity.ClaimableLiquidity memory) {
         _ClaimMinting memory _cm = self._claimMintings[oracleVersion];
         _ClaimBurning memory _cb = self._claimBurnings[oracleVersion];
 
         return
-            ILiquidity.ClaimableLiquidity({
+            IMarketLiquidity.ClaimableLiquidity({
                 mintingTokenAmountRequested: _cm.tokenAmountRequested,
                 mintingCLBTokenAmount: _cm.clbTokenAmount,
                 burningCLBTokenAmountRequested: _cb.clbTokenAmountRequested,

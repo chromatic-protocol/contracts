@@ -12,6 +12,13 @@ import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProv
 import {Token} from "@chromatic-protocol/contracts/mocks/Token.sol";
 import {ChromaticLiquidatorMock} from "@chromatic-protocol/contracts/mocks/ChromaticLiquidatorMock.sol";
 import {ChromaticVaultMock} from "@chromatic-protocol/contracts/mocks/ChromaticVaultMock.sol";
+import {DiamondLoupeFacet} from "@chromatic-protocol/contracts/core/facets/DiamondLoupeFacet.sol";
+import {MarketDiamondCutFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketDiamondCutFacet.sol";
+import {MarketStateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketStateFacet.sol";
+import {MarketLiquidityFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacet.sol";
+import {MarketTradeFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacet.sol";
+import {MarketLiquidateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidateFacet.sol";
+import {MarketSettleFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketSettleFacet.sol";
 
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;
@@ -42,7 +49,15 @@ abstract contract BaseSetup is Test {
         usdc = new Token("USDC", "USDC");
         usdc.faucet(1000000 ether);
 
-        factory = new ChromaticMarketFactory();
+        factory = new ChromaticMarketFactory(
+            address(new MarketDiamondCutFacet()),
+            address(new DiamondLoupeFacet()),
+            address(new MarketStateFacet()),
+            address(new MarketLiquidityFacet()),
+            address(new MarketTradeFacet()),
+            address(new MarketLiquidateFacet()),
+            address(new MarketSettleFacet())
+        );
 
         keeperFeePayer = new KeeperFeePayerMock(factory);
         factory.setKeeperFeePayer(address(keeperFeePayer));

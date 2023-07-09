@@ -2,48 +2,46 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
-import {ILiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/ILiquidity.sol";
+import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
+import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
-import {MarketBase} from "@chromatic-protocol/contracts/core/base/market/MarketBase.sol";
+import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
+import {MarketStorage, MarketStorageLib, LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
+import {MINIMUM_LIQUIDITY} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
+import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
 
 /**
- * @title Liquidity
+ * @title MarketLiquidityFacet
  * @dev Contract for managing liquidity in a market.
  */
-abstract contract Liquidity is MarketBase, IERC1155Receiver {
+contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Receiver, ReentrancyGuard {
     using Math for uint256;
 
-    uint256 constant MINIMUM_LIQUIDITY = 10 ** 3;
-
-    uint256 internal _lpReceiptId;
-
     error TooSmallAmount();
-    error OnlyAccessableByVault();
     error NotExistLpReceipt();
     error NotClaimableLpReceipt();
     error NotWithdrawableLpReceipt();
     error InvalidLpReceiptAction();
 
     /**
-     * @dev Modifier to restrict a function to be called only by the vault contract.
-     */
-    modifier onlyVault() {
-        if (msg.sender != address(vault)) revert OnlyAccessableByVault();
-        _;
-    }
-
-    /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function addLiquidity(
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt memory) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        IERC20Metadata settlementToken = ms.settlementToken;
+        IVault vault = ms.vault;
+
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         IChromaticLiquidityCallback(msg.sender).addLiquidityCallback(
             address(settlementToken),
@@ -58,26 +56,28 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         ctx.syncOracleVersion();
 
         vault.onAddLiquidity(amount);
-        liquidityPool.acceptAddLiquidity(ctx, tradingFeeRate, amount);
+        ms.liquidityPool.acceptAddLiquidity(ctx, tradingFeeRate, amount);
 
-        LpReceipt memory receipt = newLpReceipt(
+        LpReceipt memory receipt = _newLpReceipt(
             ctx,
             LpAction.ADD_LIQUIDITY,
             amount,
             recipient,
             tradingFeeRate
         );
-        lpReceipts[receipt.id] = receipt;
+        LpReceiptStorageLib.lpReceiptStorage().setReceipt(receipt);
 
         emit AddLiquidity(recipient, receipt);
         return receipt;
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function claimLiquidity(uint256 receiptId, bytes calldata data) external override nonReentrant {
-        LpReceipt memory receipt = getLpReceipt(receiptId);
+        LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+
+        LpReceipt memory receipt = _getLpReceipt(ls, receiptId);
         if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
 
         LpContext memory ctx = newLpContext();
@@ -85,13 +85,14 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
 
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotClaimableLpReceipt();
 
-        uint256 clbTokenAmount = liquidityPool.acceptClaimLiquidity(
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        uint256 clbTokenAmount = ms.liquidityPool.acceptClaimLiquidity(
             ctx,
             receipt.tradingFeeRate,
             receipt.amount,
             receipt.oracleVersion
         );
-        clbToken.safeTransferFrom(
+        ms.clbToken.safeTransferFrom(
             address(this),
             receipt.recipient,
             receipt.clbTokenId(),
@@ -100,13 +101,13 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         );
 
         IChromaticLiquidityCallback(msg.sender).claimLiquidityCallback(receipt.id, data);
-        delete lpReceipts[receiptId];
+        ls.deleteReceipt(receiptId);
 
         emit ClaimLiquidity(receipt.recipient, clbTokenAmount, receipt);
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function removeLiquidity(
         address recipient,
@@ -116,13 +117,16 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         LpContext memory ctx = newLpContext();
         ctx.syncOracleVersion();
 
-        LpReceipt memory receipt = newLpReceipt(
+        LpReceipt memory receipt = _newLpReceipt(
             ctx,
             LpAction.REMOVE_LIQUIDITY,
             0,
             recipient,
             tradingFeeRate
         );
+
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        ICLBToken clbToken = ms.clbToken;
 
         uint256 clbTokenId = receipt.clbTokenId();
         uint256 balanceBefore = clbToken.balanceOf(address(this), clbTokenId);
@@ -135,22 +139,24 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         uint256 clbTokenAmount = clbToken.balanceOf(address(this), clbTokenId) - balanceBefore;
         if (clbTokenAmount == 0) revert TooSmallAmount();
 
-        liquidityPool.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
+        ms.liquidityPool.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
         receipt.amount = clbTokenAmount;
 
-        lpReceipts[receipt.id] = receipt;
+        LpReceiptStorageLib.lpReceiptStorage().setReceipt(receipt);
         emit RemoveLiquidity(recipient, receipt);
         return receipt;
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function withdrawLiquidity(
         uint256 receiptId,
         bytes calldata data
     ) external override nonReentrant {
-        LpReceipt memory receipt = getLpReceipt(receiptId);
+        LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+
+        LpReceipt memory receipt = _getLpReceipt(ls, receiptId);
         if (receipt.action != LpAction.REMOVE_LIQUIDITY) revert InvalidLpReceiptAction();
 
         LpContext memory ctx = newLpContext();
@@ -161,57 +167,61 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
 
-        (uint256 amount, uint256 burnedCLBTokenAmount) = liquidityPool.acceptWithdrawLiquidity(
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        (uint256 amount, uint256 burnedCLBTokenAmount) = ms.liquidityPool.acceptWithdrawLiquidity(
             ctx,
             receipt.tradingFeeRate,
             clbTokenAmount,
             receipt.oracleVersion
         );
 
-        clbToken.safeTransferFrom(
+        ms.clbToken.safeTransferFrom(
             address(this),
             recipient,
             receipt.clbTokenId(),
             clbTokenAmount - burnedCLBTokenAmount,
             bytes("")
         );
-        vault.onWithdrawLiquidity(recipient, amount);
+        ms.vault.onWithdrawLiquidity(recipient, amount);
 
         IChromaticLiquidityCallback(msg.sender).withdrawLiquidityCallback(receipt.id, data);
-        delete lpReceipts[receiptId];
+        ls.deleteReceipt(receiptId);
 
         emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function getBinLiquidity(int16 tradingFeeRate) external view override returns (uint256 amount) {
-        amount = liquidityPool.getBinLiquidity(tradingFeeRate);
+        amount = MarketStorageLib.marketStorage().liquidityPool.getBinLiquidity(tradingFeeRate);
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function getBinFreeLiquidity(
         int16 tradingFeeRate
     ) external view override returns (uint256 amount) {
-        amount = liquidityPool.getBinFreeLiquidity(tradingFeeRate);
+        amount = MarketStorageLib.marketStorage().liquidityPool.getBinFreeLiquidity(tradingFeeRate);
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
-        liquidityPool.distributeEarning(earning, marketBalance);
+        MarketStorageLib.marketStorage().liquidityPool.distributeEarning(earning, marketBalance);
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function getBinValues(
         int16[] memory tradingFeeRates
     ) external view override returns (uint256[] memory) {
+        LiquidityPool storage liquidityPool = MarketStorageLib.marketStorage().liquidityPool;
+
         LpContext memory ctx = newLpContext();
         uint256[] memory values = new uint256[](tradingFeeRates.length);
         for (uint256 i; i < tradingFeeRates.length; ) {
@@ -225,28 +235,39 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
-    function getLpReceipt(uint256 receiptId) public view returns (LpReceipt memory receipt) {
-        receipt = lpReceipts[receiptId];
+    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
+        receipt = _getLpReceipt(LpReceiptStorageLib.lpReceiptStorage(), receiptId);
+    }
+
+    function _getLpReceipt(
+        LpReceiptStorage storage ls,
+        uint256 receiptId
+    ) private view returns (LpReceipt memory receipt) {
+        receipt = ls.getReceipt(receiptId);
         if (receipt.id == 0) revert NotExistLpReceipt();
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function claimableLiquidity(
         int16 tradingFeeRate,
         uint256 oracleVersion
     ) external view returns (ClaimableLiquidity memory) {
-        return liquidityPool.claimableLiquidity(tradingFeeRate, oracleVersion);
+        return
+            MarketStorageLib.marketStorage().liquidityPool.claimableLiquidity(
+                tradingFeeRate,
+                oracleVersion
+            );
     }
 
     /**
-     * @inheritdoc ILiquidity
+     * @inheritdoc IMarketLiquidity
      */
     function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory) {
-        return liquidityPool.liquidityBinStatuses(newLpContext());
+        return MarketStorageLib.marketStorage().liquidityPool.liquidityBinStatuses(newLpContext());
     }
 
     /**
@@ -258,7 +279,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
      * @param tradingFeeRate The trading fee rate for the liquidity.
      * @return The new liquidity receipt.
      */
-    function newLpReceipt(
+    function _newLpReceipt(
         LpContext memory ctx,
         LpAction action,
         uint256 amount,
@@ -267,7 +288,7 @@ abstract contract Liquidity is MarketBase, IERC1155Receiver {
     ) private returns (LpReceipt memory) {
         return
             LpReceipt({
-                id: ++_lpReceiptId,
+                id: LpReceiptStorageLib.lpReceiptStorage().nextId(),
                 oracleVersion: ctx.currentOracleVersion().version,
                 action: action,
                 amount: amount,
