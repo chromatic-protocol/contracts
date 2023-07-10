@@ -66,6 +66,7 @@ jobs:
         run: |
           yarn clean
           yarn build
+          yarn build:ethers-v6
           yarn wagmi generate
           npm pkg set dependencies="`npm pkg get dependencies`" --prefix ./contracts --json
           yarn publish --new-version="${{ needs.Release.outputs.version }}" --cwd contracts --no-git-tag-version --no-commit-hooks --access public
@@ -83,7 +84,9 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
       - run: |
           rm -rf sdk/packages/sdk-ethers-v5/src/gen/*
-          cp -r package-build/src.ts/* sdk/packages/sdk-ethers-v5/src/gen/
+          rm -rf sdk/packages/sdk-ethers-v6/src/gen/*
+          cp -r package-build-v5/src.ts/* sdk/packages/sdk-ethers-v5/src/gen/
+          cp -r package-build-v6/src.ts/* sdk/packages/sdk-ethers-v6/src/gen/
           cp wagmi/index.ts sdk/packages/sdk-viem/src/gen/index.ts
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
@@ -93,6 +96,7 @@ jobs:
           path: sdk
           add-paths: |
             packages/sdk-ethers-v5/src/gen/**
+            packages/sdk-ethers-v6/src/gen/**
             packages/sdk-viem/src/gen/index.ts
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: ${{ github.event.pull_request.title }}

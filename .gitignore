@@ -18,7 +18,8 @@ lcov.info
 
 # packaging
 dist/
-package-build/
+package-build-v5/
+package-build-v6/
 
 .idea
 .vsls.json
