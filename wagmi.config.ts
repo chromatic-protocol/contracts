@@ -1,7 +1,7 @@
 import { defineConfig } from '@wagmi/cli'
 import { hardhat } from '@wagmi/cli/plugins'
 import packageConfig from './hardhat-package.config'
-import { deployedAddress } from './package-build/src.ts/deployedAddress'
+import { deployedAddress } from './package-build-v5/src.ts/deployedAddress'
 
 function getDeployments(packageConfig: any) {
   const contracts = packageConfig?.includesFromDeployed
