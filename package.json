@@ -13,7 +13,8 @@
     "deploy": "hardhat deploy",
     "deploy:arbitrum_goerli": "yarn hardhat:arbitrum_goerli deploy --tags core,periphery",
     "chain": "yarn anvil:start & yarn hardhat deploy --network anvil --reset --tags core,periphery,mockup ; yarn hardhat typechain ; wait",
-    "build": "yarn anvil:start & yarn hardhat deploy --network anvil --reset --tags core,periphery ; yarn anvil:stop && yarn hardhat package --build false",
+    "build": "yarn anvil:start & yarn hardhat deploy --network anvil --reset --tags core,periphery ; yarn anvil:stop && yarn hardhat package --typechain-target ethers-v5 --build-dir package-build-v5 --build false",
+    "build:ethers-v6": "yarn anvil:start & yarn hardhat deploy --network anvil --reset --tags core,periphery ; yarn anvil:stop && yarn hardhat package --typechain-target ethers-v6 --build-dir package-build-v6 --build false",
     "clean": "hardhat clean && rm -rf deployments/anvil && rm -rf docs/out",
     "anvil:start": "dotenv -- ./anvil.sh",
     "anvil:stop": "kill -INT $(pgrep anvil)",
@@ -24,7 +25,7 @@
     "docs": "hardhat docgen"
   },
   "devDependencies": {
-    "@chromatic-protocol/hardhat-package": "^0.0.1-dev.16",
+    "@chromatic-protocol/hardhat-package": "^0.0.1-dev.18",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
     "@gelatonetwork/automate-sdk": "^2.1.1",
@@ -35,6 +36,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-etherscan": "^3.0.0",
     "@typechain/ethers-v5": "^10.1.0",
+    "@typechain/ethers-v6": "^0.4.0",
     "@typechain/hardhat": "^6.1.2",
     "@types/bluebird": "^3.5.38",
     "@types/chai": "^4.2.0",

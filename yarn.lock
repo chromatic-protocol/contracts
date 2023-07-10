@@ -60,10 +60,10 @@
     "@chainsafe/persistent-merkle-tree" "^0.4.2"
     case "^1.6.3"
 
-"@chromatic-protocol/hardhat-package@^0.0.1-dev.16":
-  version "0.0.1-dev.16"
-  resolved "https://registry.yarnpkg.com/@chromatic-protocol/hardhat-package/-/hardhat-package-0.0.1-dev.16.tgz#c96aca6faee8d21bded3e8f8a35295ad1fa5269f"
-  integrity sha512-zWN/1GkisoQ63dRpmonb7kjDQ/n/p589ZeCjiV9rLXvVebw3JB3R1duQmwmcM3iQObEZKi2X3LZantxgAPQrkw==
+"@chromatic-protocol/hardhat-package@^0.0.1-dev.18":
+  version "0.0.1-dev.18"
+  resolved "https://registry.yarnpkg.com/@chromatic-protocol/hardhat-package/-/hardhat-package-0.0.1-dev.18.tgz#9b46651e1ac77a62ed5ccdbaa2fce60ca6e6a1db"
+  integrity sha512-OapDpoL0cuaV0/z/5yaRCVEuL8F4VG9FRusXawxFBINXo3eMq8TRYnmbn/C+4MDzOz7/Nee7ar7t9h4faEI0EQ==
   dependencies:
     chalk "^2.4.2"
     minimatch "^9.0.0"
@@ -1000,6 +1000,14 @@
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-10.2.0.tgz#68f5963efb5214cb2d881477228e4b5b315473e1"
   integrity sha512-ikaq0N/w9fABM+G01OFmU3U3dNnyRwEahkdvi9mqy1a3XwKiPZaF/lu54OcNaEWnpvEYyhhS0N7buCtLQqC92w==
+  dependencies:
+    lodash "^4.17.15"
+    ts-essentials "^7.0.1"
+
+"@typechain/ethers-v6@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v6/-/ethers-v6-0.4.0.tgz#fb9e9b8eeadc455fd1fc9048b2340309860deaca"
+  integrity sha512-vD3Agzz63Gf2XlU3ed2/y+8dLWQj+wf+4Eq+0JXsyOio/plyV5F6r0yYe+s3XdGI858U3Sr263pl8mliDrUqbw==
   dependencies:
     lodash "^4.17.15"
     ts-essentials "^7.0.1"
