@@ -126,7 +126,7 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
     ) external view returns (uint256[] memory);
 
     /**
-     * @notice Adds liquidity to multiple ChromaticMarket contracts in a batch.
+     * @notice Adds liquidity to multiple liquidity bins of ChromaticMarket contract in a batch.
      * @param market The address of the ChromaticMarket contract.
      * @param recipient The address of the recipient for each liquidity bin.
      * @param feeRates An array of fee rates for each liquidity bin.

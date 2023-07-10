@@ -29,7 +29,7 @@ library InterestRate {
      *      It checks whether the length of the Record array is greater than 0.
      */
     modifier initialized(Record[] storage self) {
-        require(self.length > 0, Errors.INTEREST_RATE_NOT_INITIALIZED);
+        require(self.length != 0, Errors.INTEREST_RATE_NOT_INITIALIZED);
         _;
     }
 
@@ -102,12 +102,18 @@ library InterestRate {
         Record[] storage self,
         uint256 timestamp
     ) internal view initialized(self) returns (Record memory interestRate, uint256 index) {
-        for (uint256 i = self.length; i > 0; i--) {
-            index = i - 1;
+        for (uint256 i = self.length; i != 0; ) {
+            unchecked {
+                index = i - 1;
+            }
             interestRate = self[index];
 
             if (interestRate.beginTimestamp <= timestamp) {
                 return (interestRate, index);
+            }
+
+            unchecked {
+                i--;
             }
         }
 
@@ -134,7 +140,7 @@ library InterestRate {
         uint256 interest = 0;
 
         uint256 endTimestamp = type(uint256).max;
-        for (uint256 idx = self.length; idx > 0; idx--) {
+        for (uint256 idx = self.length; idx != 0; ) {
             Record memory record = self[idx - 1];
             if (endTimestamp <= from) {
                 break;
@@ -146,6 +152,10 @@ library InterestRate {
                 Math.min(to, endTimestamp) - Math.max(from, record.beginTimestamp)
             );
             endTimestamp = record.beginTimestamp;
+
+            unchecked {
+                idx--;
+            }
         }
         return interest;
     }

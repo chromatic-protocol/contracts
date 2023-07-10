@@ -45,7 +45,7 @@ export async function deploy() {
     const marketAddress = marketCreatedEvents[0].args.market
     console.log('market create result ', marketAddress)
 
-    const market = await ethers.getContractAt('ChromaticMarket', marketAddress)
+    const market = await ethers.getContractAt('IChromaticMarket', marketAddress)
 
     const chromaticRouter = await deployContract<ChromaticRouter>('ChromaticRouter', {
       args: [marketFactory.address]

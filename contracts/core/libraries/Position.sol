@@ -143,8 +143,12 @@ library PositionLib {
      * @return margin The maker margin
      */
     function makerMargin(Position memory self) internal pure returns (uint256 margin) {
-        for (uint256 i = 0; i < self._binMargins.length; i++) {
+        for (uint256 i; i < self._binMargins.length; ) {
             margin += self._binMargins[i].amount;
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -156,8 +160,12 @@ library PositionLib {
      * @return fee The trading fee
      */
     function tradingFee(Position memory self) internal pure returns (uint256 fee) {
-        for (uint256 i = 0; i < self._binMargins.length; i++) {
+        for (uint256 i; i < self._binMargins.length; ) {
             fee += self._binMargins[i].tradingFee(self._feeProtocol);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -167,8 +175,12 @@ library PositionLib {
      * @return fee The total protocol fee amount.
      */
     function protocolFee(Position memory self) internal pure returns (uint256 fee) {
-        for (uint256 i = 0; i < self._binMargins.length; i++) {
+        for (uint256 i; i < self._binMargins.length; ) {
             fee += self._binMargins[i].protocolFee(self._feeProtocol);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -189,31 +201,5 @@ library PositionLib {
      */
     function setBinMargins(Position memory self, BinMargin[] memory margins) internal pure {
         self._binMargins = margins;
-    }
-
-    /**
-     * @notice Stores the memory values of the `Position` struct to the storage
-     * @param self The memory instance of the `Position` struct
-     * @param storedPosition The target storage
-     */
-    function storeTo(Position memory self, Position storage storedPosition) internal {
-        storedPosition.id = self.id;
-        storedPosition.openVersion = self.openVersion;
-        storedPosition.closeVersion = self.closeVersion;
-        storedPosition.qty = self.qty;
-        storedPosition.openTimestamp = self.openTimestamp;
-        storedPosition.closeTimestamp = self.closeTimestamp;
-        storedPosition.leverage = self.leverage;
-        storedPosition.takerMargin = self.takerMargin;
-        storedPosition.owner = self.owner;
-        storedPosition._feeProtocol = self._feeProtocol;
-        // can not convert memory array to storage array
-        delete storedPosition._binMargins;
-        for (uint i = 0; i < self._binMargins.length; i++) {
-            BinMargin memory binMargin = self._binMargins[i];
-            if (binMargin.amount > 0) {
-                storedPosition._binMargins.push(self._binMargins[i]);
-            }
-        }
     }
 }

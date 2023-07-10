@@ -34,7 +34,7 @@ library PositionUtil {
      * @return uint256 Next oracle version to settle
      */
     function settleVersion(uint256 oracleVersion) internal pure returns (uint256) {
-        require(oracleVersion > 0, Errors.INVALID_ORACLE_VERSION);
+        require(oracleVersion != 0, Errors.INVALID_ORACLE_VERSION);
         return oracleVersion + 1;
     }
 

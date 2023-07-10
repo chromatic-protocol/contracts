@@ -41,8 +41,13 @@ interface ILendingPool {
     /**
      * @notice Retrieves the pending share of earnings for a specific bin (subset) of funds in a market.
      * @param market The address of the market.
+     * @param settlementToken The settlement token address.
      * @param binBalance The balance of funds in the bin.
      * @return The pending share of earnings for the specified bin.
      */
-    function getPendingBinShare(address market, uint256 binBalance) external view returns (uint256);
+    function getPendingBinShare(
+        address market,
+        address settlementToken,
+        uint256 binBalance
+    ) external view returns (uint256);
 }

@@ -63,9 +63,13 @@ library CLBTokenLib {
         uint16[FEE_RATES_LENGTH] memory feeRates = tradingFeeRates();
 
         uint256[] memory ids = new uint256[](FEE_RATES_LENGTH * 2);
-        for (uint256 i = 0; i < FEE_RATES_LENGTH; i++) {
+        for (uint256 i; i < FEE_RATES_LENGTH; ) {
             ids[i] = _encodeId(feeRates[i], true);
             ids[i + FEE_RATES_LENGTH] = _encodeId(feeRates[i], false);
+
+            unchecked {
+                i++;
+            }
         }
 
         return ids;

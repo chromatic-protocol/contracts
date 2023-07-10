@@ -115,6 +115,6 @@ library LpContextLib {
         LpContext memory self,
         uint256 oracleVersion
     ) internal view returns (bool) {
-        return oracleVersion > 0 && oracleVersion < self.currentOracleVersion().version;
+        return oracleVersion != 0 && oracleVersion < self.currentOracleVersion().version;
     }
 }

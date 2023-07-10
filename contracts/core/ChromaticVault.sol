@@ -85,23 +85,23 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @dev This function can only be called by a market contract.
      */
     function onOpenPosition(
+        address settlementToken,
         uint256 positionId,
         uint256 takerMargin,
         uint256 tradingFee,
         uint256 protocolFee
     ) external override onlyMarket {
-        IChromaticMarket market = IChromaticMarket(msg.sender);
-        address settlementToken = address(market.settlementToken());
+        address market = msg.sender;
 
         takerBalances[settlementToken] += takerMargin;
-        takerMarketBalances[address(market)] += takerMargin;
+        takerMarketBalances[market] += takerMargin;
 
         makerBalances[settlementToken] += tradingFee;
-        makerMarketBalances[address(market)] += tradingFee;
+        makerMarketBalances[market] += tradingFee;
 
-        transferProtocolFee(address(market), settlementToken, positionId, protocolFee);
+        transferProtocolFee(market, settlementToken, positionId, protocolFee);
 
-        emit OnOpenPosition(address(market), positionId, takerMargin, tradingFee, protocolFee);
+        emit OnOpenPosition(market, positionId, takerMargin, tradingFee, protocolFee);
     }
 
     /**
@@ -109,47 +109,46 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @dev This function can only be called by a market contract.
      */
     function onClaimPosition(
+        address settlementToken,
         uint256 positionId,
         address recipient,
         uint256 takerMargin,
         uint256 settlementAmount
     ) external override onlyMarket {
-        IChromaticMarket market = IChromaticMarket(msg.sender);
-        address settlementToken = address(market.settlementToken());
+        address market = msg.sender;
 
         SafeERC20.safeTransfer(IERC20(settlementToken), recipient, settlementAmount);
 
         takerBalances[settlementToken] -= takerMargin;
-        takerMarketBalances[address(market)] -= takerMargin;
+        takerMarketBalances[market] -= takerMargin;
 
         if (settlementAmount > takerMargin) {
             // maker loss
             uint256 makerLoss = settlementAmount - takerMargin;
 
             makerBalances[settlementToken] -= makerLoss;
-            makerMarketBalances[address(market)] -= makerLoss;
+            makerMarketBalances[market] -= makerLoss;
         } else {
             // maker profit
             uint256 makerProfit = takerMargin - settlementAmount;
 
             makerBalances[settlementToken] += makerProfit;
-            makerMarketBalances[address(market)] += makerProfit;
+            makerMarketBalances[market] += makerProfit;
         }
 
-        emit OnClaimPosition(address(market), positionId, recipient, takerMargin, settlementAmount);
+        emit OnClaimPosition(market, positionId, recipient, takerMargin, settlementAmount);
     }
 
     /**
      * @inheritdoc IVault
      * @dev This function can only be called by a market contract.
      */
-    function onAddLiquidity(uint256 amount) external override onlyMarket {
-        IChromaticMarket market = IChromaticMarket(msg.sender);
-        address settlementToken = address(market.settlementToken());
+    function onAddLiquidity(address settlementToken, uint256 amount) external override onlyMarket {
+        address market = msg.sender;
 
         pendingDeposits[settlementToken] += amount;
 
-        emit OnAddLiquidity(address(market), amount);
+        emit OnAddLiquidity(market, amount);
     }
 
     /**
@@ -157,11 +156,11 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @dev This function can only be called by a market contract.
      */
     function onSettlePendingLiquidity(
+        address settlementToken,
         uint256 pendingDeposit,
         uint256 pendingWithdrawal
     ) external override onlyMarket {
-        IChromaticMarket market = IChromaticMarket(msg.sender);
-        address settlementToken = address(market.settlementToken());
+        address market = msg.sender;
 
         pendingDeposits[settlementToken] -= pendingDeposit;
         pendingWithdrawals[settlementToken] += pendingWithdrawal;
@@ -169,27 +168,30 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
             makerBalances[settlementToken] +
             pendingDeposit -
             pendingWithdrawal;
-        makerMarketBalances[address(market)] =
-            makerMarketBalances[address(market)] +
+        makerMarketBalances[market] =
+            makerMarketBalances[market] +
             pendingDeposit -
             pendingWithdrawal;
 
-        emit OnSettlePendingLiquidity(address(market), pendingDeposit, pendingWithdrawal);
+        emit OnSettlePendingLiquidity(market, pendingDeposit, pendingWithdrawal);
     }
 
     /**
      * @inheritdoc IVault
      * @dev This function can only be called by a market contract.
      */
-    function onWithdrawLiquidity(address recipient, uint256 amount) external override onlyMarket {
-        IChromaticMarket market = IChromaticMarket(msg.sender);
-        address settlementToken = address(market.settlementToken());
+    function onWithdrawLiquidity(
+        address settlementToken,
+        address recipient,
+        uint256 amount
+    ) external override onlyMarket {
+        address market = msg.sender;
 
         SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
 
         pendingWithdrawals[settlementToken] -= amount;
 
-        emit OnWithdrawLiquidity(address(market), amount, recipient);
+        emit OnWithdrawLiquidity(market, amount, recipient);
     }
 
     /**
@@ -197,21 +199,21 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @dev This function can only be called by a market contract.
      */
     function transferKeeperFee(
+        address settlementToken,
         address keeper,
         uint256 fee,
         uint256 margin
     ) external override onlyMarket returns (uint256 usedFee) {
         if (fee == 0) return 0;
 
-        IChromaticMarket market = IChromaticMarket(msg.sender);
-        address settlementToken = address(market.settlementToken());
+        address market = msg.sender;
 
         usedFee = _transferKeeperFee(settlementToken, keeper, fee, margin);
 
         takerBalances[settlementToken] -= usedFee;
-        takerMarketBalances[address(market)] -= usedFee;
+        takerMarketBalances[market] -= usedFee;
 
-        emit TransferKeeperFee(address(market), fee, usedFee);
+        emit TransferKeeperFee(market, fee, usedFee);
     }
 
     /**
@@ -249,7 +251,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 positionId,
         uint256 amount
     ) internal {
-        if (amount > 0) {
+        if (amount != 0) {
             SafeERC20.safeTransfer(IERC20(settlementToken), factory.treasury(), amount);
             emit TransferProtocolFee(market, positionId, amount);
         }
@@ -295,7 +297,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 paidToMakerPool = paid - paidToTakerPool;
 
         // Transfer the amount paid to the taker pool to the DAO treasury address
-        if (paidToTakerPool > 0) {
+        if (paidToTakerPool != 0) {
             SafeERC20.safeTransfer(IERC20(token), factory.treasury(), paidToTakerPool);
         }
         // Add the amount paid to the maker pool to the pending maker earnings
@@ -310,10 +312,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     function getPendingBinShare(
         address market,
+        address settlementToken,
         uint256 binBalance
     ) external view returns (uint256) {
-        address token = address(IChromaticMarket(market).settlementToken());
-        uint256 makerBalance = makerBalances[token];
+        uint256 makerBalance = makerBalances[settlementToken];
         uint256 marketBalance = makerMarketBalances[market];
 
         return
@@ -321,7 +323,11 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
                 // Calculate the pending share of earnings for the bin based on the maker balances and bin balance
                 makerBalance == 0
                     ? 0
-                    : pendingMakerEarnings[token].mulDiv(binBalance, makerBalance, Math.Rounding.Up)
+                    : pendingMakerEarnings[settlementToken].mulDiv(
+                        binBalance,
+                        makerBalance,
+                        Math.Rounding.Up
+                    )
             ) +
             (
                 // Calculate the pending share of earnings for the bin based on the market balances and bin balance
@@ -416,12 +422,12 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMakerEarnings[token];
         delete pendingMakerEarnings[token];
 
-        uint256 usedFee = fee > 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
+        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
         emit TransferKeeperFee(fee, usedFee);
 
         uint256 remainBalance = makerBalances[token];
         uint256 remainEarning = earning - usedFee;
-        for (uint256 i = 0; i < markets.length; i++) {
+        for (uint256 i; i < markets.length; ) {
             address market = markets[i];
             uint256 marketBalance = makerMarketBalances[market];
             uint256 marketEarning = remainEarning.mulDiv(marketBalance, remainBalance);
@@ -432,6 +438,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
             remainEarning -= marketEarning;
 
             emit MarketEarningAccumulated(market, marketEarning);
+
+            unchecked {
+                i++;
+            }
         }
 
         emit MakerEarningDistributed(token, earning, usedFee);
@@ -527,7 +537,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMarketEarnings[market];
         delete pendingMarketEarnings[market];
 
-        uint256 usedFee = fee > 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
+        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
         emit TransferKeeperFee(market, fee, usedFee);
 
         uint256 remainEarning = earning - usedFee;

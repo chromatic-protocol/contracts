@@ -3,17 +3,17 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/factory/IMarketDeployer.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
-import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol/contracts/core/external/deployer/MarketDeployer.sol";
-import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/OracleProviderRegistry.sol";
-import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/external/registry/SettlementTokenRegistry.sol";
+import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
+import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderRegistry.sol";
+import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
+import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol/contracts/core/libraries/deployer/MarketDeployer.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
@@ -32,6 +32,14 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address public override vault;
     address public override keeperFeePayer;
     address public override treasury;
+
+    address private marketDiamondCutFacet;
+    address private marketLoupeFacet;
+    address private marketStateFacet;
+    address private marketLiquidityFacet;
+    address private marketTradeFacet;
+    address private marketLiquidateFacet;
+    address private marketSettleFacet;
 
     OracleProviderRegistry private _oracleProviderRegistry;
     SettlementTokenRegistry private _settlementTokenRegistry;
@@ -71,10 +79,33 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     /**
      * @dev Initializes the ChromaticMarketFactory contract.
+     * @param _marketDiamondCutFacet The market diamond cut facet address.
+     * @param _marketLoupeFacet The market loupe facet address.
+     * @param _marketStateFacet The market state facet address.
+     * @param _marketLiquidityFacet The market liquidity facet address.
+     * @param _marketTradeFacet The market trade facet address.
+     * @param _marketLiquidateFacet The market liquidate facet address.
+     * @param _marketSettleFacet The market settle facet address.
      */
-    constructor() {
+    constructor(
+        address _marketDiamondCutFacet,
+        address _marketLoupeFacet,
+        address _marketStateFacet,
+        address _marketLiquidityFacet,
+        address _marketTradeFacet,
+        address _marketLiquidateFacet,
+        address _marketSettleFacet
+    ) {
         dao = msg.sender;
         treasury = dao;
+
+        marketDiamondCutFacet = _marketDiamondCutFacet;
+        marketLoupeFacet = _marketLoupeFacet;
+        marketStateFacet = _marketStateFacet;
+        marketLiquidityFacet = _marketLiquidityFacet;
+        marketTradeFacet = _marketTradeFacet;
+        marketLiquidateFacet = _marketLiquidateFacet;
+        marketSettleFacet = _marketSettleFacet;
     }
 
     /**
@@ -154,9 +185,13 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         if (!_registered[oracleProvider][settlementToken]) return address(0);
 
         address[] memory markets = _marketsBySettlementToken[settlementToken];
-        for (uint i = 0; i < markets.length; i++) {
-            if (address(IChromaticMarket(markets[i]).oracleProvider()) == oracleProvider) {
+        for (uint i; i < markets.length; ) {
+            if (address(IMarketState(markets[i]).oracleProvider()) == oracleProvider) {
                 return markets[i];
+            }
+
+            unchecked {
+                i++;
             }
         }
         return address(0);
@@ -181,7 +216,17 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         if (_registered[oracleProvider][settlementToken]) revert ExistMarket();
 
-        address market = _deployer.deploy(oracleProvider, settlementToken);
+        address market = _deployer.deploy(
+            oracleProvider,
+            settlementToken,
+            marketDiamondCutFacet,
+            marketLoupeFacet,
+            marketStateFacet,
+            marketLiquidityFacet,
+            marketTradeFacet,
+            marketLiquidateFacet,
+            marketSettleFacet
+        );
 
         _registered[oracleProvider][settlementToken] = true;
         _marketsBySettlementToken[settlementToken].push(market);

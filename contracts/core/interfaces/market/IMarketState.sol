@@ -15,6 +15,13 @@ import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKe
  */
 interface IMarketState {
     /**
+     * @notice Emitted when the protocol fee is changed by the market
+     * @param feeProtocolOld The previous value of the protocol fee
+     * @param feeProtocolNew The updated value of the protocol fee
+     */
+    event SetFeeProtocol(uint8 feeProtocolOld, uint8 feeProtocolNew);
+
+    /**
      * @dev Returns the factory contract for the market.
      * @return The factory contract.
      */
@@ -55,4 +62,16 @@ interface IMarketState {
      * @return The keeper fee payer contract.
      */
     function keeperFeePayer() external view returns (IKeeperFeePayer);
+
+    /**
+     * @notice Returns the denominator of the protocol's % share of the fees
+     * @return The protocol fee for the market
+     */
+    function feeProtocol() external view returns (uint8);
+
+    /**
+     * @notice Set the denominator of the protocol's % share of the fees
+     * @param feeProtocol new protocol fee for the market
+     */
+    function setFeeProtocol(uint8 feeProtocol) external;
 }

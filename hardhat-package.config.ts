@@ -2,7 +2,7 @@ export default {
   includes: [
     '**/IOracleProvider.sol/**',
     '**/IOracleProviderRegistry.sol/**',
-    '**/ChromaticMarket.sol/**',
+    '**/IChromaticMarket.sol/**',
     '**/ChromaticMarketFactory.sol/**',
     '**/ChromaticVault.sol/**',
     '**/ChromaticAccount.sol/**',
@@ -12,7 +12,8 @@ export default {
     '**/AggregatorV3Interface.sol/**',
     '**/IERC20.sol/*',
     '**/IERC20Metadata.sol/*',
-    '**/IERC1155.sol/*'
+    '**/IERC1155.sol/*',
+    '**/facets/market/*'
   ],
   excludes: ['**/*Lib', '**/*Mock', '**.dbg.json', 'build-info/**'],
   includeDeployed: true,

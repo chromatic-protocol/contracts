@@ -54,6 +54,6 @@ library BinMarginLib {
     }
 
     function _protocolFee(uint256 _tradingFee, uint8 _feeProtocol) private pure returns (uint256) {
-        return _feeProtocol > 0 ? _tradingFee / _feeProtocol : 0;
+        return _feeProtocol != 0 ? _tradingFee / _feeProtocol : 0;
     }
 }
