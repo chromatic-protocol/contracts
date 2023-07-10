@@ -32,15 +32,20 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
     ) external override nonReentrant onlyLiquidator {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
 
-        LpContext memory ctx = newLpContext();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
         if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-
         uint256 usedKeeperFee = keeperFee != 0
-            ? ms.vault.transferKeeperFee(keeper, keeperFee, position.takerMargin)
+            ? ctx.vault.transferKeeperFee(
+                ctx.settlementToken,
+                keeper,
+                keeperFee,
+                position.takerMargin
+            )
             : 0;
         int256 pnl = position.pnl(ctx);
         uint256 interest = _claimPosition(
@@ -67,16 +72,21 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (position.closeVersion != 0) revert AlreadyClosedPosition();
 
-        LpContext memory ctx = newLpContext();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
         (bool _liquidate, int256 _pnl) = _checkLiquidation(ctx, position);
         if (!_liquidate) return;
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-
         uint256 usedKeeperFee = keeperFee != 0
-            ? ms.vault.transferKeeperFee(keeper, keeperFee, position.takerMargin)
+            ? ctx.vault.transferKeeperFee(
+                ctx.settlementToken,
+                keeper,
+                keeperFee,
+                position.takerMargin
+            )
             : 0;
         uint256 interest = _claimPosition(
             ctx,
@@ -99,7 +109,10 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         Position memory position = PositionStorageLib.positionStorage().getPosition(positionId);
         if (position.id == 0) return false;
 
-        (_liquidate, ) = _checkLiquidation(newLpContext(), position);
+        (_liquidate, ) = _checkLiquidation(
+            newLpContext(MarketStorageLib.marketStorage()),
+            position
+        );
     }
 
     /**
@@ -144,6 +157,6 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         Position memory position = PositionStorageLib.positionStorage().getPosition(positionId);
         if (position.id == 0) return false;
 
-        return newLpContext().isPastVersion(position.closeVersion);
+        return newLpContext(MarketStorageLib.marketStorage()).isPastVersion(position.closeVersion);
     }
 }

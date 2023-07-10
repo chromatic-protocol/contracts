@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IMarketSettle} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketSettle.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
-import {MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
+import {MarketStorage, MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
 
 /**
@@ -16,8 +16,11 @@ contract MarketSettleFacet is MarketFacetBase, IMarketSettle {
      *      and calling the settle function of the liquidity pool.
      */
     function settle() external override {
-        LpContext memory ctx = newLpContext();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
-        MarketStorageLib.marketStorage().liquidityPool.settle(ctx);
+
+        ms.liquidityPool.settle(ctx);
     }
 }

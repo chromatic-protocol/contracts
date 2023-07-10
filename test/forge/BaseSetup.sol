@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
+import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -19,6 +20,7 @@ import {MarketLiquidityFacet} from "@chromatic-protocol/contracts/core/facets/ma
 import {MarketTradeFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacet.sol";
 import {MarketLiquidateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidateFacet.sol";
 import {MarketSettleFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketSettleFacet.sol";
+import {ChromaticRouterMock} from "./periphery/ChromaticRouterMock.sol";
 
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;
@@ -29,6 +31,7 @@ abstract contract BaseSetup is Test {
     ChromaticLiquidatorMock liquidator;
     IChromaticMarket market;
     ICLBToken clbToken;
+    ChromaticRouterMock router;
 
     function setUp() public virtual {
         IAutomate _automate = IAutomate(address(5555));
@@ -45,6 +48,7 @@ abstract contract BaseSetup is Test {
         );
 
         oracleProvider = new OracleProviderMock();
+        oracleProvider.increaseVersion(Fixed18Lib.from(1));
 
         usdc = new Token("USDC", "USDC");
         usdc.faucet(1000000 ether);
@@ -90,5 +94,6 @@ abstract contract BaseSetup is Test {
         factory.createMarket(address(oracleProvider), address(usdc));
         market = IChromaticMarket(factory.getMarkets()[0]);
         clbToken = market.clbToken();
+        router = new ChromaticRouterMock(address(factory));
     }
 }

@@ -70,7 +70,13 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         ms.liquidityPool.acceptClaimPosition(ctx, position, realizedPnl);
 
         // Call the onClaimPosition function in the vault to handle the settlement
-        ms.vault.onClaimPosition(position.id, recipient, takerMargin, settlementAmount);
+        ctx.vault.onClaimPosition(
+            ctx.settlementToken,
+            position.id,
+            recipient,
+            takerMargin,
+            settlementAmount
+        );
 
         // Call the claim position callback function on the position owner's contract
         // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator

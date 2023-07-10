@@ -196,7 +196,7 @@ describe('lens', async () => {
       market.filters.RemoveLiquidity(),
       eventSubStartBlock
     )
-    receipts = [...removeLiquidityEvent.map((e) => e.args[1])]
+    receipts = [...removeLiquidityEvent.map((e) => e.args[0])]
     const claimableLiquidityParams = [
       ...new Set(
         receipts.map((r) => ({

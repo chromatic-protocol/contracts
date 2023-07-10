@@ -44,7 +44,6 @@ library LiquidityBinLib {
      * @param self The LiquidityBin storage.
      * @param ctx The LpContext data struct.
      */
-    //TODO remove callerName param
     modifier _settle(LiquidityBin storage self, LpContext memory ctx) {
         self.settle(ctx);
         _;
@@ -191,7 +190,7 @@ library LiquidityBinLib {
         return
             _value +
             self._closedPosition.currentInterest(ctx) +
-            ctx.vault.getPendingBinShare(ctx.market, _liquidity);
+            ctx.vault.getPendingBinShare(ctx.market, ctx.settlementToken, _liquidity);
     }
 
     /**

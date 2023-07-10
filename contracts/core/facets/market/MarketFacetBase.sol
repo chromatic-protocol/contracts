@@ -41,9 +41,7 @@ abstract contract MarketFacetBase {
      * @dev Creates a new LP context.
      * @return The LP context.
      */
-    function newLpContext() internal view returns (LpContext memory) {
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-
+    function newLpContext(MarketStorage storage ms) internal view returns (LpContext memory) {
         IOracleProvider.OracleVersion memory _currentVersionCache;
         return
             LpContext({

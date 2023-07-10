@@ -126,7 +126,11 @@ library BinLiquidityLib {
         }
 
         if (pendingDeposit != 0 || pendingWithdrawal != 0) {
-            ctx.vault.onSettlePendingLiquidity(pendingDeposit, pendingWithdrawal);
+            ctx.vault.onSettlePendingLiquidity(
+                ctx.settlementToken,
+                pendingDeposit,
+                pendingWithdrawal
+            );
         }
     }
 

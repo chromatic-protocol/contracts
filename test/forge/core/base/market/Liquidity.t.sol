@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {BaseSetup} from "./BaseSetup.sol";
+import {BaseSetup} from "../../../BaseSetup.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
@@ -9,8 +9,6 @@ import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.
 import "forge-std/console.sol";
 
 contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
-
-
     function setUp() public override {
         super.setUp();
     }
@@ -170,6 +168,128 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         );
     }
 
+    function testAddAndRemoveLiquidityBatch() public {
+        uint256 addLongAmount = 10 ether;
+        uint256 addShortAmount = 20 ether;
+        uint256 removeLongAmount = 7 ether;
+        uint256 removeShortAmount = 5 ether;
+
+        int16[] memory feeRates = new int16[](2);
+        uint256[] memory addAmounts = new uint256[](2);
+        uint256[] memory removeAmounts = new uint256[](2);
+
+        feeRates[0] = 1;
+        feeRates[1] = -10;
+        addAmounts[0] = addLongAmount;
+        addAmounts[1] = addShortAmount;
+        removeAmounts[0] = removeLongAmount;
+        removeAmounts[1] = removeShortAmount;
+
+        // set oracle version to 1
+        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+
+        // add liquidity $10 to 0.01% long bin and $20 to 0.1% short bin at oracle version 1
+        LpReceipt[] memory receipts1 = market.addLiquidityBatch(
+            address(this),
+            feeRates,
+            addAmounts,
+            abi.encode(addLongAmount + addShortAmount)
+        );
+        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
+        assertEq(0, vault.makerBalances(address(usdc)));
+        assertEq(0, vault.makerMarketBalances(address(market)));
+        assertEq(0, market.getBinLiquidity(1));
+        assertEq(0, clbToken.balanceOf(address(market), receipts1[0].clbTokenId()));
+        assertEq(0, clbToken.balanceOf(address(market), receipts1[1].clbTokenId()));
+
+        // set oracle version to 2
+        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+
+        // settle oracle version 2
+        market.settle();
+        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
+        assertEq(addLongAmount, market.getBinLiquidity(1));
+        assertEq(addShortAmount, market.getBinLiquidity(-10));
+        assertEq(addLongAmount, clbToken.balanceOf(address(market), receipts1[0].clbTokenId()));
+        assertEq(addShortAmount, clbToken.balanceOf(address(market), receipts1[1].clbTokenId()));
+
+        // claim liquidity at oracle version 2
+        uint256[] memory receiptIds1 = new uint256[](2);
+        receiptIds1[0] = receipts1[0].id;
+        receiptIds1[1] = receipts1[1].id;
+
+        market.claimLiquidityBatch(receiptIds1, bytes(""));
+        assertEq(0, clbToken.balanceOf(address(market), receipts1[0].clbTokenId()));
+        assertEq(addLongAmount, clbToken.balanceOf(address(this), receipts1[0].clbTokenId()));
+        assertEq(0, clbToken.balanceOf(address(market), receipts1[1].clbTokenId()));
+        assertEq(addShortAmount, clbToken.balanceOf(address(this), receipts1[1].clbTokenId()));
+
+        // set oracle version to 3
+        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+
+        // remove liquidity $7 from 0.01% long bin and $5 from 0.1% short bin at oracle version 3
+        LpReceipt[] memory receipts2 = market.removeLiquidityBatch(
+            address(this),
+            feeRates,
+            removeAmounts,
+            abi.encode(removeAmounts)
+        );
+        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
+        assertEq(addLongAmount, market.getBinLiquidity(1));
+        assertEq(addShortAmount, market.getBinLiquidity(-10));
+        assertEq(removeLongAmount, clbToken.balanceOf(address(market), receipts2[0].clbTokenId()));
+        assertEq(removeShortAmount, clbToken.balanceOf(address(market), receipts2[1].clbTokenId()));
+
+        // set oracle version to 4
+        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+
+        // settle oracle version 4
+        market.settle();
+        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
+            vault.makerBalances(address(usdc))
+        );
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
+            vault.makerMarketBalances(address(market))
+        );
+        assertEq(addLongAmount - removeLongAmount, market.getBinLiquidity(1));
+        assertEq(addShortAmount - removeShortAmount, market.getBinLiquidity(-10));
+        assertEq(0, clbToken.balanceOf(address(market), receipts2[0].clbTokenId()));
+        assertEq(0, clbToken.balanceOf(address(market), receipts2[1].clbTokenId()));
+
+        // withdraw liquidity at oracle version 4
+        uint256[] memory receiptIds2 = new uint256[](2);
+        receiptIds2[0] = receipts2[0].id;
+        receiptIds2[1] = receipts2[1].id;
+
+        uint256 beforeWithdraw = usdc.balanceOf(address(this));
+        market.withdrawLiquidityBatch(receiptIds2, bytes(""));
+        assertEq(
+            addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
+            usdc.balanceOf(address(vault))
+        );
+        assertEq(0, clbToken.balanceOf(address(market), receipts2[0].clbTokenId()));
+        assertEq(0, clbToken.balanceOf(address(market), receipts2[1].clbTokenId()));
+        assertEq(
+            beforeWithdraw + removeLongAmount + removeShortAmount,
+            usdc.balanceOf(address(this))
+        );
+        assertEq(
+            addLongAmount - removeLongAmount,
+            clbToken.balanceOf(address(this), receipts2[0].clbTokenId())
+        );
+        assertEq(
+            addShortAmount - removeShortAmount,
+            clbToken.balanceOf(address(this), receipts2[1].clbTokenId())
+        );
+    }
+
     function testDistributeMarketEarning() public {
         uint256 addLongAmount = 10 ether;
         uint256 addShortAmount = 20 ether;
@@ -219,46 +339,82 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
     // implement IChromaticLiquidityCallback
 
-    function addLiquidityCallback(
-        address settlementToken,
-        address vault,
-        bytes calldata data
-    ) external {
+    function addLiquidityCallback(address, address vault, bytes calldata data) external override {
         uint256 amount = abi.decode(data, (uint256));
         usdc.transfer(vault, amount);
     }
 
-    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external {}
+    function addLiquidityBatchCallback(
+        address,
+        address vault,
+        bytes calldata data
+    ) external override {
+        uint256 amount = abi.decode(data, (uint256));
+        usdc.transfer(vault, amount);
+    }
+
+    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+
+    function claimLiquidityBatchCallback(
+        uint256[] calldata receiptIds,
+        bytes calldata data
+    ) external override {}
 
     function removeLiquidityCallback(
         address clbToken,
         uint256 clbTokenId,
         bytes calldata data
-    ) external {
+    ) external override {
         uint256 amount = abi.decode(data, (uint256));
-        IERC1155(clbToken).safeTransferFrom(address(this), msg.sender, clbTokenId, amount, bytes(""));
+        IERC1155(clbToken).safeTransferFrom(
+            address(this),
+            msg.sender,
+            clbTokenId,
+            amount,
+            bytes("")
+        );
     }
 
-    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external {}
+    function removeLiquidityBatchCallback(
+        address clbToken,
+        uint256[] calldata clbTokenIds,
+        bytes calldata data
+    ) external override {
+        uint256[] memory amounts = abi.decode(data, (uint256[]));
+        IERC1155(clbToken).safeBatchTransferFrom(
+            address(this),
+            msg.sender,
+            clbTokenIds,
+            amounts,
+            bytes("")
+        );
+    }
+
+    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+
+    function withdrawLiquidityBatchCallback(
+        uint256[] calldata receiptIds,
+        bytes calldata data
+    ) external override {}
 
     // implement IERC1155Receiver
 
     function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
     ) external pure returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external pure returns (bytes4) {
         return this.onERC1155BatchReceived.selector;
     }

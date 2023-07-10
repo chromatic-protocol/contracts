@@ -10,18 +10,23 @@ import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {MarketStorage, MarketStorageLib, LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
-import {MINIMUM_LIQUIDITY} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
 
 /**
  * @title MarketLiquidityFacet
  * @dev Contract for managing liquidity in a market.
  */
-contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Receiver, ReentrancyGuard {
+contract MarketLiquidityFacet is
+    MarketFacetBase,
+    IMarketLiquidity,
+    IERC1155Receiver,
+    ReentrancyGuard
+{
     using Math for uint256;
 
     error TooSmallAmount();
@@ -29,6 +34,7 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
     error NotClaimableLpReceipt();
     error NotWithdrawableLpReceipt();
     error InvalidLpReceiptAction();
+    error InvalidTransferedTokenAmount();
 
     /**
      * @inheritdoc IMarketLiquidity
@@ -37,10 +43,14 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external override nonReentrant returns (LpReceipt memory) {
+    ) external override nonReentrant returns (LpReceipt memory receipt) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
-        IERC20Metadata settlementToken = ms.settlementToken;
-        IVault vault = ms.vault;
+
+        LpContext memory ctx = newLpContext(ms);
+        ctx.syncOracleVersion();
+
+        IERC20Metadata settlementToken = IERC20Metadata(ctx.settlementToken);
+        IVault vault = ctx.vault;
 
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
         IChromaticLiquidityCallback(msg.sender).addLiquidityCallback(
@@ -50,25 +60,91 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
         );
 
         uint256 amount = settlementToken.balanceOf(address(vault)) - balanceBefore;
-        if (amount <= MINIMUM_LIQUIDITY) revert TooSmallAmount();
 
-        LpContext memory ctx = newLpContext();
+        vault.onAddLiquidity(ctx.settlementToken, amount);
+
+        receipt = _addLiquidity(ctx, ms.liquidityPool, recipient, tradingFeeRate, amount);
+
+        emit AddLiquidity(receipt);
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidity
+     */
+    function addLiquidityBatch(
+        address recipient,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external override nonReentrant returns (LpReceipt[] memory receipts) {
+        require(tradingFeeRates.length == amounts.length);
+
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
+
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
-        vault.onAddLiquidity(amount);
-        ms.liquidityPool.acceptAddLiquidity(ctx, tradingFeeRate, amount);
+        uint256 totalAmount = _checkTransferedAmount(ctx, amounts, data);
 
-        LpReceipt memory receipt = _newLpReceipt(
-            ctx,
-            LpAction.ADD_LIQUIDITY,
-            amount,
-            recipient,
-            tradingFeeRate
+        ctx.vault.onAddLiquidity(ctx.settlementToken, totalAmount);
+
+        receipts = new LpReceipt[](tradingFeeRates.length);
+        for (uint256 i; i < tradingFeeRates.length; ) {
+            receipts[i] = _addLiquidity(
+                ctx,
+                liquidityPool,
+                recipient,
+                tradingFeeRates[i],
+                amounts[i]
+            );
+
+            unchecked {
+                i++;
+            }
+        }
+
+        emit AddLiquidityBatch(receipts);
+    }
+
+    function _checkTransferedAmount(
+        LpContext memory ctx,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) private returns (uint256 totalAmount) {
+        for (uint256 i; i < amounts.length; ) {
+            totalAmount += amounts[i];
+
+            unchecked {
+                i++;
+            }
+        }
+
+        IERC20Metadata settlementToken = IERC20Metadata(ctx.settlementToken);
+        address vault = address(ctx.vault);
+
+        uint256 balanceBefore = settlementToken.balanceOf(vault);
+        IChromaticLiquidityCallback(msg.sender).addLiquidityBatchCallback(
+            address(settlementToken),
+            vault,
+            data
         );
-        LpReceiptStorageLib.lpReceiptStorage().setReceipt(receipt);
 
-        emit AddLiquidity(recipient, receipt);
-        return receipt;
+        uint256 transferedAmount = settlementToken.balanceOf(vault) - balanceBefore;
+        if (transferedAmount != totalAmount) revert InvalidTransferedTokenAmount();
+    }
+
+    function _addLiquidity(
+        LpContext memory ctx,
+        LiquidityPool storage liquidityPool,
+        address recipient,
+        int16 tradingFeeRate,
+        uint256 amount
+    ) private returns (LpReceipt memory receipt) {
+        liquidityPool.acceptAddLiquidity(ctx, tradingFeeRate, amount);
+
+        receipt = _newLpReceipt(ctx, LpAction.ADD_LIQUIDITY, amount, recipient, tradingFeeRate);
+        LpReceiptStorageLib.lpReceiptStorage().setReceipt(receipt);
     }
 
     /**
@@ -76,34 +152,83 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
      */
     function claimLiquidity(uint256 receiptId, bytes calldata data) external override nonReentrant {
         LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
 
-        LpReceipt memory receipt = _getLpReceipt(ls, receiptId);
-        if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
-
-        LpContext memory ctx = newLpContext();
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
+        (LpReceipt memory receipt, uint256 clbTokenAmount) = _claimLiquidity(
+            ctx,
+            ls,
+            ms.liquidityPool,
+            receiptId
+        );
+
+        IChromaticLiquidityCallback(msg.sender).claimLiquidityCallback(receiptId, data);
+        ls.deleteReceipt(receiptId);
+
+        emit ClaimLiquidity(receipt, clbTokenAmount);
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidity
+     */
+    function claimLiquidityBatch(
+        uint256[] calldata receiptIds,
+        bytes calldata data
+    ) external override nonReentrant {
+        LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
+
+        LpContext memory ctx = newLpContext(ms);
+        ctx.syncOracleVersion();
+
+        LpReceipt[] memory _receipts = new LpReceipt[](receiptIds.length);
+        uint256[] memory _clbTokenAmounts = new uint256[](receiptIds.length);
+
+        for (uint256 i; i < receiptIds.length; ) {
+            (_receipts[i], _clbTokenAmounts[i]) = _claimLiquidity(
+                ctx,
+                ls,
+                liquidityPool,
+                receiptIds[i]
+            );
+
+            unchecked {
+                i++;
+            }
+        }
+
+        IChromaticLiquidityCallback(msg.sender).claimLiquidityBatchCallback(receiptIds, data);
+        ls.deleteReceipts(receiptIds);
+
+        emit ClaimLiquidityBatch(_receipts, _clbTokenAmounts);
+    }
+
+    function _claimLiquidity(
+        LpContext memory ctx,
+        LpReceiptStorage storage ls,
+        LiquidityPool storage liquidityPool,
+        uint256 receiptId
+    ) private returns (LpReceipt memory receipt, uint256 clbTokenAmount) {
+        receipt = _getLpReceipt(ls, receiptId);
+        if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotClaimableLpReceipt();
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-        uint256 clbTokenAmount = ms.liquidityPool.acceptClaimLiquidity(
+        clbTokenAmount = liquidityPool.acceptClaimLiquidity(
             ctx,
             receipt.tradingFeeRate,
             receipt.amount,
             receipt.oracleVersion
         );
-        ms.clbToken.safeTransferFrom(
+        ctx.clbToken.safeTransferFrom(
             address(this),
             receipt.recipient,
             receipt.clbTokenId(),
             clbTokenAmount,
             bytes("")
         );
-
-        IChromaticLiquidityCallback(msg.sender).claimLiquidityCallback(receipt.id, data);
-        ls.deleteReceipt(receiptId);
-
-        emit ClaimLiquidity(receipt.recipient, clbTokenAmount, receipt);
     }
 
     /**
@@ -113,38 +238,123 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
         address recipient,
         int16 tradingFeeRate,
         bytes calldata data
-    ) external override nonReentrant returns (LpReceipt memory) {
-        LpContext memory ctx = newLpContext();
+    ) external override nonReentrant returns (LpReceipt memory receipt) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
-        LpReceipt memory receipt = _newLpReceipt(
-            ctx,
-            LpAction.REMOVE_LIQUIDITY,
-            0,
-            recipient,
-            tradingFeeRate
-        );
-
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-        ICLBToken clbToken = ms.clbToken;
-
-        uint256 clbTokenId = receipt.clbTokenId();
-        uint256 balanceBefore = clbToken.balanceOf(address(this), clbTokenId);
+        uint256 clbTokenId = CLBTokenLib.encodeId(tradingFeeRate);
+        uint256 balanceBefore = ctx.clbToken.balanceOf(address(this), clbTokenId);
         IChromaticLiquidityCallback(msg.sender).removeLiquidityCallback(
-            address(clbToken),
+            address(ctx.clbToken),
             clbTokenId,
             data
         );
 
-        uint256 clbTokenAmount = clbToken.balanceOf(address(this), clbTokenId) - balanceBefore;
+        uint256 clbTokenAmount = ctx.clbToken.balanceOf(address(this), clbTokenId) - balanceBefore;
         if (clbTokenAmount == 0) revert TooSmallAmount();
 
-        ms.liquidityPool.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
-        receipt.amount = clbTokenAmount;
+        receipt = _removeLiquidity(
+            ctx,
+            ms.liquidityPool,
+            recipient,
+            tradingFeeRate,
+            clbTokenAmount
+        );
 
+        emit RemoveLiquidity(receipt);
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidity
+     */
+    function removeLiquidityBatch(
+        address recipient,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata clbTokenAmounts,
+        bytes calldata data
+    ) external override nonReentrant returns (LpReceipt[] memory receipts) {
+        require(tradingFeeRates.length == clbTokenAmounts.length);
+
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
+
+        LpContext memory ctx = newLpContext(ms);
+        ctx.syncOracleVersion();
+
+        _checkTransferedCLBTokenAmount(ctx, tradingFeeRates, clbTokenAmounts, data);
+
+        receipts = new LpReceipt[](tradingFeeRates.length);
+        for (uint256 i; i < tradingFeeRates.length; ) {
+            receipts[i] = _removeLiquidity(
+                ctx,
+                liquidityPool,
+                recipient,
+                tradingFeeRates[i],
+                clbTokenAmounts[i]
+            );
+
+            unchecked {
+                i++;
+            }
+        }
+
+        emit RemoveLiquidityBatch(receipts);
+    }
+
+    function _checkTransferedCLBTokenAmount(
+        LpContext memory ctx,
+        int16[] calldata tradingFeeRates,
+        uint256[] calldata clbTokenAmounts,
+        bytes calldata data
+    ) private {
+        address[] memory _accounts = new address[](tradingFeeRates.length);
+        uint256[] memory _clbTokenIds = new uint256[](tradingFeeRates.length);
+        for (uint256 i; i < tradingFeeRates.length; ) {
+            _accounts[i] = address(this);
+            _clbTokenIds[i] = CLBTokenLib.encodeId(tradingFeeRates[i]);
+
+            unchecked {
+                i++;
+            }
+        }
+
+        uint256[] memory balancesBefore = ctx.clbToken.balanceOfBatch(_accounts, _clbTokenIds);
+        IChromaticLiquidityCallback(msg.sender).removeLiquidityBatchCallback(
+            address(ctx.clbToken),
+            _clbTokenIds,
+            data
+        );
+
+        uint256[] memory balancesAfter = ctx.clbToken.balanceOfBatch(_accounts, _clbTokenIds);
+        for (uint256 i; i < tradingFeeRates.length; ) {
+            if (clbTokenAmounts[i] != balancesAfter[i] - balancesBefore[i])
+                revert InvalidTransferedTokenAmount();
+
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function _removeLiquidity(
+        LpContext memory ctx,
+        LiquidityPool storage liquidityPool,
+        address recipient,
+        int16 tradingFeeRate,
+        uint256 clbTokenAmount
+    ) private returns (LpReceipt memory receipt) {
+        liquidityPool.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
+
+        receipt = _newLpReceipt(
+            ctx,
+            LpAction.REMOVE_LIQUIDITY,
+            clbTokenAmount,
+            recipient,
+            tradingFeeRate
+        );
         LpReceiptStorageLib.lpReceiptStorage().setReceipt(receipt);
-        emit RemoveLiquidity(recipient, receipt);
-        return receipt;
     }
 
     /**
@@ -155,40 +365,88 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
         bytes calldata data
     ) external override nonReentrant {
         LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
 
-        LpReceipt memory receipt = _getLpReceipt(ls, receiptId);
-        if (receipt.action != LpAction.REMOVE_LIQUIDITY) revert InvalidLpReceiptAction();
-
-        LpContext memory ctx = newLpContext();
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
+        (
+            LpReceipt memory receipt,
+            uint256 amount,
+            uint256 burnedCLBTokenAmount
+        ) = _withdrawLiquidity(ctx, ls, ms.liquidityPool, receiptId);
+
+        IChromaticLiquidityCallback(msg.sender).withdrawLiquidityCallback(receiptId, data);
+        ls.deleteReceipt(receiptId);
+
+        emit WithdrawLiquidity(receipt, amount, burnedCLBTokenAmount);
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidity
+     */
+    function withdrawLiquidityBatch(
+        uint256[] calldata receiptIds,
+        bytes calldata data
+    ) external override nonReentrant {
+        LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
+
+        LpContext memory ctx = newLpContext(ms);
+        ctx.syncOracleVersion();
+
+        LpReceipt[] memory _receipts = new LpReceipt[](receiptIds.length);
+        uint256[] memory _amounts = new uint256[](receiptIds.length);
+        uint256[] memory _burnedCLBTokenAmounts = new uint256[](receiptIds.length);
+
+        for (uint256 i; i < receiptIds.length; ) {
+            (_receipts[i], _amounts[i], _burnedCLBTokenAmounts[i]) = _withdrawLiquidity(
+                ctx,
+                ls,
+                liquidityPool,
+                receiptIds[i]
+            );
+
+            unchecked {
+                i++;
+            }
+        }
+
+        IChromaticLiquidityCallback(msg.sender).withdrawLiquidityBatchCallback(receiptIds, data);
+        ls.deleteReceipts(receiptIds);
+
+        emit WithdrawLiquidityBatch(_receipts, _amounts, _burnedCLBTokenAmounts);
+    }
+
+    function _withdrawLiquidity(
+        LpContext memory ctx,
+        LpReceiptStorage storage ls,
+        LiquidityPool storage liquidityPool,
+        uint256 receiptId
+    ) private returns (LpReceipt memory receipt, uint256 amount, uint256 burnedCLBTokenAmount) {
+        receipt = _getLpReceipt(ls, receiptId);
+        if (receipt.action != LpAction.REMOVE_LIQUIDITY) revert InvalidLpReceiptAction();
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotWithdrawableLpReceipt();
 
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-
-        (uint256 amount, uint256 burnedCLBTokenAmount) = ms.liquidityPool.acceptWithdrawLiquidity(
+        (amount, burnedCLBTokenAmount) = liquidityPool.acceptWithdrawLiquidity(
             ctx,
             receipt.tradingFeeRate,
             clbTokenAmount,
             receipt.oracleVersion
         );
 
-        ms.clbToken.safeTransferFrom(
+        ctx.clbToken.safeTransferFrom(
             address(this),
             recipient,
             receipt.clbTokenId(),
             clbTokenAmount - burnedCLBTokenAmount,
             bytes("")
         );
-        ms.vault.onWithdrawLiquidity(recipient, amount);
-
-        IChromaticLiquidityCallback(msg.sender).withdrawLiquidityCallback(receipt.id, data);
-        ls.deleteReceipt(receiptId);
-
-        emit WithdrawLiquidity(recipient, amount, burnedCLBTokenAmount, receipt);
+        ctx.vault.onWithdrawLiquidity(ctx.settlementToken, recipient, amount);
     }
 
     /**
@@ -220,9 +478,10 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
     function getBinValues(
         int16[] memory tradingFeeRates
     ) external view override returns (uint256[] memory) {
-        LiquidityPool storage liquidityPool = MarketStorageLib.marketStorage().liquidityPool;
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
 
-        LpContext memory ctx = newLpContext();
+        LpContext memory ctx = newLpContext(ms);
         uint256[] memory values = new uint256[](tradingFeeRates.length);
         for (uint256 i; i < tradingFeeRates.length; ) {
             values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
@@ -267,7 +526,8 @@ contract MarketLiquidityFacet is MarketFacetBase, IMarketLiquidity, IERC1155Rece
      * @inheritdoc IMarketLiquidity
      */
     function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory) {
-        return MarketStorageLib.marketStorage().liquidityPool.liquidityBinStatuses(newLpContext());
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        return ms.liquidityPool.liquidityBinStatuses(newLpContext(ms));
     }
 
     /**

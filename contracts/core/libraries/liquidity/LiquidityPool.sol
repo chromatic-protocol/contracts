@@ -781,7 +781,12 @@ library LiquidityPoolLib {
             LiquidityBin storage bin = bins[feeRate];
             uint256 binLiquidity = bin.liquidity();
 
-            if (binLiquidity == 0) continue;
+            if (binLiquidity == 0) {
+                unchecked {
+                    i++;
+                }
+                continue;
+            }
 
             uint256 binEarning = remainEarning.mulDiv(binLiquidity, remainBalance);
 
@@ -846,9 +851,8 @@ library LiquidityPoolLib {
     ) internal view returns (IMarketLiquidity.LiquidityBinStatus[] memory) {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
 
-        IMarketLiquidity.LiquidityBinStatus[] memory stats = new IMarketLiquidity.LiquidityBinStatus[](
-            FEE_RATES_LENGTH * 2
-        );
+        IMarketLiquidity.LiquidityBinStatus[]
+            memory stats = new IMarketLiquidity.LiquidityBinStatus[](FEE_RATES_LENGTH * 2);
         for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 _feeRate = _tradingFeeRates[i];
             LiquidityBin storage longBin = targetBin(self, int16(_feeRate));

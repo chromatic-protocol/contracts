@@ -98,12 +98,14 @@ interface IVault {
 
     /**
      * @notice Called when a position is opened by a market contract.
+     * @param settlementToken The settlement token address.
      * @param positionId The ID of the opened position.
      * @param takerMargin The margin amount provided by the taker for the position.
      * @param tradingFee The trading fee associated with the position.
      * @param protocolFee The protocol fee associated with the position.
      */
     function onOpenPosition(
+        address settlementToken,
         uint256 positionId,
         uint256 takerMargin,
         uint256 tradingFee,
@@ -112,12 +114,14 @@ interface IVault {
 
     /**
      * @notice Called when a position is claimed by a market contract.
+     * @param settlementToken The settlement token address.
      * @param positionId The ID of the claimed position.
      * @param recipient The address that will receive the settlement amount.
      * @param takerMargin The margin amount provided by the taker for the position.
      * @param settlementAmount The amount to be settled for the position.
      */
     function onClaimPosition(
+        address settlementToken,
         uint256 positionId,
         address recipient,
         uint256 takerMargin,
@@ -126,32 +130,45 @@ interface IVault {
 
     /**
      * @notice Called when liquidity is added to the vault by a market contract.
+     * @param settlementToken The settlement token address.
      * @param amount The amount of liquidity being added.
      */
-    function onAddLiquidity(uint256 amount) external;
+    function onAddLiquidity(address settlementToken, uint256 amount) external;
 
     /**
      * @notice Called when pending liquidity is settled in the vault by a market contract.
+     * @param settlementToken The settlement token address.
      * @param pendingDeposit The amount of pending deposits being settled.
      * @param pendingWithdrawal The amount of pending withdrawals being settled.
      */
-    function onSettlePendingLiquidity(uint256 pendingDeposit, uint256 pendingWithdrawal) external;
+    function onSettlePendingLiquidity(
+        address settlementToken,
+        uint256 pendingDeposit,
+        uint256 pendingWithdrawal
+    ) external;
 
     /**
      * @notice Called when liquidity is withdrawn from the vault by a market contract.
+     * @param settlementToken The settlement token address.
      * @param recipient The address that will receive the withdrawn liquidity.
      * @param amount The amount of liquidity to be withdrawn.
      */
-    function onWithdrawLiquidity(address recipient, uint256 amount) external;
+    function onWithdrawLiquidity(
+        address settlementToken,
+        address recipient,
+        uint256 amount
+    ) external;
 
     /**
      * @notice Transfers the keeper fee from the market to the specified keeper.
+     * @param settlementToken The settlement token address.
      * @param keeper The address of the keeper to receive the fee.
      * @param fee The amount of the fee to transfer as native token.
      * @param margin The margin amount used for the fee payment.
      * @return usedFee The actual settlement token amount of fee used for the transfer.
      */
     function transferKeeperFee(
+        address settlementToken,
         address keeper,
         uint256 fee,
         uint256 margin

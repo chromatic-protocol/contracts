@@ -121,21 +121,25 @@ library MarketDeployerLib {
     function _marketLiquidityFacetCut(
         address marketLiquidityFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](14);
+        bytes4[] memory functionSelectors = new bytes4[](18);
         functionSelectors[0] = IMarketLiquidity.addLiquidity.selector;
-        functionSelectors[1] = IMarketLiquidity.claimLiquidity.selector;
-        functionSelectors[2] = IMarketLiquidity.removeLiquidity.selector;
-        functionSelectors[3] = IMarketLiquidity.withdrawLiquidity.selector;
-        functionSelectors[4] = IMarketLiquidity.getBinLiquidity.selector;
-        functionSelectors[5] = IMarketLiquidity.getBinFreeLiquidity.selector;
-        functionSelectors[6] = IMarketLiquidity.getBinValues.selector;
-        functionSelectors[7] = IMarketLiquidity.distributeEarningToBins.selector;
-        functionSelectors[8] = IMarketLiquidity.getLpReceipt.selector;
-        functionSelectors[9] = IMarketLiquidity.claimableLiquidity.selector;
-        functionSelectors[10] = IMarketLiquidity.liquidityBinStatuses.selector;
-        functionSelectors[11] = IERC1155Receiver.onERC1155Received.selector;
-        functionSelectors[12] = IERC1155Receiver.onERC1155BatchReceived.selector;
-        functionSelectors[13] = IERC165.supportsInterface.selector;
+        functionSelectors[1] = IMarketLiquidity.addLiquidityBatch.selector;
+        functionSelectors[2] = IMarketLiquidity.claimLiquidity.selector;
+        functionSelectors[3] = IMarketLiquidity.claimLiquidityBatch.selector;
+        functionSelectors[4] = IMarketLiquidity.removeLiquidity.selector;
+        functionSelectors[5] = IMarketLiquidity.removeLiquidityBatch.selector;
+        functionSelectors[6] = IMarketLiquidity.withdrawLiquidity.selector;
+        functionSelectors[7] = IMarketLiquidity.withdrawLiquidityBatch.selector;
+        functionSelectors[8] = IMarketLiquidity.getBinLiquidity.selector;
+        functionSelectors[9] = IMarketLiquidity.getBinFreeLiquidity.selector;
+        functionSelectors[10] = IMarketLiquidity.getBinValues.selector;
+        functionSelectors[11] = IMarketLiquidity.distributeEarningToBins.selector;
+        functionSelectors[12] = IMarketLiquidity.getLpReceipt.selector;
+        functionSelectors[13] = IMarketLiquidity.claimableLiquidity.selector;
+        functionSelectors[14] = IMarketLiquidity.liquidityBinStatuses.selector;
+        functionSelectors[15] = IERC1155Receiver.onERC1155Received.selector;
+        functionSelectors[16] = IERC1155Receiver.onERC1155BatchReceived.selector;
+        functionSelectors[17] = IERC165.supportsInterface.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketLiquidityFacet,

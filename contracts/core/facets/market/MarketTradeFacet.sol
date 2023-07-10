@@ -54,13 +54,13 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
 
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         IChromaticMarketFactory factory = ms.factory;
-        IERC20Metadata settlementToken = ms.settlementToken;
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
 
-        uint256 minMargin = factory.getMinimumMargin(address(settlementToken));
-        if (takerMargin < minMargin) revert TooSmallTakerMargin();
-
-        LpContext memory ctx = newLpContext();
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
+
+        uint256 minMargin = factory.getMinimumMargin(ctx.settlementToken);
+        if (takerMargin < minMargin) revert TooSmallTakerMargin();
 
         _checkPositionParam(
             ctx,
@@ -68,23 +68,15 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             leverage,
             takerMargin,
             makerMargin,
-            factory.getOracleProviderProperties(address(ms.oracleProvider))
+            factory.getOracleProviderProperties(address(ctx.oracleProvider))
         );
 
         position = _newPosition(ctx, qty, leverage, takerMargin, ms.feeProtocol);
         position.setBinMargins(
-            ms.liquidityPool.prepareBinMargins(position.qty, makerMargin, minMargin)
+            liquidityPool.prepareBinMargins(position.qty, makerMargin, minMargin)
         );
 
-        _openPosition(
-            ctx,
-            settlementToken,
-            ms.vault,
-            ms.liquidityPool,
-            position,
-            maxAllowableTradingFee,
-            data
-        );
+        _openPosition(ctx, liquidityPool, position, maxAllowableTradingFee, data);
 
         // write position
         PositionStorageLib.positionStorage().setPosition(position);
@@ -118,8 +110,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
 
     function _openPosition(
         LpContext memory ctx,
-        IERC20Metadata settlementToken,
-        IVault vault,
         LiquidityPool storage liquidityPool,
         Position memory position,
         uint256 maxAllowableTradingFee,
@@ -131,6 +121,9 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         if (tradingFee + protocolFee > maxAllowableTradingFee) {
             revert ExceedMaxAllowableTradingFee();
         }
+
+        IERC20Metadata settlementToken = IERC20Metadata(ctx.settlementToken);
+        IVault vault = ctx.vault;
 
         // call callback
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
@@ -148,7 +141,13 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
 
         liquidityPool.acceptOpenPosition(ctx, position); // settle()
 
-        vault.onOpenPosition(position.id, position.takerMargin, tradingFee, protocolFee);
+        vault.onOpenPosition(
+            address(settlementToken),
+            position.id,
+            position.takerMargin,
+            tradingFee,
+            protocolFee
+        );
     }
 
     /**
@@ -162,14 +161,14 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         if (position.owner != msg.sender) revert NotPermitted();
         if (position.closeVersion != 0) revert AlreadyClosedPosition();
 
-        LpContext memory ctx = newLpContext();
-
-        position.closeVersion = ctx.currentOracleVersion().version;
-        position.closeTimestamp = block.timestamp;
-
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
         IChromaticLiquidator liquidator = ms.liquidator;
+
+        LpContext memory ctx = newLpContext(ms);
+
+        position.closeVersion = ctx.currentOracleVersion().version;
+        position.closeTimestamp = block.timestamp;
 
         liquidityPool.acceptClosePosition(ctx, position);
         liquidator.cancelLiquidationTask(position.id);
@@ -196,7 +195,9 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (position.owner != msg.sender) revert NotPermitted();
 
-        LpContext memory ctx = newLpContext();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
         if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
@@ -205,7 +206,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         uint256 interest = _claimPosition(ctx, position, pnl, 0, recipient, data);
         emit ClaimPosition(position.owner, pnl, interest, position);
 
-        MarketStorageLib.marketStorage().liquidator.cancelClaimPositionTask(position.id);
+        ms.liquidator.cancelClaimPositionTask(position.id);
     }
 
     /**
