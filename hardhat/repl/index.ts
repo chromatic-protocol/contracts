@@ -29,8 +29,17 @@ extendEnvironment((hre) => {
   )
 
   hre.initialize = lazyFunction(() => async () => {
-    const namedAccounts = await hre.getNamedAccounts()
     const signers = await hre.ethers.getSigners()
+
+    for (let i = 0; i < 10; i++) {
+      console.log('set balance to ', ethers.utils.parseEther('10000'), signers[i].address)
+      await hre.network.provider.send('anvil_setBalance', [
+        signers[i].address,
+        ethers.utils.parseEther('10000').toString()
+      ])
+    }
+
+    const namedAccounts = await hre.getNamedAccounts()
     const deployer = signers.find((s) => s.address === namedAccounts.deployer)!
 
     const { address: marketFactory } = await deployments.get('ChromaticMarketFactory')
@@ -119,8 +128,6 @@ extendEnvironment((hre) => {
     const oracleProvider = OracleProviderMock__factory.connect(oracleProviderAddress, deployer)
     return await oracleProvider.currentVersion()
   })
-
-  
 })
 
 async function prepareWallet(wallet: ReplWallet) {
