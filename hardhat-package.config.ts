@@ -13,7 +13,7 @@ export default {
     '**/IERC20.sol/*',
     '**/IERC20Metadata.sol/*',
     '**/IERC1155.sol/*',
-    '**/facets/market/**'
+    '**/facets/market/*.sol/*'
   ],
   excludes: ['**/*Lib', '**/*Mock', '**.dbg.json', 'build-info/**'],
   includeDeployed: true,
