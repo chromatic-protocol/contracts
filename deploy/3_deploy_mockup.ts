@@ -10,9 +10,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const { address: oracleProviderAddress } = await deploy('OracleProviderMock', {
-    from: deployer
-  })
+  const deployOpts = { from: deployer }
+
+  const { address: multicall3Address } = await deploy('Multicall3', deployOpts)
+  console.log(chalk.yellow(`✨ Multicall3: ${multicall3Address}`))
+
+  const { address: oracleProviderAddress } = await deploy('OracleProviderMock', deployOpts)
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
   const { address: marketFactoryAddress, libraries: marketFactoryLibaries } = await deployments.get(
@@ -33,9 +36,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       maxTakeProfitBPS: 100000, // 1000%
       leverageLevel: 0
     },
-    {
-      from: deployer
-    }
+    deployOpts
   )
   console.log(chalk.yellow('✨ Register OracleProvider'))
 
@@ -46,15 +47,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     BigNumber.from('500'), // flashLoanFeeRate, 5%
     parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
     BigNumber.from('3000'), // uniswapFeeRate, 0.3%
-    {
-      from: deployer
-    }
+    deployOpts
   )
   console.log(chalk.yellow('✨ Register SettlementToken'))
 
-  await marketFactory.createMarket(oracleProviderAddress, USDC_ARBITRUM_GOERLI.address, {
-    from: deployer
-  })
+  await marketFactory.createMarket(oracleProviderAddress, USDC_ARBITRUM_GOERLI.address, deployOpts)
   console.log(chalk.yellow('✨ Create Market'))
   console.log(chalk.yellow('✨ Done!'))
 }
