@@ -5,6 +5,7 @@ import { lazyFunction, lazyObject } from 'hardhat/plugins'
 import {
   ChromaticLiquidatorMock__factory,
   IChromaticMarketFactory__factory,
+  IERC20__factory,
   OracleProviderMock__factory
 } from '../../typechain-types'
 import { ReplWallet } from './ReplWallet'
@@ -26,6 +27,49 @@ extendEnvironment((hre) => {
       w[s] = undefined
       return w
     }, {})
+  )
+
+  hre.showMeTheMoney = lazyFunction(
+    () => async (account: string, ethAmount: number, usdcAmount: number) => {
+      await hre.network.provider.send('anvil_setBalance', [
+        account,
+        ethers.utils.parseEther(`${ethAmount}`).toHexString()
+      ])
+
+      function fillZero(str: string, width: number) {
+        return str.length >= width ? str : new Array(width - str.length + 1).join('0') + str
+      }
+
+      function getMappingValueSlot(mappingSlotIndexHex: string, keyHex: string): BigNumber {
+        let slotIndex = fillZero(mappingSlotIndexHex.replace('0x', ''), 64)
+        let key = fillZero(keyHex.replace('0x', ''), 64) // 32bytes
+        const storageKeyHex = ethers.utils.keccak256(`0x${key + slotIndex}`)
+        return BigNumber.from(storageKeyHex)
+      }
+
+      // StandardArbERC20 _balance slot : 33
+      // usdc 0x8fb1e3fc51f3b789ded7557e680551d93ea9d892
+      // (found by anvil cache storage json - 1. find ERC20 address, 2. find balance of specific account )
+      // "0xe242da282246b923bfd083e3182d8451253d6607471d2241d5255f9eeb794bc2": "0x0000000000000000000000000000000000000000000000000000000001810cd9",
+      // await showMeTheMoney('0xaF8de6Fd87fD0b63d758960d55Da250d160F7c90',1000,2000)
+      // for (let index = 0; index < 100; index++) {
+      //   const slot = getMappingValueSlot(index.toString(), account)
+      //   if(slot.toHexString().indexOf('e242da2') > 0){
+      //     console.log(index,slot)
+      //   }
+      // }
+      const slot = getMappingValueSlot('33', account)
+      console.log(slot.toHexString())
+      const usdcAmountInput = BigNumber.from(usdcAmount)
+        .mul(10 ** 6)
+        .toHexString()
+      const usdcAmountInput32Bytes = fillZero(usdcAmountInput.replace('0x', ''), 64)
+      await hre.network.provider.send('anvil_setStorageAt', [
+        USDC_ARBITRUM_GOERLI.address,
+        slot.toHexString(),
+        usdcAmountInput32Bytes
+      ])
+    }
   )
 
   hre.initialize = lazyFunction(() => async () => {
