@@ -10,7 +10,7 @@ export function isLibErrors(name: string): boolean {
 }
 
 export function hasErrors(item: DocItemWithContext & { errors: any }) {
-  return item.errors?.length > 0 || isLibErrors(item.name)
+  return item.errors?.length > 0
 }
 
 export function formatVariable(v: VariableDeclaration): string {
