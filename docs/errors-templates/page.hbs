@@ -4,6 +4,16 @@ title: Errors
 sidebar_position: 3
 ---
 
+
+{{#each items}}
+{{#if (isLibErrors this.name)}}
+{{#hsection}}
+{{>item}}
+{{/hsection}}
+{{/if}}
+{{/each}}
+
+
 {{#each items}}
 {{#if (hasErrors this)}}
 {{#hsection}}
