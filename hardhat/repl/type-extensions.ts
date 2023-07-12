@@ -12,5 +12,6 @@ declare module 'hardhat/types/runtime' {
     initialize?: () => Promise<void>
     updatePrice?: (number) => Promise<void>
     currentOracleVersion?: () => Promise<IOracleProvider.OracleVersionStructOutput>
+    showMeTheMoney(account: string, ethAmount: number, usdcAmount: number)
   }
 }
