@@ -12,9 +12,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const deployOpts = { from: deployer }
 
-  const { address: multicall3Address } = await deploy('Multicall3', deployOpts)
-  console.log(chalk.yellow(`✨ Multicall3: ${multicall3Address}`))
-
   const { address: oracleProviderAddress } = await deploy('OracleProviderMock', deployOpts)
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
