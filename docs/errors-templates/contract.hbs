@@ -1,0 +1,36 @@
+{{>common}}
+
+{{#if (isLibErrors name)}}
+| Code | Name |
+| ---- | ---- |
+{{#each items}}
+{{#if (isNodeType this 'VariableDeclaration')}}
+{{#hsection}}
+{{>rowerror}}
+{{/hsection}}
+{{/if}}
+{{/each}}
+
+{{#each items}}
+{{#if (isNodeType this 'VariableDeclaration')}}
+{{#hsection}}
+{{>liberror}}
+{{/hsection}}
+{{/if}}
+{{/each}}
+
+{{else}}
+
+
+{{#each items}}
+
+{{#if (isNodeType this 'ErrorDefinition')}}
+{{#hsection}}
+{{>item}}
+{{/hsection}}
+
+{{/if}}
+
+{{/each}}
+
+{{/if}}
