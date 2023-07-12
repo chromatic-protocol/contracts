@@ -1,0 +1,12 @@
+---
+id: errors
+title: Errors
+---
+
+{{#each items}}
+{{#if (hasErrors this)}}
+{{#hsection}}
+{{>item}}
+{{/hsection}}
+{{/if}}
+{{/each}}

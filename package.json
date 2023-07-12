@@ -22,7 +22,7 @@
     "console:arbitrum_goerli": "yarn hardhat:arbitrum_goerli console --no-compile",
     "repl": "hardhat console --network anvil --config hardhat.repl.config.ts --no-compile",
     "format": "prettier --write '(contracts|test|repl|deploy)/**/*.(sol|ts)'",
-    "docs": "hardhat docgen"
+    "docs": "hardhat docgen && hardhat --config hardhat-errors-docs.config.ts docgen"
   },
   "devDependencies": {
     "@chromatic-protocol/hardhat-package": "^0.0.1-dev.18",

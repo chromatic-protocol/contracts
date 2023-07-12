@@ -1,0 +1,11 @@
+{{>common}}
+
+{{#each items}}
+{{#if (isNodeType this 'ErrorDefinition')}}
+
+{{#hsection}}
+{{>item}}
+{{/hsection}}
+
+{{/if}}
+{{/each}}

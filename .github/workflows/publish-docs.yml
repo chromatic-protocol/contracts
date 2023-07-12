@@ -7,6 +7,7 @@ on:
     paths:
       - contracts/**
       - docs/**
+      - hardhat-errors-docs.config.ts
       - .github/workflows/publish-docs.yml
 permissions:
   contents: write
@@ -36,6 +37,7 @@ jobs:
           yarn docs
           rm -rf docs-repo/docs/contracts/reference/*/
           cp -r docs/out/* docs-repo/docs/contracts/reference/
+          mv docs-repo/docs/contracts/reference/errors/index.md docs-repo/docs/contracts/reference/errors.md 
       - name: pull-request
         uses: peter-evans/create-pull-request@v5
         with:
