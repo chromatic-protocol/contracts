@@ -10,6 +10,7 @@ import {
 } from '../../typechain-types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
+import * as Token from '../../deployments/anvil/Token.json'
 
 const SIGNERS = ['alice', 'bob', 'charlie', 'david', 'eve', 'frank', 'grace', 'heidi']
 
@@ -47,17 +48,6 @@ extendEnvironment((hre) => {
         return BigNumber.from(storageKeyHex)
       }
 
-      // StandardArbERC20 _balance slot : 33
-      // usdc 0x8fb1e3fc51f3b789ded7557e680551d93ea9d892
-      // (found by anvil cache storage json - 1. find ERC20 address, 2. find balance of specific account )
-      // "0xe242da282246b923bfd083e3182d8451253d6607471d2241d5255f9eeb794bc2": "0x0000000000000000000000000000000000000000000000000000000001810cd9",
-      // await showMeTheMoney('0xaF8de6Fd87fD0b63d758960d55Da250d160F7c90',1000,2000)
-      // for (let index = 0; index < 100; index++) {
-      //   const slot = getMappingValueSlot(index.toString(), account)
-      //   if(slot.toHexString().indexOf('e242da2') > 0){
-      //     console.log(index,slot)
-      //   }
-      // }
       const slot = getMappingValueSlot('33', account)
       console.log(slot.toHexString())
       const usdcAmountInput = BigNumber.from(usdcAmount)
@@ -68,6 +58,11 @@ extendEnvironment((hre) => {
         USDC_ARBITRUM_GOERLI.address,
         slot.toHexString(),
         usdcAmountInput32Bytes
+      ])
+      await hre.network.provider.send('anvil_setStorageAt', [
+        Token.address,
+        getMappingValueSlot('0', account).toHexString(),
+        fillZero(ethers.utils.parseEther(usdcAmount.toString()).toHexString().replace('0x', ''), 64)
       ])
     }
   )
@@ -156,7 +151,7 @@ extendEnvironment((hre) => {
           await liquidator['liquidate(address,uint256,uint256)'](
             market.address,
             positionId,
-            BigNumber.from('0') // FIXME
+            BigNumber.from('0')
           )
       }
     }

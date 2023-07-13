@@ -11,10 +11,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts()
 
   const deployOpts = { from: deployer }
-
   const { address: oracleProviderAddress } = await deploy('OracleProviderMock', deployOpts)
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
+  const { address: chromaticTokenAddress } = await deploy('Token', {
+    args: ['CHROMATIC', 'CHRM'],
+    ...deployOpts
+  })
   const { address: marketFactoryAddress, libraries: marketFactoryLibaries } = await deployments.get(
     'ChromaticMarketFactory'
   )
@@ -46,6 +49,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   )
   console.log(chalk.yellow('✨ Register SettlementToken'))
 
+  await marketFactory.registerSettlementToken(
+    chromaticTokenAddress,
+    parseUnits('10', 18), // minimumMargin
+    BigNumber.from('1000'), // interestRate, 10%
+    BigNumber.from('500'), // flashLoanFeeRate, 5%
+    parseUnits('1000', 18), // earningDistributionThreshold, $1000
+    BigNumber.from('3000'), // uniswapFeeRate, 0.3%
+    deployOpts
+  )
+  console.log(chalk.yellow('✨ Register SettlementToken (CHRM)'))
+  await marketFactory.createMarket(oracleProviderAddress, chromaticTokenAddress, deployOpts)
+  console.log(chalk.yellow('✨ Create Market (CHRM)'))
   await marketFactory.createMarket(oracleProviderAddress, USDC_ARBITRUM_GOERLI.address, deployOpts)
   console.log(chalk.yellow('✨ Create Market'))
   console.log(chalk.yellow('✨ Done!'))
