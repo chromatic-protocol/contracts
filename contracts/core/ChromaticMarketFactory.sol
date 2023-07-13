@@ -14,7 +14,6 @@ import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-prot
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
 import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol/contracts/core/libraries/deployer/MarketDeployer.sol";
-import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
  * @title ChromaticMarketFactory
@@ -262,8 +261,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     ) external override onlyDao {
         _oracleProviderRegistry.register(
             oracleProvider,
-            properties.minStopLossBPS,
-            properties.maxStopLossBPS,
             properties.minTakeProfitBPS,
             properties.maxTakeProfitBPS,
             properties.leverageLevel
@@ -309,8 +306,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         returns (OracleProviderProperties memory)
     {
         (
-            uint32 minStopLossBPS,
-            uint32 maxStopLossBPS,
             uint32 minTakeProfitBPS,
             uint32 maxTakeProfitBPS,
             uint8 leverageLevel
@@ -318,26 +313,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         return
             OracleProviderProperties({
-                minStopLossBPS: minStopLossBPS,
-                maxStopLossBPS: maxStopLossBPS,
                 minTakeProfitBPS: minTakeProfitBPS,
                 maxTakeProfitBPS: maxTakeProfitBPS,
                 leverageLevel: leverageLevel
             });
-    }
-
-    /**
-     * @inheritdoc IOracleProviderRegistry
-     * @dev This function can only be called by the DAO and registered oracle providers.
-     */
-    function updateStopLossBPSRange(
-        address oracleProvider,
-        uint32 minStopLossBPS,
-        uint32 maxStopLossBPS
-    ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
-        require(maxStopLossBPS <= BPS);
-        _oracleProviderRegistry.setStopLossBPSRange(oracleProvider, minStopLossBPS, maxStopLossBPS);
-        emit UpdateStopLossBPSRange(oracleProvider, minStopLossBPS, maxStopLossBPS);
     }
 
     /**

@@ -75,8 +75,6 @@ abstract contract BaseSetup is Test {
         factory.registerOracleProvider(
             address(oracleProvider),
             IOracleProviderRegistry.OracleProviderProperties({
-                minStopLossBPS: 1000, // 10%
-                maxStopLossBPS: 10000, // 100%
                 minTakeProfitBPS: 1000, // 10%
                 maxTakeProfitBPS: 100000, // 1000%
                 leverageLevel: 0

@@ -11,8 +11,6 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 struct OracleProviderRegistry {
     /// @dev Set of registered oracle providers
     EnumerableSet.AddressSet _oracleProviders;
-    mapping(address => uint32) _minStopLossBPSs;
-    mapping(address => uint32) _maxStopLossBPSs;
     mapping(address => uint32) _minTakeProfitBPSs;
     mapping(address => uint32) _maxTakeProfitBPSs;
     mapping(address => uint8) _leverageLevels;
@@ -30,8 +28,6 @@ library OracleProviderRegistryLib {
      * @dev Throws an error if the oracle provider is already registered.
      * @param self The OracleProviderRegistry storage.
      * @param oracleProvider The address of the oracle provider to register.
-     * @param minStopLossBPS The minimum stop-loss basis points.
-     * @param maxStopLossBPS The maximum stop-loss basis points.
      * @param minTakeProfitBPS The minimum take-profit basis points.
      * @param maxTakeProfitBPS The maximum take-profit basis points.
      * @param leverageLevel The leverage level of the oracle provider.
@@ -39,8 +35,6 @@ library OracleProviderRegistryLib {
     function register(
         OracleProviderRegistry storage self,
         address oracleProvider,
-        uint32 minStopLossBPS,
-        uint32 maxStopLossBPS,
         uint32 minTakeProfitBPS,
         uint32 maxTakeProfitBPS,
         uint8 leverageLevel
@@ -51,8 +45,6 @@ library OracleProviderRegistryLib {
         );
 
         self._oracleProviders.add(oracleProvider);
-        self._minStopLossBPSs[oracleProvider] = minStopLossBPS;
-        self._maxStopLossBPSs[oracleProvider] = maxStopLossBPS;
         self._minTakeProfitBPSs[oracleProvider] = minTakeProfitBPS;
         self._maxTakeProfitBPSs[oracleProvider] = maxTakeProfitBPS;
         self._leverageLevels[oracleProvider] = leverageLevel;
@@ -95,8 +87,6 @@ library OracleProviderRegistryLib {
      * @notice Retrieves the properties of an oracle provider.
      * @param self The OracleProviderRegistry storage.
      * @param oracleProvider The address of the oracle provider.
-     * @return minStopLossBPS The minimum stop-loss basis points.
-     * @return maxStopLossBPS The maximum stop-loss basis points.
      * @return minTakeProfitBPS The minimum take-profit basis points.
      * @return maxTakeProfitBPS The maximum take-profit basis points.
      * @return leverageLevel The leverage level of the oracle provider.
@@ -107,36 +97,11 @@ library OracleProviderRegistryLib {
     )
         internal
         view
-        returns (
-            uint32 minStopLossBPS,
-            uint32 maxStopLossBPS,
-            uint32 minTakeProfitBPS,
-            uint32 maxTakeProfitBPS,
-            uint8 leverageLevel
-        )
+        returns (uint32 minTakeProfitBPS, uint32 maxTakeProfitBPS, uint8 leverageLevel)
     {
-        minStopLossBPS = self._minStopLossBPSs[oracleProvider];
-        maxStopLossBPS = self._maxStopLossBPSs[oracleProvider];
         minTakeProfitBPS = self._minTakeProfitBPSs[oracleProvider];
         maxTakeProfitBPS = self._maxTakeProfitBPSs[oracleProvider];
         leverageLevel = self._leverageLevels[oracleProvider];
-    }
-
-    /**
-     * @notice Sets the range for stop-loss basis points for an oracle provider.
-     * @param self The OracleProviderRegistry storage.
-     * @param oracleProvider The address of the oracle provider.
-     * @param minStopLossBPS The minimum stop-loss basis points.
-     * @param maxStopLossBPS The maximum stop-loss basis points.
-     */
-    function setStopLossBPSRange(
-        OracleProviderRegistry storage self,
-        address oracleProvider,
-        uint32 minStopLossBPS,
-        uint32 maxStopLossBPS
-    ) internal {
-        self._minStopLossBPSs[oracleProvider] = minStopLossBPS;
-        self._maxStopLossBPSs[oracleProvider] = maxStopLossBPS;
     }
 
     /**
