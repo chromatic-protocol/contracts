@@ -1,16 +1,16 @@
 import { SWAP_ROUTER_02_ADDRESSES, USDC_ARBITRUM_GOERLI, WETH9 } from '@uniswap/smart-order-router'
+import chalk from 'chalk'
 import { BigNumber, ethers } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
 import { lazyFunction, lazyObject } from 'hardhat/plugins'
+import * as Token from '../../deployments/anvil/Token.json'
 import {
   ChromaticLiquidatorMock__factory,
   IChromaticMarketFactory__factory,
-  IERC20__factory,
   OracleProviderMock__factory
 } from '../../typechain-types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
-import * as Token from '../../deployments/anvil/Token.json'
 
 const SIGNERS = ['alice', 'bob', 'charlie', 'david', 'eve', 'frank', 'grace', 'heidi']
 
@@ -31,11 +31,12 @@ extendEnvironment((hre) => {
   )
 
   hre.showMeTheMoney = lazyFunction(
-    () => async (account: string, ethAmount: number, usdcAmount: number) => {
+    () => async (account: string, ethAmount: number, erc20Amount: number) => {
       await hre.network.provider.send('anvil_setBalance', [
         account,
         ethers.utils.parseEther(`${ethAmount}`).toHexString()
       ])
+      console.log(chalk.yellow(`💸 Eth balance charged : ${ethAmount}`))
 
       function fillZero(str: string, width: number) {
         return str.length >= width ? str : new Array(width - str.length + 1).join('0') + str
@@ -48,22 +49,27 @@ extendEnvironment((hre) => {
         return BigNumber.from(storageKeyHex)
       }
 
-      const slot = getMappingValueSlot('33', account)
-      console.log(slot.toHexString())
-      const usdcAmountInput = BigNumber.from(usdcAmount)
-        .mul(10 ** 6)
-        .toHexString()
-      const usdcAmountInput32Bytes = fillZero(usdcAmountInput.replace('0x', ''), 64)
-      await hre.network.provider.send('anvil_setStorageAt', [
-        USDC_ARBITRUM_GOERLI.address,
-        slot.toHexString(),
-        usdcAmountInput32Bytes
-      ])
-      await hre.network.provider.send('anvil_setStorageAt', [
-        Token.address,
-        getMappingValueSlot('0', account).toHexString(),
-        fillZero(ethers.utils.parseEther(usdcAmount.toString()).toHexString().replace('0x', ''), 64)
-      ])
+      async function setSlotBalance(
+        address: string,
+        slotIndex: number,
+        amount: number,
+        decimals: number
+      ) {
+        const slot = getMappingValueSlot(`${slotIndex}`, account)
+        const amountWithDecimals = BigNumber.from(amount)
+          .mul(BigNumber.from(10).pow(decimals))
+          .toHexString()
+        const amountWithDecimals32Bytes = fillZero(amountWithDecimals.replace('0x', ''), 64)
+        await hre.network.provider.send('anvil_setStorageAt', [
+          address,
+          slot.toHexString(),
+          amountWithDecimals32Bytes
+        ])
+        console.log(chalk.yellow(`💸 ERC20 balance charged : ${address} ${amount}`))
+      }
+
+      await setSlotBalance(USDC_ARBITRUM_GOERLI.address, 33, erc20Amount, 6)
+      await setSlotBalance(Token.address, 0, erc20Amount, 18)
     }
   )
 
