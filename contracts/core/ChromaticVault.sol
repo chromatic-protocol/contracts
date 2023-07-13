@@ -287,9 +287,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     /**
      * @inheritdoc ILendingPool
-     * @dev
-     *  Throws a `NotEnoughBalance` error if the loan amount exceeds the available balance.
-     *  Throws a `NotEnoughFeePaid` error if the fee has not been paid by the recipient.
+     * @dev Throws a `NotEnoughBalance` error if the loan amount exceeds the available balance.
+     *      Throws a `NotEnoughFeePaid` error if the fee has not been paid by the recipient.
      *
      * Requirements:
      * - The loan amount must not exceed the available balance after considering pending deposits and withdrawals.
