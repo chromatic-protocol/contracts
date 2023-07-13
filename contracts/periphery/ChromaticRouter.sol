@@ -101,6 +101,9 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
 
     mapping(address => mapping(address => EnumerableSet.UintSet)) receiptIds; // market => provider => receiptIds
 
+    /**
+     * @dev Throws an error indicating that the specified receipt ID does not exist for the liquidity provider in the given market.
+     */
     error NotExistLpReceipt();
 
     /**
@@ -321,6 +324,8 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
 
     /**
      * @inheritdoc IChromaticRouter
+     * @dev This function allows the liquidity provider to claim their liquidity by calling the `claimLiquidity` function in the specified market contract.
+     *      Throws a `NotExistLpReceipt` error if the specified receipt ID does not exist for the liquidity provider in the given market.
      */
     function claimLiquidity(address market, uint256 receiptId) public override {
         address provider = msg.sender;
@@ -366,6 +371,8 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
 
     /**
      * @inheritdoc IChromaticRouter
+     * @dev This function allows the liquidity provider to withdraw their liquidity by calling the `withdrawLiquidity` function in the specified market contract.
+     *      Throws a `NotExistLpReceipt` error if the specified receipt ID does not exist for the liquidity provider in the given market.
      */
     function withdrawLiquidity(address market, uint256 receiptId) public override {
         address provider = msg.sender;

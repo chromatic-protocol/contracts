@@ -16,13 +16,29 @@ contract KeeperFeePayer is IKeeperFeePayer {
     ISwapRouter uniswapRouter;
     IWETH9 public WETH9;
 
+    /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
     error OnlyAccessableByDao();
+
+    /**
+     * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
+     */
     error OnlyAccessableByFactoryOrDao();
+
+    /**
+     * @dev Throws an error indicating that the transfer of keeper fee has failed.
+     */
     error KeeperFeeTransferFailure();
+
+    /**
+     * @dev Throws an error indicating that the swap value for the Uniswap trade is invalid.
+     */
     error InvalidSwapValue();
 
     /**
      * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
      */
     modifier onlyDao() {
         if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
@@ -31,6 +47,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
+     *      Throws an `OnlyAccessableByFactoryOrDao` error if the caller is nether the chormatic factory contract nor the DAO.
      */
     modifier onlyFactoryOrDao() {
         if (msg.sender != address(factory) && msg.sender != factory.dao())
@@ -71,6 +88,8 @@ contract KeeperFeePayer is IKeeperFeePayer {
     /**
      * @inheritdoc IKeeperFeePayer
      * @dev Only the Vault can call this function.
+     *      Throws a `KeeperFeeTransferFailure` error if the transfer of ETH to the keeper address fails.
+     *      Throws an `InvalidSwapValue` error if the remaining balance of the input token after the swap is insufficient.
      */
     function payKeeperFee(
         address tokenIn,

@@ -109,6 +109,7 @@ library LiquidityPoolLib {
      *         assigning the remaining maker margin to the bins until it is exhausted.
      *      4. Creates an array of BinMargin structs
      *         containing the trading fee rate and corresponding margin amount for each bin.
+     *      Throws an error with the code `Errors.NOT_ENOUGH_FREE_LIQUIDITY` if there is not enough free liquidity.
      * @param self The reference to the LiquidityPool.
      * @param qty The quantity of the position.
      * @param makerMargin The maker margin of the position.
@@ -275,6 +276,7 @@ library LiquidityPoolLib {
      *      Then, it divides the position parameters to match the bin margins.
      *      Depending on the value of the realized position pnl, it either claims the position fully or partially.
      *      The claimed pnl is distributed among the liquidity bins according to their respective margins.
+     *      Throws an error with the code `Errors.EXCEED_MARGIN_RANGE` if the realized profit or loss does not falls within the acceptable margin range.
      * @param self The reference to the LiquidityPool storage.
      * @param ctx The LpContext object.
      * @param position The Position object representing the position to claim.
@@ -651,6 +653,7 @@ library LiquidityPoolLib {
      * @dev This function validates the trading fee rate by checking if it is supported.
      *      It compares the absolute value of the fee rate with the predefined trading fee rates
      *      to determine if it is a valid rate.
+     *      Throws an error with the code `Errors.UNSUPPORTED_TRADING_FEE_RATE` if the trading fee rate is not supported.
      * @param tradingFeeRate The trading fee rate to be validated.
      */
     function validateTradingFeeRate(int16 tradingFeeRate) private pure {

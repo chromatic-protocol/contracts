@@ -29,11 +29,36 @@ contract MarketLiquidityFacet is
 {
     using Math for uint256;
 
+    /**
+     * @dev Throws an error indicating that the amount of liquidity is too small.
+     *      This error is thrown when attempting to remove liquidity with an amount of zero.
+     */
     error TooSmallAmount();
+
+    /**
+     * @dev Throws an error indicating that the specified liquidity receipt does not exist.
+     */
     error NotExistLpReceipt();
+
+    /**
+     * @dev Throws an error indicating that the liquidity receipt is not claimable.
+     */
     error NotClaimableLpReceipt();
+
+    /**
+     * @dev Throws an error indicating that the liquidity receipt is not withdrawable.
+     */
     error NotWithdrawableLpReceipt();
+
+    /**
+     * @dev Throws an error indicating that the liquidity receipt action is invalid.
+     */
     error InvalidLpReceiptAction();
+
+    /**
+     * @dev Throws an error indicating that the transferred token amount is invalid.
+     *      This error is thrown when the transferred token amount does not match the expected amount.
+     */
     error InvalidTransferedTokenAmount();
 
     /**
@@ -70,6 +95,7 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws an `InvalidTransferedTokenAmount` error if the transferred amount does not match the sum of amounts param.
      */
     function addLiquidityBatch(
         address recipient,
@@ -149,6 +175,9 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
+     *      Throws an `InvalidLpReceiptAction` error if the action of liquidity receipt is not `ADD_LIQUIDITY`.
+     *      Throws a `NotClaimableLpReceipt` error if the liquidity receipt is not claimable in the current oracle version.
      */
     function claimLiquidity(uint256 receiptId, bytes calldata data) external override nonReentrant {
         LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
@@ -172,6 +201,9 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
+     *      Throws an `InvalidLpReceiptAction` error if the action of liquidity receipt is not `ADD_LIQUIDITY`.
+     *      Throws a `NotClaimableLpReceipt` error if the liquidity receipt is not claimable in the current oracle version.
      */
     function claimLiquidityBatch(
         uint256[] calldata receiptIds,
@@ -233,6 +265,9 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev This function is called by the liquidity provider to remove their liquidity from the market.
+     *      The liquidity provider must have previously added liquidity to the market.
+     *      Throws a `TooSmallAmount` error if the CLB tokne amount of liquidity to be removed is zero.
      */
     function removeLiquidity(
         address recipient,
@@ -268,6 +303,7 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws an `InvalidTransferedTokenAmount` error if the transferred CLB token amount does not match the expected amount (clbTokenAmounts param).
      */
     function removeLiquidityBatch(
         address recipient,
@@ -359,6 +395,9 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
+     *      Throws an `InvalidLpReceiptAction` error if the action of liquidity receipt is not `REMOVE_LIQUIDITY`.
+     *      Throws a `NotWithdrawableLpReceipt` error if the liquidity receipt is not withdrawable in the current oracle version.
      */
     function withdrawLiquidity(
         uint256 receiptId,
@@ -384,6 +423,9 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
+     *      Throws an `InvalidLpReceiptAction` error if the action of liquidity receipt is not `REMOVE_LIQUIDITY`.
+     *      Throws a `NotWithdrawableLpReceipt` error if the liquidity receipt is not withdrawable in the current oracle version.
      */
     function withdrawLiquidityBatch(
         uint256[] calldata receiptIds,
@@ -495,6 +537,7 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
      */
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
         receipt = _getLpReceipt(LpReceiptStorageLib.lpReceiptStorage(), receiptId);

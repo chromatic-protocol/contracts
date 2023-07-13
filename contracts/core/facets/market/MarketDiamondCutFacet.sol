@@ -6,10 +6,14 @@ import {DiamondCutFacetBase} from "@chromatic-protocol/contracts/core/facets/Dia
 import {MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 
 contract MarketDiamondCutFacet is DiamondCutFacetBase {
+    /**
+     * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
+     */
     error OnlyAccessableByFactoryOrDao();
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
+     *      Throws an `OnlyAccessableByFactoryOrDao` error if the caller is nether the chormatic factory contract nor the DAO.
      */
     modifier onlyFactoryOrDao() {
         IChromaticMarketFactory factory = MarketStorageLib.marketStorage().factory;
@@ -21,6 +25,7 @@ contract MarketDiamondCutFacet is DiamondCutFacetBase {
     /**
      * @notice Add/replace/remove any number of functions and optionally execute
      *         a function with delegatecall
+     * @dev This function can only be called by the Chromatic factory contract or the DAO.
      * @param _cut Contains the facet addresses and function selectors
      * @param _init The address of the contract or facet to execute _calldata
      * @param _calldata A function call, including function selector and arguments

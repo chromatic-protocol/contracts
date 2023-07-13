@@ -16,7 +16,7 @@ abstract contract VerifyCallback {
 
     /**
      * @dev Modifier to verify the callback function is called by a registered market.
-     *      Throws an error if the caller is not a registered market.
+     *      Throws a `NotMarket` error if the caller is not a registered market.
      */
     modifier verifyCallback() {
         if (!IChromaticMarketFactory(marketFactory).isRegisteredMarket(msg.sender))

@@ -22,11 +22,19 @@ abstract contract Liquidator is IChromaticLiquidator {
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
     mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
 
+    /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
     error OnlyAccessableByDao();
+
+    /**
+     * @dev Throws an error indicating that the caller is not a registered market.
+     */
     error OnlyAccessableByMarket();
 
     /**
      * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
      */
     modifier onlyDao() {
         if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
@@ -35,6 +43,7 @@ abstract contract Liquidator is IChromaticLiquidator {
 
     /**
      * @dev Modifier to check if the calling contract is a registered market.
+     *      Throws an `OnlyAccessableByMarket` error if the caller is not a registered market.
      */
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();

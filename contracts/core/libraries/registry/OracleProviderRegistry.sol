@@ -25,7 +25,7 @@ library OracleProviderRegistryLib {
 
     /**
      * @notice Registers an oracle provider in the registry.
-     * @dev Throws an error if the oracle provider is already registered.
+     * @dev Throws an error with the code `Errors.ALREADY_REGISTERED_ORACLE_PROVIDER` if the oracle provider is already registered.
      * @param self The OracleProviderRegistry storage.
      * @param oracleProvider The address of the oracle provider to register.
      * @param minTakeProfitBPS The minimum take-profit basis points.

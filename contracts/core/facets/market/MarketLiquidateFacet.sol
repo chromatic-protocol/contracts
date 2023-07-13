@@ -19,11 +19,21 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
     using SafeCast for uint256;
     using SignedMath for int256;
 
+    /**
+     * @dev Throws an error indicating that the position has already been closed.
+     */
     error AlreadyClosedPosition();
+
+    /**
+     *@dev Throws an error indicating that the position is not claimable.
+     */
     error NotClaimablePosition();
 
     /**
      * @inheritdoc IMarketLiquidate
+     * @dev This function can only be called by the chromatic liquidator contract.
+     *      Throws a `NotExistPosition` error if the requested position does not exist.
+     *      Throws a `NotClaimablePosition` error if the position's close version is not in the past, indicating that it is not claimable.
      */
     function claimPosition(
         uint256 positionId,
@@ -63,6 +73,11 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
 
     /**
      * @inheritdoc IMarketLiquidate
+     * @dev This function can only be called by the chromatic liquidator contract.
+     *      The liquidation process checks if the position should be liquidated based on its profitability.
+     *      If the position does not meet the liquidation criteria, the function returns without performing any action.
+     *      Throws a `NotExistPosition` error if the requested position does not exist.
+     *      Throws an `AlreadyClosedPosition` error if the position is already closed.
      */
     function liquidate(
         uint256 positionId,

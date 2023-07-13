@@ -76,6 +76,7 @@ library LiquidityBinLib {
 
     /**
      * @notice Opens a new position in the liquidity bin
+     * @dev Throws an error with the code `Errors.NOT_ENOUGH_FREE_LIQUIDITY` if there is not enough free liquidity.
      * @param self The LiquidityBin storage
      * @param ctx The LpContext data struct
      * @param param The position parameters

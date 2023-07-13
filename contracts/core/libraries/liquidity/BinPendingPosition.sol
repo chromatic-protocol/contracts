@@ -50,6 +50,7 @@ library BinPendingPositionLib {
 
     /**
      * @notice Handles the opening of a position.
+     * @dev Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if the `openVersion` is not valid.
      * @param self The BinPendingPosition storage.
      * @param param The position parameters.
      */
@@ -79,6 +80,7 @@ library BinPendingPositionLib {
 
     /**
      * @notice Handles the closing of a position.
+     * @dev Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if the `openVersion` is not valid.
      * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.

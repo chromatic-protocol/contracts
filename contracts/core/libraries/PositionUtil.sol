@@ -28,8 +28,7 @@ library PositionUtil {
      * @notice Returns next oracle version to settle
      * @dev It adds 1 to the `oracleVersion`
      *      and ensures that the `oracleVersion` is greater than 0 using a require statement.
-     *      If the `oracleVersion` is not valid,
-     *      it will trigger an error with the message `INVALID_ORACLE_VERSION`.
+     *      Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if the `oracleVersion` is not valid.
      * @param oracleVersion Input oracle version
      * @return uint256 Next oracle version to settle
      */
@@ -59,7 +58,7 @@ library PositionUtil {
      * @dev It calculates the price by considering the `settleVersion`
      *      and the `currentVersion` obtained from the `IOracleProvider`.
      *      It ensures that the settle version is not greater than the current version;
-     *      otherwise, it triggers an error with the message `UNSETTLED_POSITION`.
+     *      otherwise, it triggers an error with the message `Errors.UNSETTLED_POSITION`.
      *      It retrieves the corresponding `OracleVersion` using `atVersion` from the `IOracleProvider`,
      *      and then calls `oraclePrice` to obtain the price.
      * @param provider The oracle provider
@@ -135,7 +134,7 @@ library PositionUtil {
      * @notice Verifies the validity of a position quantity added to the bin
      * @dev It ensures that the sign of the current quantity of the bin's position
      *      and the added quantity are same or zero.
-     *      If the condition is not met, it triggers an error with the message `INVALID_POSITION_QTY`.
+     *      If the condition is not met, it triggers an error with the message `Errors.INVALID_POSITION_QTY`.
      * @param currentQty The current quantity of the bin's pending position
      * @param addedQty The position quantity added
      */
@@ -151,7 +150,7 @@ library PositionUtil {
      * @dev It ensures that the sign of the current quantity of the bin's position
      *      and the removed quantity are same or zero,
      *      and the absolute removed quantity is not greater than the absolute current quantity.
-     *      If the condition is not met, it triggers an error with the message `INVALID_POSITION_QTY`.
+     *      If the condition is not met, it triggers an error with the message `Errors.INVALID_POSITION_QTY`.
      * @param currentQty The current quantity of the bin's position
      * @param removeQty The position quantity removed
      */

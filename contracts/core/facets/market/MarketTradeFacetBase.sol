@@ -13,7 +13,14 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
     using SafeCast for uint256;
     using SignedMath for int256;
 
+    /**
+     * @dev Throws an error indicating that the requested position does not exist.
+     */
     error NotExistPosition();
+
+    /**
+     * @dev Throws an error indicating that an error occurred during the claim position callback.
+     */
     error ClaimPositionCallbackError();
 
     /**
