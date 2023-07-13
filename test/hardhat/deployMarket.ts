@@ -17,8 +17,6 @@ export async function deploy() {
 
     await (
       await marketFactory.registerOracleProvider(oracleProvider.address, {
-        minStopLossBPS: 1000, // 10%
-        maxStopLossBPS: 10000, // 100%
         minTakeProfitBPS: 500, // 5%
         maxTakeProfitBPS: 100000, // 1000%
         leverageLevel: 0

@@ -7,8 +7,6 @@ pragma solidity >=0.8.0 <0.9.0;
  */
 interface IOracleProviderRegistry {
     struct OracleProviderProperties {
-        uint32 minStopLossBPS;
-        uint32 maxStopLossBPS;
         uint32 minTakeProfitBPS;
         uint32 maxTakeProfitBPS;
         uint8 leverageLevel;
@@ -29,18 +27,6 @@ interface IOracleProviderRegistry {
      * @param oracleProvider The address of the unregistered oracle provider.
      */
     event OracleProviderUnregistered(address indexed oracleProvider);
-
-    /**
-     * @dev Emitted when the stop-loss basis points range of an oracle provider is updated.
-     * @param oracleProvider The address of the oracle provider.
-     * @param minStopLossBPS The new minimum stop-loss basis points.
-     * @param maxStopLossBPS The new maximum stop-loss basis points.
-     */
-    event UpdateStopLossBPSRange(
-        address indexed oracleProvider,
-        uint32 indexed minStopLossBPS,
-        uint32 indexed maxStopLossBPS
-    );
 
     /**
      * @dev Emitted when the take-profit basis points range of an oracle provider is updated.
@@ -98,17 +84,6 @@ interface IOracleProviderRegistry {
     function getOracleProviderProperties(
         address oracleProvider
     ) external view returns (OracleProviderProperties memory);
-
-    /**
-     * @notice Updates the stop-loss basis points range of an oracle provider.
-     * @param oracleProvider The address of the oracle provider@param minStopLossBPS The new minimum stop-loss basis points.
-     * @param maxStopLossBPS The new maximum stop-loss basis points.
-     */
-    function updateStopLossBPSRange(
-        address oracleProvider,
-        uint32 minStopLossBPS,
-        uint32 maxStopLossBPS
-    ) external;
 
     /**
      * @notice Updates the take-profit basis points range of an oracle provider.

@@ -94,13 +94,14 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         uint256 makerMargin,
         IOracleProviderRegistry.OracleProviderProperties memory properties
     ) private pure {
-        if (leverage > (properties.leverageLevel + 1) * 10 * QTY_LEVERAGE_PRECISION)
+        uint256 maxAllowableLeverage = (properties.leverageLevel + 1) * 10;
+        if (leverage > maxAllowableLeverage * QTY_LEVERAGE_PRECISION)
             revert ExceedMaxAllowableLeverage();
 
         uint256 absQty = qty.abs().mulDiv(ctx.tokenPrecision, QTY_PRECISION);
         if (
-            takerMargin < absQty.mulDiv(properties.minStopLossBPS, BPS) ||
-            takerMargin > absQty.mulDiv(properties.maxStopLossBPS, BPS)
+            takerMargin < absQty / maxAllowableLeverage || // reciprocal of max allowable leverage
+            takerMargin > absQty // max 100%
         ) revert NotAllowableTakerMargin();
         if (
             makerMargin < absQty.mulDiv(properties.minTakeProfitBPS, BPS) ||

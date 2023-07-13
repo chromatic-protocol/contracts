@@ -27,8 +27,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.registerOracleProvider(
     oracleProviderAddress,
     {
-      minStopLossBPS: 1000, // 10%
-      maxStopLossBPS: 10000, // 100%
       minTakeProfitBPS: 1000, // 10%
       maxTakeProfitBPS: 100000, // 1000%
       leverageLevel: 0
