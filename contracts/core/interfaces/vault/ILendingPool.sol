@@ -7,7 +7,7 @@ pragma solidity >=0.8.0 <0.9.0;
  */
 interface ILendingPool {
     /**
-     * @dev Emitted when a flash loan is executed.
+     * @notice Emitted when a flash loan is executed.
      * @param sender The address initiating the flash loan.
      * @param recipient The address receiving the flash loan.
      * @param amount The amount of the flash loan.
@@ -25,7 +25,7 @@ interface ILendingPool {
     );
 
     /**
-     * @dev Executes a flash loan.
+     * @notice Executes a flash loan.
      * @param token The address of the token for the flash loan.
      * @param amount The amount of the flash loan.
      * @param recipient The address to receive the flash loan.
