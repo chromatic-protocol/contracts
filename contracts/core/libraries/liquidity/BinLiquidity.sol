@@ -137,8 +137,8 @@ library BinLiquidityLib {
     /**
      * @notice Adds liquidity to the BinLiquidity.
      * @dev Sets the pending liquidity with the specified amount and oracle version.
-     *      If the amount is less than the minimum amount, it reverts with an error.
-     *      If there is already pending liquidity with a different oracle version, it reverts with an error.
+     *      Throws an error with the code `Errors.TOO_SMALL_AMOUNT` if the amount is too small.
+     *      Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if there is already pending liquidity with a different oracle version, it reverts with an error.
      * @param self The BinLiquidity storage.
      * @param amount The amount of tokens to add for liquidity.
      * @param oracleVersion The oracle version associated with the liquidity.
@@ -191,7 +191,7 @@ library BinLiquidityLib {
     /**
      * @notice Removes liquidity from the BinLiquidity by setting pending CLB token amount.
      * @dev Sets the pending liquidity with the specified CLB token amount and oracle version.
-     *      If there is already pending liquidity with a different oracle version, it reverts with an error.
+     *      Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if there is already pending liquidity with a different oracle version, it reverts with an error.
      * @param self The BinLiquidity storage.
      * @param clbTokenAmount The amount of CLB tokens to remove liquidity.
      * @param oracleVersion The oracle version associated with the liquidity.

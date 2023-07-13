@@ -48,17 +48,44 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     mapping(address => address[]) private _marketsBySettlementToken;
     EnumerableSet.AddressSet private _markets;
 
+    /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
     error OnlyAccessableByDao();
+
+    /**
+     * @dev Throws an error indicating that the chromatic liquidator address is already set.
+     */
     error AlreadySetLiquidator();
+
+    /**
+     * @dev Throws an error indicating that the chromatic vault address is already set.
+     */
     error AlreadySetVault();
+
+    /**
+     * @dev Throws an error indicating that the keeper fee payer address is already set.
+     */
     error AlreadySetKeeperFeePayer();
+
+    /**
+     * @dev Throws an error indicating that the oracle provider is not registered.
+     */
     error NotRegisteredOracleProvider();
+
+    /**
+     * @dev Throws an error indicating that the settlement token is not registered.
+     */
     error NotRegisteredSettlementToken();
-    error WrongTokenAddress();
+
+    /**
+     * @dev Throws an error indicating that a market already exists for the given oracle provider and settlement token.
+     */
     error ExistMarket();
 
     /**
      * @dev Modifier to restrict access to only the DAO address
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
      */
     modifier onlyDao() {
         if (msg.sender != dao) revert OnlyAccessableByDao();
@@ -66,9 +93,13 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     }
 
     /**
-     * @dev Modifier to ensure that the caller is a registered oracle provider.
-     *      Throws a 'NotRegisteredOracleProvider' error if the oracle provider is not registered.
-     * @param oracleProvider The address of the oracle provider.
+     * @dev Modifier to ensure that the specified oracle provider is registered.
+     *      Throws a `NotRegisteredOracleProvider` error if the oracle provider is not registered.
+     *
+     * @param oracleProvider The address of the oracle provider to check.
+     *
+     * Requirements:
+     * - The `oracleProvider` address must be registered in the `_oracleProviderRegistry`.
      */
     modifier onlyRegisteredOracleProvider(address oracleProvider) {
         if (!_oracleProviderRegistry.isRegistered(oracleProvider))
@@ -128,6 +159,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
+     *      Throws an `AlreadySetLiquidator` error if the liquidator address has already been set.
      */
     function setLiquidator(address _liquidator) external override onlyDao {
         if (liquidator != address(0)) revert AlreadySetLiquidator();
@@ -139,6 +171,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
+     *      Throws an `AlreadySetVault` error if the vault address has already been set.
      */
     function setVault(address _vault) external override onlyDao {
         if (vault != address(0)) revert AlreadySetVault();
@@ -150,6 +183,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
+     *      Throws an `AlreadySetKeeperFeePayer` error if the keeper fee payer address has already been set.
      */
     function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
         if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
@@ -205,6 +239,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     /**
      * @inheritdoc IChromaticMarketFactory
+     * @dev This function creates a new market using the specified oracle provider and settlement token addresses.
+     *      Throws a `NotRegisteredSettlementToken` error if the settlement token is not registered.
+     *      Throws an `ExistMarket` error if the market already exists for the given oracle provider and settlement token.
      */
     function createMarket(
         address oracleProvider,

@@ -25,6 +25,9 @@ contract CLBToken is ERC1155Supply, ICLBToken {
 
     IChromaticMarket public immutable market;
 
+    /**
+     * @dev Throws an error indicating that the caller is not a registered market.
+     */
     error OnlyAccessableByMarket();
 
     /**

@@ -40,14 +40,39 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     mapping(address => bytes32) public makerEarningDistributionTaskIds; // settlement token => task id
     mapping(address => bytes32) public marketEarningDistributionTaskIds; // market => task id
 
+    /**
+     * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
+     */
     error OnlyAccessableByFactoryOrDao();
+
+    /**
+     * @dev Throws an error indicating that the caller is not a registered market.
+     */
     error OnlyAccessableByMarket();
+
+    /**
+     * @dev Throws an error indicating that the flash loan amount exceeds the available balance in the vault.
+     */
     error NotEnoughBalance();
+
+    /**
+     * @dev Throws an error indicating that the recipient has not paid the sufficient flash loan fee.
+     */
     error NotEnoughFeePaid();
+
+    /**
+     * @dev Throws an error indicating that a maker earning distribution task already exists.
+     */
+    error ExistMakerEarningDistributionTask();
+
+    /**
+     * @dev Throws an error indicating that a market earning distribution task already exists.
+     */
     error ExistMarketEarningDistributionTask();
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
+     *      Throws an `OnlyAccessableByFactoryOrDao` error if the caller is nether the chormatic factory contract nor the DAO.
      */
     modifier onlyFactoryOrDao() {
         if (msg.sender != address(factory) && msg.sender != factory.dao())
@@ -57,6 +82,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     /**
      * @dev Modifier to restrict access to only the Market contract.
+     *      Throws an `OnlyAccessableByMarket` error if the caller is not a registered market.
      */
     modifier onlyMarket() {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
@@ -261,6 +287,18 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     /**
      * @inheritdoc ILendingPool
+     * @dev
+     *  Throws a `NotEnoughBalance` error if the loan amount exceeds the available balance.
+     *  Throws a `NotEnoughFeePaid` error if the fee has not been paid by the recipient.
+     *
+     * Requirements:
+     * - The loan amount must not exceed the available balance after considering pending deposits and withdrawals.
+     * - The fee for the flash loan must be paid by the recipient.
+     * - The total amount paid must be distributed between the taker pool and maker pool according to their balances.
+     * - The amount paid to the taker pool must be transferred to the DAO treasury address.
+     * - The amount paid to the maker pool must be added to the pending maker earnings.
+     *
+     * Emits a `FlashLoan` event with details of the flash loan execution.
      */
     function flashLoan(
         address token,
@@ -370,12 +408,14 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     /**
      * @inheritdoc IChromaticVault
+     * @dev This function can only be called by the Chromatic factory contract or the DAO.
+     *      Throws an `ExistMakerEarningDistributionTask` error if a maker earning distribution task already exists for the token.
      */
     function createMakerEarningDistributionTask(
         address token
     ) external virtual override onlyFactoryOrDao {
         if (makerEarningDistributionTaskIds[token] != bytes32(0))
-            revert ExistMarketEarningDistributionTask();
+            revert ExistMakerEarningDistributionTask();
 
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
 
@@ -486,6 +526,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     /**
      * @inheritdoc IChromaticVault
+     * @dev This function can only be called by the Chromatic factory contract or the DAO.
+     *      Throws an `ExistMarketEarningDistributionTask` error if a market earning distribution task already exists for the market.
      */
     function createMarketEarningDistributionTask(
         address market

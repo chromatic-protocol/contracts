@@ -22,14 +22,34 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     mapping(address => EnumerableSet.UintSet) private positionIds;
 
+    /**
+     * @dev Throws an error indicating that the caller is not the chromatic router contract.
+     */
     error NotRouter();
+
+    /**
+     * @dev Throws an error indicating that the caller is not the owner of this account contract.
+     */
     error NotOwner();
+
+    /**
+     * @dev Throws an error indicating that the account is already initialized, and calling the initialization function again is not allowed.
+     */
     error AlreadyInitialized();
+
+    /**
+     * @dev Throws an error indicating that the account does not have sufficient balance to perform a particular operation, such as withdrawing an amount of tokens.
+     */
     error NotEnoughBalance();
+
+    /**
+     * @dev Throws an error indicating that the caller is not the owner of this account contractthat the caller is not the owner of this account contract.
+     */
     error NotExistPosition();
 
     /**
      * @dev Modifier that allows only the router to call a function.
+     *      Throws an `NotRouter` error if the caller is not the chromatic router contract.
      */
     modifier onlyRouter() {
         if (msg.sender != router) revert NotRouter();
@@ -38,6 +58,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @dev Modifier that allows only the owner to call a function.
+     *      Throws an `NotOwner` error if the caller is not the owner of this account contract.
      */
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
@@ -46,6 +67,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @notice Initializes the account with the specified owner, router, and market factory addresses.
+     * @dev Throws an `AlreadyInitialized` error if the account has already been initialized.
      * @param _owner The address of the account owner.
      * @param _router The address of the router contract.
      * @param _marketFactory The address of the market factory contract.
@@ -67,6 +89,8 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @inheritdoc IChromaticAccount
+     * @dev This function can only be called by owner.
+     *      Throws a `NotEnoughBalance` error if the account does not have enough balance of the specified token.
      */
     function withdraw(address token, uint256 amount) external onlyOwner {
         if (balance(token) < amount) revert NotEnoughBalance();
@@ -97,6 +121,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @inheritdoc IChromaticAccount
+     * @dev This function can only be called by the chromatic router contract.
      */
     function openPosition(
         address marketAddress,
@@ -119,6 +144,8 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @inheritdoc IChromaticAccount
+     * @dev This function can only be called by the chromatic router contract.
+     *      Throws a `NotExistPosition` error if the position does not exist.
      */
     function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
@@ -128,6 +155,8 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @inheritdoc IChromaticAccount
+     * @dev This function can only be called by the chromatic router contract.
+     *      Throws a `NotExistPosition` error if the position does not exist.
      */
     function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
@@ -137,6 +166,8 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     /**
      * @inheritdoc IChromaticTradeCallback
+     * @dev Transfers the required margin from the account to the specified vault.
+     *      Throws a `NotEnoughBalance` error if the account does not have enough balance of the settlement token.
      */
     function openPositionCallback(
         address settlementToken,

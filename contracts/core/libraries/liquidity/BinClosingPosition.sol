@@ -44,6 +44,7 @@ library BinClosingPositionLib {
 
     /**
      * @notice Handles the closing of a position.
+     * @dev Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if the `closeVersion` is not valid.
      * @param self The BinClosingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.
@@ -76,6 +77,7 @@ library BinClosingPositionLib {
 
     /**
      * @notice Handles the claiming of a position.
+     * @dev Throws an error with the code `Errors.INVALID_ORACLE_VERSION` if the `closeVersion` is not valid.
      * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
      * @param param The position parameters.

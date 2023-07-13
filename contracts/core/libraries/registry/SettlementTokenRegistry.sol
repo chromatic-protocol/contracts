@@ -34,7 +34,7 @@ library SettlementTokenRegistryLib {
 
     /**
      * @notice Modifier to check if a token is registered in the settlement token registry.
-     * @dev Throws an error if the token is not registered.
+     * @dev Throws an error with the code `Errors.UNREGISTERED_TOKEN` if the settlement token is not registered.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the token to check.
      */
@@ -45,7 +45,7 @@ library SettlementTokenRegistryLib {
 
     /**
      * @notice Registers a token in the settlement token registry.
-     * @dev Throws an error if the token is already registered.
+     * @dev Throws an error with the code `Errors.ALREADY_REGISTERED_TOKEN` if the settlement token is already registered.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the token to register.
      * @param minimumMargin The minimum margin for the token.
@@ -224,7 +224,7 @@ library SettlementTokenRegistryLib {
     /**
      * @notice Removes the last interest rate record for a settlement token.
      * @dev The current time must be less than the begin timestamp of the last record.
-     *      Otherwise throws an error with the message `INTEREST_RATE_ALREADY_APPLIED`.
+     *      Throws an error with the code `Errors.INTEREST_RATE_ALREADY_APPLIED` if not.
      * @dev Throws an error if the settlement token is not registered.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the settlement token.
