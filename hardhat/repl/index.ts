@@ -139,26 +139,25 @@ extendEnvironment((hre) => {
     const { address: marketFactoryAddress } = await deployments.get('ChromaticMarketFactory')
     const marketFactory = IChromaticMarketFactory__factory.connect(marketFactoryAddress, deployer)
 
-    const marketAddress = await marketFactory.getMarket(
-      oracleProvider.address,
-      USDC_ARBITRUM_GOERLI.address
-    )
+    const marketAddresses = await marketFactory.getMarkets()
     const { address: liquidatorAddress } = await deployments.get('ChromaticLiquidatorMock')
     const liquidator = ChromaticLiquidatorMock__factory.connect(liquidatorAddress, gelato)
 
-    for (const signer of SIGNERS) {
-      const w: ReplWallet = hre.w[signer]
-      const positionIds = await w.Account.getPositionIds(marketAddress)
-      if (positionIds.length == 0) return
+    for (const marketAddress of marketAddresses) {
+      for (const signer of SIGNERS) {
+        const w: ReplWallet = hre.w[signer]
+        const positionIds = await w.Account.getPositionIds(marketAddress)
+        if (positionIds.length == 0) return
 
-      for (const positionId of positionIds) {
-        const market = w.ChromaticMarket
-        if (await market.checkLiquidation(positionId))
-          await liquidator['liquidate(address,uint256,uint256)'](
-            market.address,
-            positionId,
-            BigNumber.from('0')
-          )
+        for (const positionId of positionIds) {
+          const market = w.ChromaticMarket
+          if (await market.checkLiquidation(positionId))
+            await liquidator['liquidate(address,uint256,uint256)'](
+              market.address,
+              positionId,
+              BigNumber.from('0')
+            )
+        }
       }
     }
   })
