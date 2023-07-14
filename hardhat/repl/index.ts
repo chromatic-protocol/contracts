@@ -5,8 +5,11 @@ import { extendEnvironment } from 'hardhat/config'
 import { lazyFunction, lazyObject } from 'hardhat/plugins'
 import * as Token from '../../deployments/anvil/Token.json'
 import {
+  ChromaticAccount__factory,
   ChromaticLiquidatorMock__factory,
+  ChromaticRouter__factory,
   IChromaticMarketFactory__factory,
+  IMarketLiquidate__factory,
   OracleProviderMock__factory
 } from '../../typechain-types'
 import { ReplWallet } from './ReplWallet'
@@ -143,14 +146,22 @@ extendEnvironment((hre) => {
     const { address: liquidatorAddress } = await deployments.get('ChromaticLiquidatorMock')
     const liquidator = ChromaticLiquidatorMock__factory.connect(liquidatorAddress, gelato)
 
+    const { address: router } = await deployments.get('ChromaticRouter')
+    const routerContract = ChromaticRouter__factory.connect(router, deployer)
+    const routerFilter = routerContract.filters.AccountCreated()
+    const accounts = (await routerContract.queryFilter(routerFilter)).map((e) => e.args.account)
+
     for (const marketAddress of marketAddresses) {
-      for (const signer of SIGNERS) {
-        const w: ReplWallet = hre.w[signer]
-        const positionIds = await w.Account.getPositionIds(marketAddress)
-        if (positionIds.length == 0) return
+      const market = IMarketLiquidate__factory.connect(marketAddress, deployer)
+      for (const account of accounts) {
+        const positionIds = await ChromaticAccount__factory.connect(
+          account,
+          deployer
+        ).getPositionIds(marketAddress)
+
+        if (positionIds.length == 0) continue
 
         for (const positionId of positionIds) {
-          const market = w.ChromaticMarket
           if (await market.checkLiquidation(positionId))
             await liquidator['liquidate(address,uint256,uint256)'](
               market.address,
