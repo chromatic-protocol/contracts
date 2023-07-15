@@ -59,7 +59,7 @@ contract MarketLiquidityFacet is
      * @dev Throws an error indicating that the transferred token amount is invalid.
      *      This error is thrown when the transferred token amount does not match the expected amount.
      */
-    error InvalidTransferedTokenAmount();
+    error InvalidTransferredTokenAmount();
 
     /**
      * @inheritdoc IMarketLiquidity
@@ -95,7 +95,7 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
-     * @dev Throws an `InvalidTransferedTokenAmount` error if the transferred amount does not match the sum of amounts param.
+     * @dev Throws an `InvalidTransferredTokenAmount` error if the transferred amount does not match the sum of amounts param.
      */
     function addLiquidityBatch(
         address recipient,
@@ -111,7 +111,7 @@ contract MarketLiquidityFacet is
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
-        uint256 totalAmount = _checkTransferedAmount(ctx, amounts, data);
+        uint256 totalAmount = _checkTransferredAmount(ctx, amounts, data);
 
         ctx.vault.onAddLiquidity(ctx.settlementToken, totalAmount);
 
@@ -133,7 +133,7 @@ contract MarketLiquidityFacet is
         emit AddLiquidityBatch(receipts);
     }
 
-    function _checkTransferedAmount(
+    function _checkTransferredAmount(
         LpContext memory ctx,
         uint256[] calldata amounts,
         bytes calldata data
@@ -156,8 +156,8 @@ contract MarketLiquidityFacet is
             data
         );
 
-        uint256 transferedAmount = settlementToken.balanceOf(vault) - balanceBefore;
-        if (transferedAmount != totalAmount) revert InvalidTransferedTokenAmount();
+        uint256 transferredAmount = settlementToken.balanceOf(vault) - balanceBefore;
+        if (transferredAmount != totalAmount) revert InvalidTransferredTokenAmount();
     }
 
     function _addLiquidity(
@@ -303,7 +303,7 @@ contract MarketLiquidityFacet is
 
     /**
      * @inheritdoc IMarketLiquidity
-     * @dev Throws an `InvalidTransferedTokenAmount` error if the transferred CLB token amount does not match the expected amount (clbTokenAmounts param).
+     * @dev Throws an `InvalidTransferredTokenAmount` error if the transferred CLB token amount does not match the expected amount (clbTokenAmounts param).
      */
     function removeLiquidityBatch(
         address recipient,
@@ -319,7 +319,7 @@ contract MarketLiquidityFacet is
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
-        _checkTransferedCLBTokenAmount(ctx, tradingFeeRates, clbTokenAmounts, data);
+        _checkTransferredCLBTokenAmount(ctx, tradingFeeRates, clbTokenAmounts, data);
 
         receipts = new LpReceipt[](tradingFeeRates.length);
         for (uint256 i; i < tradingFeeRates.length; ) {
@@ -339,7 +339,7 @@ contract MarketLiquidityFacet is
         emit RemoveLiquidityBatch(receipts);
     }
 
-    function _checkTransferedCLBTokenAmount(
+    function _checkTransferredCLBTokenAmount(
         LpContext memory ctx,
         int16[] calldata tradingFeeRates,
         uint256[] calldata clbTokenAmounts,
@@ -366,7 +366,7 @@ contract MarketLiquidityFacet is
         uint256[] memory balancesAfter = ctx.clbToken.balanceOfBatch(_accounts, _clbTokenIds);
         for (uint256 i; i < tradingFeeRates.length; ) {
             if (clbTokenAmounts[i] != balancesAfter[i] - balancesBefore[i])
-                revert InvalidTransferedTokenAmount();
+                revert InvalidTransferredTokenAmount();
 
             unchecked {
                 i++;

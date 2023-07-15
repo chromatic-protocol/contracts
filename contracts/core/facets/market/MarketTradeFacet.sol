@@ -37,7 +37,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
     /**
      * @dev Throws an error indicating that the margin settlement token balance does not increase by the required margin amount after the callback.
      */
-    error NotEnoughMarginTransfered();
+    error NotEnoughMarginTransferred();
 
     /**
      * @dev Throws an error indicating that the caller is not permitted to perform the action as they are not the owner of the position.
@@ -86,7 +86,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      *      Throws a `NotAllowableTakerMargin` if the taker margin is not within the allowable range based on the absolute quantity and maximum allowable leverage.
      *      Throws a `NotAllowableMakerMargin` if the maker margin is not within the allowable range based on the absolute quantity and min/max take-profit basis points (BPS).
      *      Throws an `ExceedMaxAllowableTradingFee` if the total trading fee (including protocol fee) exceeds the maximum allowable trading fee (`maxAllowableTradingFee`).
-     *      Throws a `NotEnoughMarginTransfered` if the margin settlement token balance did not increase by the required margin amount after the callback.
+     *      Throws a `NotEnoughMarginTransferred` if the margin settlement token balance did not increase by the required margin amount after the callback.
      *
      * Requirements:
      *  - The `takerMargin` must be greater than or equal to the minimum required margin for the settlement token.
@@ -189,7 +189,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         );
         // check margin settlementToken increased
         if (balanceBefore + requiredMargin < settlementToken.balanceOf(address(vault)))
-            revert NotEnoughMarginTransfered();
+            revert NotEnoughMarginTransferred();
 
         liquidityPool.acceptOpenPosition(ctx, position); // settle()
 
