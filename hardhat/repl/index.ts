@@ -125,6 +125,10 @@ extendEnvironment((hre) => {
       _w[s] = wallet
       return _w
     }, Promise.resolve(hre.w))
+
+    await hre.network.provider.send('evm_setNextBlockTimestamp', [
+      BigNumber.from(Number(Date.now() / 1000).toFixed()).toHexString()
+    ])
   })
 
   hre.updatePrice = lazyFunction(() => async (price: number) => {
