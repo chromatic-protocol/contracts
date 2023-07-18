@@ -1,4 +1,4 @@
-import { ChromaticMarketFactory } from '@chromatic/typechain-types'
+import { ChromaticMarketFactory } from '../../typechain-types'
 import chalk from 'chalk'
 import { formatUnits, parseUnits } from 'ethers'
 import { task, types } from 'hardhat/config'
@@ -14,43 +14,44 @@ task('settlement-token', 'Show settlement token information')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const token = getToken(taskArgs.address, factory.signer, hre)
+        const token = getToken(taskArgs.address, factory.runner, hre)
+        const tokenAddress = await token.getAddress()
         const symbol = await token.symbol()
         const decimals = await token.decimals()
-        if (!(await factory.isRegisteredSettlementToken(token.address))) {
-          console.log(chalk.red(`'${symbol} (${token.address})' is not registered token`))
+        if (!(await factory.isRegisteredSettlementToken(tokenAddress))) {
+          console.log(chalk.red(`'${symbol} (${tokenAddress})' is not registered token`))
           return
         }
 
-        console.log(chalk.green(`Address: ${token.address}`))
+        console.log(chalk.green(`Address: ${tokenAddress}`))
         console.log(chalk.green(`Symbol: ${await token.symbol()}`))
         console.log(chalk.green(`Decimals: ${decimals}`))
         console.log(
           chalk.green(
-            `MinMargin: ${formatUnits(await factory.getMinimumMargin(token.address), decimals)}`
+            `MinMargin: ${formatUnits(await factory.getMinimumMargin(tokenAddress), decimals)}`
           )
         )
         console.log(
           chalk.green(
-            `InterestRate: ${formatUnits(await factory.currentInterestRate(token.address), 2)}%`
+            `InterestRate: ${formatUnits(await factory.currentInterestRate(tokenAddress), 2)}%`
           )
         )
         console.log(
           chalk.green(
-            `FlashloanFeeRate: ${formatUnits(await factory.getFlashLoanFeeRate(token.address), 2)}%`
+            `FlashloanFeeRate: ${formatUnits(await factory.getFlashLoanFeeRate(tokenAddress), 2)}%`
           )
         )
         console.log(
           chalk.green(
             `EarningDistributionThreshold: ${formatUnits(
-              await factory.getEarningDistributionThreshold(token.address),
+              await factory.getEarningDistributionThreshold(tokenAddress),
               decimals
             )}`
           )
         )
         console.log(
           chalk.green(
-            `UniswapFeeRate: ${formatUnits(await factory.getUniswapFeeTier(token.address), 4)}%`
+            `UniswapFeeRate: ${formatUnits(await factory.getUniswapFeeTier(tokenAddress), 4)}%`
           )
         )
       }
@@ -71,17 +72,18 @@ task('settlement-token:register', 'Register settlement token')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const token = getToken(taskArgs.address, factory.signer, hre)
+        const token = getToken(taskArgs.address, factory.runner, hre)
+        const tokenAddress = await token.getAddress()
         const symbol = await token.symbol()
-        if (await factory.isRegisteredSettlementToken(token.address)) {
-          console.log(chalk.red(`'${symbol} (${token.address})' is already registered token`))
+        if (await factory.isRegisteredSettlementToken(tokenAddress)) {
+          console.log(chalk.red(`'${symbol} (${tokenAddress})' is already registered token`))
           return
         }
 
         const decimals = await token.decimals()
         await (
           await factory.registerSettlementToken(
-            token.address,
+            tokenAddress,
             parseUnits(taskArgs.minMargin.toString(), decimals),
             parseUnits(taskArgs.interestRate.toString(), 2),
             parseUnits(taskArgs.flashloanFeeRate.toString(), 2),
@@ -90,7 +92,7 @@ task('settlement-token:register', 'Register settlement token')
           )
         ).wait()
         console.log(
-          chalk.green(`Success settlement token registration [${symbol}: ${token.address}]`)
+          chalk.green(`Success settlement token registration [${symbol}: ${tokenAddress}]`)
         )
       }
     )
@@ -124,38 +126,39 @@ task('settlement-token:set', 'Register settlement token')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const token = getToken(taskArgs.address, factory.signer, hre)
+        const token = getToken(taskArgs.address, factory.runner, hre)
+        const tokenAddress = await token.getAddress()
         const symbol = await token.symbol()
         const decimals = await token.decimals()
-        if (!(await factory.isRegisteredSettlementToken(token.address))) {
-          console.log(chalk.red(`'${symbol} (${token.address})' is not registered token`))
+        if (!(await factory.isRegisteredSettlementToken(tokenAddress))) {
+          console.log(chalk.red(`'${symbol} (${tokenAddress})' is not registered token`))
           return
         }
 
         if (taskArgs.minMargin) {
-          await factory.setMininumMargin(
-            token.address,
+          await factory.setMinimumMargin(
+            tokenAddress,
             parseUnits(taskArgs.minMargin.toString(), decimals)
           )
           console.log(chalk.green('MinMargin is updated'))
         }
         if (taskArgs.flashloanFeeRate) {
           await factory.setFlashLoanFeeRate(
-            token.address,
+            tokenAddress,
             parseUnits(taskArgs.flashloanFeeRate.toString(), 2)
           )
           console.log(chalk.green('FlashloanFeeRate is updated'))
         }
         if (taskArgs.earningDistributionThreshold) {
           await factory.setEarningDistributionThreshold(
-            token.address,
+            tokenAddress,
             parseUnits(taskArgs.earningDistributionThreshold.toString(), decimals)
           )
           console.log(chalk.green('EarningDistributionThreshold is updated'))
         }
         if (taskArgs.uniswapFeeRate) {
           await factory.setUniswapFeeTier(
-            token.address,
+            tokenAddress,
             parseUnits(taskArgs.uniswapFeeRate.toString(), 4)
           )
           console.log(chalk.green('UniswapFeeRate is updated'))

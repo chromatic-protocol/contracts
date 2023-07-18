@@ -1,6 +1,6 @@
 import { SWAP_ROUTER_02_ADDRESSES, USDC_ARBITRUM_GOERLI, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
-import { BigNumber, ethers } from 'ethers'
+import { ethers } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
 import { lazyFunction, lazyObject } from 'hardhat/plugins'
 import * as Token from '../../deployments/anvil/Token.json'
@@ -14,6 +14,14 @@ import {
 } from '../../typechain-types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
+
+// interface HardhatRuntimeEnvironment {
+//   // We omit the ethers field because it is redundant.
+//   ethers: typeof ethers & HardhatEthersHelpers;
+// }
+
 
 const SIGNERS = ['alice', 'bob', 'charlie', 'david', 'eve', 'frank', 'grace', 'heidi']
 
@@ -21,7 +29,7 @@ const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E
 
 const ORACLE_PROVIDER_DECIMALS = 18
 
-extendEnvironment((hre) => {
+extendEnvironment((hre:HardhatRuntimeEnvironment) => {
   const { config, deployments, network } = hre
   const echainId =
     network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
@@ -37,19 +45,20 @@ extendEnvironment((hre) => {
     () => async (account: string, ethAmount: number, erc20Amount: number) => {
       await hre.network.provider.send('anvil_setBalance', [
         account,
-        ethers.utils.parseEther(`${ethAmount}`).toHexString()
+        '0x' + ethers.parseEther(`${ethAmount}`).toString(16)
       ])
+
       console.log(chalk.yellow(`💸 Eth balance charged : ${ethAmount}`))
 
       function fillZero(str: string, width: number) {
         return str.length >= width ? str : new Array(width - str.length + 1).join('0') + str
       }
 
-      function getMappingValueSlot(mappingSlotIndexHex: string, keyHex: string): BigNumber {
+      function getMappingValueSlot(mappingSlotIndexHex: string, keyHex: string): bigint {
         let slotIndex = fillZero(mappingSlotIndexHex.replace('0x', ''), 64)
         let key = fillZero(keyHex.replace('0x', ''), 64) // 32bytes
-        const storageKeyHex = ethers.utils.keccak256(`0x${key + slotIndex}`)
-        return BigNumber.from(storageKeyHex)
+        const storageKeyHex = ethers.keccak256(`0x${key + slotIndex}`)
+        return ethers.toBigInt(storageKeyHex)
       }
 
       async function setSlotBalance(
@@ -59,13 +68,11 @@ extendEnvironment((hre) => {
         decimals: number
       ) {
         const slot = getMappingValueSlot(`${slotIndex}`, account)
-        const amountWithDecimals = BigNumber.from(amount)
-          .mul(BigNumber.from(10).pow(decimals))
-          .toHexString()
+        const amountWithDecimals = '0x' + (BigInt(amount) * 10n ** BigInt(decimals)).toString(16)
         const amountWithDecimals32Bytes = fillZero(amountWithDecimals.replace('0x', ''), 64)
         await hre.network.provider.send('anvil_setStorageAt', [
           address,
-          slot.toHexString(),
+          '0x' + slot.toString(16),
           amountWithDecimals32Bytes
         ])
         console.log(chalk.yellow(`💸 ERC20 balance charged : ${address} ${amount}`))
@@ -80,10 +87,10 @@ extendEnvironment((hre) => {
     const signers = await hre.ethers.getSigners()
 
     for (let i = 0; i < 10; i++) {
-      console.log('set balance to ', ethers.utils.parseEther('10000'), signers[i].address)
+      console.log('set balance to ', ethers.parseEther('10000'), signers[i].address)
       await hre.network.provider.send('anvil_setBalance', [
         signers[i].address,
-        ethers.utils.parseEther('10000').toString()
+        ethers.parseEther('10000').toString()
       ])
     }
 
@@ -97,7 +104,7 @@ extendEnvironment((hre) => {
 
     // set first price
     const _oracleProvider = OracleProviderMock__factory.connect(oracleProvider, deployer)
-    await _oracleProvider.increaseVersion(ethers.utils.parseUnits('100', ORACLE_PROVIDER_DECIMALS))
+    await _oracleProvider.increaseVersion(ethers.parseUnits('100', ORACLE_PROVIDER_DECIMALS))
 
     await SIGNERS.reduce(async (w, s) => {
       const _w = await w
@@ -127,7 +134,7 @@ extendEnvironment((hre) => {
     }, Promise.resolve(hre.w))
 
     await hre.network.provider.send('evm_setNextBlockTimestamp', [
-      BigNumber.from(Number(Date.now() / 1000).toFixed()).toHexString()
+      '0x' + BigInt(Number(Date.now() / 1000).toFixed()).toString(16)
     ])
   })
 
@@ -140,7 +147,7 @@ extendEnvironment((hre) => {
     const { address: oracleProviderAddress } = await deployments.get('OracleProviderMock')
     const oracleProvider = OracleProviderMock__factory.connect(oracleProviderAddress, deployer)
     await oracleProvider.increaseVersion(
-      ethers.utils.parseUnits(price.toString(), ORACLE_PROVIDER_DECIMALS)
+      ethers.parseUnits(price.toString(), ORACLE_PROVIDER_DECIMALS)
     )
 
     const { address: marketFactoryAddress } = await deployments.get('ChromaticMarketFactory')
@@ -168,9 +175,9 @@ extendEnvironment((hre) => {
         for (const positionId of positionIds) {
           if (await market.checkLiquidation(positionId))
             await liquidator['liquidate(address,uint256,uint256)'](
-              market.address,
+              await market.getAddress(),
               positionId,
-              BigNumber.from('0')
+              0n
             )
         }
       }
@@ -190,13 +197,12 @@ extendEnvironment((hre) => {
 })
 
 async function prepareWallet(wallet: ReplWallet) {
-  if ((await wallet.WETH9.balanceOf(wallet.address)).lt(ethers.utils.parseEther('1000'))) {
+  if ((await wallet.WETH9.balanceOf(wallet.address)) < ethers.parseEther('1000')) {
     await wallet.wrapEth(5000)
   }
   if (
-    (await wallet.USDC.balanceOf(wallet.address)).lt(
-      ethers.utils.parseUnits('100', await wallet.USDC.decimals())
-    )
+    (await wallet.USDC.balanceOf(wallet.address)) <
+    ethers.parseUnits('100', await wallet.USDC.decimals())
   ) {
     await wallet.swapEth(1)
   }

@@ -3,7 +3,6 @@
 // To extend one of Hardhat's types, you need to import the module where it has been defined, and redeclare it.
 import 'hardhat/types/runtime'
 import 'hardhat-deploy'
-import { BigNumber } from 'ethers'
 import { IOracleProvider } from '../../typechain-types'
 
 declare module 'hardhat/types/runtime' {

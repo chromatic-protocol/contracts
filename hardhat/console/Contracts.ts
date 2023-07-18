@@ -1,5 +1,6 @@
+import{ChainId}  from '@uniswap/sdk-core'
 import {
-  ChainId,
+  
   ID_TO_CHAIN_ID,
   SWAP_ROUTER_02_ADDRESSES,
   USDC_ON,
@@ -178,12 +179,12 @@ export class Contracts {
     const deployed = await this.hre.deployments.getOrNull('FlashLoanExample')
     if (deployed) {
       const contract = this.connectFlashLoanExample(deployed.address)
-      if ((await contract.lendingPool()) == this.vault.address) {
+      if ((await contract.lendingPool()) == await this.vault.getAddress()) {
         return contract
       }
     }
 
-    return await new FlashLoanExample__factory(this._signer).deploy(this.vault.address)
+    return await new FlashLoanExample__factory(this._signer).deploy(await this.vault.getAddress())
   }
 
   connectFlashLoanExample(address: string): FlashLoanExample {
