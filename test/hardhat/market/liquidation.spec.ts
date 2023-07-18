@@ -1,11 +1,10 @@
 import { expect } from 'chai'
-import { BigNumber } from 'ethers'
-import { ethers } from 'hardhat'
+import { parseEther, parseUnits } from 'ethers'
 import { helpers, prepareMarketTest } from './testHelper'
 
 describe('liquidation test', async () => {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
-  const eth100 = ethers.utils.parseEther('100')
+  const eth100 = parseEther('100')
 
   let cnt = 1
 
@@ -14,7 +13,7 @@ describe('liquidation test', async () => {
     console.log('='.repeat(50))
     console.log(
       `${cnt++} beforeEach getPositionIds`,
-      await testData.traderAccount.getPositionIds(testData.market.address)
+      await testData.traderAccount.getPositionIds(testData.market.getAddress())
     )
     console.log('='.repeat(50))
 
@@ -24,8 +23,8 @@ describe('liquidation test', async () => {
     // add 10000 usdc liquidity to 0.01% long /short  bin
     // add 50000 usdc liquidity to 0.1% long /short  bin
     await addLiquidityBatch(
-      [eth100.mul(100), eth100.mul(100), eth100.mul(500), eth100.mul(500)],
-      [1, -1, 10, -10]
+      [eth100 * 100n, eth100 * 100n, eth100 * 500n, eth100 * 500n],
+      [1n, -1n, 10n, -10n]
     )
     await updatePrice(1000)
     await (await claimLiquidityBatch(await getLpReceiptIds())).wait()
@@ -39,9 +38,7 @@ describe('liquidation test', async () => {
   // 186250202000  8 decimal
 
   async function updatePrice(price: number) {
-    await (
-      await testData.oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
-    ).wait()
+    await (await testData.oracleProvider.increaseVersion(parseUnits(price.toString(), 8))).wait()
   }
 
   describe('long position', async () => {
@@ -49,18 +46,18 @@ describe('liquidation test', async () => {
       // TODO here after lunch
 
       await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther('100') // 100 usd
+      const takerMargin = parseEther('100') // 100 usd
       // 100
       // 20
       // 120
-      const makerMargin = ethers.utils.parseEther('190') // 19%
+      const makerMargin = parseEther('190') // 19%
       const openPositionTx = await testData.traderRouter.openPosition(
-        testData.market.address,
+        testData.market.getAddress(),
         10 ** 4 * 1000, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
+        makerMargin / 100n // maxAllowFee (1% * makerMargin)
       )
 
       await simulate([2000, 2200, 2400], [1, 1, 0], true)
@@ -68,15 +65,15 @@ describe('liquidation test', async () => {
 
     it('loss cut', async () => {
       await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther('200') // 200 usd 20% loss
-      const makerMargin = ethers.utils.parseEther('500') // 500 usd
+      const takerMargin = parseEther('200') // 200 usd 20% loss
+      const makerMargin = parseEther('500') // 500 usd
       const openPositionTx = await testData.traderRouter.openPosition(
-        testData.market.address,
+        testData.market.getAddress(),
         10 ** 4 * 1000, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
+        makerMargin / 100n // maxAllowFee (1% * makerMargin)
       )
       await simulate([2000, 1800, 1600], [1, 1, 0], false)
     })
@@ -85,30 +82,30 @@ describe('liquidation test', async () => {
   describe('short position', async () => {
     it('profit stop', async () => {
       await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther('100') // 100 usd
-      const makerMargin = ethers.utils.parseEther('190') // 19%
+      const takerMargin = parseEther('100') // 100 usd
+      const makerMargin = parseEther('190') // 19%
       const openPositionTx = await testData.traderRouter.openPosition(
-        testData.market.address,
+        testData.market.getAddress(),
         10 ** 4 * 1000 * -1, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
+        makerMargin / 100n // maxAllowFee (1% * makerMargin)
       )
       await simulate([2000, 1800, 1600], [1, 1, 0], true)
     })
 
     it('loss cut', async () => {
       await updatePrice(2000)
-      const takerMargin = ethers.utils.parseEther('200') // 20%
-      const makerMargin = ethers.utils.parseEther('120') // 120 usd 20% profit stop
+      const takerMargin = parseEther('200') // 20%
+      const makerMargin = parseEther('120') // 120 usd 20% profit stop
       const openPositionTx = await testData.traderRouter.openPosition(
-        testData.market.address,
+        testData.market.getAddress(),
         10 ** 4 * 1000 * -1, //price precision  (4 decimals)
         100, // leverage ( x1 )
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
-        makerMargin.mul(1).div(100) // maxAllowFee (1% * makerMargin)
+        makerMargin / 100n // maxAllowFee (1% * makerMargin)
       )
 
       await simulate([2000, 2200, 2400], [1, 1, 0], false)
@@ -121,43 +118,43 @@ describe('liquidation test', async () => {
     isProfitStopCase: boolean
   ) {
     const { traderAccount, settlementToken } = testData
-    const traderBalance = await settlementToken.balanceOf(traderAccount.address)
+    const traderBalance = await settlementToken.balanceOf(traderAccount.getAddress())
     console.log(`account balance : ${traderBalance}`)
     await priceChanges.reduce(async (prev, curr, index) => {
       await prev
       await updatePrice(curr)
 
       // call liquidate (simulate gelato task)
-      let positionIds = await testData.traderAccount.getPositionIds(testData.market.address)
+      let positionIds = await testData.traderAccount.getPositionIds(testData.market.getAddress())
       for (const positionId of positionIds) {
         const { canExec } = await testData.liquidator.resolveLiquidation(
-          testData.market.address,
+          testData.market.getAddress(),
           positionId
         )
         if (canExec) {
-          await testData.liquidator.liquidate(testData.market.address, positionId)
+          await testData.liquidator.liquidate(testData.market.getAddress(), positionId)
         }
       }
 
       // check after liquidate
-      positionIds = await testData.traderAccount.getPositionIds(testData.market.address)
+      positionIds = await testData.traderAccount.getPositionIds(testData.market.getAddress())
 
       const v = await testData.oracleProvider.currentVersion()
 
       console.log('='.repeat(50))
       console.log('simulate positionIds', positionIds, v.price)
       console.log('='.repeat(50))
-      const traderBalance = await settlementToken.balanceOf(traderAccount.address)
+      const traderBalance = await settlementToken.balanceOf(traderAccount.getAddress())
       console.log(`oracle price ${curr}, account balance : ${traderBalance}`)
       expect(positionIds.length).to.equal(expectedPreservedPositionLength[index])
     }, Promise.resolve())
 
-    const afterTraderBalance = await settlementToken.balanceOf(traderAccount.address)
+    const afterTraderBalance = await settlementToken.balanceOf(traderAccount.getAddress())
     if (isProfitStopCase) {
-      expect(traderBalance.lt(afterTraderBalance)).to.be.true
+      expect(traderBalance < afterTraderBalance).to.be.true
     } else {
       console.log('balance', afterTraderBalance, traderBalance)
-      expect(afterTraderBalance.eq(traderBalance)).to.be.true
+      expect(afterTraderBalance).to.equal(traderBalance)
     }
   }
 })

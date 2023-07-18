@@ -1,7 +1,6 @@
 import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
-import { BigNumber } from 'ethers'
-import { parseUnits } from 'ethers/lib/utils'
+import { parseUnits } from 'ethers'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -41,10 +40,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.registerSettlementToken(
     USDC_ARBITRUM_GOERLI.address,
     parseUnits('10', USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
-    BigNumber.from('1000'), // interestRate, 10%
-    BigNumber.from('500'), // flashLoanFeeRate, 5%
+    BigInt('1000'), // interestRate, 10%
+    BigInt('500'), // flashLoanFeeRate, 5%
     parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
-    BigNumber.from('3000'), // uniswapFeeRate, 0.3%
+    BigInt('3000'), // uniswapFeeRate, 0.3%
     deployOpts
   )
   console.log(chalk.yellow('✨ Register SettlementToken'))
@@ -52,10 +51,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.registerSettlementToken(
     chromaticTokenAddress,
     parseUnits('10', 18), // minimumMargin
-    BigNumber.from('1000'), // interestRate, 10%
-    BigNumber.from('500'), // flashLoanFeeRate, 5%
+    BigInt('1000'), // interestRate, 10%
+    BigInt('500'), // flashLoanFeeRate, 5%
     parseUnits('1000', 18), // earningDistributionThreshold, $1000
-    BigNumber.from('3000'), // uniswapFeeRate, 0.3%
+    BigInt('3000'), // uniswapFeeRate, 0.3%
     deployOpts
   )
   console.log(chalk.yellow('✨ Register SettlementToken (CHRM)'))

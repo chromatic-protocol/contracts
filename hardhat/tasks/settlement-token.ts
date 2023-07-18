@@ -1,7 +1,6 @@
 import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
-import { BigNumber } from 'ethers'
-import { formatUnits, parseUnits } from 'ethers/lib/utils'
+import { formatUnits, parseUnits } from 'ethers'
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 import { execute, getToken } from './utils'
@@ -61,8 +60,8 @@ task('settlement-token', 'Show settlement token information')
 task('settlement-token:register', 'Register settlement token')
   .addParam('address', 'The settlement token address or symbol')
   .addParam('minMargin', 'The minimum margin for trading', 10, types.float)
-  .addParam('interestRate', 'The annual interest rate as a percentage', 10, types.int)
-  .addParam('flashloanFeeRate', 'The flashloan fee rate as a percentage', 5, types.int)
+  .addParam('interestRate', 'The annual interest rate as a percentage', 10, types.float)
+  .addParam('flashloanFeeRate', 'The flashloan fee rate as a percentage', 5, types.float)
   .addParam('earningDistributionThreshold', 'The earning distribution threshold', 1000, types.float)
   .addParam('uniswapFeeRate', 'The uniswap fee rate as a percentage', 0.3, types.float)
   .setAction(
@@ -84,10 +83,10 @@ task('settlement-token:register', 'Register settlement token')
           await factory.registerSettlementToken(
             token.address,
             parseUnits(taskArgs.minMargin.toString(), decimals),
-            BigNumber.from(taskArgs.interestRate * 100),
-            BigNumber.from(taskArgs.flashloanFeeRate * 100),
+            parseUnits(taskArgs.interestRate.toString(), 2),
+            parseUnits(taskArgs.flashloanFeeRate.toString(), 2),
             parseUnits(taskArgs.earningDistributionThreshold.toString(), decimals),
-            BigNumber.from(taskArgs.uniswapFeeRate * 10000)
+            parseUnits(taskArgs.uniswapFeeRate.toString(), 4)
           )
         ).wait()
         console.log(
@@ -104,7 +103,7 @@ task('settlement-token:set', 'Register settlement token')
     'flashloanFeeRate',
     'The flashloan fee rate as a percentage',
     undefined,
-    types.int
+    types.float
   )
   .addOptionalParam(
     'earningDistributionThreshold',
@@ -143,7 +142,7 @@ task('settlement-token:set', 'Register settlement token')
         if (taskArgs.flashloanFeeRate) {
           await factory.setFlashLoanFeeRate(
             token.address,
-            BigNumber.from(taskArgs.flashloanFeeRate * 100)
+            parseUnits(taskArgs.flashloanFeeRate.toString(), 2)
           )
           console.log(chalk.green('FlashloanFeeRate is updated'))
         }
@@ -157,7 +156,7 @@ task('settlement-token:set', 'Register settlement token')
         if (taskArgs.uniswapFeeRate) {
           await factory.setUniswapFeeTier(
             token.address,
-            BigNumber.from(taskArgs.uniswapFeeRate * 10000)
+            parseUnits(taskArgs.uniswapFeeRate.toString(), 4)
           )
           console.log(chalk.green('UniswapFeeRate is updated'))
         }

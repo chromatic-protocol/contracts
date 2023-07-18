@@ -1,7 +1,7 @@
 import '@chromatic-protocol/hardhat-package'
+import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-foundry'
 import '@nomicfoundation/hardhat-toolbox'
-import '@nomiclabs/hardhat-ethers'
 import * as dotenv from 'dotenv'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
@@ -101,7 +101,12 @@ const config: HardhatUserConfig = {
     heidi: 9
   },
   package: packageConfig,
-  docgen: docgenConfig
+  docgen: docgenConfig,
+  etherscan: {
+    apiKey: {
+      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!
+    }
+  }
 }
 
 export default config

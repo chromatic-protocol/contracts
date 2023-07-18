@@ -1,8 +1,7 @@
-import { ethers, deployments, getNamedAccounts } from 'hardhat'
+import { deployments, ethers, getNamedAccounts } from 'hardhat'
 import { DeployOptions } from 'hardhat-deploy/types'
-import { Contract } from 'ethers'
-import { logDeployed } from './log-utils'
 import util from 'util'
+import { logDeployed } from './log-utils'
 
 export async function deployContract<T>(
   contractName: string,

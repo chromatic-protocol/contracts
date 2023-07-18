@@ -1,14 +1,17 @@
-import { LpReceiptStructOutput } from '@chromatic/typechain-types/contracts/core/ChromaticMarket'
+import {
+  BinMarginStructOutput,
+  LpReceiptStructOutput
+} from '@chromatic/typechain-types/contracts/core/interfaces/IChromaticMarket'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { BigNumber } from 'ethers'
-import { ethers } from 'hardhat'
+import { Result, formatEther, parseEther } from 'ethers'
 import util from 'util'
 import { helpers, prepareMarketTest } from './testHelper'
+
 describe('lens', async () => {
-  const initialLiq = ethers.utils.parseEther('100')
+  const initialLiq = parseEther('100')
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
-  const feeRates = [100, 200, 300]
+  const feeRates = [100n, 200n, 300n]
   const amounts = [initialLiq, initialLiq, initialLiq]
   beforeEach(async () => {
     testData = await prepareMarketTest()
@@ -51,13 +54,13 @@ describe('lens', async () => {
     const { openPosition } = helpers(testData)
 
     await openPosition({
-      qty: 3000 * 10 ** 4,
-      leverage: 10,
-      takerMargin: ethers.utils.parseEther('300'),
-      makerMargin: ethers.utils.parseEther('250'),
-      maxAllowFeeRate: 3
+      qty: BigInt(3000 * 10 ** 4),
+      leverage: 10n,
+      takerMargin: parseEther('300'),
+      makerMargin: parseEther('250'),
+      maxAllowFeeRate: 3n
     })
-    const liquidityInfo = (await lens.liquidityBinStatuses(market.address)).filter((info) =>
+    const liquidityInfo = (await lens.liquidityBinStatuses(market.getAddress())).filter((info) =>
       feeRates.includes(info.tradingFeeRate)
     )
 
@@ -66,18 +69,17 @@ describe('lens', async () => {
 
     // total makerMargin : 250
     const tradingFees = [
-      ethers.utils.parseEther('1'), // 1% * 100
-      ethers.utils.parseEther('2'), // 2% * 100
-      ethers.utils.parseEther('1.5') // 3% * 50
+      parseEther('1'), // 1% * 100
+      parseEther('2'), // 2% * 100
+      parseEther('1.5') // 3% * 50
     ]
     const exepectedFreeLiquidities = [0, 0, 50]
 
     liquidityInfo.forEach(({ freeLiquidity, liquidity }, i) => {
-      const expectedFreeLiquidity = ethers.utils
-        .parseEther(exepectedFreeLiquidities[i].toString())
-        .add(tradingFees[i])
+      const expectedFreeLiquidity =
+        parseEther(exepectedFreeLiquidities[i].toString()) + tradingFees[i]
       expect(freeLiquidity).to.equal(expectedFreeLiquidity)
-      expect(liquidity).to.equal(amounts[i].add(tradingFees[i]))
+      expect(liquidity).to.equal(amounts[i] + tradingFees[i])
     })
   })
 
@@ -96,27 +98,27 @@ describe('lens', async () => {
     } = helpers(testData)
     await updatePrice(1000)
 
-    console.log('Free Liq before open', await lens.liquidityBinStatuses(market.address))
+    console.log('Free Liq before open', await lens.liquidityBinStatuses(market.getAddress()))
     // consume all liquidity
 
     const expectedMargin = []
 
-    const liquidity100 = liquidityBinFor(initialLiq)(BigNumber.from('100'))
-    const liquidity200 = liquidityBinFor(initialLiq)(BigNumber.from('200'))
-    const liquidity300 = liquidityBinFor(initialLiq)(BigNumber.from('300'))
+    const liquidity100 = liquidityBinFor(initialLiq)(100n)
+    const liquidity200 = liquidityBinFor(initialLiq)(200n)
+    const liquidity300 = liquidityBinFor(initialLiq)(300n)
 
     //TODO
     for (let i = 0; i < 3; i++) {
       const blockStart = await time.latestBlock()
       console.log('open position block number', blockStart)
-      const makerMargin = ethers.utils.parseEther('100')
+      const makerMargin = parseEther('100')
       const takerMargin = makerMargin
       await openPosition({
-        qty: 100 * 10 ** 4,
-        leverage: 100,
+        qty: BigInt(100 * 10 ** 4),
+        leverage: 100n,
         takerMargin,
         makerMargin,
-        maxAllowFeeRate: 3
+        maxAllowFeeRate: 3n
       })
 
       const openPositionEvent = await market.queryFilter(market.filters.OpenPosition(), blockStart)
@@ -127,13 +129,13 @@ describe('lens', async () => {
       )
 
       const margin100 = liquidity100(makerMargin)
-      let margin200 = BigNumber.from('0')
-      let margin300 = BigNumber.from('0')
-      if (margin100.lt(makerMargin)) {
-        margin200 = liquidity200(makerMargin.sub(margin100))
+      let margin200 = 0n
+      let margin300 = 0n
+      if (margin100 < makerMargin) {
+        margin200 = liquidity200(makerMargin - margin100)
       }
-      if (margin100.add(margin200).lt(makerMargin) && !margin200.isZero()) {
-        margin300 = liquidity300(makerMargin.sub(margin100).sub(margin200))
+      if (margin100 + margin200 < makerMargin && margin200 != 0n) {
+        margin300 = liquidity300(makerMargin - margin100 - margin200)
       }
       expectedMargin.push({
         margin100,
@@ -144,29 +146,20 @@ describe('lens', async () => {
       })
     }
 
-    const totalTradingFee: Record<number, BigNumber> = {
-      100: expectedMargin.reduce(
-        (acc, curr) => acc.add(curr.margin100.mul(100).div(10000)),
-        BigNumber.from(0)
-      ),
-      200: expectedMargin.reduce(
-        (acc, curr) => acc.add(curr.margin200.mul(200).div(10000)),
-        BigNumber.from(0)
-      ),
-      300: expectedMargin.reduce(
-        (acc, curr) => acc.add(curr.margin300.mul(300).div(10000)),
-        BigNumber.from(0)
-      )
+    const totalTradingFee: Record<number, bigint> = {
+      100: expectedMargin.reduce((acc, curr) => acc + (curr.margin100 * 100n) / 10000n, 0n),
+      200: expectedMargin.reduce((acc, curr) => acc + (curr.margin200 * 200n) / 10000n, 0n),
+      300: expectedMargin.reduce((acc, curr) => acc + (curr.margin300 * 300n) / 10000n, 0n)
     }
 
     console.log('expected margins ', expectedMargin)
     console.log('Free Liq after open')
 
     await updatePrice(1000)
-    const positionIds = await traderAccount.getPositionIds(market.address)
-    const positions = [
-      ...(await market.getPositions(await traderAccount.getPositionIds(market.address)))
-    ]
+    const positionIds = [...(await traderAccount.getPositionIds(market.getAddress()))]
+    const positions = (await market.getPositions(positionIds)).map((p) =>
+      (p as unknown as Result).toObject()
+    )
 
     // const positionIds = positions.map((position) => position.id)
     console.log('positionIds', positionIds)
@@ -187,7 +180,7 @@ describe('lens', async () => {
 
     let eventSubStartBlock = await time.latestBlock()
     for (let i = 0; i < 3; i++) {
-      await awaitTx(removeLiquidity(ethers.utils.parseEther('100'), 100 * (i + 1)))
+      await awaitTx(removeLiquidity(parseEther('100'), 100 * (i + 1)))
       await updatePrice(1000)
       await settle()
     }
@@ -216,7 +209,7 @@ describe('lens', async () => {
     for (let i = 0; i < 2; i++) {
       await awaitTx(claimPosition(positionIds[i]))
       const closedTime = await time.latest()
-      positions[i] = { ...positions[i], closeTimestamp: BigNumber.from(closedTime) }
+      positions[i].closeTimestamp = BigInt(closedTime)
     }
     await settle()
 
@@ -224,7 +217,13 @@ describe('lens', async () => {
       claimableLiquidityParams.map(async (p) =>
         Object.assign(
           { tradingFeeRate: p.tradingFeeRate },
-          await lens.claimableLiquidity(market.address, p.tradingFeeRate, p.oracleVersion)
+          (
+            (await lens.claimableLiquidity(
+              market.getAddress(),
+              p.tradingFeeRate,
+              p.oracleVersion
+            )) as unknown as Result
+          ).toObject()
         )
       )
     )
@@ -236,14 +235,20 @@ describe('lens', async () => {
     await updatePrice(1000)
     await awaitTx(claimPosition(positionIds[2]))
     const closedTime = await time.latest()
-    positions[2] = { ...positions[2], closeTimestamp: BigNumber.from(closedTime) }
+    positions[2].closeTimestamp = BigInt(closedTime)
     await settle()
 
     claimableLiquidities = await Promise.all(
       claimableLiquidityParams.map(async (p) =>
         Object.assign(
           { tradingFeeRate: p.tradingFeeRate },
-          await lens.claimableLiquidity(market.address, p.tradingFeeRate, p.oracleVersion)
+          (
+            (await lens.claimableLiquidity(
+              market.getAddress(),
+              p.tradingFeeRate,
+              p.oracleVersion
+            )) as unknown as Result
+          ).toObject()
         )
       )
     )
@@ -258,27 +263,27 @@ describe('lens', async () => {
     for (let liquidityInfo of claimableLiquidities) {
       console.log('liquidity bin tradingFeeRate:', liquidityInfo.tradingFeeRate)
       let liquidityBinInterestFee = positions.reduce((acc, position) => {
-        const bin = position._binMargins.find(
+        const bin = (position._binMargins as BinMarginStructOutput[]).find(
           (binMargin) => binMargin.tradingFeeRate == liquidityInfo.tradingFeeRate
         )
-        return acc.add(
+        return (
+          acc +
           interestFee(
-            bin?.amount || BigNumber.from(0),
-            position.closeTimestamp?.toNumber() || currentBlockTime,
-            position.openTimestamp.toNumber(),
-            1000 //
+            bin?.amount || 0n,
+            position.closeTimestamp || BigInt(currentBlockTime),
+            position.openTimestamp,
+            1000n //
           )
         )
-      }, BigNumber.from(0))
+      }, 0n)
 
       console.log(`total interestFee : ${liquidityBinInterestFee.toString().padEnd(30)}`)
-      let tradingFee = totalTradingFee[liquidityInfo.tradingFeeRate]
-      if (!liquidityInfo.burningTokenAmount.isZero()) {
-        const expectedTokenAmount = initialLiq
-          .add(liquidityBinInterestFee)
-          .add(tradingFee)
-          .mul(liquidityInfo.burningCLBTokenAmount)
-          .div(liquidityInfo.burningCLBTokenAmountRequested)
+      let tradingFee = totalTradingFee[Number(liquidityInfo.tradingFeeRate)]
+      if (liquidityInfo.burningTokenAmount != 0n) {
+        const expectedTokenAmount =
+          ((initialLiq + liquidityBinInterestFee + tradingFee) *
+            liquidityInfo.burningCLBTokenAmount) /
+          liquidityInfo.burningCLBTokenAmountRequested
 
         console.log('liquidity info', liquidityInfo)
         console.log(' real tokenAmount / expected tokenAmount , ratio')
@@ -286,54 +291,50 @@ describe('lens', async () => {
         console.log(
           liquidityInfo.burningTokenAmount.toString().padEnd(30),
           expectedTokenAmount.toString().padEnd(30),
-          ethers.utils
-            .formatEther(
-              liquidityInfo.burningTokenAmount
-                .mul(ethers.utils.parseEther('1'))
-                .div(expectedTokenAmount)
-            )
-            .padEnd(30)
+          formatEther(
+            (liquidityInfo.burningTokenAmount * parseEther('1')) / expectedTokenAmount
+          ).padEnd(30)
         )
 
-        expect(liquidityInfo.burningTokenAmount.sub(expectedTokenAmount).abs().lte(10)).to.be.true
+        expect(Math.abs(Number(liquidityInfo.burningTokenAmount - expectedTokenAmount)) < 10).to.be
+          .true
       }
     }
   })
 })
 
-const liquidityBinFor = (volume: BigNumber) => (feeRate: BigNumber) => (amount: BigNumber) => {
-  if (amount.gt(volume)) {
+const liquidityBinFor = (volume: bigint) => (feeRate: bigint) => (amount: bigint) => {
+  if (amount > volume) {
     amount = volume
   }
-  volume = volume.sub(amount.mul(BigNumber.from('10000').sub(feeRate)).div(BigNumber.from(10000)))
+  volume = volume - (amount * (10000n - feeRate)) / 10000n
   return amount
 }
+
 function formatRemoveLiquidityValue(removableLiquidities: any) {
   return removableLiquidities?.map((rl: any) => ({
     tradingFeeRate: rl.tradingFeeRate,
     burningCLBTokenAmountRequested: rl.burningCLBTokenAmountRequested,
     burningCLBTokenAmount: rl.burningCLBTokenAmount,
     burningTokenAmount: rl.burningTokenAmount,
-    formattedBurningCLBTokenAmountRequested: ethers.utils.formatEther(
-      rl.burningCLBTokenAmountRequested
-    ),
-    formattedBurningCLBTokenAmount: ethers.utils.formatEther(rl.burningCLBTokenAmount),
-    formattedBurningTokenAmount: ethers.utils.formatEther(rl.burningTokenAmount)
+    formattedBurningCLBTokenAmountRequested: formatEther(rl.burningCLBTokenAmountRequested || 0n),
+    formattedBurningCLBTokenAmount: formatEther(rl.burningCLBTokenAmount || 0n),
+    formattedBurningTokenAmount: formatEther(rl.burningTokenAmount || 0n)
   }))
 }
 
 function interestFee(
-  margin: BigNumber,
-  closedOrCurrentTime: number,
-  positionOpenTime: number,
-  bps: number
+  margin: bigint,
+  closedOrCurrentTime: bigint,
+  positionOpenTime: bigint,
+  bps: bigint
 ) {
   const yearSecond = 3600 * 24 * 365
-  const denominator = BigNumber.from(yearSecond * 10000)
-  const periodBps = BigNumber.from(bps * (closedOrCurrentTime - positionOpenTime))
-  let interestFee = margin.mul(periodBps).div(denominator)
-  if (interestFee.mod(denominator).gt(0)) {
-    return interestFee.add(1)
+  const denominator = BigInt(yearSecond * 10000)
+  const periodBps = bps * (closedOrCurrentTime - positionOpenTime)
+  let interestFee = (margin * periodBps) / denominator
+  if (interestFee % denominator > 0n) {
+    return interestFee + 1n
   }
   console.log(
     `margin : ${margin.toString().padEnd(30)}, bps:${bps

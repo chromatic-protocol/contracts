@@ -1,3 +1,4 @@
+import { verify } from '@chromatic/deploy/verify'
 import chalk from 'chalk'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -9,15 +10,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: marketFactoryAddress } = await deployments.get('ChromaticMarketFactory')
 
-  const { address: routerAddress } = await deploy('ChromaticRouter', {
+  const { address: routerAddress, args: routerArgs } = await deploy('ChromaticRouter', {
     from: deployer,
     args: [marketFactoryAddress]
   })
+  await verify(hre, {
+    address: routerAddress,
+    constructorArguments: routerArgs
+  })
   console.log(chalk.yellow(`✨ ChromaticRouter: ${routerAddress}`))
 
-  const { address: lensAddress } = await deploy('ChromaticLens', {
+  const { address: lensAddress, args: lensArgs } = await deploy('ChromaticLens', {
     from: deployer,
     args: [routerAddress]
+  })
+  await verify(hre, {
+    address: lensAddress,
+    constructorArguments: lensArgs
   })
   console.log(chalk.yellow(`✨ ChromaticLens: ${lensAddress}`))
 }

@@ -1,6 +1,5 @@
 import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
-import { BigNumber } from 'ethers'
-import { parseUnits } from 'ethers/lib/utils'
+import { parseUnits } from 'ethers'
 import { ethers } from 'hardhat'
 import { ChromaticLens, ChromaticRouter, Token } from '../../typechain-types'
 import { deploy as marketFactoryDeploy } from './market_factory/deploy'
@@ -16,7 +15,7 @@ export async function deploy() {
     })
 
     await (
-      await marketFactory.registerOracleProvider(oracleProvider.address, {
+      await marketFactory.registerOracleProvider(oracleProvider.getAddress(), {
         minTakeProfitBPS: 500, // 5%
         maxTakeProfitBPS: 100000, // 1000%
         leverageLevel: 0
@@ -25,17 +24,17 @@ export async function deploy() {
 
     await (
       await marketFactory.registerSettlementToken(
-        settlementToken.address,
+        settlementToken.getAddress(),
         parseUnits('10', USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
-        BigNumber.from('1000'), // interestRate, 10%
-        BigNumber.from('500'), // flashLoanFeeRate, 5%
+        BigInt('1000'), // interestRate, 10%
+        BigInt('500'), // flashLoanFeeRate, 5%
         parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
-        BigNumber.from('3000') // uniswapFeeRate, 0.3%)
+        BigInt('3000') // uniswapFeeRate, 0.3%)
       )
     ).wait()
 
     const marketCreateResult = await (
-      await marketFactory.createMarket(oracleProvider.address, settlementToken.address)
+      await marketFactory.createMarket(oracleProvider.getAddress(), settlementToken.getAddress())
     ).wait()
     const marketCreatedEvents = await marketFactory.queryFilter(
       marketFactory.filters.MarketCreated()
@@ -46,10 +45,10 @@ export async function deploy() {
     const market = await ethers.getContractAt('IChromaticMarket', marketAddress)
 
     const chromaticRouter = await deployContract<ChromaticRouter>('ChromaticRouter', {
-      args: [marketFactory.address]
+      args: [await marketFactory.getAddress()]
     })
     const lens = await deployContract<ChromaticLens>('ChromaticLens', {
-      args: [chromaticRouter.address]
+      args: [await chromaticRouter.getAddress()]
     })
 
     return {

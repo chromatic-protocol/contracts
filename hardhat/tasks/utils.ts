@@ -15,7 +15,7 @@ import {
   USDT_ON,
   WETH9
 } from '@uniswap/smart-order-router'
-import { Signer, ethers } from 'ethers'
+import { Signer, ethers, getAddress, isAddress } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
 export function execute(
@@ -73,7 +73,7 @@ export async function findSettlementToken(
   const tokenAddresses = await factory.registeredSettlementTokens()
   for (const tokenAddress of tokenAddresses) {
     const token = IERC20Metadata__factory.connect(tokenAddress, factory.signer)
-    if (ethers.utils.isAddress(tokenAddressOrSymbol)) {
+    if (isAddress(tokenAddressOrSymbol)) {
       if (tokenAddressOrSymbol.toLowerCase() == token.address.toLowerCase()) {
         return token
       }
@@ -108,7 +108,7 @@ export function getToken(
 
   const tokenAddress = TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()]
     ? TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()](chainId).address
-    : ethers.utils.getAddress(addressOrSymbol)
+    : getAddress(addressOrSymbol)
 
   return IERC20Metadata__factory.connect(tokenAddress, signer)
 }
