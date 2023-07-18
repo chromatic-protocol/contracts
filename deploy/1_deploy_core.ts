@@ -1,7 +1,7 @@
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
-import { constants } from 'ethers'
+import { ZeroAddress } from 'ethers'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -93,7 +93,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: vault } = await deploy('ChromaticVault', {
     ...deployOpts,
-    args: [factory, GELATO_ADDRESSES[echainId].automate, constants.AddressZero]
+    args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
   })
   console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
 
@@ -106,7 +106,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     network.name === 'anvil' ? 'ChromaticLiquidatorMock' : 'ChromaticLiquidator',
     {
       ...deployOpts,
-      args: [factory, GELATO_ADDRESSES[echainId].automate, constants.AddressZero]
+      args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
     }
   )
   console.log(chalk.yellow(`✨ ChromaticLiquidator: ${liquidator}`))

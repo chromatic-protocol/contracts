@@ -1,16 +1,13 @@
 import { CLBToken__factory } from '@chromatic/typechain-types'
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { BigNumber } from 'ethers'
+import { MaxUint256, parseEther, parseUnits } from 'ethers'
 import { ethers } from 'hardhat'
 import { deploy as marketDeploy } from '../deployMarket'
-import { logYellow } from '../log-utils'
 
 export const prepareMarketTest = async () => {
   async function faucet(account: SignerWithAddress) {
-    const faucetTx = await settlementToken
-      .connect(account)
-      .faucet(ethers.utils.parseEther('1000000000'))
+    const faucetTx = await settlementToken.connect(account).faucet(parseEther('1000000000'))
     await faucetTx.wait()
   }
   const {
@@ -28,7 +25,7 @@ export const prepareMarketTest = async () => {
 
   const approveTx = await settlementToken
     .connect(tester)
-    .approve(chromaticRouter.address, ethers.constants.MaxUint256)
+    .approve(chromaticRouter.getAddress(), MaxUint256)
   await approveTx.wait()
 
   await faucet(tester)
@@ -40,23 +37,17 @@ export const prepareMarketTest = async () => {
   const traderAccountAddr = await chromaticRouter.connect(trader).getAccount()
   const traderAccount = await ethers.getContractAt('ChromaticAccount', traderAccountAddr)
 
-  logYellow(`\ttraderAccount: ${traderAccount}`)
+  // logYellow(`\ttraderAccount: ${traderAccount}`)
 
   const transferTx = await settlementToken
     .connect(trader)
-    .transfer(traderAccountAddr, ethers.utils.parseEther('1000000'))
+    .transfer(traderAccountAddr, parseEther('1000000'))
   await transferTx.wait()
 
   const traderRouter = chromaticRouter.connect(trader)
   await (
-    await settlementToken.connect(trader).approve(traderRouter.address, ethers.constants.MaxUint256)
+    await settlementToken.connect(trader).approve(traderRouter.getAddress(), MaxUint256)
   ).wait()
-
-  async function updatePrice(price: number) {
-    await (
-      await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
-    ).wait()
-  }
 
   const clbToken = CLBToken__factory.connect(await market.clbToken(), tester)
 
@@ -84,31 +75,29 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } =
     testData
   async function updatePrice(price: number) {
-    await (
-      await oracleProvider.increaseVersion(BigNumber.from(price.toString()).mul(10 ** 8))
-    ).wait()
+    await (await oracleProvider.increaseVersion(parseUnits(price.toString(), 8))).wait()
   }
 
   async function openPosition({
-    takerMargin = ethers.utils.parseEther('10'),
-    makerMargin = ethers.utils.parseEther('50'),
-    qty = 10 * 10 ** 4,
-    leverage = 500, // 5 x
-    maxAllowFeeRate = 1
+    takerMargin = parseEther('10'),
+    makerMargin = parseEther('50'),
+    qty = BigInt(10 * 10 ** 4),
+    leverage = 500n, // 5 x
+    maxAllowFeeRate = 1n
   }: {
-    takerMargin?: BigNumber
-    makerMargin?: BigNumber
-    qty?: number
-    leverage?: number
-    maxAllowFeeRate?: number
+    takerMargin?: bigint
+    makerMargin?: bigint
+    qty?: bigint
+    leverage?: bigint
+    maxAllowFeeRate?: bigint
   } = {}) {
     const openPositionTx = await traderRouter.openPosition(
-      market.address,
+      market.getAddress(),
       qty,
       leverage,
       takerMargin, // losscut 1 token
       makerMargin, // profit stop 10 token,
-      makerMargin.mul(maxAllowFeeRate.toString()).div(100) // maxAllowFee (1% * makerMargin)
+      (makerMargin * maxAllowFeeRate) / 100n // maxAllowFee (1% * makerMargin)
     )
     const receipt = await openPositionTx.wait()
     return {
@@ -120,32 +109,32 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
-  async function closePosition(positionId: BigNumber) {
-    const closePositionTx = await traderRouter.closePosition(market.address, positionId)
-    const receipt = await closePositionTx.wait()
+  async function closePosition(positionId: bigint) {
+    const closePositionTx = await traderRouter.closePosition(market.getAddress(), positionId)
+    const receipt = (await closePositionTx.wait())!
 
     return {
       receipt,
       blockNumber: closePositionTx.blockNumber,
       blockHash: receipt.blockHash,
       transactionHash: closePositionTx.hash,
-      timestamp: closePositionTx.timestamp
+      timestamp: (await closePositionTx.getBlock())!.timestamp
     }
   }
 
   async function getLpReceiptIds() {
-    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](market.address)
+    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](market.getAddress())
   }
 
-  async function addLiquidityTx(amount: BigNumber, feeBinKey: number) {
+  async function addLiquidityTx(amount: bigint, feeBinKey: bigint) {
     return chromaticRouter
       .connect(tester)
-      .addLiquidity(market.address, feeBinKey, amount, tester.address)
+      .addLiquidity(market.getAddress(), feeBinKey, amount, tester.address)
   }
 
-  async function addLiquidity(_amount?: BigNumber, _feeBinKey?: number) {
-    const amount = _amount ?? ethers.utils.parseEther('100')
-    const feeBinKey = _feeBinKey ?? 1
+  async function addLiquidity(_amount?: bigint, _feeBinKey?: bigint) {
+    const amount = _amount ?? parseEther('100')
+    const feeBinKey = _feeBinKey ?? 1n
 
     const addLiqTx = await addLiquidityTx(amount, feeBinKey)
     await addLiqTx.wait()
@@ -155,46 +144,48 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
     }
   }
 
-  async function claimPosition(positionId: BigNumber) {
-    const claimTx = await traderRouter.claimPosition(market.address, positionId)
+  async function claimPosition(positionId: bigint) {
+    const claimTx = await traderRouter.claimPosition(market.getAddress(), positionId)
     return claimTx.wait()
   }
 
-  async function addLiquidityBatch(amounts: BigNumber[], feeRates: number[]) {
+  async function addLiquidityBatch(amounts: bigint[], feeRates: bigint[]) {
     return chromaticRouter
       .connect(tester)
-      .addLiquidityBatch(market.address, tester.address, feeRates, amounts)
+      .addLiquidityBatch(market.getAddress(), tester.address, feeRates, amounts)
   }
 
-  async function claimLiquidity(receiptId: BigNumber) {
-    return chromaticRouter.connect(tester).claimLiquidity(market.address, receiptId)
+  async function claimLiquidity(receiptId: bigint) {
+    return chromaticRouter.connect(tester).claimLiquidity(market.getAddress(), receiptId)
   }
 
-  async function claimLiquidityBatch(receiptIds: BigNumber[]) {
-    return chromaticRouter.connect(tester).claimLiquidityBatch(market.address, receiptIds)
+  async function claimLiquidityBatch(receiptIds: bigint[]) {
+    return chromaticRouter.connect(tester).claimLiquidityBatch(market.getAddress(), [...receiptIds])
   }
 
-  async function removeLiquidity(clbTokenAmount: BigNumber, feeRate: number) {
+  async function removeLiquidity(clbTokenAmount: bigint, feeRate: number) {
     await (
-      await testData.clbToken.connect(tester).setApprovalForAll(chromaticRouter.address, true)
+      await testData.clbToken.connect(tester).setApprovalForAll(chromaticRouter.getAddress(), true)
     ).wait()
     return chromaticRouter
       .connect(tester)
-      .removeLiquidity(market.address, feeRate, clbTokenAmount, tester.address)
+      .removeLiquidity(market.getAddress(), feeRate, clbTokenAmount, tester.address)
   }
 
-  async function removeLiquidityBatch(clbTokenAmounts: BigNumber[], feeRates: number[]) {
+  async function removeLiquidityBatch(clbTokenAmounts: bigint[], feeRates: number[]) {
     return chromaticRouter
       .connect(tester)
-      .removeLiquidityBatch(market.address, tester.address, feeRates, clbTokenAmounts)
+      .removeLiquidityBatch(market.getAddress(), tester.address, feeRates, clbTokenAmounts)
   }
 
-  async function withdrawLiquidity(receiptId: BigNumber) {
-    return chromaticRouter.connect(tester).withdrawLiquidity(market.address, receiptId)
+  async function withdrawLiquidity(receiptId: bigint) {
+    return chromaticRouter.connect(tester).withdrawLiquidity(market.getAddress(), receiptId)
   }
 
-  async function withdrawLiquidityBatch(receiptIds: BigNumber[]) {
-    return chromaticRouter.connect(tester).withdrawLiquidityBatch(market.address, receiptIds)
+  async function withdrawLiquidityBatch(receiptIds: bigint[]) {
+    return chromaticRouter
+      .connect(tester)
+      .withdrawLiquidityBatch(market.getAddress(), [...receiptIds])
   }
 
   async function awaitTx(response: any) {

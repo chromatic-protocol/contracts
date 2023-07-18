@@ -5,7 +5,7 @@ import {
   KeeperFeePayerMock
 } from '@chromatic/typechain-types'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
-import { Contract, constants } from 'ethers'
+import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
 
@@ -15,7 +15,7 @@ export async function deploy() {
   const clbTokenDeployerLib = await deployContract<Contract>('CLBTokenDeployerLib')
   const marketDeployerLib = await deployContract<Contract>('MarketDeployerLib', {
     libraries: {
-      CLBTokenDeployerLib: clbTokenDeployerLib.address
+      CLBTokenDeployerLib: await clbTokenDeployerLib.getAddress()
     }
   })
 
@@ -26,50 +26,50 @@ export async function deploy() {
   const marketTradeFacet = await deployContract<Contract>('MarketTradeFacet')
   const marketLiquidateFacet = await deployContract<Contract>('MarketLiquidateFacet')
   const marketSettleFacet = await deployContract<Contract>('MarketSettleFacet')
-  
+
   const marketFactory = await deployContract<ChromaticMarketFactory>('ChromaticMarketFactory', {
     args: [
-      marketDiamondCutFacet.address,
-      marketLoupeFacet.address,
-      marketStateFacet.address,
-      marketLiquidityFacet.address,
-      marketTradeFacet.address,
-      marketLiquidateFacet.address,
-      marketSettleFacet.address
+      await marketDiamondCutFacet.getAddress(),
+      await marketLoupeFacet.getAddress(),
+      await marketStateFacet.getAddress(),
+      await marketLiquidityFacet.getAddress(),
+      await marketTradeFacet.getAddress(),
+      await marketLiquidateFacet.getAddress(),
+      await marketSettleFacet.getAddress()
     ],
     libraries: {
-      MarketDeployerLib: marketDeployerLib.address
+      MarketDeployerLib: await marketDeployerLib.getAddress()
     }
   })
 
   const keeperFeePayer = await deployContract<KeeperFeePayerMock>('KeeperFeePayerMock', {
-    args: [marketFactory.address]
+    args: [await marketFactory.getAddress()]
   })
-  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.address)).wait()
+  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
   await (
     await deployer.sendTransaction({
-      to: keeperFeePayer.address,
-      value: ethers.utils.parseEther('5')
+      to: keeperFeePayer.getAddress(),
+      value: parseEther('5')
     })
   ).wait()
 
   const vault = await deployContract<ChromaticVault>('ChromaticVault', {
     args: [
-      marketFactory.address,
+      await marketFactory.getAddress(),
       GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-      constants.AddressZero
+      ZeroAddress
     ]
   })
-  await (await marketFactory.setVault(vault.address)).wait()
+  await (await marketFactory.setVault(vault.getAddress())).wait()
 
   const liquidator = await deployContract<ChromaticLiquidator>('ChromaticLiquidator', {
     args: [
-      marketFactory.address,
+      await marketFactory.getAddress(),
       GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-      constants.AddressZero
+      ZeroAddress
     ]
   })
-  await (await marketFactory.setLiquidator(liquidator.address)).wait()
+  await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
 
   return { marketFactory, keeperFeePayer, liquidator }
 }

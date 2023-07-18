@@ -1,7 +1,7 @@
 import '@chromatic-protocol/hardhat-package'
+import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-foundry'
 import '@nomicfoundation/hardhat-toolbox'
-import '@nomiclabs/hardhat-ethers'
 import * as dotenv from 'dotenv'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'

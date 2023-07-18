@@ -1,15 +1,15 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import { BigNumber, ethers } from 'ethers'
+import { formatEther, parseEther } from 'ethers'
 import { helpers, prepareMarketTest } from './testHelper'
 
 interface LiquidityConfig {
-  tradingFee: number
-  amount: BigNumber
+  tradingFee: bigint
+  amount: bigint
 }
 describe('interest fee test', async function () {
   let testData: Awaited<ReturnType<typeof prepareMarketTest>>
-  const base = ethers.utils.parseEther('10')
+  const base = parseEther('10')
 
   beforeEach(async () => {
     testData = await prepareMarketTest()
@@ -34,7 +34,7 @@ describe('interest fee test', async function () {
     margin = 10
   }: {
     liquidityConfig: LiquidityConfig[]
-    year: number
+    year: bigint
     qty: number
     maxAllowFee?: number
     leverage?: number
@@ -43,33 +43,35 @@ describe('interest fee test', async function () {
     return async () => {
       await initialize(liquidityConfig)
       let timestamp = await time.latest()
-      const firstTimestamp = timestamp
+      const firstTimestamp = BigInt(timestamp)
       console.log('before open position timestamp ', timestamp)
 
-      let marginEth = ethers.utils.parseEther(margin.toString())
+      let marginEth = parseEther(margin.toString())
       const takerMargin = marginEth
       const makerMargin = marginEth
-      const { traderAccount, market, traderRouter, oracleProvider, settlementToken } = testData
-      const balanceBeforePositionPosition = await traderAccount.balance(settlementToken.address)
+      const { traderAccount, market, traderRouter, settlementToken } = testData
+      const balanceBeforePositionPosition = await traderAccount.balance(
+        settlementToken.getAddress()
+      )
 
       let direction = qty / Math.abs(qty)
       let availableLiquidity = liquidityConfig
         .filter((l) => (direction > 0 ? l.tradingFee > 0 : l.tradingFee < 0))
-        .sort((a, b) => a.tradingFee - b.tradingFee)
-      let tradingFee = BigNumber.from('0')
+        .sort((a, b) => Number(a.tradingFee - b.tradingFee))
+      let tradingFee = 0n
       console.log('availableLiquidity', availableLiquidity)
       for (let liquidity of availableLiquidity) {
-        if (marginEth.gt(0)) {
-          const holdMargin = marginEth.sub(liquidity.amount).gte(0) ? liquidity.amount : marginEth
-          console.log('hold margin', ethers.utils.formatEther(holdMargin))
-          tradingFee = tradingFee.add(holdMargin.mul(liquidity.tradingFee).div(10000))
+        if (marginEth > 0n) {
+          const holdMargin = marginEth - liquidity.amount >= 0n ? liquidity.amount : marginEth
+          console.log('hold margin', formatEther(holdMargin))
+          tradingFee = tradingFee + (holdMargin * liquidity.tradingFee) / 10000n
 
-          marginEth = marginEth.sub(liquidity.amount)
+          marginEth = marginEth - liquidity.amount
         } else {
           break
         }
       }
-      console.log('total expected trading Fee', ethers.utils.formatEther(tradingFee))
+      console.log('total expected trading Fee', formatEther(tradingFee))
 
       console.log('balanceBeforePositionPosition', balanceBeforePositionPosition)
       const { updatePrice, awaitTx } = helpers(testData)
@@ -78,7 +80,7 @@ describe('interest fee test', async function () {
       // const tradingFee = makerMargin.div(10000)
       const p = await awaitTx(
         traderRouter.openPosition(
-          market.address,
+          market.getAddress(),
           10 ** 4 * qty, //price precision  (4 decimals)
           leverage, // leverage ( x1 )
           takerMargin, // losscut <= qty
@@ -87,34 +89,36 @@ describe('interest fee test', async function () {
         )
       )
       await updatePrice(1000)
-      const positionIds = await traderAccount.getPositionIds(market.address)
+      const positionIds = await traderAccount.getPositionIds(market.getAddress())
 
       console.log('after open position timestamp ', timestamp)
       timestamp = await time.latest()
-      let wantedTimestamp = timestamp + 60 * 60 * 24 * 365 * year
-      await time.setNextBlockTimestamp(wantedTimestamp - 3)
+      let wantedTimestamp = BigInt(timestamp) + BigInt(60 * 60 * 24 * 365) * year
+      await time.setNextBlockTimestamp(wantedTimestamp - 3n)
       // timestamp = await time.latest()
 
-      await awaitTx(traderRouter.closePosition(market.address, positionIds[0]))
+      await awaitTx(traderRouter.closePosition(market.getAddress(), positionIds[0]))
       await updatePrice(1000)
-      await awaitTx(traderRouter.claimPosition(market.address, positionIds[0]))
+      await awaitTx(traderRouter.claimPosition(market.getAddress(), positionIds[0]))
 
       console.log('wantedTimestamp ', wantedTimestamp)
       console.log('updated timestamp', timestamp)
       console.log('positions', positionIds)
       console.log('position id ', positionIds[0])
-      const balanceOfAfterClosePosition = await traderAccount.balance(settlementToken.address)
+      const balanceOfAfterClosePosition = await traderAccount.balance(settlementToken.getAddress())
 
       console.log('after balance ', balanceOfAfterClosePosition)
-      const paidFee = balanceBeforePositionPosition.sub(balanceOfAfterClosePosition)
-      const interestFee = makerMargin.div(10).mul(year) // 10% annual fee
+      const paidFee = balanceBeforePositionPosition - balanceOfAfterClosePosition
+      const interestFee = (makerMargin * year) / 10n // 10% annual fee
 
-      const totalFee = tradingFee.add(interestFee)
+      const totalFee = tradingFee + interestFee
       console.log(
-        `duration ( ${((wantedTimestamp - firstTimestamp) / 3600) * 24 * 365} year ) paid fee  `,
-        ethers.utils.formatEther(paidFee)
+        `duration ( ${
+          ((wantedTimestamp - firstTimestamp) * BigInt(24 * 365)) / 3600n
+        } year ) paid fee  `,
+        formatEther(paidFee)
       )
-      expect(ethers.utils.formatEther(paidFee)).to.equal(ethers.utils.formatEther(totalFee))
+      expect(paidFee).to.equal(totalFee)
     }
   }
 
@@ -123,11 +127,11 @@ describe('interest fee test', async function () {
     persistPositionFor({
       liquidityConfig: [
         {
-          tradingFee: 1,
-          amount: ethers.utils.parseEther('50')
+          tradingFee: 1n,
+          amount: parseEther('50')
         }
       ],
-      year: 1,
+      year: 1n,
       qty: 10,
       margin: 10
     })
@@ -138,11 +142,11 @@ describe('interest fee test', async function () {
     persistPositionFor({
       liquidityConfig: [
         {
-          tradingFee: 1,
-          amount: ethers.utils.parseEther('50')
+          tradingFee: 1n,
+          amount: parseEther('50')
         }
       ],
-      year: 1,
+      year: 1n,
       qty: 10,
       margin: 10
     })
@@ -152,11 +156,11 @@ describe('interest fee test', async function () {
     persistPositionFor({
       liquidityConfig: [
         {
-          tradingFee: 1,
-          amount: ethers.utils.parseEther('50')
+          tradingFee: 1n,
+          amount: parseEther('50')
         }
       ],
-      year: 1,
+      year: 1n,
       qty: 10,
       margin: 10
     })
@@ -167,15 +171,15 @@ describe('interest fee test', async function () {
     persistPositionFor({
       liquidityConfig: [
         {
-          tradingFee: 1,
-          amount: ethers.utils.parseEther('10')
+          tradingFee: 1n,
+          amount: parseEther('10')
         },
         {
-          tradingFee: 3,
-          amount: ethers.utils.parseEther('100')
+          tradingFee: 3n,
+          amount: parseEther('100')
         }
       ],
-      year: 1,
+      year: 1n,
       qty: 50,
       margin: 50
     })

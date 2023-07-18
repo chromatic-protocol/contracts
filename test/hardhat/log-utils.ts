@@ -1,7 +1,5 @@
-import chalk from 'chalk'
 import boxen from 'boxen'
-import fs from 'fs'
-import { BigNumber } from 'ethers'
+import chalk from 'chalk'
 import { assert } from 'console'
 export function printLogo() {
   console.log(
@@ -43,13 +41,13 @@ export function logYellow(message?: any, ...optionalParams: any[]) {
   console.log(chalk.yellow(message), ...optionalParams.map((param) => chalk.yellow(param)))
 }
 
-export function logLiquidity(totalMargins: BigNumber[], unusedMargins: BigNumber[]) {
+export function logLiquidity(totalMargins: bigint[], unusedMargins: bigint[]) {
   assert(totalMargins.length === unusedMargins.length)
-  const stepPer = 20
+  const stepPer = 20n
   const maxMargin = totalMargins.reduce((a, b) => (a < b ? b : a))
 
-  const totalsQuartile = totalMargins.map((e) => e.mul(stepPer).div(maxMargin).toNumber())
-  const unusedsQuartile = unusedMargins.map((e) => e.mul(stepPer).div(maxMargin).toNumber())
+  const totalsQuartile = totalMargins.map((e) => (e * stepPer) / maxMargin)
+  const unusedsQuartile = unusedMargins.map((e) => (e * stepPer) / maxMargin)
 
   // console.log(totals20Quartile)
   // console.log(unuseds20Quartile)
