@@ -1,6 +1,4 @@
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { BigNumber, ethers } from 'ethers'
-import { parseEther, parseUnits } from 'ethers/lib/utils'
+import { Signer, ethers, parseEther, parseUnits } from 'ethers'
 import {
   ChromaticLens,
   ChromaticLens__factory,
@@ -22,6 +20,7 @@ import {
   IWETH9__factory
 } from '../../typechain-types'
 import { PositionStructOutput } from '../../typechain-types/contracts/core/interfaces/IChromaticMarket'
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 const QTY_DECIMALS = 4
 const LEVERAGE_DECIMALS = 2
@@ -39,7 +38,7 @@ export class ReplWallet {
       swapRouter: string
       marketFactory: string
       oracleProvider: string
-      router: string,
+      router: string
       lens: string
     },
     ensureAccount: boolean
@@ -91,7 +90,7 @@ export class ReplWallet {
 
   async createAccount() {
     let accountAddress = await this.ChromaticRouter['getAccount()']()
-    if (accountAddress === ethers.constants.AddressZero) {
+    if (accountAddress === ethers.ZeroAddress) {
       await this.ChromaticRouter.createAccount()
       accountAddress = await this.ChromaticRouter['getAccount()']()
     }
@@ -104,11 +103,12 @@ export class ReplWallet {
   }
 
   async swapEth(eth: number) {
-    await this.WETH9.approve(this.SwapRouter.address, ethers.constants.MaxUint256)
+    const swapRouterAddress = await this.SwapRouter.getAddress()
+    await this.WETH9.approve(swapRouterAddress, ethers.MaxUint256)
 
     await this.SwapRouter.exactInputSingle({
-      tokenIn: this.WETH9.address,
-      tokenOut: this.USDC.address,
+      tokenIn: await this.WETH9.getAddress(),
+      tokenOut: await this.USDC.getAddress(),
       // fee: 10000,
       fee: 3000,
       // fee: 500,
@@ -119,11 +119,11 @@ export class ReplWallet {
       sqrtPriceLimitX96: 0
     })
 
-    await this.WETH9.approve(this.SwapRouter.address, 0)
+    await this.WETH9.approve(swapRouterAddress, 0)
   }
 
   async positions(): Promise<PositionStructOutput[]> {
-    const positionIds = await this.Account.getPositionIds(this.ChromaticMarket.address)
+    const positionIds = await this.Account.getPositionIds(await this.ChromaticMarket.getAddress())
     return await this.ChromaticMarket.getPositions(positionIds)
   }
 
@@ -133,7 +133,7 @@ export class ReplWallet {
     const _makerMargin = parseUnits(makerMargin.toString(), decimals)
 
     await this.ChromaticRouter.openPosition(
-      this.ChromaticMarket.address,
+      await this.ChromaticMarket.getAddress(),
       parseUnits(qty.toString(), QTY_DECIMALS),
       parseUnits(leverage.toString(), LEVERAGE_DECIMALS),
       _takerMargin,
@@ -144,15 +144,15 @@ export class ReplWallet {
 
   async closePosition(positionId: number) {
     await this.ChromaticRouter.closePosition(
-      this.ChromaticMarket.address,
-      BigNumber.from(positionId)
+      await this.ChromaticMarket.getAddress(),
+      BigInt(positionId)
     )
   }
 
   async addLiquidity(feeRate: number, amount: number) {
     const decimals = await this.USDC.decimals()
     await this.ChromaticRouter.addLiquidity(
-      this.ChromaticMarket.address,
+      await this.ChromaticMarket.getAddress(),
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(amount.toString(), decimals),
       this.address
@@ -160,13 +160,13 @@ export class ReplWallet {
   }
 
   async claimLiquidity(receiptId: number) {
-    await this.ChromaticRouter.claimLiquidity(this.ChromaticMarket.address, receiptId)
+    await this.ChromaticRouter.claimLiquidity(await this.ChromaticMarket.getAddress(), receiptId)
   }
 
   async removeLiquidity(feeRate: number, clbTokenAmount: number) {
     const decimals = await this.USDC.decimals()
     await this.ChromaticRouter.removeLiquidity(
-      this.ChromaticMarket.address,
+      await this.ChromaticMarket.getAddress(),
       parseUnits(feeRate.toString(), FEE_RATE_DECIMALS),
       parseUnits(clbTokenAmount.toString(), decimals),
       this.address
@@ -174,6 +174,6 @@ export class ReplWallet {
   }
 
   async withdrawLiquidity(receiptId: number) {
-    await this.ChromaticRouter.withdrawLiquidity(this.ChromaticMarket.address, receiptId)
+    await this.ChromaticRouter.withdrawLiquidity(this.ChromaticMarket.getAddress(), receiptId)
   }
 }

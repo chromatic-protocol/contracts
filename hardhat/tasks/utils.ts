@@ -5,17 +5,11 @@ import {
   IERC20Metadata__factory,
   IOracleProvider,
   IOracleProvider__factory
-} from '@chromatic/typechain-types'
-import { Token } from '@uniswap/sdk-core'
-import {
-  ChainId,
-  DAI_ON,
-  ID_TO_CHAIN_ID,
-  USDC_ON,
-  USDT_ON,
-  WETH9
-} from '@uniswap/smart-order-router'
-import { Signer, ethers, getAddress, isAddress } from 'ethers'
+} from '../../typechain-types'
+import { ChainId, Token } from '@uniswap/sdk-core'
+import { DAI_ON, ID_TO_CHAIN_ID, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
+
+import { ContractRunner, Signer, ethers, getAddress, isAddress } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
 export function execute(
@@ -59,9 +53,9 @@ export async function findOracleProvider(
 
   const providerAddresses = await factory.registeredOracleProviders()
   for (const providerAddress of providerAddresses) {
-    const provider = new ethers.Contract(providerAddress, abi, factory.signer)
+    const provider = new ethers.Contract(providerAddress, abi, factory.runner)
     if (chainlinkAddress.toLowerCase() == (await provider.aggregator()).toLowerCase()) {
-      return IOracleProvider__factory.connect(providerAddress, factory.signer)
+      return IOracleProvider__factory.connect(providerAddress, factory.runner)
     }
   }
 }
@@ -72,13 +66,15 @@ export async function findSettlementToken(
 ): Promise<IERC20Metadata | undefined> {
   const tokenAddresses = await factory.registeredSettlementTokens()
   for (const tokenAddress of tokenAddresses) {
-    const token = IERC20Metadata__factory.connect(tokenAddress, factory.signer)
+    const token = IERC20Metadata__factory.connect(tokenAddress, factory.runner)
+    // avoid Property 'toLowerCase' does not exist on type 'never'. else block
+    const tokenAddressOrSymbolLowerCase = tokenAddressOrSymbol.toLowerCase()
     if (isAddress(tokenAddressOrSymbol)) {
-      if (tokenAddressOrSymbol.toLowerCase() == token.address.toLowerCase()) {
+      if (tokenAddressOrSymbolLowerCase == (await token.getAddress()).toLowerCase()) {
         return token
       }
     } else {
-      if (tokenAddressOrSymbol.toLowerCase() == (await token.symbol()).toLowerCase()) {
+      if (tokenAddressOrSymbolLowerCase == (await token.symbol()).toLowerCase()) {
         return token
       }
     }
@@ -98,7 +94,7 @@ const TOKEN_SYMBOLS: Record<string, (chainId: ChainId) => Token> = {
 
 export function getToken(
   addressOrSymbol: string,
-  signer: Signer,
+  runner: ContractRunner | null,
   hre: HardhatRuntimeEnvironment
 ): IERC20Metadata {
   const { config, network } = hre
@@ -110,5 +106,5 @@ export function getToken(
     ? TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()](chainId).address
     : getAddress(addressOrSymbol)
 
-  return IERC20Metadata__factory.connect(tokenAddress, signer)
+  return IERC20Metadata__factory.connect(tokenAddress, runner)
 }

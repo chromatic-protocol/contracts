@@ -1,4 +1,4 @@
-import { ChromaticMarketFactory } from '@chromatic/typechain-types'
+import { ChromaticMarketFactory } from '../..//typechain-types'
 import chalk from 'chalk'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
@@ -20,7 +20,7 @@ task('oracle-provider:register', 'Register oracle provider')
         if (provider) {
           console.log(
             chalk.blue(
-              `Alreay registered oracle provider [OracleProvider: ${provider.address}, ChainlinkFeedAggregator: ${chainlinkAddress}]`
+              `Alreay registered oracle provider [OracleProvider: ${await provider.getAddress()}, ChainlinkFeedAggregator: ${chainlinkAddress}]`
             )
           )
           return

@@ -1,4 +1,4 @@
-import { ChromaticMarketFactory } from '@chromatic/typechain-types'
+import { ChromaticMarketFactory } from '../../typechain-types'
 import chalk from 'chalk'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
@@ -30,11 +30,11 @@ task('market:create', 'Create new market')
           return
         }
 
-        await (await factory.createMarket(provider.address, token.address)).wait()
+        await (await factory.createMarket(await provider.getAddress(), await token.getAddress())).wait()
 
         console.log(
           chalk.green(
-            `Success create new market [OracleProvider: ${provider.address}, SettlementToken: ${token.address}]`
+            `Success create new market [OracleProvider: ${await provider.getAddress()}, SettlementToken: ${await token.getAddress()}]`
           )
         )
       }
