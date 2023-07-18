@@ -1,4 +1,3 @@
-import { Signer, ethers, parseEther, parseUnits } from 'ethers'
 import {
   ChromaticLens,
   ChromaticLens__factory,
@@ -18,9 +17,10 @@ import {
   ISwapRouter__factory,
   IWETH9,
   IWETH9__factory
-} from '../../typechain-types'
-import { PositionStructOutput } from '../../typechain-types/contracts/core/interfaces/IChromaticMarket'
+} from '@chromatic/typechain-types'
+import { PositionStructOutput } from '@chromatic/typechain-types/contracts/core/interfaces/IChromaticMarket'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
+import { ethers, parseEther, parseUnits } from 'ethers'
 
 const QTY_DECIMALS = 4
 const LEVERAGE_DECIMALS = 2
@@ -28,7 +28,7 @@ const FEE_RATE_DECIMALS = 4
 
 export class ReplWallet {
   public readonly address: string
-  public Account: IChromaticAccount
+  public Account: IChromaticAccount | undefined
 
   static async create(
     signer: SignerWithAddress,
@@ -86,13 +86,14 @@ export class ReplWallet {
     public readonly ChromaticLens: ChromaticLens
   ) {
     this.address = signer.address
+    this.Account = undefined
   }
 
   async createAccount() {
-    let accountAddress = await this.ChromaticRouter['getAccount()']()
+    let accountAddress = await this.ChromaticRouter.getAccount()
     if (accountAddress === ethers.ZeroAddress) {
       await this.ChromaticRouter.createAccount()
-      accountAddress = await this.ChromaticRouter['getAccount()']()
+      accountAddress = await this.ChromaticRouter.getAccount()
     }
     console.log(`create Account, signer: ${accountAddress}, ${this.signer.address}`)
     this.Account = IChromaticAccount__factory.connect(accountAddress, this.signer)
@@ -123,7 +124,7 @@ export class ReplWallet {
   }
 
   async positions(): Promise<PositionStructOutput[]> {
-    const positionIds = await this.Account.getPositionIds(await this.ChromaticMarket.getAddress())
+    const positionIds = await this.Account!.getPositionIds(await this.ChromaticMarket.getAddress())
     return await this.ChromaticMarket.getPositions(positionIds)
   }
 

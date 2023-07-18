@@ -1,16 +1,16 @@
 // If your plugin extends types from another plugin, you should import the plugin here.
 
 // To extend one of Hardhat's types, you need to import the module where it has been defined, and redeclare it.
-import 'hardhat/types/runtime'
+import { IOracleProvider } from '@chromatic/typechain-types'
 import 'hardhat-deploy'
-import { IOracleProvider } from '../../typechain-types'
+import 'hardhat/types/runtime'
 
 declare module 'hardhat/types/runtime' {
   interface HardhatRuntimeEnvironment {
-    w: object
+    w: { [accountName: string]: any }
     initialize?: () => Promise<void>
-    updatePrice?: (number) => Promise<void>
+    updatePrice?: (price: number) => Promise<void>
     currentOracleVersion?: () => Promise<IOracleProvider.OracleVersionStructOutput>
-    showMeTheMoney(account: string, ethAmount: number, usdcAmount: number)
+    showMeTheMoney?: (account: string, ethAmount: number, usdcAmount: number) => Promise<void>
   }
 }

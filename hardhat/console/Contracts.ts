@@ -1,13 +1,3 @@
-import{ChainId}  from '@uniswap/sdk-core'
-import {
-  
-  ID_TO_CHAIN_ID,
-  SWAP_ROUTER_02_ADDRESSES,
-  USDC_ON,
-  WETH9
-} from '@uniswap/smart-order-router'
-import { Signer, Wallet } from 'ethers'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import {
   ChromaticLens,
   ChromaticLens__factory,
@@ -37,23 +27,31 @@ import {
   KeeperFeePayer__factory,
   Token,
   Token__factory
-} from '../../typechain-types'
+} from '@chromatic/typechain-types'
+import {
+  ID_TO_CHAIN_ID,
+  SWAP_ROUTER_02_ADDRESSES,
+  USDC_ON,
+  WETH9
+} from '@uniswap/smart-order-router'
+import { Signer, Wallet } from 'ethers'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
 const ARB_GOERLI_CHRM_ADDRESS = '0x29A6AC3D416F8Ca85A3df95da209eDBfaF6E522d'
 
 export class Contracts {
-  private _signer: Signer
-  private _factory: ChromaticMarketFactory
-  private _vault: ChromaticVault
-  private _liquidator: ChromaticLiquidator
-  private _router: ChromaticRouter
-  private _lens: ChromaticLens
-  private _keeperFeePayer: KeeperFeePayer
-  private _weth: IWETH9
-  private _usdc: IERC20Metadata
+  private _signer!: Signer
+  private _factory!: ChromaticMarketFactory
+  private _vault!: ChromaticVault
+  private _liquidator!: ChromaticLiquidator
+  private _router!: ChromaticRouter
+  private _lens!: ChromaticLens
+  private _keeperFeePayer!: KeeperFeePayer
+  private _weth!: IWETH9
+  private _usdc!: IERC20Metadata
   private _chrm: Token | undefined
-  private _swapRouter: ISwapRouter
+  private _swapRouter!: ISwapRouter
 
   constructor(public readonly hre: HardhatRuntimeEnvironment) {}
 
@@ -61,7 +59,7 @@ export class Contracts {
     const { config, network, ethers } = this.hre
     const echainId =
       network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
-    const chainId: ChainId = ID_TO_CHAIN_ID(echainId)
+    const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
 
     this._signer = privateKey
       ? new Wallet(privateKey, ethers.provider)
@@ -179,7 +177,7 @@ export class Contracts {
     const deployed = await this.hre.deployments.getOrNull('FlashLoanExample')
     if (deployed) {
       const contract = this.connectFlashLoanExample(deployed.address)
-      if ((await contract.lendingPool()) == await this.vault.getAddress()) {
+      if ((await contract.lendingPool()) == (await this.vault.getAddress())) {
         return contract
       }
     }
@@ -190,8 +188,4 @@ export class Contracts {
   connectFlashLoanExample(address: string): FlashLoanExample {
     return FlashLoanExample__factory.connect(address, this._signer)
   }
-
-  // async deployChrm(): Promise<Token> {
-  //   return await new Token__factory(this._signer).deploy('CHRM', 'CHRM')
-  // }
 }

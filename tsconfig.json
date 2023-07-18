@@ -12,6 +12,6 @@
       "@chromatic/*": ["./*"]
     },   
   },
-  "include": ["./scripts", "./test", "./typechain-types", "./deploy"],
+  "include": ["./scripts", "./test", "./typechain-types", "./deploy", "./hardhat"],
   "files": ["./hardhat.config.ts"]
 }
