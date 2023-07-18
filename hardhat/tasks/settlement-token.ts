@@ -1,4 +1,4 @@
-import { ChromaticMarketFactory } from '../../typechain-types'
+import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { formatUnits, parseUnits } from 'ethers'
 import { task, types } from 'hardhat/config'

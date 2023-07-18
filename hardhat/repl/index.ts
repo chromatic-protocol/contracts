@@ -1,9 +1,4 @@
-import { SWAP_ROUTER_02_ADDRESSES, USDC_ARBITRUM_GOERLI, WETH9 } from '@uniswap/smart-order-router'
-import chalk from 'chalk'
-import { ethers } from 'ethers'
-import { extendEnvironment } from 'hardhat/config'
-import { lazyFunction, lazyObject } from 'hardhat/plugins'
-import * as Token from '../../deployments/anvil/Token.json'
+import * as Token from '@chromatic/deployments/anvil/Token.json'
 import {
   ChromaticAccount__factory,
   ChromaticLiquidatorMock__factory,
@@ -11,17 +6,15 @@ import {
   IChromaticMarketFactory__factory,
   IMarketLiquidate__factory,
   OracleProviderMock__factory
-} from '../../typechain-types'
+} from '@chromatic/typechain-types'
+import { SWAP_ROUTER_02_ADDRESSES, USDC_ARBITRUM_GOERLI, WETH9 } from '@uniswap/smart-order-router'
+import chalk from 'chalk'
+import { ethers } from 'ethers'
+import { extendEnvironment } from 'hardhat/config'
+import { lazyFunction, lazyObject } from 'hardhat/plugins'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ReplWallet } from './ReplWallet'
 import './type-extensions'
-import { HardhatRuntimeEnvironment } from 'hardhat/types'
-
-
-// interface HardhatRuntimeEnvironment {
-//   // We omit the ethers field because it is redundant.
-//   ethers: typeof ethers & HardhatEthersHelpers;
-// }
-
 
 const SIGNERS = ['alice', 'bob', 'charlie', 'david', 'eve', 'frank', 'grace', 'heidi']
 
@@ -29,13 +22,14 @@ const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E
 
 const ORACLE_PROVIDER_DECIMALS = 18
 
-extendEnvironment((hre:HardhatRuntimeEnvironment) => {
+extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   const { config, deployments, network } = hre
-  const echainId =
+  const echainId = (
     network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
+  ) as keyof typeof WETH9
 
   hre.w = lazyObject(() =>
-    SIGNERS.reduce((w, s) => {
+    SIGNERS.reduce((w: { [accountName: string]: any }, s) => {
       w[s] = undefined
       return w
     }, {})

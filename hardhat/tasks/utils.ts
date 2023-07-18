@@ -5,11 +5,10 @@ import {
   IERC20Metadata__factory,
   IOracleProvider,
   IOracleProvider__factory
-} from '../../typechain-types'
-import { ChainId, Token } from '@uniswap/sdk-core'
+} from '@chromatic/typechain-types'
+import { Token } from '@uniswap/sdk-core'
 import { DAI_ON, ID_TO_CHAIN_ID, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
-
-import { ContractRunner, Signer, ethers, getAddress, isAddress } from 'ethers'
+import { ContractRunner, ethers, getAddress, isAddress } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
 export function execute(
@@ -81,7 +80,7 @@ export async function findSettlementToken(
   }
 }
 
-const TOKEN_SYMBOLS: Record<string, (chainId: ChainId) => Token> = {
+const TOKEN_SYMBOLS: Record<string, (chainId: keyof typeof WETH9) => Token> = {
   DAI: DAI_ON,
   USDC: USDC_ON,
   USDT: USDT_ON,
@@ -100,7 +99,7 @@ export function getToken(
   const { config, network } = hre
   const echainId =
     network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
-  const chainId: ChainId = ID_TO_CHAIN_ID(echainId)
+  const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
 
   const tokenAddress = TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()]
     ? TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()](chainId).address
