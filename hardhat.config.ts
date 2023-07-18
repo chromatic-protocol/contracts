@@ -101,7 +101,12 @@ const config: HardhatUserConfig = {
     heidi: 9
   },
   package: packageConfig,
-  docgen: docgenConfig
+  docgen: docgenConfig,
+  etherscan: {
+    apiKey: {
+      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!
+    }
+  }
 }
 
 export default config

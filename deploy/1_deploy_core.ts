@@ -1,3 +1,5 @@
+import { verify } from '@chromatic/deploy/verify'
+import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
@@ -36,27 +38,38 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(chalk.yellow(`✨ MarketDeployerLib: ${marketDeployer}`))
 
   const { address: marketDiamondCutFacet } = await deploy('MarketDiamondCutFacet', deployOpts)
+  await verify(hre, { address: marketDiamondCutFacet })
   console.log(chalk.yellow(`✨ MarketDiamondCutFacet: ${marketDiamondCutFacet}`))
 
   const { address: marketLoupeFacet } = await deploy('DiamondLoupeFacet', deployOpts)
+  await verify(hre, { address: marketLoupeFacet })
   console.log(chalk.yellow(`✨ DiamondLoupeFacet: ${marketLoupeFacet}`))
 
   const { address: marketStateFacet } = await deploy('MarketStateFacet', deployOpts)
+  await verify(hre, { address: marketStateFacet })
   console.log(chalk.yellow(`✨ MarketStateFacet: ${marketStateFacet}`))
 
   const { address: marketLiquidityFacet } = await deploy('MarketLiquidityFacet', deployOpts)
+  await verify(hre, { address: marketLiquidityFacet })
   console.log(chalk.yellow(`✨ MarketLiquidityFacet: ${marketLiquidityFacet}`))
 
   const { address: marketTradeFacet } = await deploy('MarketTradeFacet', deployOpts)
+  await verify(hre, { address: marketTradeFacet })
   console.log(chalk.yellow(`✨ MarketTradeFacet: ${marketTradeFacet}`))
 
   const { address: marketLiquidateFacet } = await deploy('MarketLiquidateFacet', deployOpts)
+  await verify(hre, { address: marketLiquidateFacet })
   console.log(chalk.yellow(`✨ MarketLiquidateFacet: ${marketLiquidateFacet}`))
 
   const { address: marketSettleFacet } = await deploy('MarketSettleFacet', deployOpts)
+  await verify(hre, { address: marketSettleFacet })
   console.log(chalk.yellow(`✨ MarketSettleFacet: ${marketSettleFacet}`))
 
-  const { address: factory, libraries } = await deploy('ChromaticMarketFactory', {
+  const {
+    address: factory,
+    args: factoryArgs,
+    libraries: factoryLibraries
+  } = await deploy('ChromaticMarketFactory', {
     ...deployOpts,
     args: [
       marketDiamondCutFacet,
@@ -71,18 +84,27 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       MarketDeployerLib: marketDeployer
     }
   })
+  await verify(hre, {
+    address: factory,
+    constructorArguments: factoryArgs,
+    libraries: factoryLibraries
+  })
   console.log(chalk.yellow(`✨ ChromaticMarketFactory: ${factory}`))
 
   const MarketFactory = await ethers.getContractFactory('ChromaticMarketFactory', {
-    libraries
+    libraries: factoryLibraries
   })
-  const marketFactory = MarketFactory.attach(factory)
+  const marketFactory = MarketFactory.attach(factory) as ChromaticMarketFactory
 
   // deploy & set KeeperFeePayer
 
-  const { address: keeperFeePayer } = await deploy('KeeperFeePayer', {
+  const { address: keeperFeePayer, args: keeperFeePayerArgs } = await deploy('KeeperFeePayer', {
     ...deployOpts,
     args: [factory, swapRouterAddress, WETH9[echainId].address]
+  })
+  await verify(hre, {
+    address: keeperFeePayer,
+    constructorArguments: keeperFeePayerArgs
   })
   console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
@@ -91,9 +113,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // deploy & set ChromaticVault
 
-  const { address: vault } = await deploy('ChromaticVault', {
+  const { address: vault, args: vaultArgs } = await deploy('ChromaticVault', {
     ...deployOpts,
     args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+  })
+  await verify(hre, {
+    address: vault,
+    constructorArguments: vaultArgs
   })
   console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
 
@@ -102,13 +128,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // deploy & set ChromaticLiquidator
 
-  const { address: liquidator } = await deploy(
+  const { address: liquidator, args: liquidatorArgs } = await deploy(
     network.name === 'anvil' ? 'ChromaticLiquidatorMock' : 'ChromaticLiquidator',
     {
       ...deployOpts,
       args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
     }
   )
+  await verify(hre, {
+    address: liquidator,
+    constructorArguments: liquidatorArgs
+  })
   console.log(chalk.yellow(`✨ ChromaticLiquidator: ${liquidator}`))
 
   await marketFactory.setLiquidator(liquidator, deployOpts)
