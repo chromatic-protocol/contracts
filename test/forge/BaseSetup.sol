@@ -42,6 +42,11 @@ abstract contract BaseSetup is Test {
             abi.encode(address(_automate))
         );
         vm.mockCall(
+            address(_automate),
+            abi.encodeWithSelector(_automate.createTask.selector),
+            abi.encode(bytes32(""))
+        );
+        vm.mockCall(
             address(_opf),
             abi.encodeWithSelector(_opf.getProxyOf.selector),
             abi.encode(address(this), true)

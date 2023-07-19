@@ -87,7 +87,7 @@ library LiquidityBinLib {
         LpContext memory ctx,
         PositionParam memory param,
         uint256 tradingFee
-    ) internal _settle(self, ctx) {
+    ) internal {
         require(param.makerMargin <= self.freeLiquidity(), Errors.NOT_ENOUGH_FREE_LIQUIDITY);
 
         self._position.onOpenPosition(ctx, param);
@@ -157,7 +157,10 @@ library LiquidityBinLib {
      * @return uint256 The free liquidity in the bin
      */
     function freeLiquidity(LiquidityBin storage self) internal view returns (uint256) {
-        return self._liquidity.total - self._position.totalMakerMargin();
+        return
+            self._liquidity.total -
+            self._position.totalMakerMargin() -
+            self._closedPosition.totalMakerMargin();
     }
 
     /**
