@@ -111,16 +111,18 @@ library LiquidityPoolLib {
      *         containing the trading fee rate and corresponding margin amount for each bin.
      *      Throws an error with the code `Errors.NOT_ENOUGH_FREE_LIQUIDITY` if there is not enough free liquidity.
      * @param self The reference to the LiquidityPool.
+     * @param ctx The LpContext data struct
      * @param qty The quantity of the position.
      * @param makerMargin The maker margin of the position.
      * @return binMargins An array of BinMargin representing the calculated bin margins.
      */
     function prepareBinMargins(
         LiquidityPool storage self,
+        LpContext memory ctx,
         int224 qty,
         uint256 makerMargin,
         uint256 minimumBinMargin
-    ) internal view returns (BinMargin[] memory) {
+    ) internal returns (BinMargin[] memory) {
         // Retrieve the target liquidity bins based on the position quantity
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, qty);
 
@@ -133,7 +135,10 @@ library LiquidityPoolLib {
         for (; to < FEE_RATES_LENGTH; to++) {
             if (remain == 0) break;
 
-            uint256 freeLiquidity = _bins[_tradingFeeRates[to]].freeLiquidity();
+            LiquidityBin storage _bin = _bins[_tradingFeeRates[to]];
+            _bin.settle(ctx);
+
+            uint256 freeLiquidity = _bin.freeLiquidity();
             if (freeLiquidity >= minimumBinMargin) {
                 if (remain <= freeLiquidity) {
                     _binMargins[to] = remain;

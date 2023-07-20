@@ -124,7 +124,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
 
         position = _newPosition(ctx, qty, leverage, takerMargin, ms.feeProtocol);
         position.setBinMargins(
-            liquidityPool.prepareBinMargins(position.qty, makerMargin, minMargin)
+            liquidityPool.prepareBinMargins(ctx, position.qty, makerMargin, minMargin)
         );
 
         _openPosition(ctx, liquidityPool, position, maxAllowableTradingFee, data);
@@ -226,6 +226,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         IChromaticLiquidator liquidator = ms.liquidator;
 
         LpContext memory ctx = newLpContext(ms);
+        ctx.syncOracleVersion();
 
         position.closeVersion = ctx.currentOracleVersion().version;
         position.closeTimestamp = block.timestamp;

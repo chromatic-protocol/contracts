@@ -15,6 +15,7 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
  */
 struct BinClosedPosition {
     uint256 _totalMakerMargin;
+    uint256 _totalTakerMargin;
     BinClosingPosition _closing;
     EnumerableSet.UintSet _waitingVersions;
     mapping(uint256 => _ClaimWaitingPosition) _waitingPositions;
@@ -64,6 +65,7 @@ library BinClosedPositionLib {
         self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
         self._totalMakerMargin += waitingPosition.totalMakerMargin;
+        self._totalTakerMargin += waitingPosition.totalTakerMargin;
         self._waitingVersions.add(closeVersion);
         self._waitingPositions[closeVersion] = waitingPosition;
 
@@ -113,6 +115,7 @@ library BinClosedPositionLib {
             self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
             self._totalMakerMargin -= param.makerMargin;
+            self._totalTakerMargin -= param.takerMargin;
             self._accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
 
             if (exhausted) {
@@ -146,6 +149,24 @@ library BinClosedPositionLib {
         waitingPosition.totalTakerMargin -= param.takerMargin;
 
         return false;
+    }
+
+    /**
+     * @notice Returns the total maker margin for a liquidity bin closed position.
+     * @param self The BinClosedPosition storage struct.
+     * @return uint256 The total maker margin.
+     */
+    function totalMakerMargin(BinClosedPosition storage self) internal view returns (uint256) {
+        return self._totalMakerMargin + self._closing.totalMakerMargin;
+    }
+
+    /**
+     * @notice Returns the total taker margin for a liquidity bin closed position.
+     * @param self The BinClosedPosition storage struct.
+     * @return uint256 The total taker margin.
+     */
+    function totalTakerMargin(BinClosedPosition storage self) internal view returns (uint256) {
+        return self._totalTakerMargin + self._closing.totalTakerMargin;
     }
 
     /**

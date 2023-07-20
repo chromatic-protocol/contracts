@@ -73,7 +73,7 @@ contract LiquidityPoolTest is Test {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
 
-        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, 1500 ether, 0));
+        position.setBinMargins(liquidityPool.prepareBinMargins(ctx, position.qty, 1500 ether, 0));
 
         assertEq(position.leveragedQty(ctx), 1500 ether);
         assertEq(position._binMargins[0].tradingFeeRate, 1);
@@ -87,7 +87,7 @@ contract LiquidityPoolTest is Test {
     function testAcceptOpenPosition() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, 1500 ether, 0));
+        position.setBinMargins(liquidityPool.prepareBinMargins(ctx, position.qty, 1500 ether, 0));
 
         liquidityPool.acceptOpenPosition(ctx, position);
 
@@ -100,7 +100,7 @@ contract LiquidityPoolTest is Test {
     function testCloseOpenPosition_whenSameRound() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, 1500 ether, 0));
+        position.setBinMargins(liquidityPool.prepareBinMargins(ctx, position.qty, 1500 ether, 0));
         liquidityPool.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 1;
@@ -120,7 +120,7 @@ contract LiquidityPoolTest is Test {
     function testCloseOpenPosition_whenNextRoundWithTakerProfit() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, 1500 ether, 0));
+        position.setBinMargins(liquidityPool.prepareBinMargins(ctx, position.qty, 1500 ether, 0));
         liquidityPool.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 2;
@@ -141,7 +141,7 @@ contract LiquidityPoolTest is Test {
     function testCloseOpenPosition_whenNextRoundWithTakerLoss() public {
         LpContext memory ctx = _newLpContext();
         Position memory position = _newPosition();
-        position.setBinMargins(liquidityPool.prepareBinMargins(position.qty, 1500 ether, 0));
+        position.setBinMargins(liquidityPool.prepareBinMargins(ctx, position.qty, 1500 ether, 0));
         liquidityPool.acceptOpenPosition(ctx, position);
 
         ctx._currentVersionCache.version = 2;
