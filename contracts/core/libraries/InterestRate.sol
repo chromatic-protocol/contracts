@@ -13,11 +13,13 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 library InterestRate {
     using Math for uint256;
 
-    /// @dev Record type
+    /**
+     * @dev Record type
+     * @param annualRateBPS Annual interest rate in BPS
+     * @param beginTimestamp Timestamp when the interest rate becomes effective
+     */
     struct Record {
-        /// @dev Annual interest rate in BPS
         uint256 annualRateBPS;
-        /// @dev Timestamp when the interest rate becomes effective
         uint256 beginTimestamp;
     }
 

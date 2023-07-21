@@ -13,19 +13,18 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
- * @title BinPendingPosition
- * @notice Represents a pending position within the LiquidityBin
+ * @dev Represents a pending position within the LiquidityBin
+ * @param openVersion The oracle version when the position was opened.
+ * @param totalLeveragedQty The total leveraged quantity of the pending position.
+ * @param totalMakerMargin The total maker margin of the pending position.
+ * @param totalTakerMargin The total taker margin of the pending position.
+ * @param accruedInterest The accumulated interest of the pending position.
  */
 struct BinPendingPosition {
-    /// @dev The oracle version when the position was opened.
     uint256 openVersion;
-    /// @dev The total leveraged quantity of the pending position.
     int256 totalLeveragedQty;
-    /// @dev The total maker margin of the pending position.
     uint256 totalMakerMargin;
-    /// @dev The total taker margin of the pending position.
     uint256 totalTakerMargin;
-    /// @dev The accumulated interest of the pending position.
     AccruedInterest accruedInterest;
 }
 

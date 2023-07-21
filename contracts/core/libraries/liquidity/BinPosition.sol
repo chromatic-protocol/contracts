@@ -12,22 +12,21 @@ import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts
 import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 
-/**
- * @title BinPosition
- * @notice Represents a position in the LiquidityBin
+/** 
+ * @dev Represents a position in the LiquidityBin
+ * @param totalLeveragedQty The total leveraged quantity of the `LiquidityBin`
+ * @param totalEntryAmount The total entry amount of the `LiquidityBin`
+ * @param _totalMakerMargin The total maker margin of the `LiquidityBin`
+ * @param _totalTakerMargin The total taker margin of the `LiquidityBin`
+ * @param _pending The pending position of the `LiquidityBin`
+ * @param _accruedInterest The accumulated interest of the `LiquidityBin`
  */
 struct BinPosition {
-    /// @dev The total leveraged quantity of the `LiquidityBin`
     int256 totalLeveragedQty;
-    /// @dev The total entry amount of the `LiquidityBin`
     uint256 totalEntryAmount;
-    /// @dev The total maker margin of the `LiquidityBin`
     uint256 _totalMakerMargin;
-    /// @dev The total taker margin of the `LiquidityBin`
     uint256 _totalTakerMargin;
-    /// @dev The pending position of the `LiquidityBin`
     BinPendingPosition _pending;
-    /// @dev The accumulated interest of the `LiquidityBin`
     AccruedInterest _accruedInterest;
 }
 

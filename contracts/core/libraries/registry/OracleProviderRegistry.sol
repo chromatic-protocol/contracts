@@ -5,11 +5,11 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
- * @title OracleProviderRegistry
  * @dev A registry for managing oracle providers.
+ * @param _oracleProviders Set of registered oracle providers
  */
 struct OracleProviderRegistry {
-    /// @dev Set of registered oracle providers
+    
     EnumerableSet.AddressSet _oracleProviders;
     mapping(address => uint32) _minTakeProfitBPSs;
     mapping(address => uint32) _maxTakeProfitBPSs;

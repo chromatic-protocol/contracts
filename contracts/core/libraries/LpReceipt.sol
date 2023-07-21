@@ -12,23 +12,23 @@ enum LpAction {
 }
 
 /**
- * @title LpReceipt
- * @notice The LpReceipt struct represents a receipt of an LP action performed.
+ * @dev The LpReceipt struct represents a receipt of an LP action performed.
+ * @param id An identifier for the receipt
+ * @param oracleVersion The oracle version associated with the action
+ * @param amount The amount involved in the action,
+ *        when the action is `ADD_LIQUIDITY`, this value represents the amount of settlement tokens
+ *        when the action is `REMOVE_LIQUIDITY`, this value represents the amount of CLB tokens
+ * @param recipient The address of the recipient of the action
+ * @param action An enumeration representing the type of LP action performed (ADD_LIQUIDITY or REMOVE_LIQUIDITY)
+ * @param tradingFeeRate The trading fee rate associated with the LP action
  */
 struct LpReceipt {
-    /// @dev An identifier for the receipt
+    
     uint256 id;
-    /// @dev The oracle version associated with the action
     uint256 oracleVersion;
-    /// @dev The amount involved in the action,
-    ///      when the action is `ADD_LIQUIDITY`, this value represents the amount of settlement tokens
-    ///      when the action is `REMOVE_LIQUIDITY`, this value represents the amount of CLB tokens
     uint256 amount;
-    /// @dev The address of the recipient of the action
     address recipient;
-    /// @dev An enumeration representing the type of LP action performed (ADD_LIQUIDITY or REMOVE_LIQUIDITY)
     LpAction action;
-    /// @dev The trading fee rate associated with the LP action
     int16 tradingFeeRate;
 }
 

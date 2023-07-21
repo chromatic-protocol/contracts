@@ -11,31 +11,30 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
 
 /**
- * @title Position
  * @dev The Position struct represents a trading position.
+ * @param id The position identifier
+ * @param openVersion The version of the oracle when the position was opened
+ * @param closeVersion The version of the oracle when the position was closed
+ * @param qty The quantity of the position
+ * @param leverage The leverage applied to the position
+ * @param openTimestamp The timestamp when the position was opened
+ * @param closeTimestamp The timestamp when the position was closed
+ * @param takerMargin The amount of collateral that a trader must provide
+ * @param owner The owner of the position, usually it is the account address of trader
+ * @param _binMargins The bin margins for the position, it represents the amount of collateral for each bin
+ * @param _feeProtocol The protocol fee for the market
  */
 struct Position {
-    /// @dev The position identifier
     uint256 id;
-    /// @dev The version of the oracle when the position was opened
     uint256 openVersion;
-    /// @dev The version of the oracle when the position was closed
     uint256 closeVersion;
-    /// @dev The quantity of the position
     int224 qty;
-    /// @dev The leverage applied to the position
     uint32 leverage;
-    /// @dev The timestamp when the position was opened
     uint256 openTimestamp;
-    /// @dev The timestamp when the position was closed
     uint256 closeTimestamp;
-    /// @dev The amount of collateral that a trader must provide
     uint256 takerMargin;
-    /// @dev The owner of the position, usually it is the account address of trader
     address owner;
-    /// @dev The bin margins for the position, it represents the amount of collateral for each bin
     BinMargin[] _binMargins;
-    /// @dev The protocol fee for the market
     uint8 _feeProtocol;
 }
 

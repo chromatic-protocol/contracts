@@ -8,25 +8,24 @@ import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/ICh
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 
 /**
- * @title LpContext
- * @notice Represents the context information required for LP bin operations.
+ * @dev Represents the context information required for LP bin operations.
+ * @param oracleProvider The Oracle Provider contract used for price feed
+ * @param interestCalculator The Interest Calculator contract used for interest calculations
+ * @param vault The Chromatic Vault contract responsible for managing liquidity and margin
+ * @param clbToken The CLB token contract that represents LP ownership in the pool
+ * @param market The address of market contract
+ * @param settlementToken The address of the settlement token used in the market
+ * @param tokenPrecision The precision of the settlement token used in the market
+ * @param _currentVersionCache Cached instance of the current oracle version
  */
 struct LpContext {
-    /// @dev The Oracle Provider contract used for price feed
     IOracleProvider oracleProvider;
-    /// @dev The Interest Calculator contract used for interest calculations
     IInterestCalculator interestCalculator;
-    /// @dev The Chromatic Vault contract responsible for managing liquidity and margin
     IChromaticVault vault;
-    /// @dev The CLB token contract that represents LP ownership in the pool
     ICLBToken clbToken;
-    /// @dev The address of market contract
     address market;
-    /// @dev The address of the settlement token used in the market
     address settlementToken;
-    /// @dev The precision of the settlement token used in the market
     uint256 tokenPrecision;
-    /// @dev Cached instance of the current oracle version
     IOracleProvider.OracleVersion _currentVersionCache;
 }
 

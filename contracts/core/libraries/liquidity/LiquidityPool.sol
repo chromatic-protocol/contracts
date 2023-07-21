@@ -15,8 +15,7 @@ import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
- * @title LiquidityPool
- * @notice Represents a collection of long and short liquidity bins
+ * @dev Represents a collection of long and short liquidity bins
  */
 struct LiquidityPool {
     mapping(uint16 => LiquidityBin) _longBins;

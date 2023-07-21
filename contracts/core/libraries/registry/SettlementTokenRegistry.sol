@@ -6,21 +6,20 @@ import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/Interes
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
- * @title SettlementTokenRegistry
  * @dev A registry for managing settlement tokens and their associated parameters.
+ * @param _tokens Set of registered settlement tokens
+ * @param _interestRateRecords Mapping of settlement tokens to their interest rate records
+ * @param _minimumMargins Mapping of settlement tokens to their minimum margins
+ * @param _flashLoanFeeRates Mapping of settlement tokens to their flash loan fee rates
+ * @param _earningDistributionThresholds Mapping of settlement tokens to their earning distribution thresholds
+ * @param _uniswapFeeTiers Mapping of settlement tokens to their Uniswap fee tiers
  */
 struct SettlementTokenRegistry {
-    /// @dev Set of registered settlement tokens
     EnumerableSet.AddressSet _tokens;
-    /// @dev Mapping of settlement tokens to their interest rate records
     mapping(address => InterestRate.Record[]) _interestRateRecords;
-    /// @dev Mapping of settlement tokens to their minimum margins
     mapping(address => uint256) _minimumMargins;
-    /// @dev Mapping of settlement tokens to their flash loan fee rates
     mapping(address => uint256) _flashLoanFeeRates;
-    /// @dev Mapping of settlement tokens to their earning distribution thresholds
     mapping(address => uint256) _earningDistributionThresholds;
-    /// @dev Mapping of settlement tokens to their Uniswap fee tiers
     mapping(address => uint24) _uniswapFeeTiers;
 }
 

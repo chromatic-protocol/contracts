@@ -4,13 +4,12 @@ pragma solidity >=0.8.0 <0.9.0;
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 
 /**
- * @title AccruedInterest
- * @notice Structure for tracking accumulated interest
+ * @dev Structure for tracking accumulated interest
+ * @param accumulatedAt The timestamp at which the interest was last accumulated.
+ * @param accumulatedAmount The total amount of interest accumulated.
  */
 struct AccruedInterest {
-    /// @dev The timestamp at which the interest was last accumulated.
     uint256 accumulatedAt;
-    /// @dev The total amount of interest accumulated.
     uint256 accumulatedAmount;
 }
 

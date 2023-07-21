@@ -12,17 +12,16 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 /**
- * @title LiquidityBin
- * @notice Structure representing a liquidity bin
+ * @dev Structure representing a liquidity bin
+ * @param clbTokenId The ID of the CLB token
+ * @param _liquidity The liquidity data for the bin
+ * @param _position The position data for the bin
+ * @param _closedPosition The closed position data for the bin
  */
 struct LiquidityBin {
-    /// @dev The ID of the CLB token
     uint256 clbTokenId;
-    /// @dev The liquidity data for the bin
     BinLiquidity _liquidity;
-    /// @dev The position data for the bin
     BinPosition _position;
-    /// @dev The closed position data for the bin
     BinClosedPosition _closedPosition;
 }
 
