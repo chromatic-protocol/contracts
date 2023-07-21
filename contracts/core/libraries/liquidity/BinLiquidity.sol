@@ -10,8 +10,7 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
- * @title BinLiquidity
- * @notice Represents the liquidity information within an LiquidityBin.
+ * @dev Represents the liquidity information within an LiquidityBin.
  */
 struct BinLiquidity {
     uint256 total;
@@ -22,8 +21,7 @@ struct BinLiquidity {
 }
 
 /**
- * @title _PendingLiquidity
- * @notice Represents the pending liquidity details within BinLiquidity.
+ * @dev Represents the pending liquidity details within BinLiquidity.
  */
 struct _PendingLiquidity {
     uint256 oracleVersion;
@@ -32,9 +30,8 @@ struct _PendingLiquidity {
 }
 
 /**
- * @title _ClaimMinting
- * @notice Represents the accumulated values of minting claims
- *         for a specific oracle version within BinLiquidity.
+ * @dev Represents the accumulated values of minting claims
+ *      for a specific oracle version within BinLiquidity.
  */
 struct _ClaimMinting {
     uint256 tokenAmountRequested;
@@ -42,9 +39,8 @@ struct _ClaimMinting {
 }
 
 /**
- * @title _ClaimBurning
- * @notice Represents the accumulated values of burning claims
- *         for a specific oracle version within BinLiquidity.
+ * @dev Represents the accumulated values of burning claims
+ *      for a specific oracle version within BinLiquidity.
  */
 struct _ClaimBurning {
     uint256 clbTokenAmountRequested;

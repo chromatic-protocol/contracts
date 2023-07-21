@@ -6,6 +6,13 @@ pragma solidity >=0.8.0 <0.9.0;
  * @dev Interface for the Oracle Provider Registry contract.
  */
 interface IOracleProviderRegistry {
+    
+    /**
+     * @dev The OracleProviderProperties struct represents properties of the oracle provider.
+     * @param minTakeProfitBPS The minimum take-profit basis points.
+     * @param maxTakeProfitBPS The maximum take-profit basis points.
+     * @param leverageLevel The leverage level of the oracle provider.
+     */
     struct OracleProviderProperties {
         uint32 minTakeProfitBPS;
         uint32 maxTakeProfitBPS;

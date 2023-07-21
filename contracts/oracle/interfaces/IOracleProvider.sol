@@ -6,14 +6,16 @@ import "@equilibria/root/number/types/Fixed18.sol";
 interface IOracleProvider {
     /// @dev Error for invalid oracle round
     error InvalidOracleRound();
-
-    /// @dev A singular oracle version with its corresponding data
+    
+    /**
+     * @dev A singular oracle version with its corresponding data
+     * @param version The iterative version
+     * @param timestamp the timestamp of the oracle update
+     * @param price The oracle price of the corresponding version
+     */
     struct OracleVersion {
-        /// @dev The iterative version
         uint256 version;
-        /// @dev the timestamp of the oracle update
         uint256 timestamp;
-        /// @dev The oracle price of the corresponding version
         Fixed18 price;
     }
 

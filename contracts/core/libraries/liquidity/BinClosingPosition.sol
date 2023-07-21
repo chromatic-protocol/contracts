@@ -8,21 +8,20 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
- * @title BinClosingPosition
  * @dev Represents the closing position within an LiquidityBin.
+ * @param closeVersion The oracle version when the position was closed.
+ * @param totalLeveragedQty The total leveraged quantity of the closing position.
+ * @param totalEntryAmount The total entry amount of the closing position.
+ * @param totalMakerMargin The total maker margin of the closing position.
+ * @param totalTakerMargin The total taker margin of the closing position.
+ * @param accruedInterest The accumulated interest of the closing position.
  */
 struct BinClosingPosition {
-    /// @dev The oracle version when the position was closed.
     uint256 closeVersion;
-    /// @dev The total leveraged quantity of the closing position.
     int256 totalLeveragedQty;
-    /// @dev The total entry amount of the closing position.
     uint256 totalEntryAmount;
-    /// @dev The total maker margin of the closing position.
     uint256 totalMakerMargin;
-    /// @dev The total taker margin of the closing position.
     uint256 totalTakerMargin;
-    /// @dev The accumulated interest of the closing position.
     AccruedInterest accruedInterest;
 }
 

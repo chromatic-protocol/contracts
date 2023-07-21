@@ -13,16 +13,14 @@ import {IMarketSettle} from "@chromatic-protocol/contracts/core/interfaces/marke
 import {ChromaticMarket} from "@chromatic-protocol/contracts/core/ChromaticMarket.sol";
 
 /**
- * @title MarketDeployer
- * @notice Storage struct for deploying a ChromaticMarket contract
+ * @dev Storage struct for deploying a ChromaticMarket contract
  */
 struct MarketDeployer {
     Parameters parameters;
 }
 
 /**
- * @title Parameters
- * @notice Struct for storing deployment parameters
+ * @dev Struct for storing deployment parameters
  */
 struct Parameters {
     address oracleProvider;

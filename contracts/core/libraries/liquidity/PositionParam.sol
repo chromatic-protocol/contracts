@@ -9,27 +9,26 @@ import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/Positio
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 
 /**
- * @title PositionParam
  * @dev A struct representing the parameters of a position.
+ * @param openVersion The version of the position's open transaction
+ * @param closeVersion The version of the position's close transaction
+ * @param leveragedQty The leveraged quantity of the position
+ * @param takerMargin The margin amount provided by the taker
+ * @param makerMargin The margin amount provided by the maker
+ * @param openTimestamp The timestamp of the position's open transaction
+ * @param closeTimestamp The timestamp of the position's close transaction
+ * @param _entryVersionCache Caches the settle oracle version for the position's entry
+ * @param _exitVersionCache Caches the settle oracle version for the position's exit
  */
 struct PositionParam {
-    /// @dev The version of the position's open transaction
     uint256 openVersion;
-    /// @dev The version of the position's close transaction
     uint256 closeVersion;
-    /// @dev The leveraged quantity of the position
     int256 leveragedQty;
-    /// @dev The margin amount provided by the taker
     uint256 takerMargin;
-    /// @dev The margin amount provided by the maker
     uint256 makerMargin;
-    /// @dev The timestamp of the position's open transaction
     uint256 openTimestamp;
-    /// @dev The timestamp of the position's close transaction
     uint256 closeTimestamp;
-    /// @dev Caches the settle oracle version for the position's entry
     IOracleProvider.OracleVersion _entryVersionCache;
-    /// @dev Caches the settle oracle version for the position's exit
     IOracleProvider.OracleVersion _exitVersionCache;
 }
 

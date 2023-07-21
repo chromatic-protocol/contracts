@@ -4,13 +4,12 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
- * @title BinMargin
  * @dev The BinMargin struct represents the margin information for an LP bin.
+ * @param tradingFeeRate The trading fee rate associated with the LP bin
+ * @param amount The maker margin amount specified for the LP bin
  */
 struct BinMargin {
-    /// @dev The trading fee rate associated with the LP bin
     uint16 tradingFeeRate;
-    /// @dev The maker margin amount specified for the LP bin
     uint256 amount;
 }
 

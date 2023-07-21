@@ -10,20 +10,27 @@ import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.
 interface IMarketLiquidity {
     /**
      * @dev A struct representing claimable liquidity information.
+     * @param mintingTokenAmountRequested The amount of settlement tokens requested for minting.
+     * @param mintingCLBTokenAmount The actual amount of CLB tokens minted.
+     * @param burningCLBTokenAmountRequested The amount of CLB tokens requested for burning.
+     * @param burningCLBTokenAmount The actual amount of CLB tokens burned.
+     * @param burningTokenAmount The amount of settlement tokens equal in value to the burned CLB tokens.
      */
     struct ClaimableLiquidity {
-        /// @dev The amount of settlement tokens requested for minting.
         uint256 mintingTokenAmountRequested;
-        /// @dev The actual amount of CLB tokens minted.
         uint256 mintingCLBTokenAmount;
-        /// @dev The amount of CLB tokens requested for burning.
         uint256 burningCLBTokenAmountRequested;
-        /// @dev The actual amount of CLB tokens burned.
         uint256 burningCLBTokenAmount;
-        /// @dev The amount of settlement tokens equal in value to the burned CLB tokens.
         uint256 burningTokenAmount;
     }
 
+    /**
+     * @dev A struct representing status of the liquidity bin.
+     * @param liquidity The total liquidity amount in the bin
+     * @param freeLiquidity The amount of free liquidity available in the bin.
+     * @param binValue The current value of the bin.
+     * @param tradingFeeRate The trading fee rate for the liquidity.
+     */
     struct LiquidityBinStatus {
         uint256 liquidity;
         uint256 freeLiquidity;

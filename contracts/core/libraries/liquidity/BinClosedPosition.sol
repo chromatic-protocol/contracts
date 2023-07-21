@@ -10,8 +10,7 @@ import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/Positio
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 
 /**
- * @title BinClosedPosition
- * @notice Represents a closed position within an LiquidityBin.
+ * @dev Represents a closed position within an LiquidityBin.
  */
 struct BinClosedPosition {
     uint256 _totalMakerMargin;
@@ -23,8 +22,7 @@ struct BinClosedPosition {
 }
 
 /**
- * @title _ClaimWaitingPosition
- * @notice Represents the accumulated values of the waiting positions to be claimed
+ * @dev Represents the accumulated values of the waiting positions to be claimed
  *      for a specific version within BinClosedPosition.
  */
 struct _ClaimWaitingPosition {
