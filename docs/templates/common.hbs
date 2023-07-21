@@ -13,19 +13,25 @@ _{{{natspec.dev}}}_
 {{/if}}
 
 {{#if natspec.params}}
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+
+- Parameters:
+
+  | Name | Type | Description |
+  | ---- | ---- | ----------- |
 {{#each params}}
-| {{name}} | {{type}} | {{{joinLines natspec}}} |
+  | {{name}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
 {{/if}}
 
 {{#if natspec.returns}}
 {{#if returns}}
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+
+- Return Values:
+
+  | Name | Type | Description |
+  | ---- | ---- | ----------- |
 {{#each returns}}
-| {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{{joinLines natspec}}} |
+  | {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
 {{/if}}
 {{/if}}
