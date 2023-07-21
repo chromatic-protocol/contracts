@@ -15,10 +15,6 @@ export function getSourceUrl(id: string): string {
   )}`
 }
 
-export function isNodeType(item: DocItemWithContext, nodeTypeName: string): boolean {
-  return item.nodeType == nodeTypeName
-}
-
 export function replaceStruct(item: DocItemWithContext) {
   if (item.nodeType == 'StructDefinition') {
     const natspec = item['natspec']
@@ -28,7 +24,9 @@ export function replaceStruct(item: DocItemWithContext) {
         param.type = member?.typeDescriptions.typeString
         if (param.description) {
           // replace newline and tab
-          param.description = (param.description as string).replace(/\n/gi, '<br>').replace(/  /g, '')
+          param.description = (param.description as string)
+            .replace(/\n/gi, '<br>')
+            .replace(/  /g, '')
         }
       })
     }
