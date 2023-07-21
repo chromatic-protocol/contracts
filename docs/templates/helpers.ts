@@ -25,7 +25,7 @@ export function replaceStruct(item: DocItemWithContext) {
         if (param.description) {
           // replace newline and tab
           param.description = (param.description as string)
-            .replace(/\n/gi, '<br>')
+            .replace(/\n/gi, '<br />')
             .replace(/  /g, '')
         }
       })
