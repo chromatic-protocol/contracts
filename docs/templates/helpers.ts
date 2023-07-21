@@ -21,7 +21,15 @@ export function replaceStruct(item: DocItemWithContext) {
     if (natspec.params) {
       natspec.params.forEach((param) => {
         const member = item.members.find((e) => e.name === param.name)
-        param.type = member?.typeDescriptions.typeString
+        const typeString = member?.typeDescriptions.typeString
+          ?.replace('contract ', '')
+          .replace('struct ', '')
+          .replace('enum ', '')
+        if (typeString) {
+          param.type = typeString
+          member!.typeDescriptions.typeString = typeString
+          member!.typeName!.typeDescriptions.typeString = typeString
+        }
         if (param.description) {
           // replace newline and tab
           param.description = (param.description as string)
