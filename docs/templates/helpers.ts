@@ -22,10 +22,14 @@ export function isNodeType(item: DocItemWithContext, nodeTypeName: string): bool
 export function replaceStruct(item: DocItemWithContext) {
   if (item.nodeType == 'StructDefinition') {
     const natspec = item['natspec']
-    if(natspec.params){
+    if (natspec.params) {
       natspec.params.forEach((param) => {
         const member = item.members.find((e) => e.name === param.name)
         param.type = member?.typeDescriptions.typeString
+        if (param.description) {
+          // replace newline and tab
+          param.description = (param.description as string).replace(/\n/gi, '<br>').replace(/  /g, '')
+        }
       })
     }
   }
