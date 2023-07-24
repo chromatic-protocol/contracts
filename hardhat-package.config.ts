@@ -25,6 +25,6 @@ export default {
     'ChromaticRouter',
     'ChromaticVault'
   ],
-  // excludesFromDeployed: ['KeeperFeePayer', '*Lib', '*Mock', 'ChainlinkFeedOracle'],
+  excludesFromDeployed: ['*Mock'],
   excludeBytecode: true
 }
