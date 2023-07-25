@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import { parseUnits } from 'ethers'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, ethers } = hre
@@ -24,7 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const MarketFactory = await ethers.getContractFactory('ChromaticMarketFactory', {
     libraries: marketFactoryLibaries
   })
-  const marketFactory = MarketFactory.attach(marketFactoryAddress)
+  const marketFactory = MarketFactory.attach(marketFactoryAddress) as ChromaticMarketFactory
 
   await marketFactory.registerOracleProvider(
     oracleProviderAddress,

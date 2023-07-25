@@ -14,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const echainId =
+  const echainId: keyof typeof WETH9 =
     network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
