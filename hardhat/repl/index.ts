@@ -2,9 +2,11 @@ import * as Token from '@chromatic/deployments/anvil/Token.json'
 import {
   ChromaticAccount__factory,
   ChromaticLiquidatorMock__factory,
+  ChromaticMarket__factory,
   ChromaticRouter__factory,
   IChromaticMarketFactory__factory,
   IMarketLiquidate__factory,
+  IMarketSettle__factory,
   OracleProviderMock__factory
 } from '@chromatic/typechain-types'
 import { SWAP_ROUTER_02_ADDRESSES, USDC_ARBITRUM_GOERLI, WETH9 } from '@uniswap/smart-order-router'
@@ -158,6 +160,8 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
 
     for (const marketAddress of marketAddresses) {
       const market = IMarketLiquidate__factory.connect(marketAddress, deployer)
+      const marketSettle = IMarketSettle__factory.connect(marketAddress, deployer)
+      await marketSettle.settle()
       for (const account of accounts) {
         const positionIds = await ChromaticAccount__factory.connect(
           account,
@@ -176,6 +180,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
         }
       }
     }
+    
   })
 
   hre.currentOracleVersion = lazyFunction(() => async () => {
