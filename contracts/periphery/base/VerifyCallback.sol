@@ -7,6 +7,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
  * @dev Abstract contract for verifying callback functions from registered markets.
  */
 abstract contract VerifyCallback {
+    //slither-disable-next-line immutable-states
     address marketFactory;
 
     /**

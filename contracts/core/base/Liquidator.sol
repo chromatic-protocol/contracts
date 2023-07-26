@@ -15,7 +15,7 @@ abstract contract Liquidator is IChromaticLiquidator {
     uint256 private constant DEFAULT_LIQUIDATION_INTERVAL = 1 minutes;
     uint256 private constant DEFAULT_CLAIM_INTERVAL = 1 days;
 
-    IChromaticMarketFactory factory;
+    IChromaticMarketFactory immutable factory;
     uint256 public liquidationInterval;
     uint256 public claimInterval;
 

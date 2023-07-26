@@ -12,9 +12,9 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
  * @dev A contract that pays keeper fees using a Uniswap router.
  */
 contract KeeperFeePayer is IKeeperFeePayer {
-    IChromaticMarketFactory factory;
+    IChromaticMarketFactory immutable factory;
     ISwapRouter uniswapRouter;
-    IWETH9 public WETH9;
+    IWETH9 immutable public WETH9;
 
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
