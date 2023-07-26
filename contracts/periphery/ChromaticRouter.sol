@@ -444,6 +444,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         );
 
         for (uint i; i < feeRates.length; ) {
+            //slither-disable-next-line unused-return
             receiptIds[market][msg.sender].add(lpReceipts[i].id);
 
             unchecked {
