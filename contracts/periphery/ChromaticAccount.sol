@@ -74,6 +74,9 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
      */
     function initialize(address _owner, address _router, address _marketFactory) external {
         if (isInitialized) revert AlreadyInitialized();
+        require(_owner != address(0));
+        require(_router != address(0));
+        require(_marketFactory != address(0));
         owner = _owner;
         router = _router;
         isInitialized = true;
