@@ -254,6 +254,7 @@ contract MarketLiquidityFacet is
             receipt.amount,
             receipt.oracleVersion
         );
+        //slither-disable-next-line calls-loop
         ctx.clbToken.safeTransferFrom(
             address(this),
             receipt.recipient,
@@ -480,7 +481,7 @@ contract MarketLiquidityFacet is
             clbTokenAmount,
             receipt.oracleVersion
         );
-
+        //slither-disable-next-line calls-loop
         ctx.clbToken.safeTransferFrom(
             address(this),
             recipient,
@@ -488,6 +489,7 @@ contract MarketLiquidityFacet is
             clbTokenAmount - burnedCLBTokenAmount,
             bytes("")
         );
+        //slither-disable-next-line calls-loop
         ctx.vault.onWithdrawLiquidity(ctx.settlementToken, recipient, amount);
     }
 
