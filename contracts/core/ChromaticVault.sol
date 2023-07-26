@@ -213,11 +213,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     ) external override onlyMarket {
         address market = msg.sender;
 
-        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
-
         pendingWithdrawals[settlementToken] -= amount;
-
         emit OnWithdrawLiquidity(market, amount, recipient);
+        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, amount);
     }
 
     /**
