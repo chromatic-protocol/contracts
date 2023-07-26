@@ -104,6 +104,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
         WETH9.withdraw(amountOut);
 
         // send eth to keeper
+        //slither-disable-next-line arbitrary-send-eth
         (bool success, ) = keeperAddress.call{value: amountOut}("");
         if (!success) revert KeeperFeeTransferFailure();
 
