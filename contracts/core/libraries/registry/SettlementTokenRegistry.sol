@@ -252,6 +252,7 @@ library SettlementTokenRegistryLib {
         SettlementTokenRegistry storage self,
         address token
     ) internal view registeredOnly(self, token) returns (uint256 annualRateBPS) {
+        //slither-disable-next-line unused-return
         (InterestRate.Record memory record, ) = getInterestRateRecords(self, token).findRecordAt(
             block.timestamp
         );
