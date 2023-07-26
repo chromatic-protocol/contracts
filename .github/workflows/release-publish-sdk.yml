@@ -100,3 +100,4 @@ jobs:
             packages/sdk-viem/src/gen/index.ts
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: ${{ github.event.pull_request.title }}
+          title: Changes from contracts
