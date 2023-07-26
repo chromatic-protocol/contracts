@@ -126,6 +126,14 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address _marketLiquidateFacet,
         address _marketSettleFacet
     ) {
+        require(_marketDiamondCutFacet != address(0));
+        require(_marketLoupeFacet != address(0));
+        require(_marketStateFacet != address(0));
+        require(_marketLiquidityFacet != address(0));
+        require(_marketTradeFacet != address(0));
+        require(_marketLiquidateFacet != address(0));
+        require(_marketSettleFacet != address(0));
+
         dao = msg.sender;
         treasury = dao;
 
@@ -143,6 +151,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @dev This function can only be called by the DAO address.
      */
     function updateDao(address _dao) external override onlyDao {
+        require(_dao != address(0));
         dao = _dao;
         emit UpdateDao(dao);
     }
@@ -152,6 +161,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @dev This function can only be called by the DAO address.
      */
     function updateTreasury(address _treasury) external override onlyDao {
+        require(_treasury != address(0));
         treasury = _treasury;
         emit UpdateTreasury(treasury);
     }
@@ -162,6 +172,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      *      Throws an `AlreadySetLiquidator` error if the liquidator address has already been set.
      */
     function setLiquidator(address _liquidator) external override onlyDao {
+        require(_liquidator != address(0));
         if (liquidator != address(0)) revert AlreadySetLiquidator();
 
         liquidator = _liquidator;
@@ -174,6 +185,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      *      Throws an `AlreadySetVault` error if the vault address has already been set.
      */
     function setVault(address _vault) external override onlyDao {
+        require(_vault != address(0));
         if (vault != address(0)) revert AlreadySetVault();
 
         vault = _vault;
@@ -186,6 +198,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      *      Throws an `AlreadySetKeeperFeePayer` error if the keeper fee payer address has already been set.
      */
     function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
+        require(_keeperFeePayer != address(0));
         if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
 
         keeperFeePayer = _keeperFeePayer;
