@@ -31,6 +31,7 @@ library ChainlinkAggregatorLib {
     function getLatestRound(
         ChainlinkAggregator self
     ) internal view returns (ChainlinkRound memory) {
+        //slither-disable-next-line unused-return
         (uint80 roundId, int256 answer, , uint256 updatedAt, ) = AggregatorProxyInterface(
             ChainlinkAggregator.unwrap(self)
         ).latestRoundData();
@@ -47,6 +48,7 @@ library ChainlinkAggregatorLib {
         ChainlinkAggregator self,
         uint256 roundId
     ) internal view returns (ChainlinkRound memory) {
+        //slither-disable-next-line unused-return
         (, int256 answer, , uint256 updatedAt, ) = AggregatorProxyInterface(
             ChainlinkAggregator.unwrap(self)
         ).getRoundData(uint80(roundId));
@@ -71,6 +73,7 @@ library ChainlinkAggregatorLib {
         AggregatorProxyInterface proxy = AggregatorProxyInterface(ChainlinkAggregator.unwrap(self));
 
         // Try to get the immediate next round in the same phase. If this errors, we know that the phase has ended
+        //slither-disable-next-line unused-return
         try proxy.getRoundData(uint80(lastSyncedRoundId + 1)) returns (
             uint80 nextRoundId,
             int256,
@@ -94,12 +97,14 @@ library ChainlinkAggregatorLib {
 
         // lastSyncedRound is the last round it's phase before latestRound, so we need to find where the next phase starts
         // The next phase should start at the round that is closest to but after lastSyncedRound.timestamp
+        //slither-disable-next-line unused-return
         (, , , uint256 lastSyncedRoundTimestamp, ) = proxy.getRoundData(uint80(lastSyncedRoundId));
         nextPhaseStartingRoundId = latestRound.roundId;
         uint256 updatedAt = latestRound.timestamp;
         // Walk back in the new phase until we dip below the lastSyncedRound.timestamp
         while (updatedAt >= lastSyncedRoundTimestamp) {
             nextPhaseStartingRoundId--;
+            //slither-disable-next-line unused-return
             (, , , updatedAt, ) = proxy.getRoundData(uint80(nextPhaseStartingRoundId));
         }
 
