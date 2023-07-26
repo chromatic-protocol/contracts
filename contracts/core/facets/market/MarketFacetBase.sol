@@ -57,6 +57,8 @@ abstract contract MarketFacetBase {
      * @return The LP context.
      */
     function newLpContext(MarketStorage storage ms) internal view returns (LpContext memory) {
+        
+        //slither-disable-next-line uninitialized-local
         IOracleProvider.OracleVersion memory _currentVersionCache;
         return
             LpContext({
