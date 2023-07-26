@@ -64,6 +64,7 @@ library BinClosedPositionLib {
 
         self._totalMakerMargin += waitingPosition.totalMakerMargin;
         self._totalTakerMargin += waitingPosition.totalTakerMargin;
+        //slither-disable-next-line unused-return
         self._waitingVersions.add(closeVersion);
         self._waitingPositions[closeVersion] = waitingPosition;
 
@@ -117,6 +118,7 @@ library BinClosedPositionLib {
             self._accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
 
             if (exhausted) {
+                //slither-disable-next-line unused-return
                 self._waitingVersions.remove(closeVersion);
                 delete self._waitingPositions[closeVersion];
             }
