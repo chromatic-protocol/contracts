@@ -25,8 +25,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
     uint256 private constant DISTRIBUTION_INTERVAL = 1 hours;
 
-    IChromaticMarketFactory factory;
-    IKeeperFeePayer keeperFeePayer;
+    IChromaticMarketFactory immutable factory;
+    IKeeperFeePayer immutable keeperFeePayer;
 
     mapping(address => uint256) public makerBalances; // settlement token => balance
     mapping(address => uint256) public takerBalances; // settlement token => balance

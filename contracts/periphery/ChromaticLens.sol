@@ -26,7 +26,7 @@ contract ChromaticLens {
         uint256 binValue;
     }
 
-    IChromaticRouter router;
+    IChromaticRouter immutable router;
 
     constructor(IChromaticRouter _router) {
         router = _router;
