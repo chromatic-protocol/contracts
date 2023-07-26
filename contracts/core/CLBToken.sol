@@ -162,15 +162,6 @@ contract CLBToken is ERC1155Supply, ICLBToken {
     }
 
     /**
-     * @dev Encodes a trading fee rate into a token ID.
-     * @param tradingFeeRate The trading fee rate to encode.
-     * @return id The encoded token ID.
-     */
-    function encodeId(int16 tradingFeeRate) internal pure returns (uint256 id) {
-        id = CLBTokenLib.encodeId(tradingFeeRate);
-    }
-
-    /**
      * @dev Decodes a token ID into a trading fee rate.
      * @param id The token ID to decode.
      * @return tradingFeeRate The decoded trading fee rate.
