@@ -277,14 +277,14 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             marketLiquidateFacet,
             marketSettleFacet
         );
-        
+
         _marketsBySettlementToken[settlementToken].push(market);
         //slither-disable-next-line unused-return
         _markets.add(market);
 
-        IChromaticVault(vault).createMarketEarningDistributionTask(market);
-
         emit MarketCreated(oracleProvider, settlementToken, market);
+
+        IChromaticVault(vault).createMarketEarningDistributionTask(market);
     }
 
     /**
