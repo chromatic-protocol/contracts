@@ -156,11 +156,14 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
             interest.toInt256();
 
         uint256 absPnl = _pnl.abs();
+        //slither-disable-next-line timestamp
         if (_pnl > 0) {
             // whether profit stop (taker side)
+            //slither-disable-next-line timestamp
             _liquidate = absPnl >= position.makerMargin();
         } else {
             // whether loss cut (taker side)
+            //slither-disable-next-line timestamp
             _liquidate = absPnl >= position.takerMargin;
         }
     }
