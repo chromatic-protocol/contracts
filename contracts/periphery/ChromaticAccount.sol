@@ -98,10 +98,12 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     }
 
     function addPositionId(address market, uint256 positionId) internal {
+        //slither-disable-next-line unused-return
         positionIds[market].add(positionId);
     }
 
     function removePositionId(address market, uint256 positionId) internal {
+        //slither-disable-next-line unused-return
         positionIds[market].remove(positionId);
     }
 
