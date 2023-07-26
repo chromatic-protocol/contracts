@@ -16,40 +16,7 @@ contract GasUsage is BaseSetup, IERC1155Receiver {
     }
 
     function test_addLiquidity() public {
-        router.addLiquidity_directly(address(market), 1, 10 ether, address(this));
-    }
-
-    function test_addLiquidity_by_call() public {
         router.addLiquidity(address(market), 1, 10 ether, address(this));
-    }
-
-    function test_LiquidtyBatch_old() public {
-        (
-            int16[] memory feeRates,
-            uint256[] memory amounts,
-            address[] memory accounts
-        ) = _liquidityBatchArgs();
-
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
-        router.addLiquidityBatch_old(address(market), address(this), feeRates, amounts);
-
-        uint256[] memory receiptIds = router.getLpReceiptIds(address(market), address(this));
-
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
-        router.claimLiquidityBatch_old(address(market), receiptIds);
-
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
-        router.removeLiquidityBatch_old(
-            address(market),
-            address(this),
-            feeRates,
-            clbToken.balanceOfBatch(accounts, CLBTokenLib.tokenIds())
-        );
-
-        receiptIds = router.getLpReceiptIds(address(market), address(this));
-
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
-        router.withdrawLiquidityBatch_old(address(market), receiptIds);
     }
 
     function test_LiquidtyBatch() public {

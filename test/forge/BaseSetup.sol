@@ -20,7 +20,7 @@ import {MarketLiquidityFacet} from "@chromatic-protocol/contracts/core/facets/ma
 import {MarketTradeFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacet.sol";
 import {MarketLiquidateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidateFacet.sol";
 import {MarketSettleFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketSettleFacet.sol";
-import {ChromaticRouterMock} from "./periphery/ChromaticRouterMock.sol";
+import {ChromaticRouter} from "@chromatic-protocol/contracts/periphery/ChromaticRouter.sol";
 
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;
@@ -31,7 +31,7 @@ abstract contract BaseSetup is Test {
     ChromaticLiquidatorMock liquidator;
     IChromaticMarket market;
     ICLBToken clbToken;
-    ChromaticRouterMock router;
+    ChromaticRouter router;
 
     function setUp() public virtual {
         IAutomate _automate = IAutomate(address(5555));
@@ -97,6 +97,6 @@ abstract contract BaseSetup is Test {
         factory.createMarket(address(oracleProvider), address(usdc));
         market = IChromaticMarket(factory.getMarkets()[0]);
         clbToken = market.clbToken();
-        router = new ChromaticRouterMock(address(factory));
+        router = new ChromaticRouter(address(factory));
     }
 }

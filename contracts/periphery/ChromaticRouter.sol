@@ -313,7 +313,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         int16 feeRate,
         uint256 amount,
         address recipient
-    ) public override returns (LpReceipt memory receipt) {
+    ) external override returns (LpReceipt memory receipt) {
         receipt = IChromaticMarket(market).addLiquidity(
             recipient,
             feeRate,
@@ -329,7 +329,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      * @dev This function allows the liquidity provider to claim their liquidity by calling the `claimLiquidity` function in the specified market contract.
      *      Throws a `NotExistLpReceipt` error if the specified receipt ID does not exist for the liquidity provider in the given market.
      */
-    function claimLiquidity(address market, uint256 receiptId) public override {
+    function claimLiquidity(address market, uint256 receiptId) external override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
@@ -347,7 +347,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         int16 feeRate,
         uint256 clbTokenAmount,
         address recipient
-    ) public override returns (LpReceipt memory receipt) {
+    ) external override returns (LpReceipt memory receipt) {
         receipt = IChromaticMarket(market).removeLiquidity(
             recipient,
             feeRate,
@@ -364,7 +364,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      * @dev This function allows the liquidity provider to withdraw their liquidity by calling the `withdrawLiquidity` function in the specified market contract.
      *      Throws a `NotExistLpReceipt` error if the specified receipt ID does not exist for the liquidity provider in the given market.
      */
-    function withdrawLiquidity(address market, uint256 receiptId) public override {
+    function withdrawLiquidity(address market, uint256 receiptId) external override {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
