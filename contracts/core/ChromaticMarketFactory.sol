@@ -264,6 +264,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             revert NotRegisteredSettlementToken();
 
         if (_registered[oracleProvider][settlementToken]) revert ExistMarket();
+        _registered[oracleProvider][settlementToken] = true;
 
         address market = _deployer.deploy(
             oracleProvider,
@@ -276,8 +277,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             marketLiquidateFacet,
             marketSettleFacet
         );
-
-        _registered[oracleProvider][settlementToken] = true;
+        
         _marketsBySettlementToken[settlementToken].push(market);
         //slither-disable-next-line unused-return
         _markets.add(market);
