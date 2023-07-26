@@ -96,6 +96,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
         uint256 amountOut,
         address keeperAddress
     ) external returns (uint256 amountIn) {
+        require(keeperAddress != address(0));
         uint256 balance = IERC20(tokenIn).balanceOf(address(this));
 
         amountIn = swapExactOutput(tokenIn, address(this), amountOut, balance);
