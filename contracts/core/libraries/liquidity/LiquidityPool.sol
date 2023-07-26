@@ -498,7 +498,11 @@ library LiquidityPoolLib {
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         // Process the withdraw liquidity request on the liquidity bin
         // and get the amount of base tokens withdrawn and CLB tokens burned
-        return bin.acceptWithdrawLiquidity(ctx, clbTokenAmount, oracleVersion);
+        (amount, burnedCLBTokenAmount) = bin.acceptWithdrawLiquidity(
+            ctx,
+            clbTokenAmount,
+            oracleVersion
+        );
     }
 
     /**
