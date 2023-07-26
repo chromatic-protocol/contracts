@@ -106,7 +106,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
         // send eth to keeper
         //slither-disable-next-line arbitrary-send-eth
-        (bool success, ) = keeperAddress.call{value: amountOut}("");
+        bool success = payable(keeperAddress).send(amountOut);
         if (!success) revert KeeperFeeTransferFailure();
 
         uint256 remainedBalance = IERC20(tokenIn).balanceOf(address(this));
