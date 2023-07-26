@@ -131,6 +131,7 @@ library LiquidityPoolLib {
 
         //slither-disable-next-line uninitialized-local
         uint256 to;
+        //slither-disable-next-line uninitialized-local
         uint256 cnt;
         uint256 remain = makerMargin;
         for (; to < FEE_RATES_LENGTH; to++) {
