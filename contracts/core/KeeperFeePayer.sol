@@ -14,7 +14,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 contract KeeperFeePayer is IKeeperFeePayer {
     IChromaticMarketFactory immutable factory;
     ISwapRouter uniswapRouter;
-    IWETH9 immutable public WETH9;
+    IWETH9 public immutable WETH9;
 
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
@@ -82,7 +82,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
      * @dev Only the factory or the DAO can call this function.
      */
     function approveToRouter(address token, bool approve) external onlyFactoryOrDao {
-        IERC20(token).approve(address(uniswapRouter), approve ? type(uint256).max : 0);
+        require(IERC20(token).approve(address(uniswapRouter), approve ? type(uint256).max : 0));
     }
 
     /**
