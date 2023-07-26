@@ -92,6 +92,7 @@ contract ChromaticLens {
         uint256[] memory balances = market.clbToken().balanceOfBatch(accounts, tokenIds);
 
         // Count the number of CLB tokens with non-zero balance
+        //slither-disable-next-line uninitialized-local
         uint256 effectiveCnt;
         for (uint256 i; i < balances.length; ) {
             if (balances[i] != 0) {
@@ -109,6 +110,7 @@ contract ChromaticLens {
         uint256[] memory effectiveTokenIds = new uint256[](effectiveCnt);
         int16[] memory effectiveFeeRates = new int16[](effectiveCnt);
 
+        //slither-disable-next-line uninitialized-local
         uint256 idx;
         for (uint256 i; i < balances.length; ) {
             if (balances[i] != 0) {

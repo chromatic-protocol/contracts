@@ -207,6 +207,7 @@ contract CLBToken is ERC1155Supply, ICLBToken {
         uint256 integerPart = absFeeRate / pct;
         uint256 fractionalPart = absFeeRate % pct;
 
+        //slither-disable-next-line uninitialized-local
         bytes memory fraction;
         if (fractionalPart != 0) {
             uint256 fractionalPart1 = fractionalPart / (pct / 10);

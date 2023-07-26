@@ -126,8 +126,10 @@ library LiquidityPoolLib {
         mapping(uint16 => LiquidityBin) storage _bins = targetBins(self, qty);
 
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
+        //slither-disable-next-line uninitialized-local
         uint256[FEE_RATES_LENGTH] memory _binMargins;
 
+        //slither-disable-next-line uninitialized-local
         uint256 to;
         uint256 cnt;
         uint256 remain = makerMargin;
