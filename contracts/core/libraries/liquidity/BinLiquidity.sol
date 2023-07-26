@@ -344,6 +344,7 @@ library BinLiquidityLib {
             uint256 _ov = uint256(self._burningVersions.front());
             _ClaimBurning memory _cb = self._claimBurnings[_ov];
             if (_cb.clbTokenAmount >= _cb.clbTokenAmountRequested) {
+                //slither-disable-next-line unused-return
                 self._burningVersions.popFront();
                 if (_cb.clbTokenAmountRequested == 0) {
                     delete self._claimBurnings[_ov];
