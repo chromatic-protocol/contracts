@@ -266,6 +266,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         _registered[oracleProvider][settlementToken] = true;
         _marketsBySettlementToken[settlementToken].push(market);
+        //slither-disable-next-line unused-return
         _markets.add(market);
 
         IChromaticVault(vault).createMarketEarningDistributionTask(market);
