@@ -42,9 +42,9 @@ describe('interest fee test', async function () {
   }) {
     return async () => {
       await initialize(liquidityConfig)
-      let timestamp = await time.latest()
-      const firstTimestamp = BigInt(timestamp)
-      console.log('before open position timestamp ', timestamp)
+      let initTimestamp = await time.latest()
+      console.log(' first timestamp', initTimestamp)
+      console.log('before open position timestamp ', initTimestamp)
 
       let marginEth = parseEther(margin.toString())
       const takerMargin = marginEth
@@ -88,21 +88,18 @@ describe('interest fee test', async function () {
           tradingFee // maxAllowFee (0.01% * makerMargin)
         )
       )
+      // 1682590676    1682590673
+      // 1682590680    1682590676
       await updatePrice(1000)
       const positionIds = await traderAccount.getPositionIds(market.getAddress())
-
-      console.log('after open position timestamp ', timestamp)
-      timestamp = await time.latest()
-      let wantedTimestamp = BigInt(timestamp) + BigInt(60 * 60 * 24 * 365) * year
-      await time.setNextBlockTimestamp(wantedTimestamp - 3n)
-      // timestamp = await time.latest()
-
+      let wantedTimestamp = BigInt(initTimestamp) + BigInt(60 * 60 * 24 * 365) * year
+      await time.setNextBlockTimestamp(wantedTimestamp)
       await awaitTx(traderRouter.closePosition(market.getAddress(), positionIds[0]))
       await updatePrice(1000)
       await awaitTx(traderRouter.claimPosition(market.getAddress(), positionIds[0]))
 
       console.log('wantedTimestamp ', wantedTimestamp)
-      console.log('updated timestamp', timestamp)
+      console.log('updated timestamp', initTimestamp)
       console.log('positions', positionIds)
       console.log('position id ', positionIds[0])
       const balanceOfAfterClosePosition = await traderAccount.balance(settlementToken.getAddress())
@@ -114,7 +111,7 @@ describe('interest fee test', async function () {
       const totalFee = tradingFee + interestFee
       console.log(
         `duration ( ${
-          ((wantedTimestamp - firstTimestamp) * BigInt(24 * 365)) / 3600n
+          ((wantedTimestamp - BigInt(initTimestamp)) * BigInt(24 * 365)) / 3600n
         } year ) paid fee  `,
         formatEther(paidFee)
       )
