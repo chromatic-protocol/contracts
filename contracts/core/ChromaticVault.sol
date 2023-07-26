@@ -443,8 +443,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     ) external virtual override onlyFactoryOrDao {
         bytes32 taskId = makerEarningDistributionTaskIds[token];
         if (taskId != bytes32(0)) {
-            automate.cancelTask(taskId);
             delete makerEarningDistributionTaskIds[token];
+            automate.cancelTask(taskId);
         }
     }
 
@@ -561,8 +561,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     ) external virtual override onlyFactoryOrDao {
         bytes32 taskId = marketEarningDistributionTaskIds[market];
         if (taskId != bytes32(0)) {
-            automate.cancelTask(taskId);
             delete marketEarningDistributionTaskIds[market];
+            automate.cancelTask(taskId);
         }
     }
 

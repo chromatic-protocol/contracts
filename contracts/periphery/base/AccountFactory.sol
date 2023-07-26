@@ -31,8 +31,8 @@ abstract contract AccountFactory is IChromaticRouter {
         require(accounts[owner] == address(0));
 
         ChromaticAccount newAccount = ChromaticAccount(Clones.clone(address(cloneBase)));
-        newAccount.initialize(owner, address(this), marketFactory);
         accounts[owner] = address(newAccount);
+        newAccount.initialize(owner, address(this), marketFactory);
 
         emit AccountCreated(address(newAccount), owner);
     }
