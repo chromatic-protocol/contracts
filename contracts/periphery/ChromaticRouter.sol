@@ -314,17 +314,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         uint256 amount,
         address recipient
     ) public override returns (LpReceipt memory receipt) {
-        bytes memory result = _call(
-            market,
-            abi.encodeWithSelector(
-                IChromaticMarket(market).addLiquidity.selector,
-                recipient,
-                feeRate,
-                abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: amount}))
-            )
+        receipt = IChromaticMarket(market).addLiquidity(
+            recipient,
+            feeRate,
+            abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: amount}))
         );
 
-        receipt = abi.decode(result, (LpReceipt));
         //slither-disable-next-line unused-return
         receiptIds[market][msg.sender].add(receipt.id);
     }
@@ -338,13 +333,9 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
-        _call(
-            market,
-            abi.encodeWithSelector(
-                IChromaticMarket(market).claimLiquidity.selector,
-                receiptId,
-                abi.encode(ClaimLiquidityCallbackData({provider: provider}))
-            )
+        IChromaticMarket(market).claimLiquidity(
+            receiptId,
+            abi.encode(ClaimLiquidityCallbackData({provider: provider}))
         );
     }
 
@@ -357,22 +348,13 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         uint256 clbTokenAmount,
         address recipient
     ) public override returns (LpReceipt memory receipt) {
-        bytes memory result = _call(
-            market,
-            abi.encodeWithSelector(
-                IChromaticMarket(market).removeLiquidity.selector,
-                recipient,
-                feeRate,
-                abi.encode(
-                    RemoveLiquidityCallbackData({
-                        provider: msg.sender,
-                        clbTokenAmount: clbTokenAmount
-                    })
-                )
+        receipt = IChromaticMarket(market).removeLiquidity(
+            recipient,
+            feeRate,
+            abi.encode(
+                RemoveLiquidityCallbackData({provider: msg.sender, clbTokenAmount: clbTokenAmount})
             )
         );
-
-        receipt = abi.decode(result, (LpReceipt));
         //slither-disable-next-line unused-return
         receiptIds[market][msg.sender].add(receipt.id);
     }
@@ -386,13 +368,9 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         address provider = msg.sender;
         if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
 
-        _call(
-            market,
-            abi.encodeWithSelector(
-                IChromaticMarket(market).withdrawLiquidity.selector,
-                receiptId,
-                abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
-            )
+        IChromaticMarket(market).withdrawLiquidity(
+            receiptId,
+            abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
         );
     }
 
@@ -511,15 +489,5 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
             _receiptIds,
             abi.encode(WithdrawLiquidityBatchCallbackData({provider: msg.sender}))
         );
-    }
-
-    function _call(address target, bytes memory data) internal returns (bytes memory) {
-        (bool success, bytes memory result) = target.call(data);
-        if (!success) {
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
-        }
-        return result;
     }
 }
