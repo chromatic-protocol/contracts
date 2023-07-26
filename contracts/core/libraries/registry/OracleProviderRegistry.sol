@@ -9,7 +9,6 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
  * @param _oracleProviders Set of registered oracle providers
  */
 struct OracleProviderRegistry {
-    
     EnumerableSet.AddressSet _oracleProviders;
     mapping(address => uint32) _minTakeProfitBPSs;
     mapping(address => uint32) _maxTakeProfitBPSs;
@@ -44,6 +43,7 @@ library OracleProviderRegistryLib {
             Errors.ALREADY_REGISTERED_ORACLE_PROVIDER
         );
 
+        //slither-disable-next-line unused-return
         self._oracleProviders.add(oracleProvider);
         self._minTakeProfitBPSs[oracleProvider] = minTakeProfitBPS;
         self._maxTakeProfitBPSs[oracleProvider] = maxTakeProfitBPS;
@@ -56,6 +56,7 @@ library OracleProviderRegistryLib {
      * @param oracleProvider The address of the oracle provider to unregister.
      */
     function unregister(OracleProviderRegistry storage self, address oracleProvider) internal {
+        //slither-disable-next-line unused-return
         self._oracleProviders.remove(oracleProvider);
     }
 
