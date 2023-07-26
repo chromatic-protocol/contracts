@@ -51,7 +51,9 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         // Calculate the realized profit or loss by subtracting the interest from the total pnl
         int256 realizedPnl = pnl - interest.toInt256();
         uint256 absRealizedPnl = realizedPnl.abs();
+        //slither-disable-next-line timestamp
         if (realizedPnl > 0) {
+            //slither-disable-next-line timestamp
             if (absRealizedPnl > makerMargin) {
                 // If the absolute value of the realized pnl is greater than the maker margin,
                 // set the realized pnl to the maker margin and add the maker margin to the settlement
@@ -61,6 +63,7 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
                 settlementAmount += absRealizedPnl;
             }
         } else {
+            //slither-disable-next-line timestamp
             if (absRealizedPnl > takerMargin) {
                 // If the absolute value of the realized pnl is greater than the taker margin,
                 // set the realized pnl to the negative taker margin and set the settlement amount to 0
