@@ -50,24 +50,6 @@ library PositionLib {
     using SignedMath for int256;
 
     /**
-     * @notice Calculates the settle version for the position's entry
-     * @param self The memory instance of the `Position` struct
-     * @return utin256 The settle version for the position's entry
-     */
-    function entryVersion(Position memory self) internal pure returns (uint256) {
-        return PositionUtil.settleVersion(self.openVersion);
-    }
-
-    /**
-     * @notice Calculates the settle version for the position's exit
-     * @param self The memory instance of the `Position` struct
-     * @return utin256 The settle version for the position's exit
-     */
-    function exitVersion(Position memory self) internal pure returns (uint256) {
-        return PositionUtil.settleVersion(self.closeVersion);
-    }
-
-    /**
      * @notice Calculates the leveraged quantity of the position
      *         based on the position's quantity and leverage
      * @param self The memory instance of the `Position` struct
