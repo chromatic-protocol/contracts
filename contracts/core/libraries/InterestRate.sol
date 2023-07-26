@@ -63,6 +63,7 @@ library InterestRate {
         uint256 beginTimestamp
     ) internal initialized(self) {
         require(annualRateBPS <= MAX_RATE_BPS, Errors.INTEREST_RATE_OVERFLOW);
+        //slither-disable-next-line timestamp
         require(beginTimestamp > block.timestamp, Errors.INTEREST_RATE_PAST_TIMESTAMP);
 
         Record memory lastRecord = self[self.length - 1];
@@ -91,6 +92,7 @@ library InterestRate {
         }
 
         Record memory lastRecord = self[self.length - 1];
+        //slither-disable-next-line timestamp
         require(block.timestamp < lastRecord.beginTimestamp, Errors.INTEREST_RATE_ALREADY_APPLIED);
 
         self.pop();
