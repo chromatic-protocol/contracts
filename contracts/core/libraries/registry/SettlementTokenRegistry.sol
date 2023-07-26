@@ -256,7 +256,7 @@ library SettlementTokenRegistryLib {
         (InterestRate.Record memory record, ) = getInterestRateRecords(self, token).findRecordAt(
             block.timestamp
         );
-        return record.annualRateBPS;
+        annualRateBPS = record.annualRateBPS;
     }
 
     /**
