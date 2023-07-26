@@ -268,7 +268,10 @@ library LiquidityBinLib {
         uint256 clbTokenAmount,
         uint256 oracleVersion
     ) internal _settle(self, ctx) returns (uint256 amount, uint256 burnedCLBTokenAmount) {
-        return self._liquidity.onWithdrawLiquidity(clbTokenAmount, oracleVersion);
+        (amount, burnedCLBTokenAmount) = self._liquidity.onWithdrawLiquidity(
+            clbTokenAmount,
+            oracleVersion
+        );
     }
 
     /**
