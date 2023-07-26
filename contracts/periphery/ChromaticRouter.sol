@@ -164,6 +164,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
             data,
             (ClaimLiquidityCallbackData)
         );
+        //slither-disable-next-line unused-return
         receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
@@ -179,6 +180,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
             (ClaimLiquidityBatchCallbackData)
         );
         for (uint256 i; i < _receiptIds.length; ) {
+            //slither-disable-next-line unused-return
             receiptIds[msg.sender][callbackData.provider].remove(_receiptIds[i]);
 
             unchecked {
@@ -241,6 +243,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
             data,
             (WithdrawLiquidityCallbackData)
         );
+        //slither-disable-next-line unused-return
         receiptIds[msg.sender][callbackData.provider].remove(receiptId);
     }
 
@@ -257,6 +260,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         );
 
         for (uint256 i; i < _receiptIds.length; ) {
+            //slither-disable-next-line unused-return
             receiptIds[msg.sender][callbackData.provider].remove(_receiptIds[i]);
 
             unchecked {
@@ -321,6 +325,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         );
 
         receipt = abi.decode(result, (LpReceipt));
+        //slither-disable-next-line unused-return
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
@@ -368,6 +373,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         );
 
         receipt = abi.decode(result, (LpReceipt));
+        //slither-disable-next-line unused-return
         receiptIds[market][msg.sender].add(receipt.id);
     }
 
@@ -485,6 +491,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         );
 
         for (uint i; i < feeRates.length; ) {
+            //slither-disable-next-line unused-return
             receiptIds[market][msg.sender].add(lpReceipts[i].id);
 
             unchecked {
