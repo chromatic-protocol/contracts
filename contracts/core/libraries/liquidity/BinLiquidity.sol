@@ -100,6 +100,7 @@ library BinLiquidityLib {
         uint256 clbTokenId
     ) internal {
         ICLBToken clbToken = ctx.clbToken;
+        //slither-disable-next-line calls-loop
         uint256 totalSupply = clbToken.totalSupply(clbTokenId);
 
         (uint256 pendingDeposit, uint256 mintingAmount) = _settlePending(
@@ -116,12 +117,15 @@ library BinLiquidityLib {
         );
 
         if (mintingAmount > burningAmount) {
+            //slither-disable-next-line calls-loop
             clbToken.mint(ctx.market, clbTokenId, mintingAmount - burningAmount, bytes(""));
         } else if (mintingAmount < burningAmount) {
+            //slither-disable-next-line calls-loop
             clbToken.burn(ctx.market, clbTokenId, burningAmount - mintingAmount);
         }
 
         if (pendingDeposit != 0 || pendingWithdrawal != 0) {
+            //slither-disable-next-line calls-loop
             ctx.vault.onSettlePendingLiquidity(
                 ctx.settlementToken,
                 pendingDeposit,
