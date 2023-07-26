@@ -143,8 +143,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     ) external override onlyMarket {
         address market = msg.sender;
 
-        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, settlementAmount);
-
         takerBalances[settlementToken] -= takerMargin;
         takerMarketBalances[market] -= takerMargin;
 
@@ -161,8 +159,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
             makerBalances[settlementToken] += makerProfit;
             makerMarketBalances[market] += makerProfit;
         }
-
         emit OnClaimPosition(market, positionId, recipient, takerMargin, settlementAmount);
+
+        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, settlementAmount);
     }
 
     /**
@@ -276,8 +275,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 amount
     ) internal {
         if (amount != 0) {
-            SafeERC20.safeTransfer(IERC20(settlementToken), factory.treasury(), amount);
             emit TransferProtocolFee(market, positionId, amount);
+            SafeERC20.safeTransfer(IERC20(settlementToken), factory.treasury(), amount);
         }
     }
 
