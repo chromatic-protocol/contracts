@@ -32,13 +32,13 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address public override keeperFeePayer;
     address public override treasury;
 
-    address private marketDiamondCutFacet;
-    address private marketLoupeFacet;
-    address private marketStateFacet;
-    address private marketLiquidityFacet;
-    address private marketTradeFacet;
-    address private marketLiquidateFacet;
-    address private marketSettleFacet;
+    address private immutable marketDiamondCutFacet;
+    address private immutable marketLoupeFacet;
+    address private immutable marketStateFacet;
+    address private immutable marketLiquidityFacet;
+    address private immutable marketTradeFacet;
+    address private immutable marketLiquidateFacet;
+    address private immutable marketSettleFacet;
 
     OracleProviderRegistry private _oracleProviderRegistry;
     SettlementTokenRegistry private _settlementTokenRegistry;
