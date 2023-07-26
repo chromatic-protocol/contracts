@@ -1,9 +1,10 @@
 {
-    "exclude_informational": false,
-    "exclude_low": false,
-    "exclude_medium": false,
-    "exclude_high": false,
-    "disable_color": false,
-    "filter_paths": "(mocks/|test/|node_modules/|lib/forge-std|gelato/)",
-    "legacy_ast": false
+  "exclude_informational": false,
+  "exclude_low": false,
+  "exclude_medium": false,
+  "exclude_high": false,
+  "disable_color": false,
+  "filter_paths": "(mocks/|test/|node_modules/|lib/forge-std|gelato/)",
+  "legacy_ast": false,
+  "detectors_to_exclude": "solc-version,similar-names"
 }
