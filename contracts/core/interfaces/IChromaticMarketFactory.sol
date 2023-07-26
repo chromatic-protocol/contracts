@@ -90,33 +90,33 @@ interface IChromaticMarketFactory is
 
     /**
      * @notice Updates the DAO address.
-     * @param dao The new DAO address.
+     * @param _dao The new DAO address.
      */
-    function updateDao(address dao) external;
+    function updateDao(address _dao) external;
 
     /**
      * @notice Updates the DAO treasury address.
-     * @param treasury The new DAO treasury address.
+     * @param _treasury The new DAO treasury address.
      */
-    function updateTreasury(address treasury) external;
+    function updateTreasury(address _treasury) external;
 
     /**
      * @notice Sets the liquidator address.
-     * @param liquidator The liquidator address.
+     * @param _liquidator The liquidator address.
      */
-    function setLiquidator(address liquidator) external;
+    function setLiquidator(address _liquidator) external;
 
     /**
      * @notice Sets the vault address.
-     * @param vault The vault address.
+     * @param _vault The vault address.
      */
-    function setVault(address vault) external;
+    function setVault(address _vault) external;
 
     /**
      * @notice Sets the keeper fee payer address.
-     * @param keeperFeePayer The keeper fee payer address.
+     * @param _keeperFeePayer The keeper fee payer address.
      */
-    function setKeeperFeePayer(address keeperFeePayer) external;
+    function setKeeperFeePayer(address _keeperFeePayer) external;
 
     /**
      * @notice Returns an array of all market addresses.

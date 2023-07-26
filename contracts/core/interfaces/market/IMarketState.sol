@@ -71,7 +71,7 @@ interface IMarketState {
 
     /**
      * @notice Set the denominator of the protocol's % share of the fees
-     * @param feeProtocol new protocol fee for the market
+     * @param _feeProtocol new protocol fee for the market
      */
-    function setFeeProtocol(uint8 feeProtocol) external;
+    function setFeeProtocol(uint8 _feeProtocol) external;
 }

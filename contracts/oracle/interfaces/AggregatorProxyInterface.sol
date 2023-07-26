@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {AggregatorV2V3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV2V3Interface.sol";
 
 interface AggregatorProxyInterface is AggregatorV2V3Interface {
-    function phaseAggregators(uint16 phaseId) external view returns (address);
+    function phaseAggregators(uint16 _phaseId) external view returns (address);
 
     function phaseId() external view returns (uint16);
 
