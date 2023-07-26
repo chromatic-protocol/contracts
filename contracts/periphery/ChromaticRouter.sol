@@ -123,6 +123,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
         bytes calldata data
     ) external override verifyCallback {
         AddLiquidityCallbackData memory callbackData = abi.decode(data, (AddLiquidityCallbackData));
+        //slither-disable-next-line arbitrary-send-erc20
         SafeERC20.safeTransferFrom(
             IERC20(settlementToken),
             callbackData.provider,
@@ -143,6 +144,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
             data,
             (AddLiquidityBatchCallbackData)
         );
+        //slither-disable-next-line arbitrary-send-erc20
         SafeERC20.safeTransferFrom(
             IERC20(settlementToken),
             callbackData.provider,
