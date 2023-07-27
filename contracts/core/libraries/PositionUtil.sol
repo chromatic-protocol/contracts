@@ -74,6 +74,7 @@ library PositionUtil {
         uint256 _settleVersion = settleVersion(oracleVersion);
         require(_settleVersion <= currentVersion.version, Errors.UNSETTLED_POSITION);
 
+        //slither-disable-next-line calls-loop
         IOracleProvider.OracleVersion memory _oracleVersion = _settleVersion ==
             currentVersion.version
             ? currentVersion
