@@ -34,11 +34,20 @@ import {
   USDC_ON,
   WETH9
 } from '@uniswap/smart-order-router'
-import { Signer, Wallet } from 'ethers'
+import { MaxUint256, Signer, Wallet, parseUnits } from 'ethers'
+import gaussian from 'gaussian'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
 const ARB_GOERLI_CHRM_ADDRESS = '0x29A6AC3D416F8Ca85A3df95da209eDBfaF6E522d'
+
+// prettier-ignore
+const fees = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, // 0.01% ~ 0.09%, step 0.01%
+  10, 20, 30, 40, 50, 60, 70, 80, 90, // 0.1% ~ 0.9%, step 0.1%
+  100, 200, 300, 400, 500, 600, 700, 800, 900, // 1% ~ 9%, step 1%
+  1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000 // 10% ~ 50%, step 5%
+];
 
 export class Contracts {
   private _signer!: Signer
@@ -171,6 +180,38 @@ export class Contracts {
 
   connectKeeperFeePayer(address: string): KeeperFeePayer {
     return KeeperFeePayer__factory.connect(address, this._signer)
+  }
+
+  async addLiquidityWithGaussianDistribution(marketAddress: string, meanAmount: bigint) {
+    const mean = Number(meanAmount)
+    const distribution = gaussian(mean, (mean / 5) ** 2)
+
+    const market = this.connectMarket(marketAddress)
+    if ((await market.settlementToken()) != (await this.chrm!.getAddress())) {
+      console.error('invalid settlement token')
+      return
+    }
+
+    const decimals = await this.chrm!.decimals()
+
+    const amounts = fees.map((_, idx) =>
+      parseUnits(
+        Math.floor(distribution.ppf(1 - (idx + 1) / (fees.length + 1))).toString(),
+        decimals
+      )
+    )
+    const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0n)
+
+    await this.chrm!.faucet(totalAmount * 2n)
+    await this.chrm!.approve(this.router, MaxUint256, { nonce: (await this.signer.getNonce()) + 1 })
+
+    await this.router.addLiquidityBatch(
+      market,
+      this.signer,
+      fees.concat(fees.map((fee) => -fee)),
+      amounts.concat(amounts),
+      { nonce: (await this.signer.getNonce()) + 1 }
+    )
   }
 
   async getOrDeployFlashLoanExample(): Promise<FlashLoanExample> {
