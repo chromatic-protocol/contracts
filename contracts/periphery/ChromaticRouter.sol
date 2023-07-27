@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -23,7 +22,7 @@ import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/Chromati
  * @title ChromaticRouter
  * @dev A router contract that facilitates liquidity provision and trading on Chromatic.
  */
-contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
+contract ChromaticRouter is AccountFactory, VerifyCallback {
     using SignedMath for int256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -110,7 +109,8 @@ contract ChromaticRouter is AccountFactory, VerifyCallback, Ownable {
      * @dev Initializes the ChromaticRouter contract.
      * @param _marketFactory The address of the ChromaticMarketFactory contract.
      */
-    constructor(address _marketFactory) onlyOwner AccountFactory(_marketFactory) {
+    constructor(address _marketFactory) AccountFactory(_marketFactory) {
+        require(_marketFactory != address(0));
         marketFactory = _marketFactory;
     }
 
