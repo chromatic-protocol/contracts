@@ -14,19 +14,10 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
  */
 struct BinLiquidity {
     uint256 total;
-    _PendingLiquidity _pending;
+    IMarketLiquidity.PendingLiquidity _pending;
     mapping(uint256 => _ClaimMinting) _claimMintings;
     mapping(uint256 => _ClaimBurning) _claimBurnings;
     DoubleEndedQueue.Bytes32Deque _burningVersions;
-}
-
-/**
- * @dev Represents the pending liquidity details within BinLiquidity.
- */
-struct _PendingLiquidity {
-    uint256 oracleVersion;
-    uint256 tokenAmount;
-    uint256 clbTokenAmount;
 }
 
 /**
@@ -157,7 +148,7 @@ library BinLiquidityLib {
         );
 
         self._pending.oracleVersion = oracleVersion;
-        self._pending.tokenAmount += amount;
+        self._pending.mintingTokenAmountRequested += amount;
     }
 
     /**
@@ -208,7 +199,7 @@ library BinLiquidityLib {
         );
 
         self._pending.oracleVersion = oracleVersion;
-        self._pending.clbTokenAmount += clbTokenAmount;
+        self._pending.burningCLBTokenAmountRequested += clbTokenAmount;
     }
 
     /**
@@ -303,8 +294,8 @@ library BinLiquidityLib {
         uint256 oracleVersion = self._pending.oracleVersion;
         if (!ctx.isPastVersion(oracleVersion)) return (0, 0);
 
-        pendingDeposit = self._pending.tokenAmount;
-        uint256 pendingCLBTokenAmount = self._pending.clbTokenAmount;
+        pendingDeposit = self._pending.mintingTokenAmountRequested;
+        uint256 pendingCLBTokenAmount = self._pending.burningCLBTokenAmountRequested;
 
         if (pendingDeposit != 0) {
             mintingAmount = calculateCLBTokenMinting(pendingDeposit, binValue, totalSupply);
@@ -393,6 +384,17 @@ library BinLiquidityLib {
         }
 
         self.total -= pendingWithdrawal;
+    }
+
+    /**
+     * @dev Retrieves the pending liquidity information.
+     * @param self The reference to the BinLiquidity struct.
+     * @return pendingLiquidity An instance of IMarketLiquidity.PendingLiquidity representing the pending liquidity information.
+     */
+    function pendingLiquidity(
+        BinLiquidity storage self
+    ) internal view returns (IMarketLiquidity.PendingLiquidity memory) {
+        return self._pending;
     }
 
     /**

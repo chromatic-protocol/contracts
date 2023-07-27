@@ -833,6 +833,25 @@ library LiquidityPoolLib {
     }
 
     /**
+     * @dev Retrieves the pending liquidity information for a specific trading fee rate from a LiquidityPool.
+     * @param self The reference to the LiquidityPool struct.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the pending liquidity.
+     * @return pendingLiquidity An instance of IMarketLiquidity.PendingLiquidity representing the pending liquidity information.
+     */
+    function pendingLiquidity(
+        LiquidityPool storage self,
+        int16 tradingFeeRate
+    )
+        internal
+        view
+        _validTradingFeeRate(tradingFeeRate)
+        returns (IMarketLiquidity.PendingLiquidity memory)
+    {
+        LiquidityBin storage bin = targetBin(self, tradingFeeRate);
+        return bin.pendingLiquidity();
+    }
+
+    /**
      * @dev Retrieves the claimable liquidity information for a specific trading fee rate and oracle version from a LiquidityPool.
      * @param self The reference to the LiquidityPool struct.
      * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.

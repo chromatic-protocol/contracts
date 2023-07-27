@@ -23,7 +23,6 @@ enum LpAction {
  * @param tradingFeeRate The trading fee rate associated with the LP action
  */
 struct LpReceipt {
-    
     uint256 id;
     uint256 oracleVersion;
     uint256 amount;

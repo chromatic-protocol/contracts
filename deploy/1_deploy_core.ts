@@ -53,6 +53,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await verify(hre, { address: marketLiquidityFacet })
   console.log(chalk.yellow(`✨ MarketLiquidityFacet: ${marketLiquidityFacet}`))
 
+  const { address: marketLiquidityLensFacet } = await deploy('MarketLiquidityLensFacet', deployOpts)
+  await verify(hre, { address: marketLiquidityLensFacet })
+  console.log(chalk.yellow(`✨ MarketLiquidityLensFacet: ${marketLiquidityLensFacet}`))
+
   const { address: marketTradeFacet } = await deploy('MarketTradeFacet', deployOpts)
   await verify(hre, { address: marketTradeFacet })
   console.log(chalk.yellow(`✨ MarketTradeFacet: ${marketTradeFacet}`))
@@ -76,6 +80,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       marketLoupeFacet,
       marketStateFacet,
       marketLiquidityFacet,
+      marketLiquidityLensFacet,
       marketTradeFacet,
       marketLiquidateFacet,
       marketSettleFacet

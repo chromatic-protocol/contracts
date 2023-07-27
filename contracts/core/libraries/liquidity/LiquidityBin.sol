@@ -275,6 +275,17 @@ library LiquidityBinLib {
     }
 
     /**
+     * @dev Retrieves the pending liquidity information from a LiquidityBin.
+     * @param self The reference to the LiquidityBin struct.
+     * @return pendingLiquidity An instance of IMarketLiquidity.PendingLiquidity representing the pending liquidity information.
+     */
+    function pendingLiquidity(
+        LiquidityBin storage self
+    ) internal view returns (IMarketLiquidity.PendingLiquidity memory) {
+        return self._liquidity.pendingLiquidity();
+    }
+
+    /**
      * @dev Retrieves the claimable liquidity information for a specific oracle version from a LiquidityBin.
      * @param self The reference to the LiquidityBin struct.
      * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
