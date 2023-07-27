@@ -242,6 +242,7 @@ library DiamondStorageLib {
             return;
         }
         enforceHasContractCode(_init, "DiamondCut: _init address has no code");
+        //slither-disable-next-line low-level-calls
         (bool success, bytes memory error) = _init.delegatecall(_calldata);
         if (!success) {
             if (error.length > 0) {
