@@ -7,6 +7,7 @@ import {IDiamondCut} from "@chromatic-protocol/contracts/core/interfaces/IDiamon
 import {IDiamondLoupe} from "@chromatic-protocol/contracts/core/interfaces/IDiamondLoupe.sol";
 import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
+import {IMarketLiquidityLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidityLens.sol";
 import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {IMarketSettle} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketSettle.sol";
@@ -41,6 +42,7 @@ library MarketDeployerLib {
      * @param marketLoupeFacet The market loupe facet address.
      * @param marketStateFacet The market state facet address.
      * @param marketLiquidityFacet The market liquidity facet address.
+     * @param marketLiquidityLensFacet The market liquidity lens facet address.
      * @param marketTradeFacet The market trade facet address.
      * @param marketLiquidateFacet The market liquidate facet address.
      * @param marketSettleFacet The market settle facet address.
@@ -54,6 +56,7 @@ library MarketDeployerLib {
         address marketLoupeFacet,
         address marketStateFacet,
         address marketLiquidityFacet,
+        address marketLiquidityLensFacet,
         address marketTradeFacet,
         address marketLiquidateFacet,
         address marketSettleFacet
@@ -69,13 +72,14 @@ library MarketDeployerLib {
         );
         delete self.parameters;
 
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](6);
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](7);
         cut[0] = _marketLoupeFacetCut(marketLoupeFacet);
         cut[1] = _marketStateFacetCut(marketStateFacet);
         cut[2] = _marketLiquidityFacetCut(marketLiquidityFacet);
-        cut[3] = _marketTradeFacetCut(marketTradeFacet);
-        cut[4] = _marketLiquidateFacetCut(marketLiquidateFacet);
-        cut[5] = _marketSettleFacetCut(marketSettleFacet);
+        cut[3] = _marketLiquidityLensFacetCut(marketLiquidityLensFacet);
+        cut[4] = _marketTradeFacetCut(marketTradeFacet);
+        cut[5] = _marketLiquidateFacetCut(marketLiquidateFacet);
+        cut[6] = _marketSettleFacetCut(marketSettleFacet);
         IDiamondCut(market).diamondCut(cut, address(0), "");
     }
 
@@ -119,7 +123,7 @@ library MarketDeployerLib {
     function _marketLiquidityFacetCut(
         address marketLiquidityFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](18);
+        bytes4[] memory functionSelectors = new bytes4[](12);
         functionSelectors[0] = IMarketLiquidity.addLiquidity.selector;
         functionSelectors[1] = IMarketLiquidity.addLiquidityBatch.selector;
         functionSelectors[2] = IMarketLiquidity.claimLiquidity.selector;
@@ -128,19 +132,34 @@ library MarketDeployerLib {
         functionSelectors[5] = IMarketLiquidity.removeLiquidityBatch.selector;
         functionSelectors[6] = IMarketLiquidity.withdrawLiquidity.selector;
         functionSelectors[7] = IMarketLiquidity.withdrawLiquidityBatch.selector;
-        functionSelectors[8] = IMarketLiquidity.getBinLiquidity.selector;
-        functionSelectors[9] = IMarketLiquidity.getBinFreeLiquidity.selector;
-        functionSelectors[10] = IMarketLiquidity.getBinValues.selector;
-        functionSelectors[11] = IMarketLiquidity.distributeEarningToBins.selector;
-        functionSelectors[12] = IMarketLiquidity.getLpReceipt.selector;
-        functionSelectors[13] = IMarketLiquidity.claimableLiquidity.selector;
-        functionSelectors[14] = IMarketLiquidity.liquidityBinStatuses.selector;
-        functionSelectors[15] = IERC1155Receiver.onERC1155Received.selector;
-        functionSelectors[16] = IERC1155Receiver.onERC1155BatchReceived.selector;
-        functionSelectors[17] = IERC165.supportsInterface.selector;
+        functionSelectors[8] = IMarketLiquidity.distributeEarningToBins.selector;
+        functionSelectors[9] = IERC1155Receiver.onERC1155Received.selector;
+        functionSelectors[10] = IERC1155Receiver.onERC1155BatchReceived.selector;
+        functionSelectors[11] = IERC165.supportsInterface.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketLiquidityFacet,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
+    }
+
+    function _marketLiquidityLensFacetCut(
+        address marketLiquidityLensFacet
+    ) private pure returns (IDiamondCut.FacetCut memory cut) {
+        bytes4[] memory functionSelectors = new bytes4[](9);
+        functionSelectors[0] = IMarketLiquidityLens.getBinLiquidity.selector;
+        functionSelectors[1] = IMarketLiquidityLens.getBinFreeLiquidity.selector;
+        functionSelectors[2] = IMarketLiquidityLens.getBinValues.selector;
+        functionSelectors[3] = IMarketLiquidityLens.getLpReceipt.selector;
+        functionSelectors[4] = IMarketLiquidityLens.pendingLiquidity.selector;
+        functionSelectors[5] = IMarketLiquidityLens.pendingLiquidityBatch.selector;
+        functionSelectors[6] = IMarketLiquidityLens.claimableLiquidity.selector;
+        functionSelectors[7] = IMarketLiquidityLens.claimableLiquidityBatch.selector;
+        functionSelectors[8] = IMarketLiquidityLens.liquidityBinStatuses.selector;
+
+        cut = IDiamondCut.FacetCut({
+            facetAddress: marketLiquidityLensFacet,
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: functionSelectors
         });

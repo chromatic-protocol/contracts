@@ -6,7 +6,6 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
-import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
@@ -15,14 +14,14 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {MarketStorage, MarketStorageLib, LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
-import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
+import {MarketLiquidityFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacetBase.sol";
 
 /**
  * @title MarketLiquidityFacet
  * @dev Contract for managing liquidity in a market.
  */
 contract MarketLiquidityFacet is
-    MarketFacetBase,
+    MarketLiquidityFacetBase,
     IMarketLiquidity,
     IERC1155Receiver,
     ReentrancyGuard
@@ -34,11 +33,6 @@ contract MarketLiquidityFacet is
      *      This error is thrown when attempting to remove liquidity with an amount of zero.
      */
     error TooSmallAmount();
-
-    /**
-     * @dev Throws an error indicating that the specified liquidity receipt does not exist.
-     */
-    error NotExistLpReceipt();
 
     /**
      * @dev Throws an error indicating that the liquidity receipt is not claimable.
@@ -496,110 +490,8 @@ contract MarketLiquidityFacet is
     /**
      * @inheritdoc IMarketLiquidity
      */
-    function getBinLiquidity(int16 tradingFeeRate) external view override returns (uint256 amount) {
-        amount = MarketStorageLib.marketStorage().liquidityPool.getBinLiquidity(tradingFeeRate);
-    }
-
-    /**
-     * @inheritdoc IMarketLiquidity
-     */
-    function getBinFreeLiquidity(
-        int16 tradingFeeRate
-    ) external view override returns (uint256 amount) {
-        amount = MarketStorageLib.marketStorage().liquidityPool.getBinFreeLiquidity(tradingFeeRate);
-    }
-
-    /**
-     * @inheritdoc IMarketLiquidity
-     */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         MarketStorageLib.marketStorage().liquidityPool.distributeEarning(earning, marketBalance);
-    }
-
-    /**
-     * @inheritdoc IMarketLiquidity
-     */
-    function getBinValues(
-        int16[] memory tradingFeeRates
-    ) external view override returns (uint256[] memory) {
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-        LiquidityPool storage liquidityPool = ms.liquidityPool;
-
-        LpContext memory ctx = newLpContext(ms);
-        uint256[] memory values = new uint256[](tradingFeeRates.length);
-        for (uint256 i; i < tradingFeeRates.length; ) {
-            values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
-
-            unchecked {
-                i++;
-            }
-        }
-        return values;
-    }
-
-    /**
-     * @inheritdoc IMarketLiquidity
-     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
-     */
-    function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
-        receipt = _getLpReceipt(LpReceiptStorageLib.lpReceiptStorage(), receiptId);
-    }
-
-    function _getLpReceipt(
-        LpReceiptStorage storage ls,
-        uint256 receiptId
-    ) private view returns (LpReceipt memory receipt) {
-        receipt = ls.getReceipt(receiptId);
-        if (receipt.id == 0) revert NotExistLpReceipt();
-    }
-
-    /**
-     * @inheritdoc IMarketLiquidity
-     */
-    function claimableLiquidity(
-        int16 tradingFeeRate,
-        uint256 oracleVersion
-    ) external view returns (ClaimableLiquidity memory) {
-        return
-            MarketStorageLib.marketStorage().liquidityPool.claimableLiquidity(
-                tradingFeeRate,
-                oracleVersion
-            );
-    }
-
-    /**
-     * @inheritdoc IMarketLiquidity
-     */
-    function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory) {
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-        return ms.liquidityPool.liquidityBinStatuses(newLpContext(ms));
-    }
-
-    /**
-     * @dev Creates a new liquidity receipt.
-     * @param ctx The liquidity context.
-     * @param action The liquidity action.
-     * @param amount The amount of liquidity.
-     * @param recipient The address to receive the liquidity.
-     * @param tradingFeeRate The trading fee rate for the liquidity.
-     * @return The new liquidity receipt.
-     */
-    function _newLpReceipt(
-        LpContext memory ctx,
-        LpAction action,
-        uint256 amount,
-        address recipient,
-        int16 tradingFeeRate
-    ) private returns (LpReceipt memory) {
-        return
-            LpReceipt({
-                id: LpReceiptStorageLib.lpReceiptStorage().nextId(),
-                oracleVersion: ctx.currentOracleVersion().version,
-                action: action,
-                amount: amount,
-                recipient: recipient,
-                tradingFeeRate: tradingFeeRate
-            });
     }
 
     // implement IERC1155Receiver

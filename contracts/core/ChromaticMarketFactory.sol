@@ -36,6 +36,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address private immutable marketLoupeFacet;
     address private immutable marketStateFacet;
     address private immutable marketLiquidityFacet;
+    address private immutable marketLiquidityLensFacet;
     address private immutable marketTradeFacet;
     address private immutable marketLiquidateFacet;
     address private immutable marketSettleFacet;
@@ -113,6 +114,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @param _marketLoupeFacet The market loupe facet address.
      * @param _marketStateFacet The market state facet address.
      * @param _marketLiquidityFacet The market liquidity facet address.
+     * @param _marketLiquidityLensFacet The market liquidity lens facet address.
      * @param _marketTradeFacet The market trade facet address.
      * @param _marketLiquidateFacet The market liquidate facet address.
      * @param _marketSettleFacet The market settle facet address.
@@ -122,6 +124,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address _marketLoupeFacet,
         address _marketStateFacet,
         address _marketLiquidityFacet,
+        address _marketLiquidityLensFacet,
         address _marketTradeFacet,
         address _marketLiquidateFacet,
         address _marketSettleFacet
@@ -130,6 +133,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         require(_marketLoupeFacet != address(0));
         require(_marketStateFacet != address(0));
         require(_marketLiquidityFacet != address(0));
+        require(_marketLiquidityLensFacet != address(0));
         require(_marketTradeFacet != address(0));
         require(_marketLiquidateFacet != address(0));
         require(_marketSettleFacet != address(0));
@@ -141,6 +145,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         marketLoupeFacet = _marketLoupeFacet;
         marketStateFacet = _marketStateFacet;
         marketLiquidityFacet = _marketLiquidityFacet;
+        marketLiquidityLensFacet = _marketLiquidityLensFacet;
         marketTradeFacet = _marketTradeFacet;
         marketLiquidateFacet = _marketLiquidateFacet;
         marketSettleFacet = _marketSettleFacet;
@@ -274,6 +279,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             marketLoupeFacet,
             marketStateFacet,
             marketLiquidityFacet,
+            marketLiquidityLensFacet,
             marketTradeFacet,
             marketLiquidateFacet,
             marketSettleFacet

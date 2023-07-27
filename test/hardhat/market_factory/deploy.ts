@@ -23,6 +23,7 @@ export async function deploy() {
   const marketLoupeFacet = await deployContract<Contract>('DiamondLoupeFacet')
   const marketStateFacet = await deployContract<Contract>('MarketStateFacet')
   const marketLiquidityFacet = await deployContract<Contract>('MarketLiquidityFacet')
+  const marketLiquidityLensFacet = await deployContract<Contract>('MarketLiquidityLensFacet')
   const marketTradeFacet = await deployContract<Contract>('MarketTradeFacet')
   const marketLiquidateFacet = await deployContract<Contract>('MarketLiquidateFacet')
   const marketSettleFacet = await deployContract<Contract>('MarketSettleFacet')
@@ -33,6 +34,7 @@ export async function deploy() {
       await marketLoupeFacet.getAddress(),
       await marketStateFacet.getAddress(),
       await marketLiquidityFacet.getAddress(),
+      await marketLiquidityLensFacet.getAddress(),
       await marketTradeFacet.getAddress(),
       await marketLiquidateFacet.getAddress(),
       await marketSettleFacet.getAddress()
