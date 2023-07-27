@@ -234,13 +234,15 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         liquidityPool.acceptClosePosition(ctx, position);
         liquidator.cancelLiquidationTask(position.id);
 
+        //slither-disable-next-line reentrancy-events
         emit ClosePosition(position.owner, position);
-
+        
         if (position.closeVersion > position.openVersion) {
             liquidator.createClaimPositionTask(position.id);
         } else {
             // process claim if the position is closed in the same oracle version as the open version
             uint256 interest = _claimPosition(ctx, position, 0, 0, position.owner, bytes(""));
+            //slither-disable-next-line reentrancy-events
             emit ClaimPosition(position.owner, 0, interest, position);
         }
     }
