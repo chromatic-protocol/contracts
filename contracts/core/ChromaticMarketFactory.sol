@@ -232,6 +232,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         address[] memory markets = _marketsBySettlementToken[settlementToken];
         for (uint i; i < markets.length; ) {
+            //slither-disable-next-line calls-loop
             if (address(IMarketState(markets[i]).oracleProvider()) == oracleProvider) {
                 return markets[i];
             }
