@@ -312,6 +312,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         // Calculate the fee for the flash loan based on the loan amount and the flash loan fee rate of the token
         uint256 fee = amount.mulDiv(factory.getFlashLoanFeeRate(token), BPS, Math.Rounding.Up);
 
+        //slither-disable-next-line reentrancy-benign
         SafeERC20.safeTransfer(IERC20(token), recipient, amount);
 
         // Invoke the flash loan callback function on the sender contract to process the loan
@@ -332,10 +333,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
 
         // Transfer the amount paid to the taker pool to the DAO treasury address
         if (paidToTakerPool != 0) {
+            // Add the amount paid to the maker pool to the pending maker earnings
+            pendingMakerEarnings[token] += paidToMakerPool;
             SafeERC20.safeTransfer(IERC20(token), factory.treasury(), paidToTakerPool);
         }
-        // Add the amount paid to the maker pool to the pending maker earnings
-        pendingMakerEarnings[token] += paidToMakerPool;
 
         emit FlashLoan(msg.sender, recipient, amount, paid, paidToTakerPool, paidToMakerPool);
     }
