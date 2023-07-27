@@ -57,6 +57,7 @@ library LpContextLib {
         LpContext memory self
     ) internal view returns (IOracleProvider.OracleVersion memory) {
         if (self._currentVersionCache.version == 0) {
+            //slither-disable-next-line calls-loop
             self._currentVersionCache = self.oracleProvider.currentVersion();
         }
 
@@ -98,6 +99,7 @@ library LpContextLib {
         uint256 from,
         uint256 to
     ) internal view returns (uint256) {
+        //slither-disable-next-line calls-loop
         return
             amount == 0 || from >= to
                 ? 0
