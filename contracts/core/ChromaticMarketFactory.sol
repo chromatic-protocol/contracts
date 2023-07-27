@@ -279,10 +279,12 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             marketSettleFacet
         );
 
+        //slither-disable-next-line reentrancy-benign
         _marketsBySettlementToken[settlementToken].push(market);
         //slither-disable-next-line unused-return
         _markets.add(market);
 
+        //slither-disable-next-line reentrancy-events
         emit MarketCreated(oracleProvider, settlementToken, market);
 
         IChromaticVault(vault).createMarketEarningDistributionTask(market);
