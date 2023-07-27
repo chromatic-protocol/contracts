@@ -59,6 +59,7 @@ contract ChromaticLens {
 
         result = new LpReceipt[](receiptIds.length);
         for (uint i; i < receiptIds.length; ) {
+            //slither-disable-next-line calls-loop
             result[i] = market.getLpReceipt(receiptIds[i]);
 
             unchecked {
