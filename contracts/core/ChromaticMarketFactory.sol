@@ -423,9 +423,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             uniswapFeeTier
         );
 
-        IKeeperFeePayer(keeperFeePayer).approveToRouter(token, true);
-        IChromaticVault(vault).createMakerEarningDistributionTask(token);
-
         emit SettlementTokenRegistered(
             token,
             minimumMargin,
@@ -434,6 +431,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             earningDistributionThreshold,
             uniswapFeeTier
         );
+
+        IKeeperFeePayer(keeperFeePayer).approveToRouter(token, true);
+        IChromaticVault(vault).createMakerEarningDistributionTask(token);
     }
 
     /**
