@@ -213,7 +213,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      *      Throws an `AlreadyClosedPosition` error if the position has already been closed.
      *      Throws a `ClaimPositionCallbackError` error if an error occurred during the claim position callback.
      */
-    function closePosition(uint256 positionId) external override {
+    function closePosition(uint256 positionId) external override nonReentrant {
         Position storage position = PositionStorageLib.positionStorage().getStoragePosition(
             positionId
         );
@@ -235,7 +235,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         liquidator.cancelLiquidationTask(position.id);
 
         emit ClosePosition(position.owner, position);
-
+        
         if (position.closeVersion > position.openVersion) {
             liquidator.createClaimPositionTask(position.id);
         } else {
