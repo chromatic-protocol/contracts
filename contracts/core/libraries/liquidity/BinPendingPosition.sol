@@ -129,6 +129,7 @@ library BinPendingPositionLib {
             currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();
 
+        //slither-disable-next-line timestamp
         if (pnl >= 0) {
             return Math.min(absPnl, self.totalTakerMargin).toInt256();
         } else {
