@@ -54,8 +54,7 @@ describe('lens', async () => {
     const { openPosition } = helpers(testData)
 
     await openPosition({
-      qty: BigInt(3000 * 10 ** 4),
-      leverage: 10n,
+      qty: parseEther('3000'),
       takerMargin: parseEther('300'),
       makerMargin: parseEther('250'),
       maxAllowFeeRate: 3n
@@ -114,8 +113,7 @@ describe('lens', async () => {
       const makerMargin = parseEther('100')
       const takerMargin = makerMargin
       await openPosition({
-        qty: BigInt(100 * 10 ** 4),
-        leverage: 100n,
+        qty: parseEther('100'),
         takerMargin,
         makerMargin,
         maxAllowFeeRate: 3n

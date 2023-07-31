@@ -26,7 +26,7 @@ struct BinClosedPosition {
  *      for a specific version within BinClosedPosition.
  */
 struct _ClaimWaitingPosition {
-    int256 totalLeveragedQty;
+    int256 totalQty;
     uint256 totalEntryAmount;
     uint256 totalMakerMargin;
     uint256 totalTakerMargin;
@@ -53,7 +53,7 @@ library BinClosedPositionLib {
         if (!ctx.isPastVersion(closeVersion)) return;
 
         _ClaimWaitingPosition memory waitingPosition = _ClaimWaitingPosition({
-            totalLeveragedQty: self._closing.totalLeveragedQty,
+            totalQty: self._closing.totalQty,
             totalEntryAmount: self._closing.totalEntryAmount,
             totalMakerMargin: self._closing.totalMakerMargin,
             totalTakerMargin: self._closing.totalTakerMargin
@@ -138,12 +138,12 @@ library BinClosedPositionLib {
         LpContext memory ctx,
         PositionParam memory param
     ) private returns (bool exhausted) {
-        int256 totalLeveragedQty = waitingPosition.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
-        if (totalLeveragedQty == leveragedQty) return true;
+        int256 totalQty = waitingPosition.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkRemovePositionQty(totalQty, qty);
+        if (totalQty == qty) return true;
 
-        waitingPosition.totalLeveragedQty = totalLeveragedQty - leveragedQty;
+        waitingPosition.totalQty = totalQty - qty;
         waitingPosition.totalEntryAmount -= param.entryAmount(ctx);
         waitingPosition.totalMakerMargin -= param.makerMargin;
         waitingPosition.totalTakerMargin -= param.takerMargin;

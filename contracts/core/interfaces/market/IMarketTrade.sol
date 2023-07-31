@@ -46,7 +46,6 @@ interface IMarketTrade {
     /**
      * @dev Opens a new position in the market.
      * @param qty The quantity of the position.
-     * @param leverage The leverage of the position in basis points.
      * @param takerMargin The margin amount provided by the taker.
      * @param makerMargin The margin amount provided by the maker.
      * @param maxAllowableTradingFee The maximum allowable trading fee for the position.
@@ -54,8 +53,7 @@ interface IMarketTrade {
      * @return The opened position.
      */
     function openPosition(
-        int224 qty,
-        uint32 leverage, // BPS
+        int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,

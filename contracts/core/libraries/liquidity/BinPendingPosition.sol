@@ -14,14 +14,14 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 /**
  * @dev Represents a pending position within the LiquidityBin
  * @param openVersion The oracle version when the position was opened.
- * @param totalLeveragedQty The total leveraged quantity of the pending position.
+ * @param totalQty The total quantity of the pending position.
  * @param totalMakerMargin The total maker margin of the pending position.
  * @param totalTakerMargin The total taker margin of the pending position.
  * @param accruedInterest The accumulated interest of the pending position.
  */
 struct BinPendingPosition {
     uint256 openVersion;
-    int256 totalLeveragedQty;
+    int256 totalQty;
     uint256 totalMakerMargin;
     uint256 totalTakerMargin;
     AccruedInterest accruedInterest;
@@ -63,15 +63,15 @@ library BinPendingPositionLib {
             Errors.INVALID_ORACLE_VERSION
         );
 
-        int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
+        int256 totalQty = self.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkAddPositionQty(totalQty, qty);
 
         // accumulate interest before update `totalMakerMargin`
         settleAccruedInterest(self, ctx);
 
         self.openVersion = param.openVersion;
-        self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
+        self.totalQty = totalQty + qty;
         self.totalMakerMargin += param.makerMargin;
         self.totalTakerMargin += param.takerMargin;
     }
@@ -90,14 +90,14 @@ library BinPendingPositionLib {
     ) internal {
         require(self.openVersion == param.openVersion, Errors.INVALID_ORACLE_VERSION);
 
-        int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+        int256 totalQty = self.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkRemovePositionQty(totalQty, qty);
 
         // accumulate interest before update `totalMakerMargin`
         settleAccruedInterest(self, ctx);
 
-        self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
+        self.totalQty = totalQty - qty;
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;
         self.accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
@@ -124,7 +124,7 @@ library BinPendingPositionLib {
         );
         uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 
-        int256 pnl = PositionUtil.pnl(self.totalLeveragedQty, _entryPrice, _exitPrice) +
+        int256 pnl = PositionUtil.pnl(self.totalQty, _entryPrice, _exitPrice) +
             currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();
 

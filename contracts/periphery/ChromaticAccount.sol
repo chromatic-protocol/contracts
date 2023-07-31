@@ -130,15 +130,13 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
      */
     function openPosition(
         address marketAddress,
-        int224 qty,
-        uint32 leverage,
+        int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
     ) external onlyRouter returns (Position memory position) {
         position = IChromaticMarket(marketAddress).openPosition(
             qty,
-            leverage,
             takerMargin,
             makerMargin,
             maxAllowableTradingFee,

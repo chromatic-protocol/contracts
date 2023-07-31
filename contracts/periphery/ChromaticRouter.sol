@@ -274,8 +274,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      */
     function openPosition(
         address market,
-        int224 qty,
-        uint32 leverage,
+        int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
@@ -284,7 +283,6 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             _getAccount(msg.sender).openPosition(
                 market,
                 qty,
-                leverage,
                 takerMargin,
                 makerMargin,
                 maxAllowableTradingFee

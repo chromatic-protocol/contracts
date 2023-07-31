@@ -41,7 +41,7 @@ contract BinPositionTest is Test {
     }
 
     function testOnClosePosition() public {
-        position.totalLeveragedQty = 100;
+        position.totalQty = 100;
         position.totalEntryAmount = 200000;
         position._totalMakerMargin = 100;
         position._totalTakerMargin = 100;
@@ -58,7 +58,7 @@ contract BinPositionTest is Test {
 
         position.onClosePosition(ctx, param);
 
-        assertEq(position.totalLeveragedQty, 50);
+        assertEq(position.totalQty, 50);
         assertEq(position.totalEntryAmount, 100000);
         assertEq(position._totalMakerMargin, 50);
         assertEq(position._totalTakerMargin, 90);
@@ -83,7 +83,7 @@ contract BinPositionTest is Test {
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
         p.openVersion = 1;
-        p.leveragedQty = 50;
+        p.qty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
         p.openTimestamp = 1;

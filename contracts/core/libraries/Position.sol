@@ -5,7 +5,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
-import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
+import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
 
@@ -15,7 +15,6 @@ import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.
  * @param openVersion The version of the oracle when the position was opened
  * @param closeVersion The version of the oracle when the position was closed
  * @param qty The quantity of the position
- * @param leverage The leverage applied to the position
  * @param openTimestamp The timestamp when the position was opened
  * @param closeTimestamp The timestamp when the position was closed
  * @param takerMargin The amount of collateral that a trader must provide
@@ -27,8 +26,7 @@ struct Position {
     uint256 id;
     uint256 openVersion;
     uint256 closeVersion;
-    int224 qty;
-    uint32 leverage;
+    int256 qty;
     uint256 openTimestamp;
     uint256 closeTimestamp;
     uint256 takerMargin;
@@ -44,28 +42,9 @@ using PositionLib for Position global;
  * @notice Provides functions that operate on the `Position` struct
  */
 library PositionLib {
-    using Math for uint256;
-    using SafeCast for uint256;
-    using SignedMath for int256;
-
-    /**
-     * @notice Calculates the leveraged quantity of the position
-     *         based on the position's quantity and leverage
-     * @param self The memory instance of the `Position` struct
-     * @param ctx The context object for this transaction
-     * @return uint256 The leveraged quantity
-     */
-    function leveragedQty(
-        Position memory self,
-        LpContext memory ctx
-    ) internal pure returns (int256) {
-        int256 qty = self.qty;
-        int256 leveraged = qty
-            .abs()
-            .mulDiv(self.leverage * ctx.tokenPrecision, QTY_LEVERAGE_PRECISION)
-            .toInt256();
-        return qty < 0 ? -leveraged : leveraged;
-    }
+    // using Math for uint256;
+    // using SafeCast for uint256;
+    // using SignedMath for int256;
 
     /**
      * @notice Calculates the entry price of the position based on the position's open oracle version
@@ -90,16 +69,12 @@ library PositionLib {
      * @param ctx The context object for this transaction
      * @return uint256 The exit price
      */
-    function exitPrice(
-        Position memory self,
-        LpContext memory ctx
-    ) internal view returns (uint256) {
+    function exitPrice(Position memory self, LpContext memory ctx) internal view returns (uint256) {
         return PositionUtil.settlePrice(ctx.oracleProvider, self.closeVersion);
     }
 
     /**
-     * @notice Calculates the profit or loss of the position
-     *         based on the close oracle version and the leveraged quantity
+     * @notice Calculates the profit or loss of the position based on the close oracle version and the qty
      * @param self The memory instance of the `Position` struct
      * @param ctx The context object for this transaction
      * @return int256 The profit or loss
@@ -107,11 +82,7 @@ library PositionLib {
     function pnl(Position memory self, LpContext memory ctx) internal view returns (int256) {
         return
             self.closeVersion > self.openVersion
-                ? PositionUtil.pnl(
-                    self.leveragedQty(ctx),
-                    self.entryPrice(ctx),
-                    self.exitPrice(ctx)
-                )
+                ? PositionUtil.pnl(self.qty, self.entryPrice(ctx), self.exitPrice(ctx))
                 : int256(0);
     }
 

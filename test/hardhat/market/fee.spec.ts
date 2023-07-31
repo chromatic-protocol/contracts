@@ -30,14 +30,12 @@ describe('interest fee test', async function () {
     liquidityConfig,
     year,
     qty,
-    leverage = 100,
     margin = 10
   }: {
     liquidityConfig: LiquidityConfig[]
     year: bigint
     qty: number
     maxAllowFee?: number
-    leverage?: number
     margin?: number
   }) {
     return async () => {
@@ -81,8 +79,7 @@ describe('interest fee test', async function () {
       const p = await awaitTx(
         traderRouter.openPosition(
           market.getAddress(),
-          10 ** 4 * qty, //price precision  (4 decimals)
-          leverage, // leverage ( x1 )
+          parseEther(qty.toString()), //price precision
           takerMargin, // losscut <= qty
           makerMargin, // profit stop token,
           tradingFee // maxAllowFee (0.01% * makerMargin)

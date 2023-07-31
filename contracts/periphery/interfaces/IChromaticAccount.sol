@@ -42,7 +42,6 @@ interface IChromaticAccount is IChromaticTradeCallback {
      * @notice Opens a new position in the specified market.
      * @param marketAddress The address of the market.
      * @param qty The quantity of the position.
-     * @param leverage The leverage of the position.
      * @param takerMargin The margin required for the taker.
      * @param makerMargin The margin required for the maker.
      * @param maxAllowableTradingFee The maximum allowable trading fee.
@@ -50,8 +49,7 @@ interface IChromaticAccount is IChromaticTradeCallback {
      */
     function openPosition(
         address marketAddress,
-        int224 qty,
-        uint32 leverage,
+        int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee

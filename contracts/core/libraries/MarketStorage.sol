@@ -114,7 +114,6 @@ library PositionStorageLib {
         _p.qty = position.qty;
         _p.openTimestamp = position.openTimestamp;
         _p.closeTimestamp = position.closeTimestamp;
-        _p.leverage = position.leverage;
         _p.takerMargin = position.takerMargin;
         _p.owner = position.owner;
         _p._feeProtocol = position._feeProtocol;

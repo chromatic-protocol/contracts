@@ -13,7 +13,6 @@ import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
-import {QTY_PRECISION, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {MarketStorage, MarketStorageLib, PositionStorage, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
@@ -27,6 +26,9 @@ import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/ma
 contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard {
     using Math for uint256;
     using SignedMath for int256;
+
+    uint256 constant LEVERAGE_DECIMALS = 2;
+    uint256 constant LEVERAGE_PRECISION = 10 ** LEVERAGE_DECIMALS;
 
     /**
      * @dev Throws an error indicating that the taker margin provided is smaller than the minimum required margin for the specific settlement token.
@@ -67,12 +69,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
     error ExceedMaxAllowableLeverage();
 
     /**
-     * @dev Throws an error indicating that the taker margin value is not within the allowable range based on the quantity and the maximum allowable leverage.
-     *      The taker margin should be equal to or greater than the product of the absolute quantity and the reciprocal of the maximum allowable leverage, and it should not exceed 100% of the absolute quantity.
-     */
-    error NotAllowableTakerMargin();
-
-    /**
      * @dev Throws an error indicating that the maker margin value is not within the allowable range based on the absolute quantity and the specified minimum/maximum take-profit basis points (BPS).
      *      The maker margin must fall within the range calculated based on the absolute quantity of the position and the specified minimum/maximum take-profit basis points (BPS) set by the Oracle Provider.
      *      The default range for the minimum/maximum take-profit basis points is 10% to 1000%.
@@ -83,7 +79,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      * @inheritdoc IMarketTrade
      * @dev Throws a `TooSmallTakerMargin` error if the `takerMargin` is smaller than the minimum required margin for the settlement token.
      *      Throws an `ExceedMaxAllowableLeverage` if the leverage exceeds the maximum allowable leverage.
-     *      Throws a `NotAllowableTakerMargin` if the taker margin is not within the allowable range based on the absolute quantity and maximum allowable leverage.
      *      Throws a `NotAllowableMakerMargin` if the maker margin is not within the allowable range based on the absolute quantity and min/max take-profit basis points (BPS).
      *      Throws an `ExceedMaxAllowableTradingFee` if the total trading fee (including protocol fee) exceeds the maximum allowable trading fee (`maxAllowableTradingFee`).
      *      Throws a `NotEnoughMarginTransferred` if the margin settlement token balance did not increase by the required margin amount after the callback.
@@ -96,8 +91,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      *  - An `OpenPosition` event is emitted with the owner's address and the newly opened position details.
      */
     function openPosition(
-        int224 qty,
-        uint32 leverage,
+        int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
@@ -114,15 +108,13 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         if (takerMargin < minMargin) revert TooSmallTakerMargin();
 
         _checkPositionParam(
-            ctx,
             qty,
-            leverage,
             takerMargin,
             makerMargin,
             factory.getOracleProviderProperties(address(ctx.oracleProvider))
         );
 
-        position = _newPosition(ctx, qty, leverage, takerMargin, ms.feeProtocol);
+        position = _newPosition(ctx, qty, takerMargin, ms.feeProtocol);
         position.setBinMargins(
             liquidityPool.prepareBinMargins(ctx, position.qty, makerMargin, minMargin)
         );
@@ -138,22 +130,18 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
     }
 
     function _checkPositionParam(
-        LpContext memory ctx,
         int256 qty,
-        uint32 leverage,
         uint256 takerMargin,
         uint256 makerMargin,
         IOracleProviderRegistry.OracleProviderProperties memory properties
     ) private pure {
+        uint256 absQty = qty.abs();
+        uint256 leverage = absQty.mulDiv(LEVERAGE_PRECISION, takerMargin);
+
         uint256 maxAllowableLeverage = (properties.leverageLevel + 1) * 10;
-        if (leverage > maxAllowableLeverage * QTY_LEVERAGE_PRECISION)
+        if (leverage > maxAllowableLeverage * LEVERAGE_PRECISION)
             revert ExceedMaxAllowableLeverage();
 
-        uint256 absQty = qty.abs().mulDiv(ctx.tokenPrecision, QTY_PRECISION);
-        if (
-            takerMargin < absQty / maxAllowableLeverage || // reciprocal of max allowable leverage
-            takerMargin > absQty // max 100%
-        ) revert NotAllowableTakerMargin();
         if (
             makerMargin < absQty.mulDiv(properties.minTakeProfitBPS, BPS) ||
             makerMargin > absQty.mulDiv(properties.maxTakeProfitBPS, BPS)
@@ -235,7 +223,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         liquidator.cancelLiquidationTask(position.id);
 
         emit ClosePosition(position.owner, position);
-        
+
         if (position.closeVersion > position.openVersion) {
             liquidator.createClaimPositionTask(position.id);
         } else {
@@ -298,8 +286,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
 
     function _newPosition(
         LpContext memory ctx,
-        int224 qty,
-        uint32 leverage,
+        int256 qty,
         uint256 takerMargin,
         uint8 feeProtocol
     ) private returns (Position memory) {
@@ -311,7 +298,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
                 openVersion: ctx.currentOracleVersion().version,
                 closeVersion: 0,
                 qty: qty, //
-                leverage: leverage,
                 openTimestamp: block.timestamp,
                 closeTimestamp: 0,
                 takerMargin: takerMargin,

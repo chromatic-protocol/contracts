@@ -47,7 +47,7 @@ library LiquidityPoolLib {
     );
 
     struct _proportionalPositionParamValue {
-        int256 leveragedQty;
+        int256 qty;
         uint256 takerMargin;
     }
 
@@ -118,7 +118,7 @@ library LiquidityPoolLib {
     function prepareBinMargins(
         LiquidityPool storage self,
         LpContext memory ctx,
-        int224 qty,
+        int256 qty,
         uint256 makerMargin,
         uint256 minimumBinMargin
     ) internal returns (BinMargin[] memory) {
@@ -194,7 +194,7 @@ library LiquidityPoolLib {
 
         // Divide the position parameters to match the bin margins
         _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
-            position.leveragedQty(ctx),
+            position.qty,
             makerMargin,
             position.takerMargin,
             binMargins
@@ -205,7 +205,7 @@ library LiquidityPoolLib {
             BinMargin memory binMargin = binMargins[i];
 
             if (binMargin.amount != 0) {
-                param.leveragedQty = paramValues[i].leveragedQty;
+                param.qty = paramValues[i].qty;
                 param.takerMargin = paramValues[i].takerMargin;
                 param.makerMargin = binMargin.amount;
 
@@ -245,7 +245,7 @@ library LiquidityPoolLib {
 
         // Divide the position parameters to match the bin margins
         _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
-            position.leveragedQty(ctx),
+            position.qty,
             makerMargin,
             position.takerMargin,
             binMargins
@@ -262,7 +262,7 @@ library LiquidityPoolLib {
             if (binMargins[i].amount != 0) {
                 LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
-                param.leveragedQty = paramValues[i].leveragedQty;
+                param.qty = paramValues[i].qty;
                 param.takerMargin = paramValues[i].takerMargin;
                 param.makerMargin = binMargins[i].amount;
 
@@ -310,7 +310,7 @@ library LiquidityPoolLib {
 
         // Divide the position parameters to match the bin margins
         _proportionalPositionParamValue[] memory paramValues = divideToPositionParamValue(
-            position.leveragedQty(ctx),
+            position.qty,
             makerMargin,
             position.takerMargin,
             binMargins
@@ -328,7 +328,7 @@ library LiquidityPoolLib {
                 if (binMargins[i].amount != 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
-                    param.leveragedQty = paramValues[i].leveragedQty;
+                    param.qty = paramValues[i].qty;
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = binMargins[i].amount;
 
@@ -344,7 +344,7 @@ library LiquidityPoolLib {
                 if (binMargins[i].amount != 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
-                    param.leveragedQty = paramValues[i].leveragedQty;
+                    param.qty = paramValues[i].qty;
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = binMargins[i].amount;
 
@@ -363,7 +363,7 @@ library LiquidityPoolLib {
                 if (binMargins[i].amount != 0) {
                     LiquidityBin storage _bin = _bins[binMargins[i].tradingFeeRate];
 
-                    param.leveragedQty = paramValues[i].leveragedQty;
+                    param.qty = paramValues[i].qty;
                     param.takerMargin = paramValues[i].takerMargin;
                     param.makerMargin = binMargins[i].amount;
 
@@ -574,24 +574,23 @@ library LiquidityPoolLib {
     }
 
     /**
-     * @notice Divides the leveraged quantity, maker margin, and taker margin
-     *         into proportional position parameter values.
-     * @dev This function divides the leveraged quantity, maker margin, and taker margin
+     * @notice Divides the quantity, maker margin, and taker margin into proportional position parameter values.
+     * @dev This function divides the quantity, maker margin, and taker margin
      *      into proportional position parameter values based on the bin margins.
      *      It calculates the proportional values for each bin margin and returns them in an array.
-     * @param leveragedQty The leveraged quantity.
+     * @param qty The position quantity.
      * @param makerMargin The maker margin amount.
      * @param takerMargin The taker margin amount.
      * @param binMargins The array of bin margins.
      * @return values The array of proportional position parameter values.
      */
     function divideToPositionParamValue(
-        int256 leveragedQty,
+        int256 qty,
         uint256 makerMargin,
         uint256 takerMargin,
         BinMargin[] memory binMargins
     ) private pure returns (_proportionalPositionParamValue[] memory) {
-        uint256 remainLeveragedQty = leveragedQty.abs();
+        uint256 remainQty = qty.abs();
         uint256 remainTakerMargin = takerMargin;
 
         _proportionalPositionParamValue[] memory values = new _proportionalPositionParamValue[](
@@ -599,15 +598,15 @@ library LiquidityPoolLib {
         );
 
         for (uint256 i; i < binMargins.length - 1; ) {
-            uint256 _qty = remainLeveragedQty.mulDiv(binMargins[i].amount, makerMargin);
+            uint256 _qty = remainQty.mulDiv(binMargins[i].amount, makerMargin);
             uint256 _takerMargin = remainTakerMargin.mulDiv(binMargins[i].amount, makerMargin);
 
             values[i] = _proportionalPositionParamValue({
-                leveragedQty: leveragedQty < 0 ? _qty.toInt256() : -(_qty.toInt256()), // opposit side
+                qty: qty < 0 ? _qty.toInt256() : -(_qty.toInt256()), // opposit side
                 takerMargin: _takerMargin
             });
 
-            remainLeveragedQty -= _qty;
+            remainQty -= _qty;
             remainTakerMargin -= _takerMargin;
 
             unchecked {
@@ -616,9 +615,7 @@ library LiquidityPoolLib {
         }
 
         values[binMargins.length - 1] = _proportionalPositionParamValue({
-            leveragedQty: leveragedQty < 0
-                ? remainLeveragedQty.toInt256()
-                : -(remainLeveragedQty.toInt256()), // opposit side
+            qty: qty < 0 ? remainQty.toInt256() : -(remainQty.toInt256()), // opposit side
             takerMargin: remainTakerMargin
         });
 

@@ -42,8 +42,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
 
         // open position at oracle version 2
         Position memory position1 = market.openPosition(
-            10000,
-            1000,
+            10 ether,
             1 ether,
             liquidityAmount,
             1 ether,
@@ -83,8 +82,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
 
         // open position at oracle version 5
         Position memory position2 = market.openPosition(
-            10000,
-            1000,
+            10 ether,
             1 ether,
             liquidityAmount,
             1 ether,

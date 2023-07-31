@@ -46,7 +46,7 @@ contract BinPendingPositionTest is Test {
         pending.onOpenPosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
-        assertEq(pending.totalLeveragedQty, param.leveragedQty);
+        assertEq(pending.totalQty, param.qty);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
@@ -56,12 +56,12 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         pending.onOpenPosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
-        assertEq(pending.totalLeveragedQty, param.leveragedQty + 10);
+        assertEq(pending.totalQty, param.qty + 10);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
@@ -71,7 +71,7 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
         param.openVersion = 2;
 
         vm.expectRevert(bytes("IOV"));
@@ -83,7 +83,7 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam().inverse();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         vm.expectRevert(bytes("IPQ"));
         pending.onOpenPosition(ctx, param);
@@ -104,21 +104,21 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 50;
+        pending.totalQty = 50;
         pending.totalMakerMargin = 50;
         pending.totalTakerMargin = 10;
 
         pending.onClosePosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
-        assertEq(pending.totalLeveragedQty, 0);
+        assertEq(pending.totalQty, 0);
         assertEq(pending.totalMakerMargin, 0);
         assertEq(pending.totalTakerMargin, 0);
     }
 
     function testOnClosePosition_InvalidOracleVersion() public {
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 50;
+        pending.totalQty = 50;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
@@ -130,7 +130,7 @@ contract BinPendingPositionTest is Test {
 
     function testOnClosePosition_InvalidClosePositionQty() public {
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
@@ -141,7 +141,7 @@ contract BinPendingPositionTest is Test {
 
     function testEntryPrice_UsingProviderCall() public {
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         LpContext memory ctx = _newLpContext();
         ctx._currentVersionCache.version = 10;
@@ -181,7 +181,7 @@ contract BinPendingPositionTest is Test {
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
         p.openVersion = 1;
-        p.leveragedQty = 50;
+        p.qty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
         p.openTimestamp = 1;

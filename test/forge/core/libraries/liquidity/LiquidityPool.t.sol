@@ -6,7 +6,6 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Recei
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
-import {QTY_PRECISION, LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
 import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
@@ -74,7 +73,7 @@ contract LiquidityPoolTest is Test {
 
         position.setBinMargins(liquidityPool.prepareBinMargins(ctx, position.qty, 1500 ether, 0));
 
-        assertEq(position.leveragedQty(ctx), 1500 ether);
+        assertEq(position.qty, 1500 ether);
         assertEq(position._binMargins[0].tradingFeeRate, 1);
         assertEq(position._binMargins[0].amount, 1000 ether);
         assertEq(position._binMargins[0].tradingFee(0), 0.1 ether);
@@ -212,8 +211,7 @@ contract LiquidityPoolTest is Test {
                 id: 1,
                 openVersion: 1,
                 closeVersion: 0,
-                qty: int224(150 * QTY_PRECISION.toInt256()),
-                leverage: uint32(10 * LEVERAGE_PRECISION),
+                qty: 1500 ether,
                 takerMargin: 150 ether,
                 openTimestamp: 1,
                 closeTimestamp: 0,

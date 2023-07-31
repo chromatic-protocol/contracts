@@ -95,14 +95,14 @@ contract LiquidityBinTest is Test {
     function testValue() public {
         LpContext memory ctx = _newLpContext();
 
-        bin._position.totalLeveragedQty = -150 ether;
+        bin._position.totalQty = -150 ether;
         bin._position.totalEntryAmount = 15000 ether; // oraclePrice 100
         bin._position._totalMakerMargin = 15000 ether;
         bin._position._totalTakerMargin = 15000 ether;
         bin._position._accruedInterest.accumulatedAt = 1;
         bin._position._accruedInterest.accumulatedAmount = 0.1 ether;
         bin._position._pending.openVersion = 1;
-        bin._position._pending.totalLeveragedQty = -10 ether;
+        bin._position._pending.totalQty = -10 ether;
         bin._position._pending.totalMakerMargin = 1000 ether;
         bin._position._pending.totalTakerMargin = 1000 ether;
         bin._position._pending.accruedInterest.accumulatedAt = 1;

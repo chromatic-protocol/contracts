@@ -21,7 +21,6 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      * @dev Opens a new position in a ChromaticMarket contract.
      * @param market The address of the ChromaticMarket contract.
      * @param qty The quantity of the position.
-     * @param leverage The leverage of the position.
      * @param takerMargin The margin amount for the taker.
      * @param makerMargin The margin amount for the maker.
      * @param maxAllowableTradingFee The maximum allowable trading fee.
@@ -29,8 +28,7 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      */
     function openPosition(
         address market,
-        int224 qty,
-        uint32 leverage,
+        int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
