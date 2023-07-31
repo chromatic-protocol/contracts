@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPosition.sol";
@@ -50,12 +49,12 @@ contract BinPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         ctx._currentVersionCache.version = 3;
         ctx._currentVersionCache.timestamp = 3;
-        ctx._currentVersionCache.price = Fixed18Lib.from(2100);
+        ctx._currentVersionCache.price = 2100 ether;
 
         PositionParam memory param = _newPositionParam();
         param._entryVersionCache.version = 2;
         param._entryVersionCache.timestamp = 2;
-        param._entryVersionCache.price = Fixed18Lib.from(2000);
+        param._entryVersionCache.price = 2000 ether;
 
         position.onClosePosition(ctx, param);
 

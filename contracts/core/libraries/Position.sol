@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil, QTY_LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -74,12 +73,12 @@ library PositionLib {
      *      at the settle version calculated based on the position's open oracle version
      * @param self The memory instance of the `Position` struct
      * @param ctx The context object for this transaction
-     * @return UFixed18 The entry price
+     * @return uint256 The entry price
      */
     function entryPrice(
         Position memory self,
         LpContext memory ctx
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return PositionUtil.settlePrice(ctx.oracleProvider, self.openVersion);
     }
 
@@ -89,12 +88,12 @@ library PositionLib {
      *      at the settle version calculated based on the position's close oracle version
      * @param self The memory instance of the `Position` struct
      * @param ctx The context object for this transaction
-     * @return UFixed18 The exit price
+     * @return uint256 The exit price
      */
     function exitPrice(
         Position memory self,
         LpContext memory ctx
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return PositionUtil.settlePrice(ctx.oracleProvider, self.closeVersion);
     }
 

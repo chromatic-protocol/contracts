@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -54,7 +53,7 @@ abstract contract BaseSetup is Test {
         );
 
         oracleProvider = new OracleProviderMock();
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         usdc = new Token("USDC", "USDC");
         usdc.faucet(1000000 ether);

@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {BaseSetup} from "../../../BaseSetup.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import "forge-std/console.sol";
@@ -20,7 +19,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         uint256 removeShortAmount = 5 ether;
 
         // set oracle version to 1
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // add liquidity $10 to 0.01% long bin at oracle version 1
         LpReceipt memory receipt1 = market.addLiquidity(
@@ -35,7 +34,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(0, clbToken.balanceOf(address(market), receipt1.clbTokenId()));
 
         // set oracle version to 2
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 2
         market.settle();
@@ -63,7 +62,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(0, clbToken.balanceOf(address(market), receipt2.clbTokenId()));
 
         // set oracle version to 3
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 3
         market.settle();
@@ -91,7 +90,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(removeLongAmount, clbToken.balanceOf(address(market), receipt3.clbTokenId()));
 
         // set oracle version to 4
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 4
         market.settle();
@@ -137,7 +136,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(removeShortAmount, clbToken.balanceOf(address(market), receipt4.clbTokenId()));
 
         // set oracle version to 5
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 5
         market.settle();
@@ -186,7 +185,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         removeAmounts[1] = removeShortAmount;
 
         // set oracle version to 1
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // add liquidity $10 to 0.01% long bin and $20 to 0.1% short bin at oracle version 1
         LpReceipt[] memory receipts1 = market.addLiquidityBatch(
@@ -203,7 +202,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(0, clbToken.balanceOf(address(market), receipts1[1].clbTokenId()));
 
         // set oracle version to 2
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 2
         market.settle();
@@ -227,7 +226,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(addShortAmount, clbToken.balanceOf(address(this), receipts1[1].clbTokenId()));
 
         // set oracle version to 3
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // remove liquidity $7 from 0.01% long bin and $5 from 0.1% short bin at oracle version 3
         LpReceipt[] memory receipts2 = market.removeLiquidityBatch(
@@ -245,7 +244,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(removeShortAmount, clbToken.balanceOf(address(market), receipts2[1].clbTokenId()));
 
         // set oracle version to 4
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 4
         market.settle();
@@ -300,7 +299,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         address(keeperFeePayer).call{value: keeperFee}("");
 
         // set oracle version to 1
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // add liquidity $10 to 0.01% long bin
         market.addLiquidity(address(this), 1, abi.encode(addLongAmount));
@@ -308,7 +307,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         market.addLiquidity(address(this), -10, abi.encode(addShortAmount));
 
         // set oracle version to 2
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 2
         market.settle();

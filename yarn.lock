@@ -86,13 +86,6 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@equilibria/root@^2.0.0-rc0":
-  version "2.0.0-rc0"
-  resolved "https://registry.yarnpkg.com/@equilibria/root/-/root-2.0.0-rc0.tgz#4ea2541e3d9b8b5d8b38d5d361f3b390d52aceb3"
-  integrity sha512-czfmBzMTqDfcOjQuBsAfjjv7HcIJoqSPi+YcsgxiD7I0B9/lfd/gKjCn3a76cSkzE8boXHt0SeVrmCw4D6mZ8w==
-  dependencies:
-    "@openzeppelin/contracts" "4.6.0"
-
 "@esbuild/android-arm@0.15.13":
   version "0.15.13"
   resolved "https://registry.yarnpkg.com/@esbuild/android-arm/-/android-arm-0.15.13.tgz#ce11237a13ee76d5eae3908e47ba4ddd380af86a"
@@ -830,7 +823,7 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.2.tgz#d81f786fda2871d1eb8a8c5a73e455753ba53527"
   integrity sha512-z0zMCjyhhp4y7XKAcDAi3Vgms4T2PstwBdahiO0+9NaGICQKjynK3wduSRplTgk4LXmoO1yfDGO5RbjKYxtuxA==
 
-"@openzeppelin/contracts@3.4.1-solc-0.7-2", "@openzeppelin/contracts@3.4.2-solc-0.7", "@openzeppelin/contracts@4.6.0", "@openzeppelin/contracts@4.7.0", "@openzeppelin/contracts@^4.9.2", "@openzeppelin/contracts@~4.3.3":
+"@openzeppelin/contracts@3.4.1-solc-0.7-2", "@openzeppelin/contracts@3.4.2-solc-0.7", "@openzeppelin/contracts@4.7.0", "@openzeppelin/contracts@^4.9.2", "@openzeppelin/contracts@~4.3.3":
   version "4.9.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.2.tgz#1cb2d5e4d3360141a17dbc45094a8cad6aac16c1"
   integrity sha512-mO+y6JaqXjWeMh9glYVzVu8HYPGknAAnWyxTRhGeckOruyXQMNnlcW6w/Dx9ftLeIQk6N+ZJFuVmTwF7lEIFrg==

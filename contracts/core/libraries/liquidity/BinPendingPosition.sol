@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/AccruedInterest.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
@@ -118,12 +117,12 @@ library BinPendingPositionLib {
         if (!ctx.isPastVersion(openVersion)) return 0;
 
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        UFixed18 _entryPrice = PositionUtil.settlePrice(
+        uint256 _entryPrice = PositionUtil.settlePrice(
             ctx.oracleProvider,
             openVersion,
             ctx.currentOracleVersion()
         );
-        UFixed18 _exitPrice = PositionUtil.oraclePrice(currentVersion);
+        uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 pnl = PositionUtil.pnl(self.totalLeveragedQty, _entryPrice, _exitPrice) +
             currentInterest(self, ctx).toInt256();
@@ -154,12 +153,12 @@ library BinPendingPositionLib {
      * @notice Calculates the entry price of the pending position.
      * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
-     * @return UFixed18 The entry price.
+     * @return uint256 The entry price.
      */
     function entryPrice(
         BinPendingPosition storage self,
         LpContext memory ctx
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return
             PositionUtil.settlePrice(
                 ctx.oracleProvider,

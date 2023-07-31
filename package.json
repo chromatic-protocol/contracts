@@ -68,7 +68,6 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^0.6.1",
-    "@equilibria/root": "^2.0.0-rc0",
     "@openzeppelin/contracts": "^4.9.2",
     "@uniswap/v3-periphery": "^1.4.3"
   },

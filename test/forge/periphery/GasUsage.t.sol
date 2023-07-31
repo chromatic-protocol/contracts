@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {BaseSetup} from "../BaseSetup.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import "forge-std/console.sol";
@@ -26,15 +25,15 @@ contract GasUsage is BaseSetup, IERC1155Receiver {
             address[] memory accounts
         ) = _liquidityBatchArgs();
 
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
         router.addLiquidityBatch(address(market), address(this), feeRates, amounts);
 
         uint256[] memory receiptIds = router.getLpReceiptIds(address(market), address(this));
 
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
         router.claimLiquidityBatch(address(market), receiptIds);
 
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
         router.removeLiquidityBatch(
             address(market),
             address(this),
@@ -44,7 +43,7 @@ contract GasUsage is BaseSetup, IERC1155Receiver {
 
         receiptIds = router.getLpReceiptIds(address(market), address(this));
 
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
         router.withdrawLiquidityBatch(address(market), receiptIds);
     }
 

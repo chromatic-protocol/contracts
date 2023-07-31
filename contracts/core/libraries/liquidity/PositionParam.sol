@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -55,12 +54,12 @@ library PositionParamLib {
      * @notice Calculates the entry price for a PositionParam.
      * @param self The PositionParam struct.
      * @param ctx The LpContext struct.
-     * @return UFixed18 The entry price.
+     * @return uint256 The entry price.
      */
     function entryPrice(
         PositionParam memory self,
         LpContext memory ctx
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return
             PositionUtil.settlePrice(
                 ctx.oracleProvider,

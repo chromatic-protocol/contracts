@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Test} from "forge-std/Test.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {QTY_PRECISION, LEVERAGE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
@@ -125,7 +124,7 @@ contract LiquidityPoolTest is Test {
 
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(110);
+        ctx._currentVersionCache.price = 110 ether;
         position.closeVersion = ctx._currentVersionCache.version;
         position.closeTimestamp = ctx._currentVersionCache.timestamp;
 
@@ -146,7 +145,7 @@ contract LiquidityPoolTest is Test {
 
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        ctx._currentVersionCache.price = 90 ether;
         position.closeVersion = ctx._currentVersionCache.version;
         position.closeTimestamp = ctx._currentVersionCache.timestamp;
 
@@ -168,7 +167,7 @@ contract LiquidityPoolTest is Test {
         // set oracle version to 2
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        ctx._currentVersionCache.price = 90 ether;
 
         liquidityPool.settle(ctx);
         assertEq(liquidityPool._longBins[1].liquidity(), 1100 ether);
@@ -183,7 +182,7 @@ contract LiquidityPoolTest is Test {
         // set oracle version to 2
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        ctx._currentVersionCache.price = 90 ether;
 
         liquidityPool.settle(ctx);
         assertEq(liquidityPool._longBins[1].liquidity(), 900 ether);
@@ -193,6 +192,7 @@ contract LiquidityPoolTest is Test {
         IOracleProvider.OracleVersion memory _currentVersionCache;
         _currentVersionCache.version = 1;
         _currentVersionCache.timestamp = 1;
+        _currentVersionCache.price = 90 ether;
         return
             LpContext({
                 oracleProvider: provider,

@@ -3,8 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -148,12 +146,12 @@ contract BinPendingPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         ctx._currentVersionCache.version = 10;
         ctx._currentVersionCache.timestamp = 10;
-        ctx._currentVersionCache.price = Fixed18.wrap(1200);
+        ctx._currentVersionCache.price = 1200;
 
         IOracleProvider.OracleVersion memory _ov;
         _ov.version = 2;
         _ov.timestamp = 2;
-        _ov.price = Fixed18.wrap(1100);
+        _ov.price = 1100;
         vm.mockCall(
             address(provider),
             abi.encodeWithSelector(provider.atVersion.selector, 2),
@@ -161,9 +159,9 @@ contract BinPendingPositionTest is Test {
         );
 
         vm.expectCall(address(provider), abi.encodeWithSelector(provider.atVersion.selector, 2));
-        UFixed18 entryPrice = pending.entryPrice(ctx);
+        uint256 entryPrice = pending.entryPrice(ctx);
 
-        assertEq(UFixed18.unwrap(entryPrice), 1100);
+        assertEq(entryPrice, 1100);
     }
 
     function _newLpContext() private view returns (LpContext memory) {

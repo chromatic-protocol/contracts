@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -12,7 +11,7 @@ import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts
 import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 
-/** 
+/**
  * @dev Represents a position in the LiquidityBin
  * @param totalLeveragedQty The total leveraged quantity of the `LiquidityBin`
  * @param totalEntryAmount The total entry amount of the `LiquidityBin`
@@ -143,7 +142,7 @@ library BinPositionLib {
 
         int256 leveragedQty = self.totalLeveragedQty;
         int256 sign = leveragedQty < 0 ? int256(-1) : int256(1);
-        UFixed18 exitPrice = PositionUtil.oraclePrice(currentVersion);
+        uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
         int256 exitAmount = PositionUtil.transactionAmount(leveragedQty, exitPrice).toInt256() *
