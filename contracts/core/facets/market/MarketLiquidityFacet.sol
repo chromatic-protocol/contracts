@@ -248,14 +248,16 @@ contract MarketLiquidityFacet is
             receipt.amount,
             receipt.oracleVersion
         );
-        //slither-disable-next-line calls-loop
-        ctx.clbToken.safeTransferFrom(
-            address(this),
-            receipt.recipient,
-            receipt.clbTokenId(),
-            clbTokenAmount,
-            bytes("")
-        );
+        if (clbTokenAmount > 0) {
+            //slither-disable-next-line calls-loop
+            ctx.clbToken.safeTransferFrom(
+                address(this),
+                receipt.recipient,
+                receipt.clbTokenId(),
+                clbTokenAmount,
+                bytes("")
+            );
+        }
     }
 
     /**
@@ -475,14 +477,16 @@ contract MarketLiquidityFacet is
             clbTokenAmount,
             receipt.oracleVersion
         );
-        //slither-disable-next-line calls-loop
-        ctx.clbToken.safeTransferFrom(
-            address(this),
-            recipient,
-            receipt.clbTokenId(),
-            clbTokenAmount - burnedCLBTokenAmount,
-            bytes("")
-        );
+        if (clbTokenAmount > burnedCLBTokenAmount) {
+            //slither-disable-next-line calls-loop
+            ctx.clbToken.safeTransferFrom(
+                address(this),
+                recipient,
+                receipt.clbTokenId(),
+                clbTokenAmount - burnedCLBTokenAmount,
+                bytes("")
+            );
+        }
         //slither-disable-next-line calls-loop
         ctx.vault.onWithdrawLiquidity(ctx.settlementToken, recipient, amount);
     }
