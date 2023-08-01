@@ -4,16 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
-import {UFixed18, UFixed18Lib} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
-
-uint256 constant QTY_DECIMALS = 4;
-uint256 constant LEVERAGE_DECIMALS = 2;
-uint256 constant QTY_PRECISION = 10 ** QTY_DECIMALS;
-uint256 constant LEVERAGE_PRECISION = 10 ** LEVERAGE_DECIMALS;
-uint256 constant QTY_LEVERAGE_PRECISION = QTY_PRECISION * LEVERAGE_PRECISION;
 
 /**
  * @title PositionUtil
@@ -23,6 +15,8 @@ library PositionUtil {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
+
+    uint256 private constant PRICE_PRECISION = 1e18;
 
     /**
      * @notice Returns next oracle version to settle
@@ -44,12 +38,12 @@ library PositionUtil {
      *      passing the `currentVersion` obtained from the `provider`
      * @param provider The oracle provider
      * @param oracleVersion The oracle version of position
-     * @return UFixed18 The calculated price to settle
+     * @return uint256 The calculated price to settle
      */
     function settlePrice(
         IOracleProvider provider,
         uint256 oracleVersion
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return settlePrice(provider, oracleVersion, provider.currentVersion());
     }
 
@@ -64,13 +58,13 @@ library PositionUtil {
      * @param provider The oracle provider
      * @param oracleVersion The oracle version of position
      * @param currentVersion The current oracle version
-     * @return UFixed18 The calculated entry price to settle
+     * @return uint256 The calculated entry price to settle
      */
     function settlePrice(
         IOracleProvider provider,
         uint256 oracleVersion,
         IOracleProvider.OracleVersion memory currentVersion
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         uint256 _settleVersion = settleVersion(oracleVersion);
         require(_settleVersion <= currentVersion.version, Errors.UNSETTLED_POSITION);
 
@@ -84,49 +78,40 @@ library PositionUtil {
 
     /**
      * @notice Extracts the price value from an `OracleVersion` struct
-     * @dev If the price is less than 0, it returns 0
+     * @dev If the price is not positive value, it triggers an error with the message `Errors.NOT_POSITIVE_PRICE`.
      * @param oracleVersion The memory instance of `OracleVersion` struct
-     * @return UFixed18 The price value of `oracleVersion`
+     * @return uint256 The price value of `oracleVersion`
      */
     function oraclePrice(
         IOracleProvider.OracleVersion memory oracleVersion
-    ) internal pure returns (UFixed18) {
-        return
-            oracleVersion.price.sign() < 0
-                ? UFixed18Lib.ZERO
-                : UFixed18Lib.from(oracleVersion.price);
+    ) internal pure returns (uint256) {
+        require(oracleVersion.price > 0, Errors.NOT_POSITIVE_PRICE);
+        return oracleVersion.price.abs();
     }
 
     /**
-     * @notice Calculates the profit or loss (PnL) for a position
-     *         based on the leveraged quantity, entry price, and exit price
+     * @notice Calculates the profit or loss (PnL) for a position based on the quantity, entry price, and exit price
      * @dev It first calculates the price difference (`delta`) between the exit price and the entry price.
-     *      If the leveraged quantity is negative, indicating short position,
-     *      it adjusts the `delta` to reflect a negative change.
-     *      The function then calculates the absolute PnL
-     *      by multiplying the absolute value of the leveraged quantity
-     *      with the absolute value of the `delta`, divided by the entry price.
-     *      Finally, if `delta` is negative, indicating a loss,
-     *      the absolute PnL is negated to represent a negative value.
-     * @param leveragedQty The leveraged quantity of the position
+     *      If the quantity is negative, indicating short position, it adjusts the `delta` to reflect a negative change.
+     *      The function then calculates the absolute PnL by multiplying the absolute value of the quantity
+     *          with the absolute value of the `delta`, divided by the entry price.
+     *      Finally, if `delta` is negative, indicating a loss, the absolute PnL is negated to represent a negative value.
+     * @param qty The quantity of the position
      * @param _entryPrice The entry price of the position
      * @param _exitPrice The exit price of the position
      * @return int256 The profit or loss
      */
     function pnl(
-        int256 leveragedQty, // as token precision
-        UFixed18 _entryPrice,
-        UFixed18 _exitPrice
+        int256 qty, // as token precision
+        uint256 _entryPrice,
+        uint256 _exitPrice
     ) internal pure returns (int256) {
-        int256 delta = _exitPrice.gt(_entryPrice)
-            ? UFixed18.unwrap(_exitPrice.sub(_entryPrice)).toInt256()
-            : -UFixed18.unwrap(_entryPrice.sub(_exitPrice)).toInt256();
-        if (leveragedQty < 0) delta *= -1;
+        int256 delta = _exitPrice > _entryPrice
+            ? (_exitPrice - _entryPrice).toInt256()
+            : -(_entryPrice - _exitPrice).toInt256();
+        if (qty < 0) delta *= -1;
 
-        int256 absPnl = leveragedQty
-            .abs()
-            .mulDiv(delta.abs(), UFixed18.unwrap(_entryPrice))
-            .toInt256();
+        int256 absPnl = qty.abs().mulDiv(delta.abs(), _entryPrice).toInt256();
 
         return delta < 0 ? -absPnl : absPnl;
     }
@@ -166,15 +151,12 @@ library PositionUtil {
     }
 
     /**
-     * @notice Calculates the transaction amount based on the leveraged quantity and price
-     * @param leveragedQty The leveraged quantity of the position
+     * @notice Calculates the transaction amount based on the quantity and price
+     * @param qty The quantity of the position
      * @param price The price of the position
      * @return uint256 The transaction amount
      */
-    function transactionAmount(
-        int256 leveragedQty,
-        UFixed18 price
-    ) internal pure returns (uint256) {
-        return leveragedQty.abs().mulDiv(UFixed18.unwrap(price), UFixed18.unwrap(UFixed18Lib.ONE));
+    function transactionAmount(int256 qty, uint256 price) internal pure returns (uint256) {
+        return qty.abs().mulDiv(price, PRICE_PRECISION);
     }
 }

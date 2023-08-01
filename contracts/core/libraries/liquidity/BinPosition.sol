@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -12,9 +11,9 @@ import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts
 import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 
-/** 
+/**
  * @dev Represents a position in the LiquidityBin
- * @param totalLeveragedQty The total leveraged quantity of the `LiquidityBin`
+ * @param totalQty The total quantity of the `LiquidityBin`
  * @param totalEntryAmount The total entry amount of the `LiquidityBin`
  * @param _totalMakerMargin The total maker margin of the `LiquidityBin`
  * @param _totalTakerMargin The total taker margin of the `LiquidityBin`
@@ -22,7 +21,7 @@ import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquid
  * @param _accruedInterest The accumulated interest of the `LiquidityBin`
  */
 struct BinPosition {
-    int256 totalLeveragedQty;
+    int256 totalQty;
     uint256 totalEntryAmount;
     uint256 _totalMakerMargin;
     uint256 _totalTakerMargin;
@@ -53,8 +52,8 @@ library BinPositionLib {
         // accumulate interest before update `_totalMakerMargin`
         self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
-        int256 pendingQty = self._pending.totalLeveragedQty;
-        self.totalLeveragedQty += pendingQty;
+        int256 pendingQty = self._pending.totalQty;
+        self.totalQty += pendingQty;
         self.totalEntryAmount += PositionUtil.transactionAmount(
             pendingQty,
             self._pending.entryPrice(ctx)
@@ -96,14 +95,14 @@ library BinPositionLib {
         if (param.openVersion == self._pending.openVersion) {
             self._pending.onClosePosition(ctx, param);
         } else {
-            int256 totalLeveragedQty = self.totalLeveragedQty;
-            int256 leveragedQty = param.leveragedQty;
-            PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+            int256 totalQty = self.totalQty;
+            int256 qty = param.qty;
+            PositionUtil.checkRemovePositionQty(totalQty, qty);
 
             // accumulate interest before update `_totalMakerMargin`
             self._accruedInterest.accumulate(ctx, self._totalMakerMargin, block.timestamp);
 
-            self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
+            self.totalQty = totalQty - qty;
             self.totalEntryAmount -= param.entryAmount(ctx);
             self._totalMakerMargin -= param.makerMargin;
             self._totalTakerMargin -= param.takerMargin;
@@ -141,13 +140,12 @@ library BinPositionLib {
     ) internal view returns (int256) {
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
 
-        int256 leveragedQty = self.totalLeveragedQty;
-        int256 sign = leveragedQty < 0 ? int256(-1) : int256(1);
-        UFixed18 exitPrice = PositionUtil.oraclePrice(currentVersion);
+        int256 qty = self.totalQty;
+        int256 sign = qty < 0 ? int256(-1) : int256(1);
+        uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
         int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
-        int256 exitAmount = PositionUtil.transactionAmount(leveragedQty, exitPrice).toInt256() *
-            sign;
+        int256 exitAmount = PositionUtil.transactionAmount(qty, exitPrice).toInt256() * sign;
 
         int256 rawPnl = exitAmount - entryAmount;
         int256 pnl = rawPnl +

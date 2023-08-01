@@ -168,6 +168,8 @@ describe('market test', async function () {
 
   it('calculate CLBTokenMinting/CLBTokenValue when zero liquidity', async () => {
     const { market, clbToken } = testData
+    const { updatePrice } = helpers(testData)
+    await updatePrice(1000)
 
     const amount = parseEther('100')
     const feeRate = 1

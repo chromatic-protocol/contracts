@@ -32,11 +32,10 @@ describe('position & account test', async function () {
 
     await updatePrice(1000)
     const takerMargin = parseEther('2000')
-    const leverage = 200n
-    const makerMargin = (takerMargin * leverage) / 100n
+    const leverage = 2n // x2
+    const makerMargin = takerMargin * leverage
     const { receipt } = await openPosition({
-      qty: parseUnits(formatEther(base), 4) * 2n,
-      leverage,
+      qty: makerMargin,
       takerMargin,
       makerMargin
     })
@@ -59,12 +58,11 @@ describe('position & account test', async function () {
     const { updatePrice, openPosition } = helpers(testData)
     await updatePrice(1000)
     const takerMargin = parseEther('2000')
-    const leverage = 200n
-    const makerMargin = (takerMargin * leverage) / 100n
+    const leverage = 2n // x2
+    const makerMargin = takerMargin * leverage
 
     const { receipt } = await openPosition({
-      qty: -parseUnits(formatEther(base), 4) * 2n,
-      leverage,
+      qty: -makerMargin,
       takerMargin,
       makerMargin
     })
@@ -110,7 +108,7 @@ describe('position & account test', async function () {
 
     await time.increase(101)
     // prevent IOV
-    await updatePrice(0)
+    await updatePrice(1)
     const oraclePrices = [1000, 1100, 1300, 1200]
     await bluebird.each(oraclePrices, async (price) => {
       await openPosition()
@@ -123,21 +121,15 @@ describe('position & account test', async function () {
     const entryVersions = await oracleProvider.atVersions(settleVersions)
 
     const settlementTokenDecimal = 10n ** (await settlementToken.decimals())
-    const QTY_LEVERAGE_PRECISION = 10n ** 6n
 
     const results = positions.reduce((acc: any[], curr: PositionStructOutput) => {
       const entryPrice = entryVersions.find((v) => v.version == curr.openVersion + 1n)?.price
       if (!entryPrice) throw new Error('Not found oracle version for entry price')
 
-      const leveraged =
-        (BigInt(Math.abs(Number(curr.qty))) * (settlementTokenDecimal * curr.leverage)) /
-        QTY_LEVERAGE_PRECISION
-      const leveragedQty = curr.qty < 0n ? -leveraged : leveraged
       const makerMargin = curr._binMargins.map((m) => m.amount).reduce((a, b) => a + b)
       acc.push({
         ...(curr as unknown as Result).toObject(),
-        // pnl: getPnl(leveragedQty, entryPrice, currentPrice),
-        leveragedQty: leveragedQty,
+        // pnl: getPnl(qty, entryPrice, currentPrice),
         entryPrice: entryPrice,
         makerMargin: makerMargin
       })
@@ -199,17 +191,17 @@ describe('position & account test', async function () {
       /// validate pnl
       const currentVersion = await oracleProvider.currentVersion()
       const currentPrice = currentVersion.price
-      const expectedPnl = getPnl(r.leveragedQty, r.entryPrice, currentPrice)
+      const expectedPnl = getPnl(r.qty, r.entryPrice, currentPrice)
       const oraclePriceDiff =
         index != results.length
           ? parseUnits((oraclePrices[oraclePrices.length - 1] - oraclePrices[index]).toString(), 8)
           : currentPrice - BigInt(oraclePrices[index]) //
-      expect(expectedPnl, 'wrong pnl').to.equal((r.leveragedQty * oraclePriceDiff) / r.entryPrice)
+      expect(expectedPnl, 'wrong pnl').to.equal((r.qty * oraclePriceDiff) / r.entryPrice)
       expect(
-        parseFloat(expectedPnl.toString()) / parseFloat(r.leveragedQty),
+        parseFloat(expectedPnl.toString()) / parseFloat(r.qty),
         'wrong pnl percentage'
       ).to.equal(Number(oraclePriceDiff) / Number(r.entryPrice))
-      console.log(`pnl ${(parseFloat(expectedPnl.toString()) / parseFloat(r.leveragedQty)) * 100}%`)
+      console.log(`pnl ${(parseFloat(expectedPnl.toString()) / parseFloat(r.qty)) * 100}%`)
 
       await expect(tx, 'not matched actual pnl')
         .to.emit(market, 'ClaimPosition')

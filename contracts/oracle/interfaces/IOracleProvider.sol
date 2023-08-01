@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@equilibria/root/number/types/Fixed18.sol";
-
 interface IOracleProvider {
     /// @dev Error for invalid oracle round
     error InvalidOracleRound();
-    
+
     /**
      * @dev A singular oracle version with its corresponding data
      * @param version The iterative version
@@ -16,7 +14,7 @@ interface IOracleProvider {
     struct OracleVersion {
         uint256 version;
         uint256 timestamp;
-        Fixed18 price;
+        int256 price;
     }
 
     /**

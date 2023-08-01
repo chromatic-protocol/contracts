@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -12,7 +11,7 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
  * @dev A struct representing the parameters of a position.
  * @param openVersion The version of the position's open transaction
  * @param closeVersion The version of the position's close transaction
- * @param leveragedQty The leveraged quantity of the position
+ * @param qty The quantity of the position
  * @param takerMargin The margin amount provided by the taker
  * @param makerMargin The margin amount provided by the maker
  * @param openTimestamp The timestamp of the position's open transaction
@@ -23,7 +22,7 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 struct PositionParam {
     uint256 openVersion;
     uint256 closeVersion;
-    int256 leveragedQty;
+    int256 qty;
     uint256 takerMargin;
     uint256 makerMargin;
     uint256 openTimestamp;
@@ -55,12 +54,12 @@ library PositionParamLib {
      * @notice Calculates the entry price for a PositionParam.
      * @param self The PositionParam struct.
      * @param ctx The LpContext struct.
-     * @return UFixed18 The entry price.
+     * @return uint256 The entry price.
      */
     function entryPrice(
         PositionParam memory self,
         LpContext memory ctx
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return
             PositionUtil.settlePrice(
                 ctx.oracleProvider,
@@ -79,7 +78,7 @@ library PositionParamLib {
         PositionParam memory self,
         LpContext memory ctx
     ) internal view returns (uint256) {
-        return PositionUtil.transactionAmount(self.leveragedQty, self.entryPrice(ctx));
+        return PositionUtil.transactionAmount(self.qty, self.entryPrice(ctx));
     }
 
     /**
@@ -124,7 +123,7 @@ library PositionParamLib {
             PositionParam({
                 openVersion: self.openVersion,
                 closeVersion: self.closeVersion,
-                leveragedQty: self.leveragedQty,
+                qty: self.qty,
                 takerMargin: self.takerMargin,
                 makerMargin: self.makerMargin,
                 openTimestamp: self.openTimestamp,
@@ -135,13 +134,13 @@ library PositionParamLib {
     }
 
     /**
-     * @notice Creates the inverse of a PositionParam by negating the leveragedQty.
+     * @notice Creates the inverse of a PositionParam by negating the qty.
      * @param self The PositionParam data struct.
      * @return PositionParam The inverted PositionParam.
      */
     function inverse(PositionParam memory self) internal pure returns (PositionParam memory) {
         PositionParam memory param = self.clone();
-        param.leveragedQty *= -1;
+        param.qty *= -1;
         return param;
     }
 }

@@ -81,20 +81,17 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   async function openPosition({
     takerMargin = parseEther('10'),
     makerMargin = parseEther('50'),
-    qty = BigInt(10 * 10 ** 4),
-    leverage = 500n, // 5 x
+    qty = parseEther('10'),
     maxAllowFeeRate = 1n
   }: {
     takerMargin?: bigint
     makerMargin?: bigint
     qty?: bigint
-    leverage?: bigint
     maxAllowFeeRate?: bigint
   } = {}) {
     const openPositionTx = await traderRouter.openPosition(
       market.getAddress(),
       qty,
-      leverage,
       takerMargin, // losscut 1 token
       makerMargin, // profit stop 10 token,
       (makerMargin * maxAllowFeeRate) / 100n // maxAllowFee (1% * makerMargin)
@@ -104,8 +101,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
       receipt,
       makerMargin,
       takerMargin,
-      qty,
-      leverage
+      qty
     }
   }
 

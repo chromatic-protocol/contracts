@@ -15,6 +15,8 @@ import "./types/ChainlinkAggregator.sol";
 contract ChainlinkFeedOracle is IOracleProvider {
     error UnableToSyncError();
 
+    int256 private constant BASE = 1e18;
+
     /// @dev Chainlink feed aggregator address
     ChainlinkAggregator public immutable aggregator;
 
@@ -140,7 +142,7 @@ contract ChainlinkFeedOracle is IOracleProvider {
         ChainlinkRound memory round,
         uint256 version
     ) private view returns (OracleVersion memory) {
-        Fixed18 price = Fixed18Lib.ratio(round.answer, _decimalOffset);
+        int256 price = (round.answer * BASE) / _decimalOffset;
         return OracleVersion({version: version, timestamp: round.timestamp, price: price});
     }
 

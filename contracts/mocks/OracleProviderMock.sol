@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
 import {ChainlinkAggregator} from "@chromatic-protocol/contracts/oracle/types/ChainlinkAggregator.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 
@@ -16,7 +15,7 @@ contract OracleProviderMock is IOracleProvider {
         aggregator = ChainlinkAggregator.wrap(address(0));
     }
 
-    function increaseVersion(Fixed18 price) public {
+    function increaseVersion(int256 price) public {
         latestVersion++;
 
         IOracleProvider.OracleVersion memory oracleVersion;

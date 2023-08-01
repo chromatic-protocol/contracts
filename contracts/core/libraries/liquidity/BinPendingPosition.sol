@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/AccruedInterest.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
@@ -15,14 +14,14 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 /**
  * @dev Represents a pending position within the LiquidityBin
  * @param openVersion The oracle version when the position was opened.
- * @param totalLeveragedQty The total leveraged quantity of the pending position.
+ * @param totalQty The total quantity of the pending position.
  * @param totalMakerMargin The total maker margin of the pending position.
  * @param totalTakerMargin The total taker margin of the pending position.
  * @param accruedInterest The accumulated interest of the pending position.
  */
 struct BinPendingPosition {
     uint256 openVersion;
-    int256 totalLeveragedQty;
+    int256 totalQty;
     uint256 totalMakerMargin;
     uint256 totalTakerMargin;
     AccruedInterest accruedInterest;
@@ -64,15 +63,15 @@ library BinPendingPositionLib {
             Errors.INVALID_ORACLE_VERSION
         );
 
-        int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
+        int256 totalQty = self.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkAddPositionQty(totalQty, qty);
 
         // accumulate interest before update `totalMakerMargin`
         settleAccruedInterest(self, ctx);
 
         self.openVersion = param.openVersion;
-        self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
+        self.totalQty = totalQty + qty;
         self.totalMakerMargin += param.makerMargin;
         self.totalTakerMargin += param.takerMargin;
     }
@@ -91,14 +90,14 @@ library BinPendingPositionLib {
     ) internal {
         require(self.openVersion == param.openVersion, Errors.INVALID_ORACLE_VERSION);
 
-        int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+        int256 totalQty = self.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkRemovePositionQty(totalQty, qty);
 
         // accumulate interest before update `totalMakerMargin`
         settleAccruedInterest(self, ctx);
 
-        self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
+        self.totalQty = totalQty - qty;
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;
         self.accruedInterest.deduct(param.calculateInterest(ctx, block.timestamp));
@@ -118,14 +117,14 @@ library BinPendingPositionLib {
         if (!ctx.isPastVersion(openVersion)) return 0;
 
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
-        UFixed18 _entryPrice = PositionUtil.settlePrice(
+        uint256 _entryPrice = PositionUtil.settlePrice(
             ctx.oracleProvider,
             openVersion,
             ctx.currentOracleVersion()
         );
-        UFixed18 _exitPrice = PositionUtil.oraclePrice(currentVersion);
+        uint256 _exitPrice = PositionUtil.oraclePrice(currentVersion);
 
-        int256 pnl = PositionUtil.pnl(self.totalLeveragedQty, _entryPrice, _exitPrice) +
+        int256 pnl = PositionUtil.pnl(self.totalQty, _entryPrice, _exitPrice) +
             currentInterest(self, ctx).toInt256();
         uint256 absPnl = pnl.abs();
 
@@ -154,12 +153,12 @@ library BinPendingPositionLib {
      * @notice Calculates the entry price of the pending position.
      * @param self The BinPendingPosition storage.
      * @param ctx The LpContext.
-     * @return UFixed18 The entry price.
+     * @return uint256 The entry price.
      */
     function entryPrice(
         BinPendingPosition storage self,
         LpContext memory ctx
-    ) internal view returns (UFixed18) {
+    ) internal view returns (uint256) {
         return
             PositionUtil.settlePrice(
                 ctx.oracleProvider,

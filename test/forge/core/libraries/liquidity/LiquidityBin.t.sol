@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Test} from "forge-std/Test.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
@@ -65,7 +64,7 @@ contract LiquidityBinTest is Test {
         // oracle version 2
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        ctx._currentVersionCache.price = 90 ether;
         bin.acceptAddLiquidity(ctx, 100 ether);
         assertEq(bin.liquidity(), 20000 ether);
 
@@ -82,7 +81,7 @@ contract LiquidityBinTest is Test {
         // oracle version 2
         ctx._currentVersionCache.version = 2;
         ctx._currentVersionCache.timestamp = 2;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        ctx._currentVersionCache.price = 90 ether;
         bin.acceptRemoveLiquidity(ctx, 100 ether);
         assertEq(bin.liquidity(), 20000 ether);
 
@@ -96,14 +95,14 @@ contract LiquidityBinTest is Test {
     function testValue() public {
         LpContext memory ctx = _newLpContext();
 
-        bin._position.totalLeveragedQty = -150 ether;
+        bin._position.totalQty = -150 ether;
         bin._position.totalEntryAmount = 15000 ether; // oraclePrice 100
         bin._position._totalMakerMargin = 15000 ether;
         bin._position._totalTakerMargin = 15000 ether;
         bin._position._accruedInterest.accumulatedAt = 1;
         bin._position._accruedInterest.accumulatedAmount = 0.1 ether;
         bin._position._pending.openVersion = 1;
-        bin._position._pending.totalLeveragedQty = -10 ether;
+        bin._position._pending.totalQty = -10 ether;
         bin._position._pending.totalMakerMargin = 1000 ether;
         bin._position._pending.totalTakerMargin = 1000 ether;
         bin._position._pending.accruedInterest.accumulatedAt = 1;
@@ -111,12 +110,12 @@ contract LiquidityBinTest is Test {
         vm.warp(3);
         ctx._currentVersionCache.version = 3;
         ctx._currentVersionCache.timestamp = 3;
-        ctx._currentVersionCache.price = Fixed18Lib.from(90);
+        ctx._currentVersionCache.price = 90 ether;
 
         IOracleProvider.OracleVersion memory _ov;
         _ov.version = 2;
         _ov.timestamp = 2;
-        _ov.price = Fixed18Lib.from(100);
+        _ov.price = 100 ether;
         vm.mockCall(
             address(provider),
             abi.encodeWithSelector(provider.atVersion.selector, 2),

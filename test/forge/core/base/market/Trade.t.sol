@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {BaseSetup} from "../../../BaseSetup.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {Fixed18, Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
@@ -19,7 +18,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         uint256 liquidityAmount = 10 ether;
 
         // set oracle version to 1
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // add liquidity $10 to 0.01% and 0.02% long bin at oracle version 1
         LpReceipt memory receipt1 = market.addLiquidity(
@@ -34,7 +33,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         );
 
         // set oracle version to 2
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // claim liquidity at oracle version 2
         market.claimLiquidity(receipt1.id, bytes(""));
@@ -43,8 +42,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
 
         // open position at oracle version 2
         Position memory position1 = market.openPosition(
-            10000,
-            1000,
+            10 ether,
             1 ether,
             liquidityAmount,
             1 ether,
@@ -52,7 +50,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         );
 
         // set oracle version to 3
-        oracleProvider.increaseVersion(Fixed18Lib.from(1));
+        oracleProvider.increaseVersion(1 ether);
 
         // close position at oracle version 3
         market.closePosition(position1.id);
@@ -60,7 +58,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         assertEq(position1.tradingFee(), market.getBinFreeLiquidity(1));
 
         // set oracle version to 4
-        oracleProvider.increaseVersion(Fixed18.wrap(1.1 ether));
+        oracleProvider.increaseVersion(1.1 ether);
 
         // remove liquidity and claim position at oracle version 4
         LpReceipt memory receipt3 = market.removeLiquidity(
@@ -80,12 +78,11 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         assertEq(liquidityAmount + position1.tradingFee() - 1 ether, market.getBinFreeLiquidity(1));
 
         // set oracle version to 5
-        oracleProvider.increaseVersion(Fixed18.wrap(1.1 ether));
+        oracleProvider.increaseVersion(1.1 ether);
 
         // open position at oracle version 5
         Position memory position2 = market.openPosition(
-            10000,
-            1000,
+            10 ether,
             1 ether,
             liquidityAmount,
             1 ether,

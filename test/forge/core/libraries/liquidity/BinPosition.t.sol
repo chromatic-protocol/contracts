@@ -3,7 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18Lib} from "@equilibria/root/number/types/Fixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPosition.sol";
@@ -42,7 +41,7 @@ contract BinPositionTest is Test {
     }
 
     function testOnClosePosition() public {
-        position.totalLeveragedQty = 100;
+        position.totalQty = 100;
         position.totalEntryAmount = 200000;
         position._totalMakerMargin = 100;
         position._totalTakerMargin = 100;
@@ -50,16 +49,16 @@ contract BinPositionTest is Test {
         LpContext memory ctx = _newLpContext();
         ctx._currentVersionCache.version = 3;
         ctx._currentVersionCache.timestamp = 3;
-        ctx._currentVersionCache.price = Fixed18Lib.from(2100);
+        ctx._currentVersionCache.price = 2100 ether;
 
         PositionParam memory param = _newPositionParam();
         param._entryVersionCache.version = 2;
         param._entryVersionCache.timestamp = 2;
-        param._entryVersionCache.price = Fixed18Lib.from(2000);
+        param._entryVersionCache.price = 2000 ether;
 
         position.onClosePosition(ctx, param);
 
-        assertEq(position.totalLeveragedQty, 50);
+        assertEq(position.totalQty, 50);
         assertEq(position.totalEntryAmount, 100000);
         assertEq(position._totalMakerMargin, 50);
         assertEq(position._totalTakerMargin, 90);
@@ -84,7 +83,7 @@ contract BinPositionTest is Test {
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
         p.openVersion = 1;
-        p.leveragedQty = 50;
+        p.qty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
         p.openTimestamp = 1;

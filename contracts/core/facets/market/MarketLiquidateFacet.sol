@@ -149,7 +149,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
 
         _pnl =
             PositionUtil.pnl(
-                position.leveragedQty(ctx),
+                position.qty,
                 position.entryPrice(ctx),
                 PositionUtil.oraclePrice(ctx.currentOracleVersion())
             ) -

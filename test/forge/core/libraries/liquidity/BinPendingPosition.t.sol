@@ -3,8 +3,6 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {Fixed18} from "@equilibria/root/number/types/Fixed18.sol";
-import {UFixed18} from "@equilibria/root/number/types/UFixed18.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -48,7 +46,7 @@ contract BinPendingPositionTest is Test {
         pending.onOpenPosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
-        assertEq(pending.totalLeveragedQty, param.leveragedQty);
+        assertEq(pending.totalQty, param.qty);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
@@ -58,12 +56,12 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         pending.onOpenPosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
-        assertEq(pending.totalLeveragedQty, param.leveragedQty + 10);
+        assertEq(pending.totalQty, param.qty + 10);
         assertEq(pending.totalMakerMargin, param.makerMargin);
         assertEq(pending.totalTakerMargin, param.takerMargin);
     }
@@ -73,7 +71,7 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
         param.openVersion = 2;
 
         vm.expectRevert(bytes("IOV"));
@@ -85,7 +83,7 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam().inverse();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         vm.expectRevert(bytes("IPQ"));
         pending.onOpenPosition(ctx, param);
@@ -106,21 +104,21 @@ contract BinPendingPositionTest is Test {
         PositionParam memory param = _newPositionParam();
 
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 50;
+        pending.totalQty = 50;
         pending.totalMakerMargin = 50;
         pending.totalTakerMargin = 10;
 
         pending.onClosePosition(ctx, param);
 
         assertEq(pending.openVersion, param.openVersion);
-        assertEq(pending.totalLeveragedQty, 0);
+        assertEq(pending.totalQty, 0);
         assertEq(pending.totalMakerMargin, 0);
         assertEq(pending.totalTakerMargin, 0);
     }
 
     function testOnClosePosition_InvalidOracleVersion() public {
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 50;
+        pending.totalQty = 50;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
@@ -132,7 +130,7 @@ contract BinPendingPositionTest is Test {
 
     function testOnClosePosition_InvalidClosePositionQty() public {
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         LpContext memory ctx = _newLpContext();
         PositionParam memory param = _newPositionParam();
@@ -143,17 +141,17 @@ contract BinPendingPositionTest is Test {
 
     function testEntryPrice_UsingProviderCall() public {
         pending.openVersion = 1;
-        pending.totalLeveragedQty = 10;
+        pending.totalQty = 10;
 
         LpContext memory ctx = _newLpContext();
         ctx._currentVersionCache.version = 10;
         ctx._currentVersionCache.timestamp = 10;
-        ctx._currentVersionCache.price = Fixed18.wrap(1200);
+        ctx._currentVersionCache.price = 1200;
 
         IOracleProvider.OracleVersion memory _ov;
         _ov.version = 2;
         _ov.timestamp = 2;
-        _ov.price = Fixed18.wrap(1100);
+        _ov.price = 1100;
         vm.mockCall(
             address(provider),
             abi.encodeWithSelector(provider.atVersion.selector, 2),
@@ -161,9 +159,9 @@ contract BinPendingPositionTest is Test {
         );
 
         vm.expectCall(address(provider), abi.encodeWithSelector(provider.atVersion.selector, 2));
-        UFixed18 entryPrice = pending.entryPrice(ctx);
+        uint256 entryPrice = pending.entryPrice(ctx);
 
-        assertEq(UFixed18.unwrap(entryPrice), 1100);
+        assertEq(entryPrice, 1100);
     }
 
     function _newLpContext() private view returns (LpContext memory) {
@@ -183,7 +181,7 @@ contract BinPendingPositionTest is Test {
 
     function _newPositionParam() private pure returns (PositionParam memory p) {
         p.openVersion = 1;
-        p.leveragedQty = 50;
+        p.qty = 50;
         p.takerMargin = 10;
         p.makerMargin = 50;
         p.openTimestamp = 1;

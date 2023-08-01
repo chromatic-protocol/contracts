@@ -22,8 +22,6 @@ import { PositionStructOutput } from '@chromatic/typechain-types/contracts/core/
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { ethers, parseEther, parseUnits } from 'ethers'
 
-const QTY_DECIMALS = 4
-const LEVERAGE_DECIMALS = 2
 const FEE_RATE_DECIMALS = 4
 
 export class ReplWallet {
@@ -128,15 +126,14 @@ export class ReplWallet {
     return await this.ChromaticMarket.getPositions(positionIds)
   }
 
-  async openPosition(qty: number, leverage: number, takerMargin: number, makerMargin: number) {
+  async openPosition(qty: number, takerMargin: number, makerMargin: number) {
     const decimals = await this.USDC.decimals()
     const _takerMargin = parseUnits(takerMargin.toString(), decimals)
     const _makerMargin = parseUnits(makerMargin.toString(), decimals)
 
     await this.ChromaticRouter.openPosition(
       await this.ChromaticMarket.getAddress(),
-      parseUnits(qty.toString(), QTY_DECIMALS),
-      parseUnits(leverage.toString(), LEVERAGE_DECIMALS),
+      parseUnits(qty.toString(), decimals),
       _takerMargin,
       _makerMargin,
       _makerMargin // no limit trading fee

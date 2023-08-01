@@ -10,7 +10,7 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 /**
  * @dev Represents the closing position within an LiquidityBin.
  * @param closeVersion The oracle version when the position was closed.
- * @param totalLeveragedQty The total leveraged quantity of the closing position.
+ * @param totalQty The total quantity of the closing position.
  * @param totalEntryAmount The total entry amount of the closing position.
  * @param totalMakerMargin The total maker margin of the closing position.
  * @param totalTakerMargin The total taker margin of the closing position.
@@ -18,7 +18,7 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
  */
 struct BinClosingPosition {
     uint256 closeVersion;
-    int256 totalLeveragedQty;
+    int256 totalQty;
     uint256 totalEntryAmount;
     uint256 totalMakerMargin;
     uint256 totalTakerMargin;
@@ -59,15 +59,15 @@ library BinClosingPositionLib {
             Errors.INVALID_ORACLE_VERSION
         );
 
-        int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkAddPositionQty(totalLeveragedQty, leveragedQty);
+        int256 totalQty = self.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkAddPositionQty(totalQty, qty);
 
         // accumulate interest before update `totalMakerMargin`
         settleAccruedInterest(self, ctx);
 
         self.closeVersion = param.closeVersion;
-        self.totalLeveragedQty = totalLeveragedQty + leveragedQty;
+        self.totalQty = totalQty + qty;
         self.totalEntryAmount += param.entryAmount(ctx);
         self.totalMakerMargin += param.makerMargin;
         self.totalTakerMargin += param.takerMargin;
@@ -88,14 +88,14 @@ library BinClosingPositionLib {
     ) internal {
         require(self.closeVersion == param.closeVersion, Errors.INVALID_ORACLE_VERSION);
 
-        int256 totalLeveragedQty = self.totalLeveragedQty;
-        int256 leveragedQty = param.leveragedQty;
-        PositionUtil.checkRemovePositionQty(totalLeveragedQty, leveragedQty);
+        int256 totalQty = self.totalQty;
+        int256 qty = param.qty;
+        PositionUtil.checkRemovePositionQty(totalQty, qty);
 
         // accumulate interest before update `totalMakerMargin`
         settleAccruedInterest(self, ctx);
 
-        self.totalLeveragedQty = totalLeveragedQty - leveragedQty;
+        self.totalQty = totalQty - qty;
         self.totalEntryAmount -= param.entryAmount(ctx);
         self.totalMakerMargin -= param.makerMargin;
         self.totalTakerMargin -= param.takerMargin;

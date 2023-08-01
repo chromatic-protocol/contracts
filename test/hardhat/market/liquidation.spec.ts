@@ -53,8 +53,7 @@ describe('liquidation test', async () => {
       const makerMargin = parseEther('190') // 19%
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.getAddress(),
-        10 ** 4 * 1000, //price precision  (4 decimals)
-        100, // leverage ( x1 )
+        parseEther('1000'), //price precision
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
         makerMargin / 100n // maxAllowFee (1% * makerMargin)
@@ -69,8 +68,7 @@ describe('liquidation test', async () => {
       const makerMargin = parseEther('500') // 500 usd
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.getAddress(),
-        10 ** 4 * 1000, //price precision  (4 decimals)
-        100, // leverage ( x1 )
+        parseEther('1000'), //price precision
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
         makerMargin / 100n // maxAllowFee (1% * makerMargin)
@@ -86,8 +84,7 @@ describe('liquidation test', async () => {
       const makerMargin = parseEther('190') // 19%
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.getAddress(),
-        10 ** 4 * 1000 * -1, //price precision  (4 decimals)
-        100, // leverage ( x1 )
+        -parseEther('1000'), //price precision
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
         makerMargin / 100n // maxAllowFee (1% * makerMargin)
@@ -101,8 +98,7 @@ describe('liquidation test', async () => {
       const makerMargin = parseEther('120') // 120 usd 20% profit stop
       const openPositionTx = await testData.traderRouter.openPosition(
         testData.market.getAddress(),
-        10 ** 4 * 1000 * -1, //price precision  (4 decimals)
-        100, // leverage ( x1 )
+        -parseEther('1000'), //price precision
         takerMargin, // losscut <= qty
         makerMargin, // profit stop 10 token,
         makerMargin / 100n // maxAllowFee (1% * makerMargin)

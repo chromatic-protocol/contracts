@@ -80,4 +80,9 @@ library Errors {
      * @dev Error code indicating that the position quantity is invalid.
      */
     string constant INVALID_POSITION_QTY = "IPQ";
+
+    /**
+     * @dev Error code indicating that the oracle price is not positive.
+     */
+    string constant NOT_POSITIVE_PRICE = "NPP";
 }
