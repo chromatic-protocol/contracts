@@ -210,6 +210,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         address recipient,
         uint256 amount
     ) external override onlyMarket {
+        if (amount == 0) return;
+
         address market = msg.sender;
 
         pendingWithdrawals[settlementToken] -= amount;
