@@ -182,9 +182,12 @@ export class Contracts {
     return KeeperFeePayer__factory.connect(address, this._signer)
   }
 
-  async addLiquidityWithGaussianDistribution(marketAddress: string, meanAmount: bigint) {
-    const mean = Number(meanAmount)
-    const distribution = gaussian(mean, (mean / 5) ** 2)
+  async addLiquidityWithGaussianDistribution(
+    marketAddress: string,
+    minAmount: number,
+    maxAmount: number
+  ) {
+    const distribution = gaussian(0, 0.2)
 
     const market = this.connectMarket(marketAddress)
     if ((await market.settlementToken()) != (await this.chrm!.getAddress())) {
@@ -192,26 +195,33 @@ export class Contracts {
       return
     }
 
+    const scale = maxAmount - minAmount
     const decimals = await this.chrm!.decimals()
 
-    const amounts = fees.map((_, idx) =>
-      parseUnits(
-        Math.floor(distribution.ppf(1 - (idx + 1) / (fees.length + 1))).toString(),
-        decimals
-      )
-    )
+    const longAmounts = fees.map((_, idx) => {
+      const p = distribution.pdf((idx + Math.random()) / fees.length)
+      return parseUnits((p * scale + minAmount).toString(), decimals)
+    })
+    const shortAmounts = fees.map((_, idx) => {
+      const p = distribution.pdf((idx + Math.random()) / fees.length)
+      return parseUnits((p * scale + minAmount).toString(), decimals)
+    })
+    const amounts = longAmounts.concat(shortAmounts)
+
     const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0n)
 
-    await this.chrm!.faucet(totalAmount * 2n)
-    await this.chrm!.approve(this.router, MaxUint256, { nonce: (await this.signer.getNonce()) + 1 })
+    const chrmBalance = await this.chrm!.balanceOf(this.signer)
+    if (chrmBalance < totalAmount) await (await this.chrm!.faucet(totalAmount - chrmBalance)).wait()
+    await (await this.chrm!.approve(this.router, MaxUint256)).wait()
 
-    await this.router.addLiquidityBatch(
-      market,
-      this.signer,
-      fees.concat(fees.map((fee) => -fee)),
-      amounts.concat(amounts),
-      { nonce: (await this.signer.getNonce()) + 1 }
-    )
+    await (
+      await this.router.addLiquidityBatch(
+        market,
+        this.signer,
+        fees.concat(fees.map((fee) => -fee)),
+        amounts
+      )
+    ).wait()
   }
 
   async getOrDeployFlashLoanExample(): Promise<FlashLoanExample> {
