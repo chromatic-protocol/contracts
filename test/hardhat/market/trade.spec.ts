@@ -39,6 +39,7 @@ describe('position & account test', async function () {
       takerMargin,
       makerMargin
     })
+    expect(receipt).to.emit(traderAccount, 'OpenPosition').withArgs(market.target, anyValue)
 
     const positionIds = [...(await traderAccount.getPositionIds(market.getAddress()))]
     console.log(positionIds)
@@ -67,7 +68,7 @@ describe('position & account test', async function () {
       makerMargin
     })
 
-    //TODO assert result
+    expect(receipt).to.emit(traderAccount, 'OpenPosition').withArgs(market.target, anyValue)
 
     const positionIds = [...(await traderAccount.getPositionIds(market.getAddress()))]
     console.log(positionIds)
@@ -154,7 +155,10 @@ describe('position & account test', async function () {
     const interestRates = await marketFactory.getInterestRateRecords(settlementToken.getAddress())
     // console.log("fees", interestRates);
 
-    await bluebird.each(results, async (r) => traderRouter.closePosition(market.getAddress(), r.id))
+    await bluebird.each(results, async (r) => {
+      const tx = await traderRouter.closePosition(market.getAddress(), r.id)
+      await expect(tx).to.emit(traderAccount, 'ClosePosition').withArgs(market.target, anyValue)
+    })
 
     await updatePrice(1200)
 
@@ -206,6 +210,10 @@ describe('position & account test', async function () {
       await expect(tx, 'not matched actual pnl')
         .to.emit(market, 'ClaimPosition')
         .withArgs(await traderAccount.getAddress(), expectedPnl, interestFee, anyValue)
+
+      await expect(tx)
+        .to.emit(traderAccount, 'ClaimPosition')
+        .withArgs(market.target, anyValue, anyValue, anyValue)
     })
   })
 })

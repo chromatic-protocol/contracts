@@ -1,4 +1,5 @@
 import { verify } from '@chromatic/deploy/verify'
+import { ChromaticRouter } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -19,6 +20,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     constructorArguments: routerArgs
   })
   console.log(chalk.yellow(`✨ ChromaticRouter: ${routerAddress}`))
+
+  const ChromaticRouter = await ethers.getContractFactory('ChromaticRouter')
+  const chromatiRouter = ChromaticRouter.attach(routerAddress) as ChromaticRouter
+  const accountAddress = await chromatiRouter.accountBase()
+  await verify(hre, {
+    address: accountAddress
+  })
+
+  console.log(chalk.yellow(`✨ ChromaticRouter.accountBase: ${accountAddress}`))
 
   const { address: lensAddress, args: lensArgs } = await deploy('ChromaticLens', {
     from: deployer,

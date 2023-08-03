@@ -22,6 +22,8 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
 
     mapping(address => EnumerableSet.UintSet) private positionIds;
 
+    bytes32 private constant MY_CLAIM = "M";
+
     /**
      * @dev Throws an error indicating that the caller is not the chromatic router contract.
      */
@@ -143,6 +145,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
             bytes("")
         );
         addPositionId(marketAddress, position.id);
+        emit OpenPosition(marketAddress, position);
     }
 
     /**
@@ -153,7 +156,9 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        IChromaticMarket(marketAddress).closePosition(positionId);
+        Position memory position = IChromaticMarket(marketAddress).closePosition(positionId);
+        // add pnl information
+        emit ClosePosition(marketAddress, position);
     }
 
     /**
@@ -164,7 +169,11 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        IChromaticMarket(marketAddress).claimPosition(positionId, address(this), bytes(""));
+        IChromaticMarket(marketAddress).claimPosition(
+            positionId,
+            address(this),
+            bytes.concat(MY_CLAIM)
+        );
     }
 
     /**
@@ -187,9 +196,21 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
      * @inheritdoc IChromaticTradeCallback
      */
     function claimPositionCallback(
-        uint256 positionId,
-        bytes calldata /* data */
+        Position memory position,
+        int256 realizedPnl,
+        uint256 interest,
+        bytes calldata data
     ) external override verifyCallback {
-        removePositionId(msg.sender, positionId);
+        removePositionId(msg.sender, position.id);
+        address marketAddress = msg.sender;
+        if (data.length > 0 && bytes32(data[:32]) == MY_CLAIM) {
+            emit ClaimPosition(marketAddress, realizedPnl, interest, position);
+        } else {
+            if (realizedPnl > 0) {
+                emit TakeProfit(marketAddress, realizedPnl, interest, position);
+            } else {
+                emit StopLoss(marketAddress, realizedPnl, interest, position);
+            }
+        }
     }
 }
