@@ -10,7 +10,7 @@ import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/Chromati
  * @dev Abstract contract for creating and managing user accounts.
  */
 abstract contract AccountFactory is IChromaticRouter {
-    ChromaticAccount public accountBase;
+    ChromaticAccount public immutable accountBase;
     address private marketFactory;
     mapping(address => address) private accounts;
 
