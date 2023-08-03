@@ -10,6 +10,7 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
 import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/AccruedInterest.sol";
 import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
+import {PRICE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
  * @dev Represents a position in the LiquidityBin
@@ -141,13 +142,14 @@ library BinPositionLib {
         IOracleProvider.OracleVersion memory currentVersion = ctx.currentOracleVersion();
 
         int256 qty = self.totalQty;
-        int256 sign = qty < 0 ? int256(-1) : int256(1);
-        uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
 
-        int256 entryAmount = self.totalEntryAmount.toInt256() * sign;
-        int256 exitAmount = PositionUtil.transactionAmount(qty, exitPrice).toInt256() * sign;
+        int256 rawPnl;
+        if (qty != 0) {
+            uint256 avgEntryPrice = self.totalEntryAmount.mulDiv(PRICE_PRECISION, qty.abs());
+            uint256 exitPrice = PositionUtil.oraclePrice(currentVersion);
+            rawPnl = PositionUtil.pnl(qty, avgEntryPrice, exitPrice);
+        }
 
-        int256 rawPnl = exitAmount - entryAmount;
         int256 pnl = rawPnl +
             self._pending.unrealizedPnl(ctx) +
             _currentInterest(self, ctx).toInt256();

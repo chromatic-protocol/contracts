@@ -145,7 +145,7 @@ contract LiquidityBinTest is Test {
         );
 
         uint256 value = bin.value(ctx);
-        assertEq(value, 21501.111 ether);
+        assertEq(value, 20016.111 ether);
     }
 
     function _newLpContext() private view returns (LpContext memory) {
