@@ -145,6 +145,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
             bytes("")
         );
         addPositionId(marketAddress, position.id);
+        //slither-disable-next-line reentrancy-events
         emit OpenPosition(marketAddress, position);
     }
 
@@ -157,7 +158,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
         Position memory position = IChromaticMarket(marketAddress).closePosition(positionId);
-        // add pnl information
+        //slither-disable-next-line reentrancy-events
         emit ClosePosition(marketAddress, position);
     }
 
