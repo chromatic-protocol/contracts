@@ -87,23 +87,45 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
             takerMargin,
             settlementAmount
         );
+        _callClaimPositionCallback(
+            ctx,
+            position,
+            realizedPnl,
+            interest,
+            data,
+            address(ms.liquidator)
+        );
 
+        // Delete the claimed position from the positions mapping
+        PositionStorageLib.positionStorage().deletePosition(position.id);
+    }
+
+    function _callClaimPositionCallback(
+        LpContext memory ctx,
+        Position memory position,
+        int256 realizedPnl,
+        uint256 interest,
+        bytes memory data,
+        address liquidatorAddress
+    ) internal {
+        uint256 entryPrice = position.entryPrice(ctx);
+        uint256 exitPrice = position.entryPrice(ctx);
         // Call the claim position callback function on the position owner's contract
         // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator
         try
             IChromaticTradeCallback(position.owner).claimPositionCallback(
                 position,
+                entryPrice,
+                exitPrice,
                 realizedPnl,
                 interest,
                 data
             )
         {} catch (bytes memory /* e */ /*lowLevelData*/) {
-            if (msg.sender != address(ms.liquidator)) {
+            if (msg.sender != liquidatorAddress) {
                 revert ClaimPositionCallbackError();
             }
         }
-        // Delete the claimed position from the positions mapping
-        PositionStorageLib.positionStorage().deletePosition(position.id);
     }
 
     function _getPosition(

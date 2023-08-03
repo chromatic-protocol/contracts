@@ -26,12 +26,16 @@ interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @dev Emitted when a position is claimed.
      * @param marketAddress The address of the market.
+     * @param entryPrice The entry price of the position
+     * @param exitPrice The exit price of the position
      * @param realizedPnl The profit or loss of the claimed position.
      * @param interest The interest paid for the claimed position.
      * @param position The claimed position.
      */
     event ClaimPosition(
         address indexed marketAddress,
+        uint256 entryPrice,
+        uint256 exitPrice,
         int256 realizedPnl,
         uint256 interest,
         Position position
@@ -40,12 +44,16 @@ interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @dev Emitted when a position is claimed.
      * @param marketAddress The address of the market.
+     * @param entryPrice The entry price of the position
+     * @param exitPrice The exit price of the position
      * @param realizedPnl The profit or loss of the claimed position.
      * @param interest The interest paid for the claimed position.
      * @param position The claimed position.
      */
     event TakeProfit(
         address indexed marketAddress,
+        uint256 entryPrice,
+        uint256 exitPrice,
         int256 realizedPnl,
         uint256 interest,
         Position position
@@ -54,12 +62,16 @@ interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @dev Emitted when a position is claimed.
      * @param marketAddress The address of the market.
+     * @param entryPrice The entry price of the position
+     * @param exitPrice The exit price of the position
      * @param realizedPnl The profit or loss of the claimed position.
      * @param interest The interest paid for the claimed position.
      * @param position The liquidated position.
      */
     event StopLoss(
         address indexed marketAddress,
+        uint256 entryPrice,
+        uint256 exitPrice,
         int256 realizedPnl,
         uint256 interest,
         Position position

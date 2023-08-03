@@ -121,6 +121,8 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
      */
     function claimPositionCallback(
         Position memory /* position */,
+        uint256 /* entryPrice */,
+        uint256 /* exitPrice */,
         int256 /* realizedPnl */,
         uint256 /* interest */,
         bytes calldata /* data */

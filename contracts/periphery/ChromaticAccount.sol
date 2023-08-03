@@ -197,6 +197,8 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
      */
     function claimPositionCallback(
         Position memory position,
+        uint256 entryPrice,
+        uint256 exitPrice,
         int256 realizedPnl,
         uint256 interest,
         bytes calldata data
@@ -204,12 +206,33 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         removePositionId(msg.sender, position.id);
         address marketAddress = msg.sender;
         if (data.length > 0 && bytes32(data[:32]) == MY_CLAIM) {
-            emit ClaimPosition(marketAddress, realizedPnl, interest, position);
+            emit ClaimPosition(
+                marketAddress,
+                entryPrice,
+                exitPrice,
+                realizedPnl,
+                interest,
+                position
+            );
         } else {
             if (realizedPnl > 0) {
-                emit TakeProfit(marketAddress, realizedPnl, interest, position);
+                emit TakeProfit(
+                    marketAddress,
+                    entryPrice,
+                    exitPrice,
+                    realizedPnl,
+                    interest,
+                    position
+                );
             } else {
-                emit StopLoss(marketAddress, realizedPnl, interest, position);
+                emit StopLoss(
+                    marketAddress,
+                    entryPrice,
+                    exitPrice,
+                    realizedPnl,
+                    interest,
+                    position
+                );
             }
         }
     }
