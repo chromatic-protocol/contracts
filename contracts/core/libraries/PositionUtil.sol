@@ -5,6 +5,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {PRICE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
@@ -15,8 +16,6 @@ library PositionUtil {
     using Math for uint256;
     using SafeCast for uint256;
     using SignedMath for int256;
-
-    uint256 private constant PRICE_PRECISION = 1e18;
 
     /**
      * @notice Returns next oracle version to settle
@@ -106,6 +105,8 @@ library PositionUtil {
         uint256 _entryPrice,
         uint256 _exitPrice
     ) internal pure returns (int256) {
+        if (qty == 0 || _entryPrice == _exitPrice) return 0;
+
         int256 delta = _exitPrice > _entryPrice
             ? (_exitPrice - _entryPrice).toInt256()
             : -(_entryPrice - _exitPrice).toInt256();
