@@ -10,7 +10,7 @@ import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/Chromati
  * @dev Abstract contract for creating and managing user accounts.
  */
 abstract contract AccountFactory is IChromaticRouter {
-    ChromaticAccount private cloneBase;
+    ChromaticAccount public accountBase;
     address private marketFactory;
     mapping(address => address) private accounts;
 
@@ -19,7 +19,7 @@ abstract contract AccountFactory is IChromaticRouter {
      * @param _marketFactory The address of the market factory contract.
      */
     constructor(address _marketFactory) {
-        cloneBase = new ChromaticAccount();
+        accountBase = new ChromaticAccount();
         marketFactory = _marketFactory;
     }
 
@@ -30,11 +30,11 @@ abstract contract AccountFactory is IChromaticRouter {
         address owner = msg.sender;
         require(accounts[owner] == address(0));
 
-        ChromaticAccount newAccount = ChromaticAccount(Clones.clone(address(cloneBase)));
+        ChromaticAccount newAccount = ChromaticAccount(Clones.clone(address(accountBase)));
         accounts[owner] = address(newAccount);
 
         emit AccountCreated(address(newAccount), owner);
-        
+
         newAccount.initialize(owner, address(this), marketFactory);
     }
 

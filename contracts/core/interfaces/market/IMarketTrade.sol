@@ -63,8 +63,9 @@ interface IMarketTrade {
     /**
      * @dev Closes a position in the market.
      * @param positionId The ID of the position to close.
+     * @return The closed position.
      */
-    function closePosition(uint256 positionId) external;
+    function closePosition(uint256 positionId) external returns (Position memory);
 
     /**
      * @dev Claims a closed position in the market.

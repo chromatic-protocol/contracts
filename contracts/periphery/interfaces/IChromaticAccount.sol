@@ -10,6 +10,62 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
  */
 interface IChromaticAccount is IChromaticTradeCallback {
     /**
+     * @dev Emitted when a position is opened.
+     * @param marketAddress The address of the market.
+     * @param position The opened position.
+     */
+    event OpenPosition(address indexed marketAddress, Position position);
+
+    /**
+     * @dev Emitted when a position is closed.
+     * @param marketAddress The address of the market.
+     * @param position The closed position.
+     */
+    event ClosePosition(address indexed marketAddress, Position position);
+
+    /**
+     * @dev Emitted when a position is claimed.
+     * @param marketAddress The address of the market.
+     * @param realizedPnl The profit or loss of the claimed position.
+     * @param interest The interest paid for the claimed position.
+     * @param position The claimed position.
+     */
+    event ClaimPosition(
+        address indexed marketAddress,
+        int256 realizedPnl,
+        uint256 interest,
+        Position position
+    );
+
+    /**
+     * @dev Emitted when a position is claimed.
+     * @param marketAddress The address of the market.
+     * @param realizedPnl The profit or loss of the claimed position.
+     * @param interest The interest paid for the claimed position.
+     * @param position The claimed position.
+     */
+    event TakeProfit(
+        address indexed marketAddress,
+        int256 realizedPnl,
+        uint256 interest,
+        Position position
+    );
+
+    /**
+     * @dev Emitted when a position is claimed.
+     * @param marketAddress The address of the market.
+     * @param realizedPnl The profit or loss of the claimed position.
+     * @param interest The interest paid for the claimed position.
+     * @param position The liquidated position.
+     */
+    event StopLoss(
+        address indexed marketAddress,
+        int256 realizedPnl,
+        uint256 interest,
+        Position position
+    );
+
+    /**
      * @notice Returns the balance of the specified token for the account.
      * @param token The address of the token.
      * @return The balance of the token.

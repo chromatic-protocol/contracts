@@ -1,3 +1,5 @@
+import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
+import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { parseEther, parseUnits } from 'ethers'
 import { helpers, prepareMarketTest } from './testHelper'
@@ -113,6 +115,8 @@ describe('liquidation test', async () => {
     expectedPreservedPositionLength: number[],
     isProfitStopCase: boolean
   ) {
+    const blockStart = await time.latestBlock()
+
     const { traderAccount, settlementToken } = testData
     const traderBalance = await settlementToken.balanceOf(traderAccount.getAddress())
     console.log(`account balance : ${traderBalance}`)
@@ -128,7 +132,20 @@ describe('liquidation test', async () => {
           positionId
         )
         if (canExec) {
-          await testData.liquidator.liquidate(testData.market.getAddress(), positionId)
+          const marketAddress = testData.market.getAddress()
+          const receipt = await testData.liquidator.liquidate(
+            testData.market.getAddress(),
+            positionId
+          )
+          if (isProfitStopCase) {
+            expect(receipt)
+              .to.emit(traderAccount, 'TakeProfit')
+              .withArgs(marketAddress, anyValue, anyValue, anyValue)
+          } else {
+            expect(receipt)
+              .to.emit(traderAccount, 'StopLoss')
+              .withArgs(marketAddress, anyValue, anyValue, anyValue)
+          }
         }
       }
 

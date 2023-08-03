@@ -91,7 +91,12 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         // Call the claim position callback function on the position owner's contract
         // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator
         try
-            IChromaticTradeCallback(position.owner).claimPositionCallback(position.id, data)
+            IChromaticTradeCallback(position.owner).claimPositionCallback(
+                position,
+                realizedPnl,
+                interest,
+                data
+            )
         {} catch (bytes memory /* e */ /*lowLevelData*/) {
             if (msg.sender != address(ms.liquidator)) {
                 revert ClaimPositionCallbackError();
