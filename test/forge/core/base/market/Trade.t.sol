@@ -120,7 +120,9 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
      * @inheritdoc IChromaticTradeCallback
      */
     function claimPositionCallback(
-        uint256 positionId,
+        Position memory /* position */,
+        int256 /* realizedPnl */,
+        uint256 /* interest */,
         bytes calldata /* data */
     ) external override {}
 
