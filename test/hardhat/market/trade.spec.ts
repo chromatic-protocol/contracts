@@ -213,7 +213,7 @@ describe('position & account test', async function () {
 
       await expect(tx)
         .to.emit(traderAccount, 'ClaimPosition')
-        .withArgs(market.target, anyValue, anyValue, anyValue)
+        .withArgs(market.target, anyValue, anyValue, anyValue, anyValue, anyValue)
     })
   })
 })

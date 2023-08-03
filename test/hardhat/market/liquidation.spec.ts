@@ -140,11 +140,11 @@ describe('liquidation test', async () => {
           if (isProfitStopCase) {
             expect(receipt)
               .to.emit(traderAccount, 'TakeProfit')
-              .withArgs(marketAddress, anyValue, anyValue, anyValue)
+              .withArgs(marketAddress, anyValue, anyValue, anyValue, anyValue, anyValue)
           } else {
             expect(receipt)
               .to.emit(traderAccount, 'StopLoss')
-              .withArgs(marketAddress, anyValue, anyValue, anyValue)
+              .withArgs(marketAddress, anyValue, anyValue, anyValue, anyValue, anyValue)
           }
         }
       }
