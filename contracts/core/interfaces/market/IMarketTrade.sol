@@ -7,10 +7,8 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
  * @dev The OpenPositionInfo struct represents a opened trading position.
  * @param id The position identifier
  * @param openVersion The version of the oracle when the position was opened
- * @param closeVersion The version of the oracle when the position was closed
  * @param qty The quantity of the position
  * @param openTimestamp The timestamp when the position was opened
- * @param closeTimestamp The timestamp when the position was closed
  * @param takerMargin The amount of collateral that a trader must provide
  * @param makerMargin The margin amount provided by the maker.
  * @param tradingFee The trading fee associated with the position.
