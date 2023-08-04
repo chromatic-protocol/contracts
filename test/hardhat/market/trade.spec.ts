@@ -39,7 +39,7 @@ describe('position & account test', async function () {
       takerMargin,
       makerMargin
     })
-    expect(receipt).to.emit(traderAccount, 'OpenPosition').withArgs(market.target, anyValue)
+    expect(receipt).to.emit(traderAccount, 'OpenPosition').withArgs(anyValue, market.target)
 
     const positionIds = [...(await traderAccount.getPositionIds(market.getAddress()))]
     console.log(positionIds)
@@ -159,7 +159,7 @@ describe('position & account test', async function () {
       const tx = await traderRouter.closePosition(market.getAddress(), r.id)
       await expect(tx)
         .to.emit(traderAccount, 'ClosePosition')
-        .withArgs(market.target, anyValue, anyValue)
+        .withArgs(anyValue, market.target, anyValue)
     })
 
     await updatePrice(1200)
@@ -215,7 +215,7 @@ describe('position & account test', async function () {
 
       await expect(tx)
         .to.emit(traderAccount, 'ClaimPosition')
-        .withArgs(market.target, anyValue, anyValue)
+        .withArgs(anyValue, market.target, anyValue)
     })
   })
 })
