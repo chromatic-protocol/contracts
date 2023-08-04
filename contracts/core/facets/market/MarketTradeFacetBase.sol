@@ -113,8 +113,13 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         address liquidatorAddress,
         bytes4 cause
     ) internal {
-        uint256 entryPrice = position.entryPrice(ctx);
-        uint256 exitPrice = position.entryPrice(ctx);
+        uint256 currentOracleVersion = ctx.currentOracleVersion().version;
+        uint256 entryPrice = currentOracleVersion > position.openVersion
+            ? position.entryPrice(ctx)
+            : 0;
+        uint256 exitPrice = currentOracleVersion > position.closeVersion
+            ? position.exitPrice(ctx)
+            : 0;
         // Call the claim position callback function on the position owner's contract
         // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator
         try
