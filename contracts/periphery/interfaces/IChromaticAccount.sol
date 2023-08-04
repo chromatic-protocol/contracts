@@ -13,19 +13,19 @@ import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic
 interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @dev Emitted when a position is opened.
+     * @param position The opened position.
      * @param marketAddress The address of the market.
      * @param positionId The position identifier
-     * @param position The opened position.
      */
-    event OpenPosition(address indexed marketAddress, uint256 indexed positionId, OpenPositionInfo position);
+    event OpenPosition(OpenPositionInfo position, address indexed marketAddress, uint256 indexed positionId);
 
     /**
      * @dev Emitted when a position is closed.
+     * @param position The closed position.
      * @param marketAddress The address of the market.
      * @param positionId The position identifier
-     * @param position The closed position.
      */
-    event ClosePosition(address indexed marketAddress, uint256 indexed positionId, ClosePositionInfo position);
+    event ClosePosition(ClosePositionInfo position, address indexed marketAddress, uint256 indexed positionId);
 
     /**
      * @dev Emitted when a position is claimed.
@@ -33,9 +33,7 @@ interface IChromaticAccount is IChromaticTradeCallback {
      * @param positionId The position identifier
      * @param position The claimed position.
      */
-    event ClaimPosition(address indexed marketAddress, uint256 indexed positionId, ClaimPositionInfo position);
-
-
+    event ClaimPosition(ClaimPositionInfo position, address indexed marketAddress, uint256 indexed positionId);
 
     /**
      * @notice Returns the balance of the specified token for the account.

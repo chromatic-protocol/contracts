@@ -139,7 +139,7 @@ describe('liquidation test', async () => {
           )
           expect(receipt)
             .to.emit(traderAccount, 'ClaimPosition')
-            .withArgs(marketAddress, positionId, anyValue)
+            .withArgs(anyValue, marketAddress, positionId)
         }
       }
 
