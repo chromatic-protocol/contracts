@@ -146,7 +146,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         );
         addPositionId(marketAddress, position.id);
         //slither-disable-next-line reentrancy-events
-        emit OpenPosition(position, marketAddress, position.id);
+        emit OpenPosition(marketAddress, position.id, position);
     }
 
     /**
@@ -161,7 +161,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
             positionId
         );
         //slither-disable-next-line reentrancy-events
-        emit ClosePosition(position, marketAddress, position.id);
+        emit ClosePosition(marketAddress, position.id, position);
     }
 
     /**
@@ -201,6 +201,6 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     ) external override verifyCallback {
         removePositionId(msg.sender, position.id);
         address marketAddress = msg.sender;
-        emit ClaimPosition(claimInfo, marketAddress, claimInfo.id);
+        emit ClaimPosition(marketAddress, claimInfo.id, claimInfo);
     }
 }
