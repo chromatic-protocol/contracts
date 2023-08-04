@@ -157,7 +157,9 @@ describe('position & account test', async function () {
 
     await bluebird.each(results, async (r) => {
       const tx = await traderRouter.closePosition(market.getAddress(), r.id)
-      await expect(tx).to.emit(traderAccount, 'ClosePosition').withArgs(market.target, anyValue)
+      await expect(tx)
+        .to.emit(traderAccount, 'ClosePosition')
+        .withArgs(market.target, anyValue, anyValue)
     })
 
     await updatePrice(1200)
@@ -213,7 +215,7 @@ describe('position & account test', async function () {
 
       await expect(tx)
         .to.emit(traderAccount, 'ClaimPosition')
-        .withArgs(market.target, anyValue, anyValue, anyValue, anyValue, anyValue)
+        .withArgs(market.target, anyValue, anyValue)
     })
   })
 })

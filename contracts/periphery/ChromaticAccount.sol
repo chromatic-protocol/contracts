@@ -7,6 +7,8 @@ import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IC
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {IChromaticAccount} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticAccount.sol";
+import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+
 import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
 
 /**
@@ -21,8 +23,6 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     bool isInitialized;
 
     mapping(address => EnumerableSet.UintSet) private positionIds;
-
-    bytes32 private constant MY_CLAIM = "M";
 
     /**
      * @dev Throws an error indicating that the caller is not the chromatic router contract.
@@ -136,7 +136,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external onlyRouter returns (Position memory position) {
+    ) external onlyRouter returns (OpenPositionInfo memory position) {
         position = IChromaticMarket(marketAddress).openPosition(
             qty,
             takerMargin,
@@ -146,7 +146,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         );
         addPositionId(marketAddress, position.id);
         //slither-disable-next-line reentrancy-events
-        emit OpenPosition(marketAddress, position);
+        emit OpenPosition(marketAddress, position.id, position);
     }
 
     /**
@@ -157,9 +157,11 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     function closePosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        Position memory position = IChromaticMarket(marketAddress).closePosition(positionId);
+        ClosePositionInfo memory position = IChromaticMarket(marketAddress).closePosition(
+            positionId
+        );
         //slither-disable-next-line reentrancy-events
-        emit ClosePosition(marketAddress, position);
+        emit ClosePosition(marketAddress, position.id, position);
     }
 
     /**
@@ -170,11 +172,7 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     function claimPosition(address marketAddress, uint256 positionId) external override onlyRouter {
         if (!hasPositionId(marketAddress, positionId)) revert NotExistPosition();
 
-        IChromaticMarket(marketAddress).claimPosition(
-            positionId,
-            address(this),
-            bytes.concat(MY_CLAIM)
-        );
+        IChromaticMarket(marketAddress).claimPosition(positionId, address(this), bytes(""));
     }
 
     /**
@@ -198,43 +196,11 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
      */
     function claimPositionCallback(
         Position memory position,
-        uint256 entryPrice,
-        uint256 exitPrice,
-        int256 realizedPnl,
-        uint256 interest,
-        bytes calldata data
+        ClaimPositionInfo memory claimInfo,
+        bytes calldata /* data */
     ) external override verifyCallback {
         removePositionId(msg.sender, position.id);
         address marketAddress = msg.sender;
-        if (data.length > 0 && bytes32(data[:32]) == MY_CLAIM) {
-            emit ClaimPosition(
-                marketAddress,
-                entryPrice,
-                exitPrice,
-                realizedPnl,
-                interest,
-                position
-            );
-        } else {
-            if (realizedPnl > 0) {
-                emit TakeProfit(
-                    marketAddress,
-                    entryPrice,
-                    exitPrice,
-                    realizedPnl,
-                    interest,
-                    position
-                );
-            } else {
-                emit StopLoss(
-                    marketAddress,
-                    entryPrice,
-                    exitPrice,
-                    realizedPnl,
-                    interest,
-                    position
-                );
-            }
-        }
+        emit ClaimPosition(marketAddress, claimInfo.id, claimInfo);
     }
 }

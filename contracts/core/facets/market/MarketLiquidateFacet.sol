@@ -10,6 +10,7 @@ import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/Positio
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {MarketStorage, MarketStorageLib, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacetBase.sol";
+import {IMarketTrade, OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 
 /**
  * @title MarketLiquidateFacet
@@ -64,7 +65,8 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
             pnl,
             usedKeeperFee,
             position.owner,
-            bytes("")
+            bytes(""),
+            CLAIM_KEEPER
         );
         emit ClaimPositionByKeeper(position.owner, pnl, interest, usedKeeperFee, position);
 
@@ -109,7 +111,8 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
             _pnl,
             usedKeeperFee,
             position.owner,
-            bytes("")
+            bytes(""),
+            _pnl > 0 ? CLAIM_TP : CLAIM_SL
         );
 
         ms.liquidator.cancelLiquidationTask(positionId);
