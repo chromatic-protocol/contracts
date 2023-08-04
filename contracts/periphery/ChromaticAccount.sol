@@ -146,7 +146,16 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
         );
         addPositionId(marketAddress, position.id);
         //slither-disable-next-line reentrancy-events
-        emit OpenPosition(marketAddress, position.id, position);
+        emit OpenPosition(
+            marketAddress,
+            position.id,
+            position.openVersion,
+            position.qty,
+            position.openTimestamp,
+            position.takerMargin,
+            position.makerMargin,
+            position.tradingFee
+        );
     }
 
     /**
@@ -161,7 +170,12 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
             positionId
         );
         //slither-disable-next-line reentrancy-events
-        emit ClosePosition(marketAddress, position.id, position);
+        emit ClosePosition(
+            marketAddress,
+            position.id,
+            position.closeVersion,
+            position.closeTimestamp
+        );
     }
 
     /**
@@ -201,6 +215,14 @@ contract ChromaticAccount is IChromaticAccount, VerifyCallback {
     ) external override verifyCallback {
         removePositionId(msg.sender, position.id);
         address marketAddress = msg.sender;
-        emit ClaimPosition(marketAddress, claimInfo.id, claimInfo);
+        emit ClaimPosition(
+            marketAddress,
+            claimInfo.id,
+            claimInfo.entryPrice,
+            claimInfo.exitPrice,
+            claimInfo.realizedPnl,
+            claimInfo.interest,
+            claimInfo.cause
+        );
     }
 }

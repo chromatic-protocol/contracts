@@ -5,7 +5,6 @@ import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interf
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 
-
 /**
  * @title IChromaticAccount
  * @dev Interface for the ChromaticAccount contract, which manages user accounts and positions.
@@ -15,27 +14,57 @@ interface IChromaticAccount is IChromaticTradeCallback {
      * @dev Emitted when a position is opened.
      * @param marketAddress The address of the market.
      * @param positionId The position identifier
-     * @param position The opened position.
+     * @param openVersion The version of the oracle when the position was opened
+     * @param qty The quantity of the position
+     * @param openTimestamp The timestamp when the position was opened
+     * @param takerMargin The amount of collateral that a trader must provide
+     * @param makerMargin The margin amount provided by the maker.
+     * @param tradingFee The trading fee associated with the position.
      */
-    event OpenPosition(address indexed marketAddress, uint256 indexed positionId, OpenPositionInfo position);
+    event OpenPosition(
+        address indexed marketAddress,
+        uint256 indexed positionId,
+        uint256 openVersion,
+        int256 qty,
+        uint256 openTimestamp,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint256 tradingFee
+    );
 
     /**
      * @dev Emitted when a position is closed.
      * @param marketAddress The address of the market.
      * @param positionId The position identifier
-     * @param position The closed position.
+     * @param closeVersion The version of the oracle when the position was closed
+     * @param closeTimestamp The timestamp when the position was closed
      */
-    event ClosePosition(address indexed marketAddress, uint256 indexed positionId, ClosePositionInfo position);
+    event ClosePosition(
+        address indexed marketAddress,
+        uint256 indexed positionId,
+        uint256 closeVersion,
+        uint256 closeTimestamp
+    );
 
     /**
      * @dev Emitted when a position is claimed.
      * @param marketAddress The address of the market.
      * @param positionId The position identifier
-     * @param position The claimed position.
+     * @param entryPrice The entry price of the position
+     * @param exitPrice The exit price of the position
+     * @param realizedPnl The profit or loss of the claimed position.
+     * @param interest The interest paid for the claimed position.
+     * @param cause The description of being claimed.
      */
-    event ClaimPosition(address indexed marketAddress, uint256 indexed positionId, ClaimPositionInfo position);
-
-
+    event ClaimPosition(
+        address indexed marketAddress,
+        uint256 indexed positionId,
+        uint256 entryPrice,
+        uint256 exitPrice,
+        int256 realizedPnl,
+        uint256 interest,
+        bytes4 cause
+    );
 
     /**
      * @notice Returns the balance of the specified token for the account.
