@@ -9,7 +9,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
-import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {IMarketTrade, OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
@@ -96,7 +96,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
         bytes calldata data
-    ) external override nonReentrant returns (Position memory position) {
+    ) external override nonReentrant returns (OpenPositionInfo memory positionInfo) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         IChromaticMarketFactory factory = ms.factory;
         LiquidityPool storage liquidityPool = ms.liquidityPool;
@@ -114,12 +114,12 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             factory.getOracleProviderProperties(address(ctx.oracleProvider))
         );
 
-        position = _newPosition(ctx, qty, takerMargin, ms.feeProtocol);
+        Position memory position = _newPosition(ctx, qty, takerMargin, ms.feeProtocol);
         position.setBinMargins(
             liquidityPool.prepareBinMargins(ctx, position.qty, makerMargin, minMargin)
         );
 
-        _openPosition(ctx, liquidityPool, position, maxAllowableTradingFee, data);
+        positionInfo = _openPosition(ctx, liquidityPool, position, maxAllowableTradingFee, data);
 
         // write position
         PositionStorageLib.positionStorage().setPosition(position);
@@ -154,7 +154,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         Position memory position,
         uint256 maxAllowableTradingFee,
         bytes calldata data
-    ) private {
+    ) private returns (OpenPositionInfo memory openInfo) {
         // check trading fee
         uint256 tradingFee = position.tradingFee();
         uint256 protocolFee = position.protocolFee();
@@ -188,6 +188,16 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             tradingFee,
             protocolFee
         );
+
+        openInfo = OpenPositionInfo({
+            id: position.id,
+            openVersion: position.openVersion,
+            qty: position.qty,
+            openTimestamp: position.openTimestamp,
+            takerMargin: position.takerMargin,
+            makerMargin: position.makerMargin(),
+            tradingFee: tradingFee + protocolFee
+        });
     }
 
     /**
@@ -201,7 +211,9 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      *      Throws an `AlreadyClosedPosition` error if the position has already been closed.
      *      Throws a `ClaimPositionCallbackError` error if an error occurred during the claim position callback.
      */
-    function closePosition(uint256 positionId) external override nonReentrant returns (Position memory closed){
+    function closePosition(
+        uint256 positionId
+    ) external override nonReentrant returns (ClosePositionInfo memory closed) {
         Position storage position = PositionStorageLib.positionStorage().getStoragePosition(
             positionId
         );
@@ -228,10 +240,22 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             liquidator.createClaimPositionTask(position.id);
         } else {
             // process claim if the position is closed in the same oracle version as the open version
-            uint256 interest = _claimPosition(ctx, position, 0, 0, position.owner, bytes(""));
+            uint256 interest = _claimPosition(
+                ctx,
+                position,
+                0,
+                0,
+                position.owner,
+                bytes(""),
+                CLAIM_USER
+            );
             emit ClaimPosition(position.owner, 0, interest, position);
         }
-        closed = position;
+        closed = ClosePositionInfo({
+            id: position.id,
+            closeVersion: position.closeVersion,
+            closeTimestamp: position.closeTimestamp
+        });
     }
 
     /**
@@ -261,7 +285,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
 
         int256 pnl = position.pnl(ctx);
-        uint256 interest = _claimPosition(ctx, position, pnl, 0, recipient, data);
+        uint256 interest = _claimPosition(ctx, position, pnl, 0, recipient, data, CLAIM_USER);
         emit ClaimPosition(position.owner, pnl, interest, position);
 
         ms.liquidator.cancelClaimPositionTask(position.id);

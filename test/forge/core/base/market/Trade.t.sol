@@ -8,6 +8,7 @@ import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/in
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 
 contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCallback {
     function setUp() public override {
@@ -41,7 +42,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         assertEq(liquidityAmount, clbToken.balanceOf(address(this), receipt1.clbTokenId()));
 
         // open position at oracle version 2
-        Position memory position1 = market.openPosition(
+        OpenPositionInfo memory position1 = market.openPosition(
             10 ether,
             1 ether,
             liquidityAmount,
@@ -54,8 +55,8 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
 
         // close position at oracle version 3
         market.closePosition(position1.id);
-        assertEq(liquidityAmount + position1.tradingFee(), market.getBinLiquidity(1));
-        assertEq(position1.tradingFee(), market.getBinFreeLiquidity(1));
+        assertEq(liquidityAmount + position1.tradingFee, market.getBinLiquidity(1));
+        assertEq(position1.tradingFee, market.getBinFreeLiquidity(1));
 
         // set oracle version to 4
         oracleProvider.increaseVersion(1.1 ether);
@@ -66,22 +67,22 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
             1,
             abi.encode(liquidityAmount)
         );
-        assertEq(liquidityAmount + position1.tradingFee(), market.getBinLiquidity(1));
-        assertEq(position1.tradingFee(), market.getBinFreeLiquidity(1));
+        assertEq(liquidityAmount + position1.tradingFee, market.getBinLiquidity(1));
+        assertEq(position1.tradingFee, market.getBinFreeLiquidity(1));
 
         uint256 balanceBefore = usdc.balanceOf(address(this));
 
         market.claimPosition(position1.id, address(this), bytes(""));
 
         assertEq(2 ether, usdc.balanceOf(address(this)) - balanceBefore);
-        assertEq(liquidityAmount + position1.tradingFee() - 1 ether, market.getBinLiquidity(1));
-        assertEq(liquidityAmount + position1.tradingFee() - 1 ether, market.getBinFreeLiquidity(1));
+        assertEq(liquidityAmount + position1.tradingFee - 1 ether, market.getBinLiquidity(1));
+        assertEq(liquidityAmount + position1.tradingFee - 1 ether, market.getBinFreeLiquidity(1));
 
         // set oracle version to 5
         oracleProvider.increaseVersion(1.1 ether);
 
         // open position at oracle version 5
-        Position memory position2 = market.openPosition(
+        OpenPositionInfo memory position2 = market.openPosition(
             10 ether,
             1 ether,
             liquidityAmount,
@@ -90,8 +91,8 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         );
 
         assertEq(0, market.getBinLiquidity(1));
-        assertEq(liquidityAmount + position2.tradingFee(), market.getBinLiquidity(2));
-        assertEq(position2.tradingFee(), market.getBinFreeLiquidity(2));
+        assertEq(liquidityAmount + position2.tradingFee, market.getBinLiquidity(2));
+        assertEq(position2.tradingFee, market.getBinFreeLiquidity(2));
 
         // withdraw liquidity at oracle version 5
         balanceBefore = usdc.balanceOf(address(this));
@@ -99,7 +100,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         market.withdrawLiquidity(receipt3.id, bytes(""));
 
         assertEq(
-            liquidityAmount + position1.tradingFee() - 1 ether,
+            liquidityAmount + position1.tradingFee - 1 ether,
             usdc.balanceOf(address(this)) - balanceBefore
         );
         assertEq(0, clbToken.balanceOf(address(this), 1));
@@ -121,10 +122,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
      */
     function claimPositionCallback(
         Position memory /* position */,
-        uint256 /* entryPrice */,
-        uint256 /* exitPrice */,
-        int256 /* realizedPnl */,
-        uint256 /* interest */,
+        ClaimPositionInfo memory /* claimInfo */,
         bytes calldata /* data */
     ) external override {}
 

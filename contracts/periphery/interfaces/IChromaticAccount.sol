@@ -3,6 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+
 
 /**
  * @title IChromaticAccount
@@ -12,70 +14,28 @@ interface IChromaticAccount is IChromaticTradeCallback {
     /**
      * @dev Emitted when a position is opened.
      * @param marketAddress The address of the market.
+     * @param positionId The position identifier
      * @param position The opened position.
      */
-    event OpenPosition(address indexed marketAddress, Position position);
+    event OpenPosition(address indexed marketAddress, uint256 indexed positionId, OpenPositionInfo position);
 
     /**
      * @dev Emitted when a position is closed.
      * @param marketAddress The address of the market.
+     * @param positionId The position identifier
      * @param position The closed position.
      */
-    event ClosePosition(address indexed marketAddress, Position position);
+    event ClosePosition(address indexed marketAddress, uint256 indexed positionId, ClosePositionInfo position);
 
     /**
      * @dev Emitted when a position is claimed.
      * @param marketAddress The address of the market.
-     * @param entryPrice The entry price of the position
-     * @param exitPrice The exit price of the position
-     * @param realizedPnl The profit or loss of the claimed position.
-     * @param interest The interest paid for the claimed position.
+     * @param positionId The position identifier
      * @param position The claimed position.
      */
-    event ClaimPosition(
-        address indexed marketAddress,
-        uint256 entryPrice,
-        uint256 exitPrice,
-        int256 realizedPnl,
-        uint256 interest,
-        Position position
-    );
+    event ClaimPosition(address indexed marketAddress, uint256 indexed positionId, ClaimPositionInfo position);
 
-    /**
-     * @dev Emitted when a position is claimed.
-     * @param marketAddress The address of the market.
-     * @param entryPrice The entry price of the position
-     * @param exitPrice The exit price of the position
-     * @param realizedPnl The profit or loss of the claimed position.
-     * @param interest The interest paid for the claimed position.
-     * @param position The claimed position.
-     */
-    event TakeProfit(
-        address indexed marketAddress,
-        uint256 entryPrice,
-        uint256 exitPrice,
-        int256 realizedPnl,
-        uint256 interest,
-        Position position
-    );
 
-    /**
-     * @dev Emitted when a position is claimed.
-     * @param marketAddress The address of the market.
-     * @param entryPrice The entry price of the position
-     * @param exitPrice The exit price of the position
-     * @param realizedPnl The profit or loss of the claimed position.
-     * @param interest The interest paid for the claimed position.
-     * @param position The liquidated position.
-     */
-    event StopLoss(
-        address indexed marketAddress,
-        uint256 entryPrice,
-        uint256 exitPrice,
-        int256 realizedPnl,
-        uint256 interest,
-        Position position
-    );
 
     /**
      * @notice Returns the balance of the specified token for the account.
@@ -113,7 +73,7 @@ interface IChromaticAccount is IChromaticTradeCallback {
      * @param takerMargin The margin required for the taker.
      * @param makerMargin The margin required for the maker.
      * @param maxAllowableTradingFee The maximum allowable trading fee.
-     * @return position The opened position.
+     * @return openPositionInfo The opened position information.
      */
     function openPosition(
         address marketAddress,
@@ -121,7 +81,7 @@ interface IChromaticAccount is IChromaticTradeCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external returns (Position memory);
+    ) external returns (OpenPositionInfo memory);
 
     /**
      * @notice Closes the specified position in the specified market.

@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {ClaimPositionInfo, CLAIM_USER, CLAIM_TP, CLAIM_SL} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {MarketStorage, MarketStorageLib, PositionStorage, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
@@ -31,6 +32,7 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
      * @param usedKeeperFee The amount of the keeper fee used.
      * @param recipient The address of the recipient (EOA or account contract) receiving the settlement.
      * @param data Additional data for the claim position callback.
+     * @param cause The description of being claimed.
      */
     function _claimPosition(
         LpContext memory ctx,
@@ -38,7 +40,8 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         int256 pnl,
         uint256 usedKeeperFee,
         address recipient,
-        bytes memory data
+        bytes memory data,
+        bytes4 cause
     ) internal returns (uint256 interest) {
         uint256 makerMargin = position.makerMargin();
         uint256 takerMargin = position.takerMargin - usedKeeperFee;
@@ -93,7 +96,8 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
             realizedPnl,
             interest,
             data,
-            address(ms.liquidator)
+            address(ms.liquidator),
+            cause
         );
 
         // Delete the claimed position from the positions mapping
@@ -106,7 +110,8 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         int256 realizedPnl,
         uint256 interest,
         bytes memory data,
-        address liquidatorAddress
+        address liquidatorAddress,
+        bytes4 cause
     ) internal {
         uint256 entryPrice = position.entryPrice(ctx);
         uint256 exitPrice = position.entryPrice(ctx);
@@ -115,10 +120,14 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         try
             IChromaticTradeCallback(position.owner).claimPositionCallback(
                 position,
-                entryPrice,
-                exitPrice,
-                realizedPnl,
-                interest,
+                ClaimPositionInfo({
+                    id: position.id,
+                    entryPrice: entryPrice,
+                    exitPrice: exitPrice,
+                    realizedPnl: realizedPnl,
+                    interest: interest,
+                    cause: cause
+                }),
                 data
             )
         {} catch (bytes memory /* e */ /*lowLevelData*/) {

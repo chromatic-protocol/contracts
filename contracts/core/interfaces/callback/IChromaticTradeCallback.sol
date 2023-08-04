@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
+import {ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 
 /**
  * @title IChromaticTradeCallback
@@ -25,18 +26,12 @@ interface IChromaticTradeCallback {
     /**
      * @notice Callback function called after claiming a position.
      * @param position The claimed position.
-     * @param entryPrice The entry price of the position
-     * @param exitPrice The exit price of the position
-     * @param realizedPnl The realized position pnl (taker side).
-     * @param interest The interest paid for the claimed position.
+     * @param claimInfo The pnl related information of the claim
      * @param data Additional data related to the callback.
      */
     function claimPositionCallback(
         Position memory position,
-        uint256 entryPrice,
-        uint256 exitPrice,
-        int256 realizedPnl,
-        uint256 interest,
+        ClaimPositionInfo memory claimInfo,
         bytes calldata data
     ) external;
 }

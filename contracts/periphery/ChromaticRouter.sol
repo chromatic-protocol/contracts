@@ -17,6 +17,7 @@ import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfac
 import {AccountFactory} from "@chromatic-protocol/contracts/periphery/base/AccountFactory.sol";
 import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
 import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
+import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 
 /**
  * @title ChromaticRouter
@@ -278,7 +279,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external override returns (Position memory) {
+    ) external override returns (OpenPositionInfo memory) {
         return
             _getAccount(msg.sender).openPosition(
                 market,
