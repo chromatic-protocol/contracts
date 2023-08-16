@@ -9,8 +9,6 @@ contract OracleProviderMock is IOracleProvider {
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
 
-    error InvalidVersion();
-
     constructor() {
         aggregator = ChainlinkAggregator.wrap(address(0));
     }
@@ -37,7 +35,9 @@ contract OracleProviderMock is IOracleProvider {
         uint256 version
     ) public view override returns (OracleVersion memory oracleVersion) {
         oracleVersion = oracleVersions[version];
-        if (version != oracleVersion.version) revert InvalidVersion();
+        if(oracleVersion.version == 0){
+            oracleVersion.version = version;
+        }
     }
 
     function description() external pure override returns (string memory) {
