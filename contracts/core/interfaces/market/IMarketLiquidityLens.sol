@@ -34,6 +34,18 @@ interface IMarketLiquidityLens {
     ) external view returns (uint256[] memory values);
 
     /**
+     * @dev Retrieves the values of specific trading fee rates' bins in the liquidity pool at a specific oracle version.
+     *      The value of a bin represents the total valuation of the liquidity in the bin.
+     * @param oracleVersion The oracle version for which to retrieve the bin values.
+     * @param tradingFeeRates The list of trading fee rates for which to retrieve the bin values.
+     * @return values The array of LiquidityBinValue representing the values of the bins for the specified trading fee rates and oracle version.
+     */
+    function getBinValuesAt(
+        uint256 oracleVersion,
+        int16[] calldata tradingFeeRates
+    ) external view returns (IMarketLiquidity.LiquidityBinValue[] memory values);
+
+    /**
      * @dev Retrieves the liquidity receipt with the given receipt ID.
      *      It throws NotExistLpReceipt if the specified receipt ID does not exist.
      * @param receiptId The ID of the liquidity receipt to retrieve.
@@ -47,7 +59,9 @@ interface IMarketLiquidityLens {
      * @param receiptIds The ID list of the liquidity receipt to retrieve.
      * @return receipts The liquidity receipt list with the specified IDs.
      */
-    function getLpReceipts(uint256[] calldata receiptIds) external view returns (LpReceipt[] memory);
+    function getLpReceipts(
+        uint256[] calldata receiptIds
+    ) external view returns (LpReceipt[] memory);
 
     /**
      * @dev Retrieves the pending liquidity information for a specific trading fee rate from the associated LiquidityPool.

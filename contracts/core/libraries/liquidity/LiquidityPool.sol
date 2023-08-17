@@ -835,16 +835,31 @@ library LiquidityPoolLib {
     /**
      * @dev Retrieves the value of a specific bin in the LiquidityPool storage for the provided trading fee rate.
      * @param self The reference to the LiquidityPool storage.
-     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
      * @param ctx The LP context containing relevant information for the calculation.
+     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
      * @return value The value of the specified bin.
      */
     function binValue(
         LiquidityPool storage self,
-        int16 _tradingFeeRate,
-        LpContext memory ctx
+        LpContext memory ctx,
+        int16 _tradingFeeRate
     ) internal view returns (uint256 value) {
         value = targetBin(self, _tradingFeeRate).value(ctx);
+    }
+
+    /**
+     * @dev Retrieves the value of a specific bin in the LiquidityPool storage at a specific oracle version.
+     * @param self The reference to the LiquidityPool storage.
+     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
+     * @param oracleVersion The oracle version for which to retrieve the bin value.
+     * @return value The LiquidityBinValue representing the value of the specified bin at the given oracle version.
+     */
+    function binValueAt(
+        LiquidityPool storage self,
+        int16 _tradingFeeRate,
+        uint256 oracleVersion
+    ) internal view returns (IMarketLiquidity.LiquidityBinValue memory value) {
+        value = targetBin(self, _tradingFeeRate).binValueAt[oracleVersion];
     }
 
     /**

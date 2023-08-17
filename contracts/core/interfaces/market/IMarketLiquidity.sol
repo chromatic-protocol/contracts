@@ -51,6 +51,16 @@ interface IMarketLiquidity {
     }
 
     /**
+     * @dev A struct representing value of the liquidity bin.
+     * @param binValue The value of liquidity bin expressed in amount of settlement token.
+     * @param clbTokenTotalSupply The total supply amount of the CLB token.
+     */
+    struct LiquidityBinValue {
+        uint256 binValue;
+        uint256 clbTokenTotalSupply;
+    }
+
+    /**
      * @dev Emitted when liquidity is added to the market.
      * @param receipt The liquidity receipt.
      */

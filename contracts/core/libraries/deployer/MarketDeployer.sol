@@ -147,17 +147,18 @@ library MarketDeployerLib {
     function _marketLiquidityLensFacetCut(
         address marketLiquidityLensFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](10);
+        bytes4[] memory functionSelectors = new bytes4[](11);
         functionSelectors[0] = IMarketLiquidityLens.getBinLiquidity.selector;
         functionSelectors[1] = IMarketLiquidityLens.getBinFreeLiquidity.selector;
         functionSelectors[2] = IMarketLiquidityLens.getBinValues.selector;
-        functionSelectors[3] = IMarketLiquidityLens.getLpReceipt.selector;
-        functionSelectors[4] = IMarketLiquidityLens.getLpReceipts.selector;
-        functionSelectors[5] = IMarketLiquidityLens.pendingLiquidity.selector;
-        functionSelectors[6] = IMarketLiquidityLens.pendingLiquidityBatch.selector;
-        functionSelectors[7] = IMarketLiquidityLens.claimableLiquidity.selector;
-        functionSelectors[8] = IMarketLiquidityLens.claimableLiquidityBatch.selector;
-        functionSelectors[9] = IMarketLiquidityLens.liquidityBinStatuses.selector;
+        functionSelectors[3] = IMarketLiquidityLens.getBinValuesAt.selector;
+        functionSelectors[4] = IMarketLiquidityLens.getLpReceipt.selector;
+        functionSelectors[5] = IMarketLiquidityLens.getLpReceipts.selector;
+        functionSelectors[6] = IMarketLiquidityLens.pendingLiquidity.selector;
+        functionSelectors[7] = IMarketLiquidityLens.pendingLiquidityBatch.selector;
+        functionSelectors[8] = IMarketLiquidityLens.claimableLiquidity.selector;
+        functionSelectors[9] = IMarketLiquidityLens.claimableLiquidityBatch.selector;
+        functionSelectors[10] = IMarketLiquidityLens.liquidityBinStatuses.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketLiquidityLensFacet,

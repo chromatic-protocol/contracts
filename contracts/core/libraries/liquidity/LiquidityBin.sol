@@ -11,6 +11,7 @@ import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquid
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
+
 /**
  * @dev Structure representing a liquidity bin
  * @param clbTokenId The ID of the CLB token
@@ -23,6 +24,7 @@ struct LiquidityBin {
     BinLiquidity _liquidity;
     BinPosition _position;
     BinClosedPosition _closedPosition;
+    mapping(uint256 => IMarketLiquidity.LiquidityBinValue) binValueAt; // oracleVersion => binValue
 }
 
 /**
@@ -56,12 +58,25 @@ library LiquidityBinLib {
     function settle(LiquidityBin storage self, LpContext memory ctx) internal {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settlePendingPosition(ctx);
-        self._liquidity.settlePendingLiquidity(
-            ctx,
-            self.value(ctx),
-            self.freeLiquidity(),
-            self.clbTokenId
-        );
+        if (self._liquidity.needSettle(ctx)) {
+            uint256 binValue = self.value(ctx);
+            uint256 clbTokenId = self.clbTokenId;
+            uint256 totalSupply = ctx.clbToken.totalSupply(clbTokenId);
+
+            uint256 oracleVersion = ctx.currentOracleVersion().version;
+            self.binValueAt[oracleVersion] = IMarketLiquidity.LiquidityBinValue({
+                binValue: binValue,
+                clbTokenTotalSupply: totalSupply
+            });
+
+            self._liquidity.settlePendingLiquidity(
+                ctx,
+                binValue,
+                self.freeLiquidity(),
+                clbTokenId,
+                totalSupply
+            );
+        }
     }
 
     /**

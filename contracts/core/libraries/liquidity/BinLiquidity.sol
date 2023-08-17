@@ -88,31 +88,28 @@ library BinLiquidityLib {
         LpContext memory ctx,
         uint256 binValue,
         uint256 freeLiquidity,
-        uint256 clbTokenId
+        uint256 clbTokenId,
+        uint256 clbTokenTotalSupply
     ) internal {
-        ICLBToken clbToken = ctx.clbToken;
-        //slither-disable-next-line calls-loop
-        uint256 totalSupply = clbToken.totalSupply(clbTokenId);
-
         (uint256 pendingDeposit, uint256 mintingAmount) = _settlePending(
             self,
             ctx,
             binValue,
-            totalSupply
+            clbTokenTotalSupply
         );
         (uint256 burningAmount, uint256 pendingWithdrawal) = _settleBurning(
             self,
             freeLiquidity + pendingDeposit,
             binValue,
-            totalSupply
+            clbTokenTotalSupply
         );
 
         if (mintingAmount > burningAmount) {
             //slither-disable-next-line calls-loop
-            clbToken.mint(ctx.market, clbTokenId, mintingAmount - burningAmount, bytes(""));
+            ctx.clbToken.mint(ctx.market, clbTokenId, mintingAmount - burningAmount, bytes(""));
         } else if (mintingAmount < burningAmount) {
             //slither-disable-next-line calls-loop
-            clbToken.burn(ctx.market, clbTokenId, burningAmount - mintingAmount);
+            ctx.clbToken.burn(ctx.market, clbTokenId, burningAmount - mintingAmount);
         }
 
         if (pendingDeposit != 0 || pendingWithdrawal != 0) {
@@ -276,6 +273,29 @@ library BinLiquidityLib {
         return clbTokenTotalSupply == 0 ? 0 : clbTokenAmount.mulDiv(binValue, clbTokenTotalSupply);
     }
 
+    function needSettle(BinLiquidity storage self, LpContext memory ctx) internal returns (bool) {
+        // trim all claim completed burning versions
+        while (!self._burningVersions.empty()) {
+            uint256 _ov = uint256(self._burningVersions.front());
+            _ClaimBurning memory _cb = self._claimBurnings[_ov];
+            if (_cb.clbTokenAmount >= _cb.clbTokenAmountRequested) {
+                //slither-disable-next-line unused-return
+                self._burningVersions.popFront();
+                if (_cb.clbTokenAmountRequested == 0) {
+                    delete self._claimBurnings[_ov];
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (!ctx.isPastVersion(self._pending.oracleVersion)) return false;
+        return
+            self._pending.mintingTokenAmountRequested != 0 ||
+            self._pending.burningCLBTokenAmountRequested != 0 ||
+            self._burningVersions.length() != 0;
+    }
+
     /**
      * @dev Settles the pending deposit and pending CLB token burning.
      * @param self The BinLiquidity storage.
@@ -334,23 +354,8 @@ library BinLiquidityLib {
         uint256 binValue,
         uint256 totalSupply
     ) private returns (uint256 burningAmount, uint256 pendingWithdrawal) {
-        // trim all claim completed burning versions
-        while (!self._burningVersions.empty()) {
-            uint256 _ov = uint256(self._burningVersions.front());
-            _ClaimBurning memory _cb = self._claimBurnings[_ov];
-            if (_cb.clbTokenAmount >= _cb.clbTokenAmountRequested) {
-                //slither-disable-next-line unused-return
-                self._burningVersions.popFront();
-                if (_cb.clbTokenAmountRequested == 0) {
-                    delete self._claimBurnings[_ov];
-                }
-            } else {
-                break;
-            }
-        }
-
         uint256 length = self._burningVersions.length();
-        for (uint256 i; i < length && freeLiquidity != 0; ) {
+        for (uint256 i; i < length && freeLiquidity != 0; i++) {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
 
@@ -376,10 +381,6 @@ library BinLiquidityLib {
                 burningAmount += _burningAmount;
                 pendingWithdrawal += _pendingWithdrawal;
                 freeLiquidity -= _pendingWithdrawal;
-            }
-
-            unchecked {
-                i++;
             }
         }
 

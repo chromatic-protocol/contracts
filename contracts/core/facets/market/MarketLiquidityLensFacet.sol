@@ -3,6 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IMarketLiquidityLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidityLens.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
@@ -35,20 +36,31 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
      */
     function getBinValues(
         int16[] memory tradingFeeRates
-    ) external view override returns (uint256[] memory) {
+    ) external view override returns (uint256[] memory values) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
 
+        values = new uint256[](tradingFeeRates.length);
         LpContext memory ctx = newLpContext(ms);
-        uint256[] memory values = new uint256[](tradingFeeRates.length);
-        for (uint256 i; i < tradingFeeRates.length; ) {
-            values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
-
-            unchecked {
-                i++;
-            }
+        for (uint256 i; i < tradingFeeRates.length; i++) {
+            values[i] = liquidityPool.binValue(ctx, tradingFeeRates[i]);
         }
-        return values;
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidityLens
+     */
+    function getBinValuesAt(
+        uint256 oracleVersion,
+        int16[] memory tradingFeeRates
+    ) external view override returns (IMarketLiquidity.LiquidityBinValue[] memory values) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
+
+        values = new IMarketLiquidity.LiquidityBinValue[](tradingFeeRates.length);
+        for (uint256 i; i < tradingFeeRates.length; i++) {
+            values[i] = liquidityPool.binValueAt(tradingFeeRates[i], oracleVersion);
+        }
     }
 
     /**
