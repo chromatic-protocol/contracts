@@ -37,7 +37,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 2
-        market.settle();
+        market.settleAll();
         assertEq(addLongAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
@@ -65,7 +65,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 3
-        market.settle();
+        market.settleAll();
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
@@ -93,7 +93,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 4
-        market.settle();
+        market.settleAll();
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount,
@@ -139,7 +139,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 5
-        market.settle();
+        market.settleAll();
         assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
@@ -205,7 +205,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 2
-        market.settle();
+        market.settleAll();
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
@@ -247,7 +247,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 4
-        market.settle();
+        market.settleAll();
         assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
@@ -310,7 +310,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         oracleProvider.increaseVersion(1 ether);
 
         // settle oracle version 2
-        market.settle();
+        market.settleAll();
 
         // set markint earning
         usdc.transfer(address(vault), earning);
@@ -352,11 +352,20 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         usdc.transfer(vault, amount);
     }
 
-    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+    function claimLiquidityCallback(
+        uint256,
+        int16,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external override {}
 
     function claimLiquidityBatchCallback(
-        uint256[] calldata receiptIds,
-        bytes calldata data
+        uint256[] calldata,
+        int16[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external override {}
 
     function removeLiquidityCallback(
@@ -389,11 +398,20 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         );
     }
 
-    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+    function withdrawLiquidityCallback(
+        uint256,
+        int16,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external override {}
 
     function withdrawLiquidityBatchCallback(
-        uint256[] calldata receiptIds,
-        bytes calldata data
+        uint256[] calldata,
+        int16[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external override {}
 
     // implement IERC1155Receiver

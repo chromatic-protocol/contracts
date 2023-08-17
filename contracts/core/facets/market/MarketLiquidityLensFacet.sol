@@ -6,7 +6,7 @@ import {IMarketLiquidityLens} from "@chromatic-protocol/contracts/core/interface
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
-import {MarketStorage, MarketStorageLib, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
+import {MarketStorage, MarketStorageLib, LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {MarketLiquidityFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacetBase.sol";
 
 /**
@@ -57,6 +57,20 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
      */
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
         receipt = _getLpReceipt(LpReceiptStorageLib.lpReceiptStorage(), receiptId);
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidityLens
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
+     */
+    function getLpReceipts(
+        uint256[] calldata receiptIds
+    ) external view returns (LpReceipt[] memory receipts) {
+        receipts = new LpReceipt[](receiptIds.length);
+        LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+        for (uint256 i; i < receiptIds.length; i++) {
+            receipts[i] = _getLpReceipt(ls, receiptIds[i]);
+        }
     }
 
     /**

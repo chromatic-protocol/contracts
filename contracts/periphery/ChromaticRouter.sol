@@ -48,22 +48,6 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
     }
 
     /**
-     * @dev Struct representing the data for a claimLiquidity callback.
-     * @param provider The address of the liquidity provider.
-     */
-    struct ClaimLiquidityCallbackData {
-        address provider;
-    }
-
-    /**
-     * @dev Struct representing the data for a claimLiquidityBatch callback.
-     * @param provider The address of the liquidity provider.
-     */
-    struct ClaimLiquidityBatchCallbackData {
-        address provider;
-    }
-
-    /**
      * @dev Struct representing the data for a removeLiquidity callback.
      * @param provider The address of the liquidity provider.
      * @param clbTokenAmount The amount of CLB tokens being removed.
@@ -83,28 +67,8 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256[] clbTokenAmounts;
     }
 
-    /**
-     * @dev Struct representing the data for a withdrawLiquidity callback.
-     * @param provider The address of the liquidity provider.
-     */
-    struct WithdrawLiquidityCallbackData {
-        address provider;
-    }
-
-    /**
-     * @dev Struct representing the data for a withdrawLiquidityBatch callback.
-     * @param provider The address of the liquidity provider.
-     */
-    struct WithdrawLiquidityBatchCallbackData {
-        address provider;
-    }
-
+    mapping(address => mapping(uint256 => address)) providerMap; // market => receiptId => provider
     mapping(address => mapping(address => EnumerableSet.UintSet)) receiptIds; // market => provider => receiptIds
-
-    /**
-     * @dev Throws an error indicating that the specified receipt ID does not exist for the liquidity provider in the given market.
-     */
-    error NotExistLpReceipt();
 
     /**
      * @dev Initializes the ChromaticRouter contract.
@@ -159,14 +123,17 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      */
     function claimLiquidityCallback(
         uint256 receiptId,
-        bytes calldata data
+        int16,
+        uint256,
+        uint256,
+        bytes calldata
     ) external override verifyCallback {
-        ClaimLiquidityCallbackData memory callbackData = abi.decode(
-            data,
-            (ClaimLiquidityCallbackData)
-        );
+        address market = msg.sender;
+        address provider = providerMap[market][receiptId];
+
         //slither-disable-next-line unused-return
-        receiptIds[msg.sender][callbackData.provider].remove(receiptId);
+        receiptIds[market][provider].remove(receiptId);
+        delete providerMap[market][receiptId];
     }
 
     /**
@@ -174,19 +141,19 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      */
     function claimLiquidityBatchCallback(
         uint256[] calldata _receiptIds,
-        bytes calldata data
+        int16[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external override verifyCallback {
-        ClaimLiquidityBatchCallbackData memory callbackData = abi.decode(
-            data,
-            (ClaimLiquidityBatchCallbackData)
-        );
-        for (uint256 i; i < _receiptIds.length; ) {
-            //slither-disable-next-line unused-return
-            receiptIds[msg.sender][callbackData.provider].remove(_receiptIds[i]);
+        address market = msg.sender;
+        for (uint256 i; i < _receiptIds.length; i++) {
+            uint256 receiptId = _receiptIds[i];
+            address provider = providerMap[market][receiptId];
 
-            unchecked {
-                i++;
-            }
+            //slither-disable-next-line unused-return
+            receiptIds[market][provider].remove(_receiptIds[i]);
+            delete providerMap[market][receiptId];
         }
     }
 
@@ -202,6 +169,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             data,
             (RemoveLiquidityCallbackData)
         );
+
         IERC1155(clbToken).safeTransferFrom(
             callbackData.provider,
             msg.sender, // market
@@ -238,14 +206,17 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      */
     function withdrawLiquidityCallback(
         uint256 receiptId,
-        bytes calldata data
+        int16,
+        uint256,
+        uint256,
+        bytes calldata
     ) external override verifyCallback {
-        WithdrawLiquidityCallbackData memory callbackData = abi.decode(
-            data,
-            (WithdrawLiquidityCallbackData)
-        );
+        address market = msg.sender;
+        address provider = providerMap[market][receiptId];
+
         //slither-disable-next-line unused-return
-        receiptIds[msg.sender][callbackData.provider].remove(receiptId);
+        receiptIds[market][provider].remove(receiptId);
+        delete providerMap[market][receiptId];
     }
 
     /**
@@ -253,20 +224,19 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      */
     function withdrawLiquidityBatchCallback(
         uint256[] calldata _receiptIds,
-        bytes calldata data
+        int16[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external override verifyCallback {
-        WithdrawLiquidityBatchCallbackData memory callbackData = abi.decode(
-            data,
-            (WithdrawLiquidityBatchCallbackData)
-        );
+        address market = msg.sender;
+        for (uint256 i; i < _receiptIds.length; i++) {
+            uint256 receiptId = _receiptIds[i];
+            address provider = providerMap[market][receiptId];
 
-        for (uint256 i; i < _receiptIds.length; ) {
             //slither-disable-next-line unused-return
-            receiptIds[msg.sender][callbackData.provider].remove(_receiptIds[i]);
-
-            unchecked {
-                i++;
-            }
+            receiptIds[market][provider].remove(_receiptIds[i]);
+            delete providerMap[market][receiptId];
         }
     }
 
@@ -313,29 +283,24 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256 amount,
         address recipient
     ) external override returns (LpReceipt memory receipt) {
+        address provider = msg.sender;
         receipt = IChromaticMarket(market).addLiquidity(
             recipient,
             feeRate,
-            abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: amount}))
+            abi.encode(AddLiquidityCallbackData({provider: provider, amount: amount}))
         );
 
         //slither-disable-next-line unused-return
-        receiptIds[market][msg.sender].add(receipt.id);
+        receiptIds[market][provider].add(receipt.id);
+        providerMap[market][receipt.id] = provider;
     }
 
     /**
      * @inheritdoc IChromaticRouter
      * @dev This function allows the liquidity provider to claim their liquidity by calling the `claimLiquidity` function in the specified market contract.
-     *      Throws a `NotExistLpReceipt` error if the specified receipt ID does not exist for the liquidity provider in the given market.
      */
     function claimLiquidity(address market, uint256 receiptId) external override {
-        address provider = msg.sender;
-        if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
-
-        IChromaticMarket(market).claimLiquidity(
-            receiptId,
-            abi.encode(ClaimLiquidityCallbackData({provider: provider}))
-        );
+        IChromaticMarket(market).claimLiquidity(receiptId, bytes(""));
     }
 
     /**
@@ -347,30 +312,26 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256 clbTokenAmount,
         address recipient
     ) external override returns (LpReceipt memory receipt) {
+        address provider = msg.sender;
         receipt = IChromaticMarket(market).removeLiquidity(
             recipient,
             feeRate,
             abi.encode(
-                RemoveLiquidityCallbackData({provider: msg.sender, clbTokenAmount: clbTokenAmount})
+                RemoveLiquidityCallbackData({provider: provider, clbTokenAmount: clbTokenAmount})
             )
         );
+
         //slither-disable-next-line unused-return
-        receiptIds[market][msg.sender].add(receipt.id);
+        receiptIds[market][provider].add(receipt.id);
+        providerMap[market][receipt.id] = provider;
     }
 
     /**
      * @inheritdoc IChromaticRouter
      * @dev This function allows the liquidity provider to withdraw their liquidity by calling the `withdrawLiquidity` function in the specified market contract.
-     *      Throws a `NotExistLpReceipt` error if the specified receipt ID does not exist for the liquidity provider in the given market.
      */
     function withdrawLiquidity(address market, uint256 receiptId) external override {
-        address provider = msg.sender;
-        if (!receiptIds[market][provider].contains(receiptId)) revert NotExistLpReceipt();
-
-        IChromaticMarket(market).withdrawLiquidity(
-            receiptId,
-            abi.encode(WithdrawLiquidityCallbackData({provider: provider}))
-        );
+        IChromaticMarket(market).withdrawLiquidity(receiptId, bytes(""));
     }
 
     /**
@@ -411,28 +372,23 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         require(feeRates.length == amounts.length, "TradeRouter: invalid arguments");
 
         uint256 totalAmount;
-        for (uint256 i; i < amounts.length; ) {
+        for (uint256 i; i < amounts.length; i++) {
             totalAmount += amounts[i];
-
-            unchecked {
-                i++;
-            }
         }
 
+        address provider = msg.sender;
         lpReceipts = IChromaticMarket(market).addLiquidityBatch(
             recipient,
             feeRates,
             amounts,
-            abi.encode(AddLiquidityCallbackData({provider: msg.sender, amount: totalAmount}))
+            abi.encode(AddLiquidityBatchCallbackData({provider: provider, amount: totalAmount}))
         );
 
-        for (uint i; i < feeRates.length; ) {
+        for (uint i; i < feeRates.length; i++) {
+            uint256 receiptId = lpReceipts[i].id;
             //slither-disable-next-line unused-return
-            receiptIds[market][msg.sender].add(lpReceipts[i].id);
-
-            unchecked {
-                i++;
-            }
+            receiptIds[market][provider].add(receiptId);
+            providerMap[market][receiptId] = provider;
         }
     }
 
@@ -440,10 +396,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      * @inheritdoc IChromaticRouter
      */
     function claimLiquidityBatch(address market, uint256[] calldata _receiptIds) external override {
-        IChromaticMarket(market).claimLiquidityBatch(
-            _receiptIds,
-            abi.encode(ClaimLiquidityBatchCallbackData({provider: msg.sender}))
-        );
+        IChromaticMarket(market).claimLiquidityBatch(_receiptIds, bytes(""));
     }
 
     /**
@@ -455,25 +408,26 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         int16[] calldata feeRates,
         uint256[] calldata clbTokenAmounts
     ) external override returns (LpReceipt[] memory lpReceipts) {
+        require(feeRates.length == clbTokenAmounts.length, "TradeRouter: invalid arguments");
+
+        address provider = msg.sender;
         lpReceipts = IChromaticMarket(market).removeLiquidityBatch(
             recipient,
             feeRates,
             clbTokenAmounts,
             abi.encode(
                 RemoveLiquidityBatchCallbackData({
-                    provider: msg.sender,
+                    provider: provider,
                     clbTokenAmounts: clbTokenAmounts
                 })
             )
         );
 
-        for (uint i; i < feeRates.length; ) {
+        for (uint i; i < feeRates.length; i++) {
+            uint256 receiptId = lpReceipts[i].id;
             //slither-disable-next-line unused-return
-            receiptIds[market][msg.sender].add(lpReceipts[i].id);
-
-            unchecked {
-                i++;
-            }
+            receiptIds[market][provider].add(receiptId);
+            providerMap[market][receiptId] = provider;
         }
     }
 
@@ -484,9 +438,6 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         address market,
         uint256[] calldata _receiptIds
     ) external override {
-        IChromaticMarket(market).withdrawLiquidityBatch(
-            _receiptIds,
-            abi.encode(WithdrawLiquidityBatchCallbackData({provider: msg.sender}))
-        );
+        IChromaticMarket(market).withdrawLiquidityBatch(_receiptIds, bytes(""));
     }
 }

@@ -82,17 +82,35 @@ library LiquidityPoolLib {
      * @notice Settles the liquidity bins in the LiquidityPool.
      * @param self The reference to the LiquidityPool.
      * @param ctx The LpContext object.
+     * @param feeRates The feeRate list of liquidity bin to settle.
      */
-    function settle(LiquidityPool storage self, LpContext memory ctx) internal {
+    function settle(
+        LiquidityPool storage self,
+        LpContext memory ctx,
+        int16[] memory feeRates
+    ) internal {
+        for (uint256 i; i < feeRates.length; i++) {
+            int16 feeRate = feeRates[i];
+
+            if (feeRate < 0) {
+                self._shortBins[uint16(-feeRate)].settle(ctx);
+            } else {
+                self._longBins[uint16(feeRate)].settle(ctx);
+            }
+        }
+    }
+
+    /**
+     * @notice Settles the liquidity bins in the LiquidityPool.
+     * @param self The reference to the LiquidityPool.
+     * @param ctx The LpContext object.
+     */
+    function settleAll(LiquidityPool storage self, LpContext memory ctx) internal {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
-        for (uint256 i; i < FEE_RATES_LENGTH; ) {
+        for (uint256 i; i < FEE_RATES_LENGTH; i++) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longBins[feeRate].settle(ctx);
             self._shortBins[feeRate].settle(ctx);
-
-            unchecked {
-                i++;
-            }
         }
     }
 

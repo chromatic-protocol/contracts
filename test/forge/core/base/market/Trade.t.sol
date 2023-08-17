@@ -139,11 +139,20 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         usdc.transfer(vault, amount);
     }
 
-    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+    function claimLiquidityCallback(
+        uint256,
+        int16,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external override {}
 
     function claimLiquidityBatchCallback(
-        uint256[] calldata receiptIds,
-        bytes calldata data
+        uint256[] calldata,
+        int16[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external override {}
 
     function removeLiquidityCallback(
@@ -176,11 +185,20 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         );
     }
 
-    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+    function withdrawLiquidityCallback(
+        uint256,
+        int16,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external override {}
 
     function withdrawLiquidityBatchCallback(
-        uint256[] calldata receiptIds,
-        bytes calldata data
+        uint256[] calldata,
+        int16[] calldata,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
     ) external override {}
 
     // implement IERC1155Receiver

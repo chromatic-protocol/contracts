@@ -30,7 +30,7 @@ interface IMarketLiquidityLens {
      * @return values The value list of the bins for the specified trading fee rates.
      */
     function getBinValues(
-        int16[] memory tradingFeeRates
+        int16[] calldata tradingFeeRates
     ) external view returns (uint256[] memory values);
 
     /**
@@ -40,6 +40,14 @@ interface IMarketLiquidityLens {
      * @return receipt The liquidity receipt with the specified ID.
      */
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory);
+
+    /**
+     * @dev Retrieves the liquidity receipts with the given receipt IDs.
+     *      It throws NotExistLpReceipt if the specified receipt ID does not exist.
+     * @param receiptIds The ID list of the liquidity receipt to retrieve.
+     * @return receipts The liquidity receipt list with the specified IDs.
+     */
+    function getLpReceipts(uint256[] calldata receiptIds) external view returns (LpReceipt[] memory);
 
     /**
      * @dev Retrieves the pending liquidity information for a specific trading fee rate from the associated LiquidityPool.
