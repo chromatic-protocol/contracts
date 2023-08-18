@@ -42,8 +42,12 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
 
         values = new uint256[](tradingFeeRates.length);
         LpContext memory ctx = newLpContext(ms);
-        for (uint256 i; i < tradingFeeRates.length; i++) {
+        for (uint256 i; i < tradingFeeRates.length; ) {
             values[i] = liquidityPool.binValue(ctx, tradingFeeRates[i]);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -58,8 +62,12 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
         LiquidityPool storage liquidityPool = ms.liquidityPool;
 
         values = new IMarketLiquidity.LiquidityBinValue[](tradingFeeRates.length);
-        for (uint256 i; i < tradingFeeRates.length; i++) {
+        for (uint256 i; i < tradingFeeRates.length; ) {
             values[i] = liquidityPool.binValueAt(tradingFeeRates[i], oracleVersion);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -80,8 +88,12 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
     ) external view returns (LpReceipt[] memory receipts) {
         receipts = new LpReceipt[](receiptIds.length);
         LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
-        for (uint256 i; i < receiptIds.length; i++) {
+        for (uint256 i; i < receiptIds.length; ) {
             receipts[i] = _getLpReceipt(ls, receiptIds[i]);
+
+            unchecked {
+                i++;
+            }
         }
     }
 

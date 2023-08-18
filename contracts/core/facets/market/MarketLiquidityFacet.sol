@@ -220,7 +220,7 @@ contract MarketLiquidityFacet is
         uint256[] memory _tokenAmounts = new uint256[](receiptIds.length);
         uint256[] memory _clbTokenAmounts = new uint256[](receiptIds.length);
 
-        for (uint256 i; i < receiptIds.length; i++) {
+        for (uint256 i; i < receiptIds.length; ) {
             (_receipts[i], _clbTokenAmounts[i]) = _claimLiquidity(
                 ctx,
                 ls,
@@ -229,6 +229,10 @@ contract MarketLiquidityFacet is
             );
             _feeRates[i] = _receipts[i].tradingFeeRate;
             _tokenAmounts[i] = _receipts[i].amount;
+
+            unchecked {
+                i++;
+            }
         }
 
         IChromaticLiquidityCallback(msg.sender).claimLiquidityBatchCallback(
@@ -456,7 +460,7 @@ contract MarketLiquidityFacet is
         uint256[] memory _amounts = new uint256[](receiptIds.length);
         uint256[] memory _burnedCLBTokenAmounts = new uint256[](receiptIds.length);
 
-        for (uint256 i; i < receiptIds.length; i++) {
+        for (uint256 i; i < receiptIds.length; ) {
             (_receipts[i], _amounts[i], _burnedCLBTokenAmounts[i]) = _withdrawLiquidity(
                 ctx,
                 ls,
@@ -464,6 +468,10 @@ contract MarketLiquidityFacet is
                 receiptIds[i]
             );
             _feeRates[i] = _receipts[i].tradingFeeRate;
+
+            unchecked {
+                i++;
+            }
         }
 
         IChromaticLiquidityCallback(msg.sender).withdrawLiquidityBatchCallback(

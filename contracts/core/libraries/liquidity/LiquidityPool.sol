@@ -89,13 +89,17 @@ library LiquidityPoolLib {
         LpContext memory ctx,
         int16[] memory feeRates
     ) internal {
-        for (uint256 i; i < feeRates.length; i++) {
+        for (uint256 i; i < feeRates.length; ) {
             int16 feeRate = feeRates[i];
 
             if (feeRate < 0) {
                 self._shortBins[uint16(-feeRate)].settle(ctx);
             } else {
                 self._longBins[uint16(feeRate)].settle(ctx);
+            }
+
+            unchecked {
+                i++;
             }
         }
     }
@@ -107,10 +111,14 @@ library LiquidityPoolLib {
      */
     function settleAll(LiquidityPool storage self, LpContext memory ctx) internal {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
-        for (uint256 i; i < FEE_RATES_LENGTH; i++) {
+        for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
             self._longBins[feeRate].settle(ctx);
             self._shortBins[feeRate].settle(ctx);
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -152,7 +160,7 @@ library LiquidityPoolLib {
         //slither-disable-next-line uninitialized-local
         uint256 cnt;
         uint256 remain = makerMargin;
-        for (; to < FEE_RATES_LENGTH; to++) {
+        for (; to < FEE_RATES_LENGTH; ) {
             if (remain == 0) break;
 
             LiquidityBin storage _bin = _bins[_tradingFeeRates[to]];
@@ -169,12 +177,16 @@ library LiquidityPoolLib {
                 }
                 cnt++;
             }
+
+            unchecked {
+                to++;
+            }
         }
 
         require(remain == 0, Errors.NOT_ENOUGH_FREE_LIQUIDITY);
 
         BinMargin[] memory binMargins = new BinMargin[](cnt);
-        for ((uint256 i, uint256 idx) = (0, 0); i < to; i++) {
+        for ((uint256 i, uint256 idx) = (0, 0); i < to; ) {
             if (_binMargins[i] != 0) {
                 binMargins[idx] = BinMargin({
                     tradingFeeRate: _tradingFeeRates[i],
@@ -184,6 +196,10 @@ library LiquidityPoolLib {
                 unchecked {
                     idx++;
                 }
+            }
+
+            unchecked {
+                i++;
             }
         }
 

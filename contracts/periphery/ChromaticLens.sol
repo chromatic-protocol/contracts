@@ -80,8 +80,12 @@ contract ChromaticLens {
         uint256[] memory tokenIds = CLBTokenLib.tokenIds();
         address[] memory accounts = new address[](tokenIds.length);
         // Set all accounts to the owner's address
-        for (uint256 i; i < accounts.length; i++) {
+        for (uint256 i; i < accounts.length; ) {
             accounts[i] = owner;
+
+            unchecked {
+                i++;
+            }
         }
 
         // Get balances of CLB tokens for the owner
@@ -90,11 +94,15 @@ contract ChromaticLens {
         // Count the number of CLB tokens with non-zero balance
         //slither-disable-next-line uninitialized-local
         uint256 effectiveCnt;
-        for (uint256 i; i < balances.length; i++) {
+        for (uint256 i; i < balances.length; ) {
             if (balances[i] != 0) {
                 unchecked {
                     effectiveCnt++;
                 }
+            }
+
+            unchecked {
+                i++;
             }
         }
 
@@ -104,7 +112,7 @@ contract ChromaticLens {
 
         //slither-disable-next-line uninitialized-local
         uint256 idx;
-        for (uint256 i; i < balances.length; i++) {
+        for (uint256 i; i < balances.length; ) {
             if (balances[i] != 0) {
                 effectiveBalances[idx] = balances[i];
                 effectiveTokenIds[idx] = tokenIds[i];
@@ -113,6 +121,10 @@ contract ChromaticLens {
                     idx++;
                 }
             }
+
+            unchecked {
+                i++;
+            }
         }
 
         uint256[] memory totalSupplies = market.clbToken().totalSupplyBatch(effectiveTokenIds);
@@ -120,13 +132,17 @@ contract ChromaticLens {
 
         // Populate the result array with CLB token balance information
         CLBBalance[] memory result = new CLBBalance[](effectiveCnt);
-        for (uint256 i; i < effectiveCnt; i++) {
+        for (uint256 i; i < effectiveCnt; ) {
             result[i] = CLBBalance({
                 tokenId: effectiveTokenIds[i],
                 balance: effectiveBalances[i],
                 totalSupply: totalSupplies[i],
                 binValue: binValues[i]
             });
+
+            unchecked {
+                i++;
+            }
         }
 
         return result;

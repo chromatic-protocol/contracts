@@ -147,13 +147,17 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         bytes calldata
     ) external override verifyCallback {
         address market = msg.sender;
-        for (uint256 i; i < _receiptIds.length; i++) {
+        for (uint256 i; i < _receiptIds.length; ) {
             uint256 receiptId = _receiptIds[i];
             address provider = providerMap[market][receiptId];
 
             //slither-disable-next-line unused-return
             receiptIds[market][provider].remove(_receiptIds[i]);
             delete providerMap[market][receiptId];
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -230,13 +234,17 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         bytes calldata
     ) external override verifyCallback {
         address market = msg.sender;
-        for (uint256 i; i < _receiptIds.length; i++) {
+        for (uint256 i; i < _receiptIds.length; ) {
             uint256 receiptId = _receiptIds[i];
             address provider = providerMap[market][receiptId];
 
             //slither-disable-next-line unused-return
             receiptIds[market][provider].remove(_receiptIds[i]);
             delete providerMap[market][receiptId];
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -372,8 +380,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         require(feeRates.length == amounts.length, "TradeRouter: invalid arguments");
 
         uint256 totalAmount;
-        for (uint256 i; i < amounts.length; i++) {
+        for (uint256 i; i < amounts.length; ) {
             totalAmount += amounts[i];
+
+            unchecked {
+                i++;
+            }
         }
 
         address provider = msg.sender;
@@ -384,11 +396,15 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             abi.encode(AddLiquidityBatchCallbackData({provider: provider, amount: totalAmount}))
         );
 
-        for (uint i; i < feeRates.length; i++) {
+        for (uint i; i < feeRates.length; ) {
             uint256 receiptId = lpReceipts[i].id;
             //slither-disable-next-line unused-return
             receiptIds[market][provider].add(receiptId);
             providerMap[market][receiptId] = provider;
+
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -423,11 +439,15 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             )
         );
 
-        for (uint i; i < feeRates.length; i++) {
+        for (uint i; i < feeRates.length; ) {
             uint256 receiptId = lpReceipts[i].id;
             //slither-disable-next-line unused-return
             receiptIds[market][provider].add(receiptId);
             providerMap[market][receiptId] = provider;
+
+            unchecked {
+                i++;
+            }
         }
     }
 

@@ -355,7 +355,7 @@ library BinLiquidityLib {
         uint256 totalSupply
     ) private returns (uint256 burningAmount, uint256 pendingWithdrawal) {
         uint256 length = self._burningVersions.length();
-        for (uint256 i; i < length && freeLiquidity != 0; i++) {
+        for (uint256 i; i < length && freeLiquidity != 0; ) {
             uint256 _ov = uint256(self._burningVersions.at(i));
             _ClaimBurning storage _cb = self._claimBurnings[_ov];
 
@@ -381,6 +381,10 @@ library BinLiquidityLib {
                 burningAmount += _burningAmount;
                 pendingWithdrawal += _pendingWithdrawal;
                 freeLiquidity -= _pendingWithdrawal;
+            }
+
+            unchecked {
+                i++;
             }
         }
 
