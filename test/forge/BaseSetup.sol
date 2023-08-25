@@ -38,6 +38,11 @@ abstract contract BaseSetup is Test {
         IOpsProxyFactory _opf = IOpsProxyFactory(address(6666));
         vm.mockCall(
             address(_automate),
+            abi.encodeWithSelector(_automate.getFeeDetails.selector),
+            abi.encode(0, address(_automate))
+        );
+        vm.mockCall(
+            address(_automate),
             abi.encodeWithSelector(_automate.gelato.selector),
             abi.encode(address(_automate))
         );

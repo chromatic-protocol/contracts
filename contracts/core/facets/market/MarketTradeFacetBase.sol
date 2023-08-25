@@ -117,7 +117,8 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         uint256 entryPrice = currentOracleVersion > position.openVersion
             ? position.entryPrice(ctx)
             : 0;
-        uint256 exitPrice = currentOracleVersion > position.closeVersion
+        uint256 exitPrice = position.closeVersion > 0 &&
+            currentOracleVersion > position.closeVersion
             ? position.exitPrice(ctx)
             : 0;
         // Call the claim position callback function on the position owner's contract

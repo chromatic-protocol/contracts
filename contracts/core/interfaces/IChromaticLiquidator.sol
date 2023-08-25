@@ -93,4 +93,8 @@ interface IChromaticLiquidator {
      * @param positionId The ID of the position to be claimed.
      */
     function claimPosition(address market, uint256 positionId) external;
+
+    function getLiquidationTaskId(address market, uint256 positionId) external returns (bytes32);
+
+    function getClaimPositionTaskId(address market, uint256 positionId) external returns (bytes32);
 }
