@@ -94,7 +94,13 @@ interface IChromaticLiquidator {
      */
     function claimPosition(address market, uint256 positionId) external;
 
-    function getLiquidationTaskId(address market, uint256 positionId) external returns (bytes32);
+    function getLiquidationTaskId(
+        address market,
+        uint256 positionId
+    ) external view returns (bytes32);
 
-    function getClaimPositionTaskId(address market, uint256 positionId) external returns (bytes32);
+    function getClaimPositionTaskId(
+        address market,
+        uint256 positionId
+    ) external view returns (bytes32);
 }
