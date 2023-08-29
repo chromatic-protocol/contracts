@@ -1,109 +1,56 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {BaseSetup} from "../../../BaseSetup.sol";
+import {BaseSetup} from "../BaseSetup.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
+import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
-import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {OpenPositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import "forge-std/console.sol";
 
-contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCallback {
+contract ChromaticLiquidatorTest is
+    BaseSetup,
+    IChromaticTradeCallback,
+    IChromaticLiquidityCallback
+{
     function setUp() public override {
         super.setUp();
     }
 
-    function testOpenPositionAfterRemoveLiquidity() public {
+    function testLiquidate() public {
         uint256 liquidityAmount = 10 ether;
 
-        // set oracle version to 1
-        oracleProvider.increaseVersion(1 ether);
-
-        // add liquidity $10 to 0.01% and 0.02% long bin at oracle version 1
-        LpReceipt memory receipt1 = market.addLiquidity(
+        // prepare bin
+        LpReceipt memory receipt = market.addLiquidity(
             address(this),
             1,
             abi.encode(liquidityAmount)
         );
-        LpReceipt memory receipt2 = market.addLiquidity(
-            address(this),
-            2,
-            abi.encode(liquidityAmount)
-        );
-
-        // set oracle version to 2
         oracleProvider.increaseVersion(1 ether);
+        market.claimLiquidity(receipt.id, bytes(""));
 
-        // claim liquidity at oracle version 2
-        market.claimLiquidity(receipt1.id, bytes(""));
-        market.claimLiquidity(receipt2.id, bytes(""));
-        assertEq(liquidityAmount, clbToken.balanceOf(address(this), receipt1.clbTokenId()));
-
-        // open position at oracle version 2
-        OpenPositionInfo memory position1 = market.openPosition(
+        // open position when oracle price is 10 ether
+        OpenPositionInfo memory position = market.openPosition(
             10 ether,
             1 ether,
             liquidityAmount,
             1 ether,
             bytes("")
         );
+        oracleProvider.increaseVersion(10 ether);
 
-        // set oracle version to 3
-        oracleProvider.increaseVersion(1 ether);
+        // set oracle price with 5 ether
+        oracleProvider.increaseVersion(5 ether);
 
-        // close position at oracle version 3
-        market.closePosition(position1.id);
-        assertEq(liquidityAmount + position1.tradingFee, market.getBinLiquidity(1));
-        assertEq(position1.tradingFee, market.getBinFreeLiquidity(1));
+        // resolve liquidation
+        (bool canExec, ) = liquidator.resolveLiquidation(address(market), position.id);
+        assertEq(canExec, true);
 
-        // set oracle version to 4
-        oracleProvider.increaseVersion(1.1 ether);
-
-        // remove liquidity and claim position at oracle version 4
-        LpReceipt memory receipt3 = market.removeLiquidity(
-            address(this),
-            1,
-            abi.encode(liquidityAmount)
-        );
-        assertEq(liquidityAmount + position1.tradingFee, market.getBinLiquidity(1));
-        assertEq(position1.tradingFee, market.getBinFreeLiquidity(1));
-
-        uint256 balanceBefore = usdc.balanceOf(address(this));
-
-        market.claimPosition(position1.id, address(this), bytes(""));
-
-        assertEq(2 ether, usdc.balanceOf(address(this)) - balanceBefore);
-        assertEq(liquidityAmount + position1.tradingFee - 1 ether, market.getBinLiquidity(1));
-        assertEq(liquidityAmount + position1.tradingFee - 1 ether, market.getBinFreeLiquidity(1));
-
-        // set oracle version to 5
-        oracleProvider.increaseVersion(1.1 ether);
-
-        // open position at oracle version 5
-        OpenPositionInfo memory position2 = market.openPosition(
-            10 ether,
-            1 ether,
-            liquidityAmount,
-            1 ether,
-            bytes("")
-        );
-
-        assertEq(0, market.getBinLiquidity(1));
-        assertEq(liquidityAmount + position2.tradingFee, market.getBinLiquidity(2));
-        assertEq(position2.tradingFee, market.getBinFreeLiquidity(2));
-
-        // withdraw liquidity at oracle version 5
-        balanceBefore = usdc.balanceOf(address(this));
-
-        market.withdrawLiquidity(receipt3.id, bytes(""));
-
-        assertEq(
-            liquidityAmount + position1.tradingFee - 1 ether,
-            usdc.balanceOf(address(this)) - balanceBefore
-        );
-        assertEq(0, clbToken.balanceOf(address(this), 1));
+        // liquidate
+        liquidator.liquidate(address(market), position.id);
     }
 
     // implement IChromaticTradeCallback

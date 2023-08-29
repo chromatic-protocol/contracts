@@ -220,4 +220,18 @@ abstract contract Liquidator is IChromaticLiquidator {
             delete registry[market][positionId];
         }
     }
+
+    function getLiquidationTaskId(
+        address market,
+        uint256 positionId
+    ) external view returns (bytes32 taskId) {
+        taskId = _liquidationTaskIds[market][positionId];
+    }
+
+    function getClaimPositionTaskId(
+        address market,
+        uint256 positionId
+    ) external view returns (bytes32 taskId) {
+        taskId = _claimPositionTaskIds[market][positionId];
+    }
 }
