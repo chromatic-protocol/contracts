@@ -86,10 +86,19 @@ contract ChromaticLiquidatorTest is
         usdc.transfer(vault, amount);
     }
 
-    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+    function claimLiquidityCallback(
+        uint256 receiptId,
+        int16 feeRate,
+        uint256 depositedAmount,
+        uint256 mintedCLBTokenAmount,
+        bytes calldata data
+    ) external override {}
 
     function claimLiquidityBatchCallback(
         uint256[] calldata receiptIds,
+        int16[] calldata feeRates,
+        uint256[] calldata depositedAmounts,
+        uint256[] calldata mintedCLBTokenAmounts,
         bytes calldata data
     ) external override {}
 
@@ -123,10 +132,19 @@ contract ChromaticLiquidatorTest is
         );
     }
 
-    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external override {}
+    function withdrawLiquidityCallback(
+        uint256 receiptId,
+        int16 feeRate,
+        uint256 withdrawnAmount,
+        uint256 burnedCLBTokenAmount,
+        bytes calldata data
+    ) external override {}
 
     function withdrawLiquidityBatchCallback(
         uint256[] calldata receiptIds,
+        int16[] calldata feeRates,
+        uint256[] calldata withdrawnAmounts,
+        uint256[] calldata burnedCLBTokenAmounts,
         bytes calldata data
     ) external override {}
 
