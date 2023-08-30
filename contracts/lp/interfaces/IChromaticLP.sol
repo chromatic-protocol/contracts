@@ -31,14 +31,10 @@ interface IChromaticLP {
         address recipient
     ) external returns (ChromaticLPReceipt memory);
 
-    function claimLiquidity(uint256 receiptId) external;
-
     function removeLiquidity(
         uint256 lpTokenAmount,
         address recipient
     ) external returns (ChromaticLPReceipt memory);
-
-    function withdrawLiquidity(uint256 receiptId) external;
 
     function getReceipts(address owner) external view returns (ChromaticLPReceipt[] memory);
 }
