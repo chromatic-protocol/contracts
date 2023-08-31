@@ -109,14 +109,14 @@ interface IChromaticLiquidityCallback {
      * @param receiptIds The array of the liquidity receipt IDs.
      * @param feeRates The array of trading fee rates associated with each withdrawal in the batch.
      * @param withdrawnAmounts The array of withdrawn liquidity amounts for each receipt in the batch.
-     * @param burnedCLBTokenAmounts The array of CLB token amounts burned for each receipt in the batch.
+     * @param remainedCLBTokenAmounts The array of CLB token amounts not burned for each receipt in the batch.
      * @param data Additional data associated with the liquidity withdrawal.
      */
     function withdrawLiquidityBatchCallback(
         uint256[] calldata receiptIds,
         int16[] calldata feeRates,
         uint256[] calldata withdrawnAmounts,
-        uint256[] calldata burnedCLBTokenAmounts,
+        uint256[] calldata remainedCLBTokenAmounts,
         bytes calldata data
     ) external;
 }

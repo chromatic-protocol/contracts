@@ -455,35 +455,58 @@ contract MarketLiquidityFacet is
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
-        LpReceipt[] memory _receipts = new LpReceipt[](receiptIds.length);
-        int16[] memory _feeRates = new int16[](receiptIds.length);
-        uint256[] memory _amounts = new uint256[](receiptIds.length);
+        (
+            LpReceipt[] memory _receipts,
+            int16[] memory _feeRates,
+            uint256[] memory _amounts,
+            uint256[] memory _remainedCLBTokenAmounts // uint256[] memory _burnedCLBTokenAmounts
+        ) = _withdrawLiquidityBatch(ctx, ls, ms.liquidityPool, receiptIds);
+
+        IChromaticLiquidityCallback(msg.sender).withdrawLiquidityBatchCallback(
+            receiptIds,
+            _feeRates,
+            _amounts,
+            _remainedCLBTokenAmounts,
+            data
+        );
+        ls.deleteReceipts(receiptIds);
+
+        emit WithdrawLiquidityBatch(_receipts, _amounts, _remainedCLBTokenAmounts);
+    }
+
+    function _withdrawLiquidityBatch(
+        LpContext memory ctx,
+        LpReceiptStorage storage ls,
+        LiquidityPool storage liquidityPool,
+        uint256[] calldata receiptIds
+    )
+        private
+        returns (
+            LpReceipt[] memory _receipts,
+            int16[] memory _feeRates,
+            uint256[] memory _amounts,
+            uint256[] memory _remainedCLBTokenAmounts
+        )
+    {
+        _receipts = new LpReceipt[](receiptIds.length);
+        _feeRates = new int16[](receiptIds.length);
+        _amounts = new uint256[](receiptIds.length);
+        _remainedCLBTokenAmounts = new uint256[](receiptIds.length);
         uint256[] memory _burnedCLBTokenAmounts = new uint256[](receiptIds.length);
 
         for (uint256 i; i < receiptIds.length; ) {
             (_receipts[i], _amounts[i], _burnedCLBTokenAmounts[i]) = _withdrawLiquidity(
                 ctx,
                 ls,
-                ms.liquidityPool,
+                liquidityPool,
                 receiptIds[i]
             );
             _feeRates[i] = _receipts[i].tradingFeeRate;
-
+            _remainedCLBTokenAmounts[i] = _receipts[i].amount - _burnedCLBTokenAmounts[i];
             unchecked {
                 i++;
             }
         }
-
-        IChromaticLiquidityCallback(msg.sender).withdrawLiquidityBatchCallback(
-            receiptIds,
-            _feeRates,
-            _amounts,
-            _burnedCLBTokenAmounts,
-            data
-        );
-        ls.deleteReceipts(receiptIds);
-
-        emit WithdrawLiquidityBatch(_receipts, _amounts, _burnedCLBTokenAmounts);
     }
 
     function _withdrawLiquidity(

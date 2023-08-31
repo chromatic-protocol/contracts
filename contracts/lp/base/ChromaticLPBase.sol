@@ -543,7 +543,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         uint256[] calldata receiptIds,
         int16[] calldata _feeRates,
         uint256[] calldata withdrawnAmounts,
-        uint256[] calldata burnedCLBTokenAmounts,
+        uint256[] calldata remainedCLBTokenAmounts,
         bytes calldata data
     ) external override verifyCallback {
         ChromaticLPReceipt memory receipt = abi.decode(data, (ChromaticLPReceipt));
@@ -574,10 +574,13 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                 receipt.recipient,
                 withdrawAmount
             );
-            // TODO : transfer remaind CLB Tokens
-            //
-            //
-
+            IERC1155(market.clbToken()).safeBatchTransferFrom(
+                address(this),
+                receipt.recipient,
+                _clbTokenIds,
+                remainedCLBTokenAmounts,
+                bytes("")
+            );
             emit RemoveLiquiditySettled({receiptId: receipt.id});
         } else {
             emit RebalanceSettled({receiptId: receipt.id});
