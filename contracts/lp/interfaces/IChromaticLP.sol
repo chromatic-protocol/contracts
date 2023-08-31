@@ -11,7 +11,7 @@ interface IChromaticLP {
         uint256 amount
     );
 
-    event ClaimLiquidity(uint256 indexed receiptId, uint256 lpTokenAmount);
+    event AddLiquiditySettled(uint256 indexed receiptId, uint256 lpTokenAmount);
 
     event RemoveLiquidity(
         uint256 indexed receiptId,
@@ -19,6 +19,11 @@ interface IChromaticLP {
         uint256 oracleVersion,
         uint256 lpTokenAmount
     );
+
+    event RemoveLiquiditySettled(uint256 indexed receiptId);
+
+    event RebalanceLiquidity(uint256 indexed receiptId);
+    event RebalanceSettled(uint256 indexed receiptId);
 
     function markets() external view returns (address[] memory);
 
