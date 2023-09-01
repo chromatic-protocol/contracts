@@ -25,7 +25,7 @@ interface IChromaticLP {
     event RebalanceLiquidity(uint256 indexed receiptId);
     event RebalanceSettled(uint256 indexed receiptId);
 
-    function markets() external view returns (address[] memory);
+    function market() external view returns (address);
 
     function settlementToken() external view returns (address);
 
