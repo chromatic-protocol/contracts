@@ -252,7 +252,6 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             id: nextReceiptId(),
             oracleVersion: lpReceipts[0].oracleVersion,
             amount: amount,
-            provider: msg.sender,
             recipient: recipient,
             action: ChromaticLPAction.ADD_LIQUIDITY
         });
@@ -385,7 +384,6 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             id: nextReceiptId(),
             oracleVersion: lpReceipts[0].oracleVersion,
             amount: lpTokenAmount,
-            provider: msg.sender,
             recipient: recipient,
             action: ChromaticLPAction.REMOVE_LIQUIDITY
         });
@@ -515,7 +513,21 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         address clbToken,
         uint256[] calldata clbTokenIds,
         bytes calldata data
-    ) external pure override {}
+    ) external override {
+        RemoveLiquidityBatchCallbackData memory callbackData = abi.decode(
+            data,
+            (RemoveLiquidityBatchCallbackData)
+        );
+        callbackData.lpTokenAmount;
+        if (callbackData.provider != address(this)) {
+            SafeERC20.safeTransferFrom(
+                IERC20(this),
+                callbackData.provider,
+                address(this),
+                callbackData.lpTokenAmount
+            );
+        }
+    }
 
     function withdrawLiquidityBatchCallback(
         uint256[] calldata receiptIds,
@@ -526,8 +538,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     ) external override verifyCallback {
         ChromaticLPReceipt memory receipt = abi.decode(data, (ChromaticLPReceipt));
         // burn and transfer settlementToken
-
         if (receipt.recipient != address(this)) {
+            (uint256 totalValue, uint256 clbValue, uint256 holdingValue) = poolValue();
             uint256 withdrawnAmount;
             for (uint256 i; i < receiptIds.length; ) {
                 withdrawnAmount += withdrawnAmounts[i];
@@ -535,10 +547,6 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                     i++;
                 }
             }
-            // burn LPToken requested
-            _burn(receipt.provider, receipt.amount);
-            // transfer settlement token and not remaind CLBTokens
-
             // (tokenBalance - withdrawn) * (burningLP /totalSupplyLP) + withdrawn
             uint256 balance = IERC20(_market.settlementToken()).balanceOf(address(this));
             uint256 withdrawAmount = (balance - withdrawnAmount).mulDiv(
@@ -552,13 +560,23 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                 receipt.recipient,
                 withdrawAmount
             );
-            IERC1155(_market.clbToken()).safeBatchTransferFrom(
-                address(this),
-                receipt.recipient,
-                _clbTokenIds,
-                remainedCLBTokenAmounts,
-                bytes("")
-            );
+            // burningLP: withdrawAmount = totalSupply: totalValue
+            // burningLP = withdrawAmount * totalSupply / totalValue
+            // burn LPToken requested
+            uint256 burningAmount = withdrawAmount.mulDiv(totalSupply(), totalValue);
+            _burn(address(this), burningAmount);
+
+            // transfer left lpTokens
+            uint256 leftLpToken = receipt.amount - burningAmount;
+            if (leftLpToken > 0) {
+                SafeERC20.safeTransferFrom(
+                    IERC20(this),
+                    address(this),
+                    receipt.recipient,
+                    leftLpToken
+                );
+            }
+
             emit RemoveLiquiditySettled({receiptId: receipt.id});
         } else {
             emit RebalanceSettled({receiptId: receipt.id});

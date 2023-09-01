@@ -16,7 +16,6 @@ enum ChromaticLPAction {
  * @param amount The amount involved in the action,
  *        when the action is `ADD_LIQUIDITY`, this value represents the amount of settlement tokens
  *        when the action is `REMOVE_LIQUIDITY`, this value represents the amount of CLB tokens
- * @param provider The address of making transaction
  * @param recipient The address of the recipient of the action
  * @param action An enumeration representing the type of LP action performed (ADD_LIQUIDITY or REMOVE_LIQUIDITY)
  */
@@ -24,7 +23,6 @@ struct ChromaticLPReceipt {
     uint256 id;
     uint256 oracleVersion;
     uint256 amount;
-    address provider;
     address recipient;
     ChromaticLPAction action;
 }
