@@ -49,19 +49,15 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     uint256 private immutable REBALANCE_CHECKING_INTERVAL;
     uint256 private immutable SETTLE_CHECKING_INTERVAL;
     bytes32 private _rebalanceTaskId;
-    bytes32 private _settleTaskId;
+
+    mapping(uint256 => bytes32) _receiptSettleTaskIds;
 
     uint256 _receiptId;
     mapping(uint256 => ChromaticLPReceipt) public receipts; // receiptId => receipt
-    // mapping(uint256 => address) _providerMap; // receiptId => provider
-    // mapping(address => EnumerableSet.UintSet) _providerReceiptIds; // provider => receiptIds
     mapping(uint256 => EnumerableSet.UintSet) _lpReceiptMap; // receiptId => lpReceiptIds
 
     mapping(uint256 => address) _providerMap; // receiptId => provider
     mapping(address => EnumerableSet.UintSet) _providerReceiptIds; // provider => receiptIds
-
-    EnumerableSet.UintSet pendingAddReceipts; // set of ChromaticLPReceipts with ADD_LIQUIDITY
-    EnumerableSet.UintSet pendingRemoveReceipts; // set of ChromaticLPReceipts with REMOVE_LIQUIDITY
 
     error InvalidUtilizationTarget(uint16 targetBPS);
     error InvalidRebalanceBPS();
@@ -71,6 +67,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
     error NotMarket();
     error OnlyBatchCall();
+
+    error UnknownLPAction();
 
     modifier verifyCallback() {
         if (address(_market) != msg.sender) revert NotMarket();
@@ -261,10 +259,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
         _addReceipt(receipt, lpReceipts);
 
-        // store receipt to call claim and transfer
-        pendingAddReceipts.add(receipt.id);
-
-        createSettleTask();
+        createSettleTask(receipt.id);
     }
 
     function _addReceipt(
@@ -397,27 +392,27 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
         _addReceipt(receipt, lpReceipts);
 
-        // store receipt to call claim and transfer
-        pendingRemoveReceipts.add(receipt.id);
-
-        createSettleTask();
+        createSettleTask(receipt.id);
     }
 
-    function createSettleTask() internal {
-        if (_settleTaskId != 0) return;
+    function createSettleTask(uint256 receiptId) internal {
+        if (_receiptSettleTaskIds[receiptId] != 0) return;
 
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
         moduleData.modules[0] = Module.RESOLVER;
         moduleData.modules[1] = Module.TIME;
         moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = abi.encode(address(this), abi.encodeCall(this.resolveSettle, ()));
+        moduleData.args[0] = abi.encode(
+            address(this),
+            abi.encodeCall(this.resolveSettle, (receiptId))
+        );
         moduleData.args[1] = abi.encode(
             uint128(block.timestamp + SETTLE_CHECKING_INTERVAL),
             uint128(SETTLE_CHECKING_INTERVAL)
         );
         moduleData.args[2] = bytes("");
 
-        _settleTaskId = automate.createTask(
+        _receiptSettleTaskIds[receiptId] = automate.createTask(
             address(this),
             abi.encode(this.settle.selector),
             moduleData,
@@ -425,94 +420,60 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         );
     }
 
-    function resolveSettle() external view returns (bool, bytes memory) {
-        if (pendingAddReceipts.length() == 0 && pendingRemoveReceipts.length() == 0) {
-            return (false, bytes(""));
-        }
+    function resolveSettle(uint256 receiptId) external view returns (bool, bytes memory) {
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
             .currentVersion();
 
-        for (uint256 i = 0; i < pendingAddReceipts.length(); i++) {
-            uint256 receiptId = pendingAddReceipts.at(i);
-            ChromaticLPReceipt memory receipt = receipts[receiptId];
-            if (receipt.oracleVersion < currentOracle.version) {
-                return (true, abi.encodeCall(this.settle, ()));
-            }
-        }
-        for (uint256 i = 0; i < pendingRemoveReceipts.length(); i++) {
-            uint256 receiptId = pendingRemoveReceipts.at(i);
-            ChromaticLPReceipt memory receipt = receipts[receiptId];
-            if (receipt.oracleVersion < currentOracle.version) {
-                return (true, abi.encodeCall(this.settle, ()));
-            }
+        ChromaticLPReceipt memory receipt = receipts[receiptId];
+        if (receipt.id > 0 && receipt.oracleVersion < currentOracle.version) {
+            return (true, abi.encodeCall(this.settle, (receiptId)));
         }
 
         // for pending add/remove by user and by self
         return (false, bytes(""));
     }
 
-    function cancelSettleTask() internal {
-        if (_settleTaskId != 0) {
-            automate.cancelTask(_settleTaskId);
-            _settleTaskId = 0;
+    function cancelSettleTask(uint256 receiptId) internal {
+        if (_receiptSettleTaskIds[receiptId] != 0) {
+            automate.cancelTask(_receiptSettleTaskIds[receiptId]);
+            delete _receiptSettleTaskIds[receiptId];
         }
     }
 
-    function settle() public {
-        _settleAddLiquidity();
-        _settleRemoveLiquidity();
-        // finally remove settle task
-        cancelSettleTask();
-    }
-
-    function _settleAddLiquidity() internal {
+    function settle(uint256 receiptId) public {
+        ChromaticLPReceipt memory receipt = receipts[receiptId];
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
             .currentVersion();
-        uint256[] memory receiptIds = pendingAddReceipts.values();
-        for (uint256 i = 0; i < receiptIds.length; ) {
-            ChromaticLPReceipt memory receipt = receipts[receiptIds[i]];
-            if (receipt.oracleVersion >= currentOracle.version) {
-                break; // acending order
+        // TODO check receipt
+        if (receipt.oracleVersion >= currentOracle.version) {
+            if (receipt.action == ChromaticLPAction.ADD_LIQUIDITY) {
+                _settleAddLiquidity(receipt);
+            } else if (receipt.action == ChromaticLPAction.REMOVE_LIQUIDITY) {
+                _settleRemoveLiquidity(receipt);
+            } else {
+                revert UnknownLPAction();
             }
-            // pass ChromaticLPReceipt as calldata
-            // mint and transfer lp pool token to provider in callback
-            _market.claimLiquidityBatch(_lpReceiptMap[receipt.id].values(), abi.encode(receipt));
-
-            _removeReceipt(receipt.id);
-
-            pendingAddReceipts.remove(receipt.id);
-
-            unchecked {
-                i++;
-            }
+            // finally remove settle task
+            cancelSettleTask(receiptId);
         }
     }
 
-    function _settleRemoveLiquidity() internal {
-        IOracleProvider.OracleVersion memory currentOracle = _market
-            .oracleProvider()
-            .currentVersion();
-        uint256[] memory receiptIds = pendingRemoveReceipts.values();
-        for (uint256 i = 0; i < receiptIds.length; ) {
-            ChromaticLPReceipt memory receipt = receipts[receiptIds[i]];
-            if (receipt.oracleVersion >= currentOracle.version) {
-                break; // acending order
-            }
+    function _settleAddLiquidity(ChromaticLPReceipt memory receipt) internal {
+        // pass ChromaticLPReceipt as calldata
+        // mint and transfer lp pool token to provider in callback
+        _market.claimLiquidityBatch(_lpReceiptMap[receipt.id].values(), abi.encode(receipt));
 
-            // do claim
-            // pass ChromaticLPReceipt as calldata
-            _market.withdrawLiquidityBatch(_lpReceiptMap[receipt.id].values(), abi.encode(receipt));
+        _removeReceipt(receipt.id);
+    }
 
-            _removeReceipt(receipt.id);
+    function _settleRemoveLiquidity(ChromaticLPReceipt memory receipt) internal {
+        // do claim
+        // pass ChromaticLPReceipt as calldata
+        _market.withdrawLiquidityBatch(_lpReceiptMap[receipt.id].values(), abi.encode(receipt));
 
-            pendingRemoveReceipts.remove(receipt.id);
-
-            unchecked {
-                i++;
-            }
-        }
+        _removeReceipt(receipt.id);
     }
 
     function claimLiquidityBatchCallback(
@@ -629,7 +590,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
      * @inheritdoc IChromaticLP
      */
     function market() external view override returns (address) {
-        return _market;
+        return address(_market);
     }
 
     /**
