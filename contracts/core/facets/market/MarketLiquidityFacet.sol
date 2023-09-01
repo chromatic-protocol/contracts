@@ -459,19 +459,19 @@ contract MarketLiquidityFacet is
             LpReceipt[] memory _receipts,
             int16[] memory _feeRates,
             uint256[] memory _amounts,
-            uint256[] memory _remainedCLBTokenAmounts // uint256[] memory _burnedCLBTokenAmounts
+            uint256[] memory _burnedCLBTokenAmounts // uint256[] memory _burnedCLBTokenAmounts
         ) = _withdrawLiquidityBatch(ctx, ls, ms.liquidityPool, receiptIds);
 
         IChromaticLiquidityCallback(msg.sender).withdrawLiquidityBatchCallback(
             receiptIds,
             _feeRates,
             _amounts,
-            _remainedCLBTokenAmounts,
+            _burnedCLBTokenAmounts,
             data
         );
         ls.deleteReceipts(receiptIds);
 
-        emit WithdrawLiquidityBatch(_receipts, _amounts, _remainedCLBTokenAmounts);
+        emit WithdrawLiquidityBatch(_receipts, _amounts, _burnedCLBTokenAmounts);
     }
 
     function _withdrawLiquidityBatch(
@@ -485,14 +485,13 @@ contract MarketLiquidityFacet is
             LpReceipt[] memory _receipts,
             int16[] memory _feeRates,
             uint256[] memory _amounts,
-            uint256[] memory _remainedCLBTokenAmounts
+            uint256[] memory _burnedCLBTokenAmounts
         )
     {
         _receipts = new LpReceipt[](receiptIds.length);
         _feeRates = new int16[](receiptIds.length);
         _amounts = new uint256[](receiptIds.length);
-        _remainedCLBTokenAmounts = new uint256[](receiptIds.length);
-        uint256[] memory _burnedCLBTokenAmounts = new uint256[](receiptIds.length);
+        _burnedCLBTokenAmounts = new uint256[](receiptIds.length);
 
         for (uint256 i; i < receiptIds.length; ) {
             (_receipts[i], _amounts[i], _burnedCLBTokenAmounts[i]) = _withdrawLiquidity(
@@ -502,7 +501,6 @@ contract MarketLiquidityFacet is
                 receiptIds[i]
             );
             _feeRates[i] = _receipts[i].tradingFeeRate;
-            _remainedCLBTokenAmounts[i] = _receipts[i].amount - _burnedCLBTokenAmounts[i];
             unchecked {
                 i++;
             }

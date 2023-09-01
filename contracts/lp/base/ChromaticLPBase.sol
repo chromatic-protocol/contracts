@@ -533,7 +533,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         uint256[] calldata receiptIds,
         int16[] calldata _feeRates,
         uint256[] calldata withdrawnAmounts,
-        uint256[] calldata remainedCLBTokenAmounts,
+        uint256[] calldata burnedCLBTokenAmounts,
         bytes calldata data
     ) external override verifyCallback {
         ChromaticLPReceipt memory receipt = abi.decode(data, (ChromaticLPReceipt));
