@@ -57,6 +57,9 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     // mapping(address => EnumerableSet.UintSet) _providerReceiptIds; // provider => receiptIds
     mapping(uint256 => EnumerableSet.UintSet) _lpReceiptMap; // receiptId => lpReceiptIds
 
+    mapping(uint256 => address) _providerMap; // receiptId => provider
+    mapping(address => EnumerableSet.UintSet) _providerReceiptIds; // provider => receiptIds
+
     EnumerableSet.UintSet pendingAddReceipts; // set of ChromaticLPReceipts with ADD_LIQUIDITY
     EnumerableSet.UintSet pendingRemoveReceipts; // set of ChromaticLPReceipts with REMOVE_LIQUIDITY
 
@@ -256,6 +259,18 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             action: ChromaticLPAction.ADD_LIQUIDITY
         });
 
+        _addReceipt(receipt, lpReceipts);
+
+        // store receipt to call claim and transfer
+        pendingAddReceipts.add(receipt.id);
+
+        createSettleTask();
+    }
+
+    function _addReceipt(
+        ChromaticLPReceipt memory receipt,
+        LpReceipt[] memory lpReceipts
+    ) internal {
         receipts[receipt.id] = receipt;
         EnumerableSet.UintSet storage lpReceiptIdSet = _lpReceiptMap[receipt.id];
         for (uint256 i; i < lpReceipts.length; ) {
@@ -265,10 +280,19 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                 i++;
             }
         }
-        // store receipt to call claim and transfer
-        pendingAddReceipts.add(receipt.id);
 
-        createSettleTask();
+        _providerMap[receipt.id] = msg.sender;
+        EnumerableSet.UintSet storage receiptIdSet = _providerReceiptIds[msg.sender];
+        receiptIdSet.add(receipt.id);
+    }
+
+    function _removeReceipt(uint256 receiptId) internal {
+        delete receipts[receiptId];
+        delete _lpReceiptMap[receiptId];
+        address provider = _providerMap[receiptId];
+        EnumerableSet.UintSet storage receiptIdSet = _providerReceiptIds[provider];
+        receiptIdSet.remove(receiptId);
+        delete _providerMap[receiptId];
     }
 
     function addLiquidityBatchCallback(
@@ -371,15 +395,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             action: ChromaticLPAction.REMOVE_LIQUIDITY
         });
 
-        receipts[receipt.id] = receipt;
-        EnumerableSet.UintSet storage lpReceiptIdSet = _lpReceiptMap[receipt.id];
-        for (uint256 i; i < lpReceipts.length; ) {
-            lpReceiptIdSet.add(lpReceipts[i].id);
+        _addReceipt(receipt, lpReceipts);
 
-            unchecked {
-                i++;
-            }
-        }
         // store receipt to call claim and transfer
         pendingRemoveReceipts.add(receipt.id);
 
@@ -463,9 +480,9 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             // mint and transfer lp pool token to provider in callback
             _market.claimLiquidityBatch(_lpReceiptMap[receipt.id].values(), abi.encode(receipt));
 
-            delete _lpReceiptMap[receipt.id];
+            _removeReceipt(receipt.id);
+
             pendingAddReceipts.remove(receipt.id);
-            delete receipts[receipt.id];
 
             unchecked {
                 i++;
@@ -488,9 +505,9 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             // pass ChromaticLPReceipt as calldata
             _market.withdrawLiquidityBatch(_lpReceiptMap[receipt.id].values(), abi.encode(receipt));
 
-            delete _lpReceiptMap[receipt.id];
+            _removeReceipt(receipt.id);
+
             pendingRemoveReceipts.remove(receipt.id);
-            delete receipts[receipt.id];
 
             unchecked {
                 i++;
