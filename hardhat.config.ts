@@ -84,6 +84,18 @@ const config: HardhatUserConfig = {
       url: 'https://arb1.arbitrum.io/rpc',
       chainId: 42161,
       tags: ['core']
+    },
+    mantle: {
+      ...common,
+      url: 'https://rpc.mantle.xyz/',
+      chainId: 5000,
+      tags: ['keeper']
+    },
+    mantle_goerli: {
+      ...common,
+      url: 'https://rpc.testnet.mantle.xyz/',
+      chainId: 5001,
+      tags: ['keeper']
     }
   },
   namedAccounts: {
