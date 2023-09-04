@@ -15,10 +15,19 @@ import {ChromaticLPReceipt, ChromaticLPAction} from "@chromatic-protocol/contrac
 import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 import {AutomateReady} from "@chromatic-protocol/contracts/core/base/gelato/AutomateReady.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {TokenSwappable, SwapConfig} from "@chromatic-protocol/contracts/lp/base/TokenSwappable.sol";
+import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import {IWETH9} from "@chromatic-protocol/contracts/core/interfaces/IWETH9.sol";
 
 uint16 constant BPS = 10000;
 
-contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, AutomateReady {
+contract ChromaticLPBase is
+    IChromaticLP,
+    IChromaticLiquidityCallback,
+    ERC20,
+    TokenSwappable,
+    AutomateReady
+{
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -69,6 +78,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     error OnlyBatchCall();
 
     error UnknownLPAction();
+    error NotOwner();
+    error AlreadySwapRouterConfigured();
 
     modifier verifyCallback() {
         if (address(_market) != msg.sender) revert NotMarket();
@@ -84,19 +95,47 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         uint256 rebalanceCheckingInterval,
         uint256 settleCheckingInterval,
         address _automate,
-        address opsProxyFactory
+        address opsProxyFactory,
+        SwapConfig memory _swapConfig
     ) ERC20("", "") AutomateReady(_automate, address(this), opsProxyFactory) {
+        _validateConfig(_utilizationTargetBPS, _rebalanceBPS, _feeRates, _distributionRates);
+
+        _market = marketAddress;
+        utilizationTargetBPS = _utilizationTargetBPS;
+        rebalanceBPS = _rebalanceBPS;
+
+        _setupDistributionRates(_feeRates, _distributionRates);
+        feeRates = _feeRates;
+
+        REBALANCE_CHECKING_INTERVAL = rebalanceCheckingInterval;
+        SETTLE_CHECKING_INTERVAL = settleCheckingInterval;
+
+        // set clbTokenIds
+        _setupClbTokenIds(_feeRates);
+
+        _setSwapRouter(_swapConfig);
+
+        // _owner = msg.sender;
+        createRebalanceTask();
+    }
+
+    function _validateConfig(
+        uint16 _utilizationTargetBPS,
+        uint16 _rebalanceBPS,
+        int16[] memory _feeRates,
+        uint16[] memory _distributionRates
+    ) private pure {
         if (_utilizationTargetBPS > BPS) revert InvalidUtilizationTarget(_utilizationTargetBPS);
         if (_feeRates.length != _distributionRates.length)
             revert NotMatchDistributionLength(_feeRates.length, _distributionRates.length);
 
         if (_utilizationTargetBPS <= _rebalanceBPS) revert InvalidRebalanceBPS();
+    }
 
-        _market = marketAddress;
-        utilizationTargetBPS = _utilizationTargetBPS;
-        rebalanceBPS = _rebalanceBPS;
-        feeRates = _feeRates;
-
+    function _setupDistributionRates(
+        int16[] memory _feeRates,
+        uint16[] memory _distributionRates
+    ) private {
         uint16 totalRate;
         for (uint256 i; i < _distributionRates.length; ) {
             distributionRates[_feeRates[i]] = _distributionRates[i];
@@ -106,12 +145,10 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                 i++;
             }
         }
-        feeRates = _feeRates;
         if (totalRate != BPS) revert InvalidDistributionSum();
-        REBALANCE_CHECKING_INTERVAL = rebalanceCheckingInterval;
-        SETTLE_CHECKING_INTERVAL = settleCheckingInterval;
+    }
 
-        // set clbTokenIds
+    function _setupClbTokenIds(int16[] memory _feeRates) private {
         _clbTokenIds = new uint256[](_feeRates.length);
         for (uint256 i; i < _feeRates.length; ) {
             _clbTokenIds[i] = CLBTokenLib.encodeId(_feeRates[i]);
@@ -120,8 +157,6 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                 i++;
             }
         }
-
-        createRebalanceTask();
     }
 
     function createRebalanceTask() internal {
@@ -412,7 +447,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
         _receiptSettleTaskIds[receiptId] = automate.createTask(
             address(this),
-            abi.encode(this.settle.selector),
+            abi.encode(this.settleTask.selector),
             moduleData,
             ETH
         );
@@ -425,7 +460,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
         ChromaticLPReceipt memory receipt = receipts[receiptId];
         if (receipt.id > 0 && receipt.oracleVersion < currentOracle.version) {
-            return (true, abi.encodeCall(this.settle, (receiptId)));
+            return (true, abi.encodeCall(this.settleTask, (receiptId)));
         }
 
         // for pending add/remove by user and by self
@@ -439,7 +474,33 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         }
     }
 
-    function settle(uint256 receiptId) public {
+    function settleTask(uint256 receiptId) external onlyDedicatedMsgSender {
+        if (_settle(receiptId)) {
+            payKeeperFee();
+        }
+    }
+
+    function payKeeperFee() internal {
+        (uint256 fee, ) = _getFeeDetails();
+        uint256 balanceETH = address(this).balance + WETH9.balanceOf(address(this));
+
+        uint256 swapAmountOut = fee > balanceETH ? fee - balanceETH : 0;
+        if (swapAmountOut > 0) {
+            uint256 swapAmountIn = swapExactOutput(swapAmountOut, swapAmountOut);
+            WETH9.withdraw(swapAmountOut);
+        }
+        _transfer(fee, ETH);
+    }
+
+    function swapTokenFrom() internal view override returns (address) {
+        return address(_market.settlementToken());
+    }
+
+    function settle(uint256 receiptId) external {
+        _settle(receiptId);
+    }
+
+    function _settle(uint256 receiptId) internal returns (bool) {
         ChromaticLPReceipt memory receipt = receipts[receiptId];
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
@@ -455,7 +516,9 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             }
             // finally remove settle task
             cancelSettleTask(receiptId);
+            return true;
         }
+        return false;
     }
 
     function _settleAddLiquidity(ChromaticLPReceipt memory receipt) internal {
