@@ -44,8 +44,8 @@ contract ChromaticLPBase is
     }
 
     // configurations
-    uint256 private constant DEFAULT_CHECK_REBALANCE_INTERVAL = 30 minutes;
-    uint256 private constant DEFAULT_CHECK_SETTLE_INTERVAL = 1 minutes;
+    // uint256 private constant DEFAULT_CHECK_REBALANCE_INTERVAL = 30 minutes;
+    // uint256 private constant DEFAULT_CHECK_SETTLE_INTERVAL = 1 minutes;
 
     IChromaticMarket internal immutable _market;
     uint16 public immutable utilizationTargetBPS; // 10000 for 1.0
@@ -80,9 +80,15 @@ contract ChromaticLPBase is
     error UnknownLPAction();
     error NotOwner();
     error AlreadySwapRouterConfigured();
+    error NotKeeperCalled();
 
     modifier verifyCallback() {
         if (address(_market) != msg.sender) revert NotMarket();
+        _;
+    }
+
+    modifier onlyKeeper() virtual {
+        if (msg.sender != dedicatedMsgSender) revert NotKeeperCalled();
         _;
     }
 
@@ -110,12 +116,10 @@ contract ChromaticLPBase is
         REBALANCE_CHECKING_INTERVAL = rebalanceCheckingInterval;
         SETTLE_CHECKING_INTERVAL = settleCheckingInterval;
 
-        // set clbTokenIds
         _setupClbTokenIds(_feeRates);
 
         _setSwapRouter(_swapConfig);
 
-        // _owner = msg.sender;
         createRebalanceTask();
     }
 
@@ -201,7 +205,7 @@ contract ChromaticLPBase is
         return (false, bytes(""));
     }
 
-    function rebalance() external virtual onlyDedicatedMsgSender {
+    function rebalance() external virtual onlyKeeper {
         _rebalance();
         _payKeeperFee();
     }
@@ -457,7 +461,6 @@ contract ChromaticLPBase is
             ETH
         );
     }
-
     function resolveSettle(uint256 receiptId) external view returns (bool, bytes memory) {
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
@@ -479,7 +482,7 @@ contract ChromaticLPBase is
         }
     }
 
-    function settleTask(uint256 receiptId) external onlyDedicatedMsgSender {
+    function settleTask(uint256 receiptId) external onlyKeeper {
         if (_settle(receiptId)) {
             _payKeeperFee();
         }
