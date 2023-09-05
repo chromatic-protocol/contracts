@@ -161,7 +161,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
     for (const marketAddress of marketAddresses) {
       const market = IMarketLiquidate__factory.connect(marketAddress, deployer)
       const marketSettle = IMarketSettle__factory.connect(marketAddress, deployer)
-      await marketSettle.settle()
+      await marketSettle.settleAll()
       for (const account of accounts) {
         const positionIds = await ChromaticAccount__factory.connect(
           account,
