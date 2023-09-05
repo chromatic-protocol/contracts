@@ -15,19 +15,12 @@ import {ChromaticLPReceipt, ChromaticLPAction} from "@chromatic-protocol/contrac
 import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 import {AutomateReady} from "@chromatic-protocol/contracts/core/base/gelato/AutomateReady.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
-import {TokenSwappable, SwapConfig} from "@chromatic-protocol/contracts/lp/base/TokenSwappable.sol";
-import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
-import {IWETH9} from "@chromatic-protocol/contracts/core/interfaces/IWETH9.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 
 uint16 constant BPS = 10000;
 
-contract ChromaticLPBase is
-    IChromaticLP,
-    IChromaticLiquidityCallback,
-    ERC20,
-    TokenSwappable,
-    AutomateReady
-{
+contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, AutomateReady {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -101,8 +94,7 @@ contract ChromaticLPBase is
         uint256 rebalanceCheckingInterval,
         uint256 settleCheckingInterval,
         address _automate,
-        address opsProxyFactory,
-        SwapConfig memory _swapConfig
+        address opsProxyFactory
     ) ERC20("", "") AutomateReady(_automate, address(this), opsProxyFactory) {
         _validateConfig(_utilizationTargetBPS, _rebalanceBPS, _feeRates, _distributionRates);
 
@@ -117,8 +109,6 @@ contract ChromaticLPBase is
         SETTLE_CHECKING_INTERVAL = settleCheckingInterval;
 
         _setupClbTokenIds(_feeRates);
-
-        _setSwapRouter(_swapConfig);
 
         createRebalanceTask();
     }
@@ -170,7 +160,6 @@ contract ChromaticLPBase is
             abi.encode(this.rebalance.selector),
             REBALANCE_CHECKING_INTERVAL
         );
-
     }
 
     function cancelRebalanceTask() internal {
@@ -447,12 +436,13 @@ contract ChromaticLPBase is
         moduleData.args[1] = abi.encode(uint128(block.timestamp + interval), uint128(interval));
         moduleData.args[2] = bytes("");
 
-        return automate.createTask(
-            address(this),
-            execSelector, // abi.encode(this.rebalance.selector),
-            moduleData,
-            ETH
-        );
+        return
+            automate.createTask(
+                address(this),
+                execSelector, // abi.encode(this.rebalance.selector),
+                moduleData,
+                ETH
+            );
     }
 
     function resolveSettle(uint256 receiptId) external view returns (bool, bytes memory) {
@@ -484,25 +474,8 @@ contract ChromaticLPBase is
 
     function _payKeeperFee() internal virtual {
         (uint256 fee, ) = _getFeeDetails();
-        uint256 balanceAllETH = address(this).balance + WETH9.balanceOf(address(this));
-
-        if (fee > balanceAllETH) {
-            // NOTE: set upper bound swap ratio for safety?
-            swapExactOutput(
-                fee - balanceAllETH,
-                _market.settlementToken().balanceOf(address(this)) // amountInMaximum
-            );
-        }
-
-        if (fee > address(this).balance) {
-            WETH9.withdraw(fee - address(this).balance);
-        }
-
-        _transfer(fee, ETH);
-    }
-
-    function swapTokenFrom() internal view override returns (address) {
-        return address(_market.settlementToken());
+        IKeeperFeePayer payer = IKeeperFeePayer(_market.factory().keeperFeePayer());
+        payer.payKeeperFee(address(_market.settlementToken()), fee, automate.gelato());
     }
 
     function settle(uint256 receiptId) external {
@@ -710,8 +683,7 @@ contract ChromaticLPBase is
      * @inheritdoc ERC20
      */
     function name() public view virtual override returns (string memory) {
-        return
-            string(abi.encodePacked("ChromaticLP - ", _tokenSymbol(), " - ", _indexName()));
+        return string(abi.encodePacked("ChromaticLP - ", _tokenSymbol(), " - ", _indexName()));
     }
 
     /**
