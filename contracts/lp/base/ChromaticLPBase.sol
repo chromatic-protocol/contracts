@@ -201,7 +201,12 @@ contract ChromaticLPBase is
         return (false, bytes(""));
     }
 
-    function rebalance() external {
+    function rebalance() external virtual onlyDedicatedMsgSender {
+        _rebalance();
+        _payKeeperFee();
+    }
+
+    function _rebalance() internal {
         (uint256 total, uint256 clbValue, ) = poolValue();
 
         if (total == 0) return;
@@ -476,11 +481,11 @@ contract ChromaticLPBase is
 
     function settleTask(uint256 receiptId) external onlyDedicatedMsgSender {
         if (_settle(receiptId)) {
-            payKeeperFee();
+            _payKeeperFee();
         }
     }
 
-    function payKeeperFee() internal {
+    function _payKeeperFee() internal virtual {
         (uint256 fee, ) = _getFeeDetails();
         uint256 balanceAllETH = address(this).balance + WETH9.balanceOf(address(this));
 
