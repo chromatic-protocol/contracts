@@ -25,8 +25,6 @@ abstract contract TokenSwappable {
     function swapTokenFrom() internal virtual returns (address) {}
 
     function swapExactOutput(
-        // address tokenIn,
-        // address recipient,
         uint256 amountOut,
         uint256 amountInMaximum
     ) internal returns (uint256 amountIn) {

@@ -482,13 +482,20 @@ contract ChromaticLPBase is
 
     function payKeeperFee() internal {
         (uint256 fee, ) = _getFeeDetails();
-        uint256 balanceETH = address(this).balance + WETH9.balanceOf(address(this));
+        uint256 balanceAllETH = address(this).balance + WETH9.balanceOf(address(this));
 
-        uint256 swapAmountOut = fee > balanceETH ? fee - balanceETH : 0;
-        if (swapAmountOut > 0) {
-            uint256 swapAmountIn = swapExactOutput(swapAmountOut, swapAmountOut);
-            WETH9.withdraw(swapAmountOut);
+        if (fee > balanceAllETH) {
+            // NOTE: set upper bound swap ratio for safety?
+            swapExactOutput(
+                fee - balanceAllETH,
+                _market.settlementToken().balanceOf(address(this)) // amountInMaximum
+            );
         }
+
+        if (fee > address(this).balance) {
+            WETH9.withdraw(fee - address(this).balance);
+        }
+
         _transfer(fee, ETH);
     }
 
