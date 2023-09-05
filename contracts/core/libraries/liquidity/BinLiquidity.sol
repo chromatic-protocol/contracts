@@ -288,12 +288,11 @@ library BinLiquidityLib {
                 break;
             }
         }
-
+        if (self._burningVersions.length() > 0) return true;
         if (!ctx.isPastVersion(self._pending.oracleVersion)) return false;
         return
             self._pending.mintingTokenAmountRequested != 0 ||
-            self._pending.burningCLBTokenAmountRequested != 0 ||
-            self._burningVersions.length() != 0;
+            self._pending.burningCLBTokenAmountRequested != 0;
     }
 
     /**
