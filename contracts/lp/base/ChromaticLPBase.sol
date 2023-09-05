@@ -165,24 +165,12 @@ contract ChromaticLPBase is
 
     function createRebalanceTask() internal {
         if (_rebalanceTaskId != 0) revert AlreadyRebalanceTaskExist();
-
-        ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
-        moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = abi.encode(address(this), abi.encodeCall(this.resolveRebalance, ()));
-        moduleData.args[1] = abi.encode(
-            uint128(block.timestamp + REBALANCE_CHECKING_INTERVAL),
-            uint128(REBALANCE_CHECKING_INTERVAL)
-        );
-        moduleData.args[2] = bytes("");
-
-        _rebalanceTaskId = automate.createTask(
-            address(this),
+        _rebalanceTaskId = _createTask(
+            abi.encodeCall(this.resolveRebalance, ()),
             abi.encode(this.rebalance.selector),
-            moduleData,
-            ETH
+            REBALANCE_CHECKING_INTERVAL
         );
+
     }
 
     function cancelRebalanceTask() internal {
@@ -439,28 +427,34 @@ contract ChromaticLPBase is
 
     function createSettleTask(uint256 receiptId) internal {
         if (_receiptSettleTaskIds[receiptId] != 0) return;
+        _receiptSettleTaskIds[receiptId] = _createTask(
+            abi.encodeCall(this.resolveSettle, (receiptId)),
+            abi.encode(this.settleTask.selector),
+            SETTLE_CHECKING_INTERVAL
+        );
+    }
 
+    function _createTask(
+        bytes memory resolver,
+        bytes memory execSelector,
+        uint256 interval
+    ) internal returns (bytes32) {
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
         moduleData.modules[0] = Module.RESOLVER;
         moduleData.modules[1] = Module.TIME;
         moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = abi.encode(
-            address(this),
-            abi.encodeCall(this.resolveSettle, (receiptId))
-        );
-        moduleData.args[1] = abi.encode(
-            uint128(block.timestamp + SETTLE_CHECKING_INTERVAL),
-            uint128(SETTLE_CHECKING_INTERVAL)
-        );
+        moduleData.args[0] = abi.encode(address(this), resolver); // abi.encodeCall(this.resolveRebalance, ()));
+        moduleData.args[1] = abi.encode(uint128(block.timestamp + interval), uint128(interval));
         moduleData.args[2] = bytes("");
 
-        _receiptSettleTaskIds[receiptId] = automate.createTask(
+        return automate.createTask(
             address(this),
-            abi.encode(this.settleTask.selector),
+            execSelector, // abi.encode(this.rebalance.selector),
             moduleData,
             ETH
         );
     }
+
     function resolveSettle(uint256 receiptId) external view returns (bool, bytes memory) {
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
@@ -717,7 +711,7 @@ contract ChromaticLPBase is
      */
     function name() public view virtual override returns (string memory) {
         return
-            string(abi.encodePacked("ChromaticPassiveLP - ", _tokenSymbol(), " - ", _indexName()));
+            string(abi.encodePacked("ChromaticLP - ", _tokenSymbol(), " - ", _indexName()));
     }
 
     /**
