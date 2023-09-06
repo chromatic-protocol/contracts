@@ -74,7 +74,7 @@ const config: HardhatUserConfig = {
     arbitrum_goerli: {
       // testnet
       ...common,
-      url: 'https://goerli-rollup.arbitrum.io/rpc',
+      url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 421613,
       tags: ['core']
     },
@@ -91,7 +91,7 @@ const config: HardhatUserConfig = {
       chainId: 5000,
       tags: ['keeper']
     },
-    mantle_goerli: {
+    mantle_testnet: {
       ...common,
       url: 'https://rpc.testnet.mantle.xyz/',
       chainId: 5001,
