@@ -478,8 +478,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         payer.payKeeperFee(address(_market.settlementToken()), fee, automate.gelato());
     }
 
-    function settle(uint256 receiptId) external {
-        _settle(receiptId);
+    function settle(uint256 receiptId) external returns (bool) {
+        return _settle(receiptId);
     }
 
     function _settle(uint256 receiptId) internal returns (bool) {
@@ -488,7 +488,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             .oracleProvider()
             .currentVersion();
         // TODO check receipt
-        if (receipt.oracleVersion >= currentOracle.version) {
+        if (receipt.oracleVersion < currentOracle.version) {
             if (receipt.action == ChromaticLPAction.ADD_LIQUIDITY) {
                 _settleAddLiquidity(receipt);
             } else if (receipt.action == ChromaticLPAction.REMOVE_LIQUIDITY) {
