@@ -532,7 +532,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         if (receipt.recipient != address(this)) {
             // uint256 clbValue = calcClbValue(mintedCLBTokenAmounts);
             (uint256 total, , ) = poolValue();
-            uint256 lpTokenMint = total == 0
+            uint256 lpTokenMint = total == receipt.amount
                 ? receipt.amount
                 : receipt.amount.mulDiv(totalSupply(), total - receipt.amount);
             _mint(receipt.recipient, lpTokenMint);
