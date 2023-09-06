@@ -675,8 +675,13 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
      */
     function getReceipts(
         address owner
-    ) external view override returns (ChromaticLPReceipt[] memory) {
-        // TODO
+    ) external view override returns (ChromaticLPReceipt[] memory providerReceipts) {
+        EnumerableSet.UintSet storage receiptIds = _providerReceiptIds[owner];
+
+        providerReceipts = new ChromaticLPReceipt[](receiptIds.length());
+        for (uint256 i; i < providerReceipts.length; i++) {
+            providerReceipts[i] = receipts[receiptIds.at(i)];
+        }
     }
 
     /**
