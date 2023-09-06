@@ -3,7 +3,9 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155} from "@openzeppelin/contracts/interfaces/IERC1155.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -257,7 +259,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         );
 
         LpReceipt[] memory lpReceipts = _market.addLiquidityBatch(
-            recipient,
+            address(this),
             feeRates,
             amounts,
             abi.encode(
@@ -389,7 +391,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         address recipient
     ) internal returns (ChromaticLPReceipt memory receipt) {
         LpReceipt[] memory lpReceipts = _market.removeLiquidityBatch(
-            recipient,
+            address(this),
             feeRates,
             clbTokenAmounts,
             abi.encode(
@@ -755,5 +757,43 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         bytes calldata
     ) external pure override {
         revert OnlyBatchCall();
+    }
+
+    // implement IERC1155Receiver
+
+    /**
+     * @inheritdoc IERC1155Receiver
+     */
+    function onERC1155Received(
+        address /* operator */,
+        address /* from */,
+        uint256 /* id */,
+        uint256 /* value */,
+        bytes calldata /* data */
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    /**
+     * @inheritdoc IERC1155Receiver
+     */
+    function onERC1155BatchReceived(
+        address /* operator */,
+        address /* from */,
+        uint256[] calldata /* ids */,
+        uint256[] calldata /* values */,
+        bytes calldata /* data */
+    ) external pure override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+        return
+            // super.supportsInterface(interfaceID) ||
+            interfaceID == this.supportsInterface.selector || // ERC165
+            interfaceID == this.onERC1155Received.selector ^ this.onERC1155BatchReceived.selector; // IERC1155Receiver
     }
 }
