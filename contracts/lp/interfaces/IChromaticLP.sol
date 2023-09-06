@@ -2,8 +2,9 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {ChromaticLPReceipt} from "@chromatic-protocol/contracts/lp/libraries/ChromaticLPReceipt.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-interface IChromaticLP {
+interface IChromaticLP is IERC20 {
     event AddLiquidity(
         uint256 indexed receiptId,
         address indexed recipient,
@@ -40,6 +41,8 @@ interface IChromaticLP {
         uint256 lpTokenAmount,
         address recipient
     ) external returns (ChromaticLPReceipt memory);
+
+    function settle(uint256 receiptId) external;
 
     function getReceipts(address owner) external view returns (ChromaticLPReceipt[] memory);
 }
