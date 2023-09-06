@@ -57,7 +57,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     mapping(uint256 => bytes32) _receiptSettleTaskIds;
 
     uint256 _receiptId;
-    mapping(uint256 => ChromaticLPReceipt) public receipts; // receiptId => receipt
+    mapping(uint256 => ChromaticLPReceipt) _receipts; // receiptId => receipt
     mapping(uint256 => EnumerableSet.UintSet) _lpReceiptMap; // receiptId => lpReceiptIds
 
     mapping(uint256 => address) _providerMap; // receiptId => provider
@@ -223,8 +223,18 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         _clbTokenBalances = IERC1155(_market.clbToken()).balanceOfBatch(_owners, _clbTokenIds);
     }
 
-    function poolClbValue() public view returns (uint256 value) {
-        value = calcClbValue(clbTokenBalances());
+    function _poolClbValue() internal view returns (uint256 value) {
+        // value = calcClbValue(clbTokenBalances());
+
+        uint256[] memory clbSupplies = _market.clbToken().totalSupplyBatch(_clbTokenIds);
+        uint256[] memory binValues = _market.getBinValues(feeRates);
+        uint256[] memory clbTokenAmounts = clbTokenBalances();
+        for (uint256 i; i < binValues.length; ) {
+            value += clbTokenAmounts[i].mulDiv(binValues[i], clbSupplies[i]);
+            unchecked {
+                i++;
+            }
+        }
     }
 
     function poolValue()
@@ -233,7 +243,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         returns (uint256 totalValue, uint256 clbValue, uint256 holdingValue)
     {
         holdingValue = IERC20(_market.settlementToken()).balanceOf(address(this));
-        clbValue = poolClbValue();
+        clbValue = _poolClbValue();
         totalValue = holdingValue + clbValue;
     }
 
@@ -284,11 +294,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         createSettleTask(receipt.id);
     }
 
-    function _addReceipt(
-        ChromaticLPReceipt memory receipt,
-        LpReceipt[] memory lpReceipts
-    ) internal {
-        receipts[receipt.id] = receipt;
+    function _addReceipt(ChromaticLPReceipt memory receipt, LpReceipt[] memory lpReceipts) private {
+        _receipts[receipt.id] = receipt;
         EnumerableSet.UintSet storage lpReceiptIdSet = _lpReceiptMap[receipt.id];
         for (uint256 i; i < lpReceipts.length; ) {
             lpReceiptIdSet.add(lpReceipts[i].id);
@@ -303,8 +310,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         receiptIdSet.add(receipt.id);
     }
 
-    function _removeReceipt(uint256 receiptId) internal {
-        delete receipts[receiptId];
+    function _removeReceipt(uint256 receiptId) private {
+        delete _receipts[receiptId];
         delete _lpReceiptMap[receiptId];
         address provider = _providerMap[receiptId];
         EnumerableSet.UintSet storage receiptIdSet = _providerReceiptIds[provider];
@@ -452,7 +459,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             .oracleProvider()
             .currentVersion();
 
-        ChromaticLPReceipt memory receipt = receipts[receiptId];
+        ChromaticLPReceipt memory receipt = _receipts[receiptId];
         if (receipt.id > 0 && receipt.oracleVersion < currentOracle.version) {
             return (true, abi.encodeCall(this.settleTask, (receiptId)));
         }
@@ -485,7 +492,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     }
 
     function _settle(uint256 receiptId) internal returns (bool) {
-        ChromaticLPReceipt memory receipt = receipts[receiptId];
+        ChromaticLPReceipt memory receipt = _receipts[receiptId];
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
             .currentVersion();
@@ -539,20 +546,6 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             emit AddLiquiditySettled({receiptId: receipt.id, lpTokenAmount: lpTokenMint});
         } else {
             emit RebalanceSettled({receiptId: receipt.id});
-        }
-    }
-
-    function calcClbValue(
-        uint256[] memory clbTokenAmounts
-    ) public view returns (uint256 totalValue) {
-        uint256[] memory clbSupplies = _market.clbToken().totalSupplyBatch(_clbTokenIds);
-        uint256[] memory binValues = _market.getBinValues(feeRates);
-
-        for (uint256 i; i < binValues.length; ) {
-            totalValue += clbTokenAmounts[i].mulDiv(binValues[i], clbSupplies[i]);
-            unchecked {
-                i++;
-            }
         }
     }
 
@@ -675,15 +668,19 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     /**
      * @inheritdoc IChromaticLP
      */
-    function getReceipts(
+    function getReceiptIds(
         address owner
-    ) external view override returns (ChromaticLPReceipt[] memory providerReceipts) {
-        EnumerableSet.UintSet storage receiptIds = _providerReceiptIds[owner];
+    ) external view override returns (uint256[] memory receiptIds) {
+        return _providerReceiptIds[owner].values();
+    }
 
-        providerReceipts = new ChromaticLPReceipt[](receiptIds.length());
-        for (uint256 i; i < providerReceipts.length; i++) {
-            providerReceipts[i] = receipts[receiptIds.at(i)];
-        }
+    /**
+     * @inheritdoc IChromaticLP
+     */
+    function getReceipt(
+        uint256 receiptId
+    ) external view override returns (ChromaticLPReceipt memory) {
+        return _receipts[receiptId];
     }
 
     /**
