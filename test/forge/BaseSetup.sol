@@ -33,9 +33,15 @@ abstract contract BaseSetup is Test {
     ICLBToken clbToken;
     ChromaticRouter router;
 
+    IAutomate automate;
+    IOpsProxyFactory opf;
+
     function setUp() public virtual {
         IAutomate _automate = IAutomate(address(5555));
         IOpsProxyFactory _opf = IOpsProxyFactory(address(6666));
+        automate = _automate;
+        opf = _opf;
+
         vm.mockCall(
             address(_automate),
             abi.encodeWithSelector(_automate.getFeeDetails.selector),
