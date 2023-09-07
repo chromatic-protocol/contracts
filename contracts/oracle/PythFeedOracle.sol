@@ -28,7 +28,7 @@ contract PythFeedOracle is IOracleProvider {
 
     constructor(AbstractPyth pyth_, bytes32 priceFeedId_, string memory description_) {
         pyth = pyth_;
-        if(pyth.priceFeedExists(priceFeedId_)){
+        if(!pyth.priceFeedExists(priceFeedId_)){
             revert PriceFeedNotExist();
         }
         priceFeedId = priceFeedId_;
