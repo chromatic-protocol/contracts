@@ -170,7 +170,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         }
     }
 
-    function resolveRebalance() external view returns (bool, bytes memory) {
+    function resolveRebalance() external view override returns (bool, bytes memory) {
         (uint256 total, uint256 clbValue, ) = _poolValue();
 
         if (total == 0) return (false, bytes(""));
@@ -451,7 +451,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             );
     }
 
-    function resolveSettle(uint256 receiptId) external view returns (bool, bytes memory) {
+    function resolveSettle(uint256 receiptId) external view override returns (bool, bytes memory) {
         IOracleProvider.OracleVersion memory currentOracle = _market
             .oracleProvider()
             .currentVersion();
