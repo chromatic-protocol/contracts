@@ -43,11 +43,11 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     // uint256 private constant DEFAULT_CHECK_SETTLE_INTERVAL = 1 minutes;
 
     IChromaticMarket internal immutable _market;
-    uint16 public immutable utilizationTargetBPS; // 10000 for 1.0
-    uint16 public immutable rebalanceBPS; // 1000 for 0.1
+    uint16 immutable UTILIZATION_TARGET_BPS; // 10000 for 1.0
+    uint16 immutable REBALANCE_BPS; // 1000 for 0.1
 
-    int16[] public feeRates;
-    mapping(int16 => uint16) public distributionRates; // feeRate => distributionRate
+    int16[] _feeRates;
+    mapping(int16 => uint16) _distributionRates; // feeRate => distributionRate
     uint256[] private _clbTokenIds;
 
     uint256 private immutable REBALANCE_CHECKING_INTERVAL;
@@ -89,53 +89,52 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
     constructor(
         IChromaticMarket marketAddress,
-        uint16 _utilizationTargetBPS,
-        uint16 _rebalanceBPS,
-        int16[] memory _feeRates,
-        uint16[] memory _distributionRates,
+        uint16 utilizationTargetBPS,
+        uint16 rebalanceBPS,
+        int16[] memory feeRates,
+        uint16[] memory distributionRates,
         uint256 rebalanceCheckingInterval,
         uint256 settleCheckingInterval,
         address _automate,
         address opsProxyFactory
     ) ERC20("", "") AutomateReady(_automate, address(this), opsProxyFactory) {
-        _validateConfig(_utilizationTargetBPS, _rebalanceBPS, _feeRates, _distributionRates);
+        _validateConfig(utilizationTargetBPS, rebalanceBPS, feeRates, distributionRates);
 
         _market = marketAddress;
-        utilizationTargetBPS = _utilizationTargetBPS;
-        rebalanceBPS = _rebalanceBPS;
+        UTILIZATION_TARGET_BPS = utilizationTargetBPS;
+        REBALANCE_BPS = rebalanceBPS;
 
-        _setupDistributionRates(_feeRates, _distributionRates);
-        feeRates = _feeRates;
+        _setupDistributionRates(feeRates, distributionRates);
+        _feeRates = feeRates;
 
         REBALANCE_CHECKING_INTERVAL = rebalanceCheckingInterval;
         SETTLE_CHECKING_INTERVAL = settleCheckingInterval;
 
-        _setupClbTokenIds(_feeRates);
-
+        _setupClbTokenIds(feeRates);
         createRebalanceTask();
     }
 
     function _validateConfig(
-        uint16 _utilizationTargetBPS,
-        uint16 _rebalanceBPS,
-        int16[] memory _feeRates,
-        uint16[] memory _distributionRates
+        uint16 utilizationTargetBPS,
+        uint16 rebalanceBPS,
+        int16[] memory feeRates,
+        uint16[] memory distributionRates
     ) private pure {
-        if (_utilizationTargetBPS > BPS) revert InvalidUtilizationTarget(_utilizationTargetBPS);
-        if (_feeRates.length != _distributionRates.length)
-            revert NotMatchDistributionLength(_feeRates.length, _distributionRates.length);
+        if (utilizationTargetBPS > BPS) revert InvalidUtilizationTarget(utilizationTargetBPS);
+        if (feeRates.length != distributionRates.length)
+            revert NotMatchDistributionLength(feeRates.length, distributionRates.length);
 
-        if (_utilizationTargetBPS <= _rebalanceBPS) revert InvalidRebalanceBPS();
+        if (utilizationTargetBPS <= rebalanceBPS) revert InvalidRebalanceBPS();
     }
 
     function _setupDistributionRates(
-        int16[] memory _feeRates,
-        uint16[] memory _distributionRates
+        int16[] memory feeRates,
+        uint16[] memory distributionRates
     ) private {
         uint16 totalRate;
-        for (uint256 i; i < _distributionRates.length; ) {
-            distributionRates[_feeRates[i]] = _distributionRates[i];
-            totalRate += _distributionRates[i];
+        for (uint256 i; i < distributionRates.length; ) {
+            _distributionRates[feeRates[i]] = distributionRates[i];
+            totalRate += distributionRates[i];
 
             unchecked {
                 i++;
@@ -144,10 +143,10 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         if (totalRate != BPS) revert InvalidDistributionSum();
     }
 
-    function _setupClbTokenIds(int16[] memory _feeRates) private {
-        _clbTokenIds = new uint256[](_feeRates.length);
-        for (uint256 i; i < _feeRates.length; ) {
-            _clbTokenIds[i] = CLBTokenLib.encodeId(_feeRates[i]);
+    function _setupClbTokenIds(int16[] memory feeRates) private {
+        _clbTokenIds = new uint256[](feeRates.length);
+        for (uint256 i; i < feeRates.length; ) {
+            _clbTokenIds[i] = CLBTokenLib.encodeId(feeRates[i]);
 
             unchecked {
                 i++;
@@ -172,13 +171,13 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     }
 
     function resolveRebalance() external view returns (bool, bytes memory) {
-        (uint256 total, uint256 clbValue, ) = poolValue();
+        (uint256 total, uint256 clbValue, ) = _poolValue();
 
         if (total == 0) return (false, bytes(""));
         uint256 currentUtility = clbValue.mulDiv(BPS, total);
-        if (uint256(utilizationTargetBPS + rebalanceBPS) > currentUtility) {
+        if (uint256(UTILIZATION_TARGET_BPS + REBALANCE_BPS) > currentUtility) {
             return (true, abi.encodeCall(this.rebalance, ()));
-        } else if (uint256(utilizationTargetBPS - rebalanceBPS) < currentUtility) {
+        } else if (uint256(UTILIZATION_TARGET_BPS - REBALANCE_BPS) < currentUtility) {
             return (true, abi.encodeCall(this.rebalance, ()));
         }
         return (false, bytes(""));
@@ -190,22 +189,22 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     }
 
     function _rebalance() internal {
-        (uint256 total, uint256 clbValue, ) = poolValue();
+        (uint256 total, uint256 clbValue, ) = _poolValue();
 
         if (total == 0) return;
         uint256 currentUtility = clbValue.mulDiv(BPS, total);
-        if (uint256(utilizationTargetBPS + rebalanceBPS) > currentUtility) {
+        if (uint256(UTILIZATION_TARGET_BPS + REBALANCE_BPS) > currentUtility) {
             uint256[] memory _clbTokenBalances = clbTokenBalances();
-            uint256[] memory clbTokenAmounts = new uint256[](feeRates.length);
-            for (uint256 i; i < feeRates.length; i++) {
-                clbTokenAmounts[i] = _clbTokenBalances[i].mulDiv(rebalanceBPS, currentUtility);
+            uint256[] memory clbTokenAmounts = new uint256[](_feeRates.length);
+            for (uint256 i; i < _feeRates.length; i++) {
+                clbTokenAmounts[i] = _clbTokenBalances[i].mulDiv(REBALANCE_BPS, currentUtility);
             }
             ChromaticLPReceipt memory receipt = _removeLiquidity(clbTokenAmounts, 0, address(this));
 
             emit RebalanceLiquidity({receiptId: receipt.id});
-        } else if (uint256(utilizationTargetBPS - rebalanceBPS) < currentUtility) {
+        } else if (uint256(UTILIZATION_TARGET_BPS - REBALANCE_BPS) < currentUtility) {
             ChromaticLPReceipt memory receipt = _addLiquidity(
-                total.mulDiv(rebalanceBPS, BPS),
+                total.mulDiv(REBALANCE_BPS, BPS),
                 address(this)
             );
             emit RebalanceLiquidity({receiptId: receipt.id});
@@ -213,8 +212,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     }
 
     function clbTokenBalances() public view returns (uint256[] memory _clbTokenBalances) {
-        address[] memory _owners = new address[](feeRates.length);
-        for (uint256 i; i < feeRates.length; ) {
+        address[] memory _owners = new address[](_feeRates.length);
+        for (uint256 i; i < _feeRates.length; ) {
             _owners[i] = address(this);
             unchecked {
                 i++;
@@ -224,10 +223,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     }
 
     function _poolClbValue() internal view returns (uint256 value) {
-        // value = calcClbValue(clbTokenBalances());
-
         uint256[] memory clbSupplies = _market.clbToken().totalSupplyBatch(_clbTokenIds);
-        uint256[] memory binValues = _market.getBinValues(feeRates);
+        uint256[] memory binValues = _market.getBinValues(_feeRates);
         uint256[] memory clbTokenAmounts = clbTokenBalances();
         for (uint256 i; i < binValues.length; ) {
             value += clbTokenAmounts[i] == 0
@@ -239,8 +236,8 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         }
     }
 
-    function poolValue()
-        public
+    function _poolValue()
+        internal
         view
         returns (uint256 totalValue, uint256 clbValue, uint256 holdingValue)
     {
@@ -267,12 +264,12 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         address recipient
     ) internal returns (ChromaticLPReceipt memory receipt) {
         (uint256[] memory amounts, uint256 liquidityAmount) = _distributeAmount(
-            amount.mulDiv(utilizationTargetBPS, BPS)
+            amount.mulDiv(UTILIZATION_TARGET_BPS, BPS)
         );
 
         LpReceipt[] memory lpReceipts = _market.addLiquidityBatch(
             address(this),
-            feeRates,
+            _feeRates,
             amounts,
             abi.encode(
                 AddLiquidityBatchCallbackData({
@@ -366,8 +363,6 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     function _calcRemoveClbAmounts(
         uint256 lpTokenAmount
     ) internal view returns (uint256[] memory clbTokenAmounts) {
-        int16[] memory _feeRates = feeRates;
-
         address[] memory _owners = new address[](_feeRates.length);
         for (uint256 i; i < _feeRates.length; ) {
             _owners[i] = address(this);
@@ -401,7 +396,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     ) internal returns (ChromaticLPReceipt memory receipt) {
         LpReceipt[] memory lpReceipts = _market.removeLiquidityBatch(
             address(this),
-            feeRates,
+            _feeRates,
             clbTokenAmounts,
             abi.encode(
                 RemoveLiquidityBatchCallbackData({
@@ -531,16 +526,15 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     }
 
     function claimLiquidityBatchCallback(
-        uint256[] calldata receiptIds,
-        int16[] calldata _feeRates,
-        uint256[] calldata depositedAmounts,
-        uint256[] calldata mintedCLBTokenAmounts,
+        uint256[] calldata /* receiptIds */,
+        int16[] calldata /* feeRates */,
+        uint256[] calldata /* depositedAmounts */,
+        uint256[] calldata /* mintedCLBTokenAmounts */,
         bytes calldata data
     ) external override verifyCallback {
         ChromaticLPReceipt memory receipt = abi.decode(data, (ChromaticLPReceipt));
         if (receipt.recipient != address(this)) {
-            // uint256 clbValue = calcClbValue(mintedCLBTokenAmounts);
-            (uint256 total, , ) = poolValue();
+            (uint256 total, , ) = _poolValue();
             uint256 lpTokenMint = total == receipt.amount
                 ? receipt.amount
                 : receipt.amount.mulDiv(totalSupply(), total - receipt.amount);
@@ -580,15 +574,15 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
 
     function withdrawLiquidityBatchCallback(
         uint256[] calldata receiptIds,
-        int16[] calldata _feeRates,
+        int16[] calldata,
         uint256[] calldata withdrawnAmounts,
-        uint256[] calldata burnedCLBTokenAmounts,
+        uint256[] calldata,
         bytes calldata data
     ) external override verifyCallback {
         ChromaticLPReceipt memory receipt = abi.decode(data, (ChromaticLPReceipt));
         // burn and transfer settlementToken
         if (receipt.recipient != address(this)) {
-            (uint256 totalValue, uint256 clbValue, uint256 holdingValue) = poolValue();
+            (uint256 totalValue, , ) = _poolValue();
             uint256 withdrawnAmount;
             for (uint256 i; i < receiptIds.length; ) {
                 withdrawnAmount += withdrawnAmounts[i];
@@ -625,10 +619,9 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
     function _distributeAmount(
         uint256 amount
     ) private view returns (uint256[] memory amounts, uint256 totalAmount) {
-        int16[] memory _feeRates = feeRates;
         amounts = new uint256[](_feeRates.length);
         for (uint256 i = 0; i < _feeRates.length; ) {
-            uint256 _amount = amount.mulDiv(distributionRates[_feeRates[i]], BPS);
+            uint256 _amount = amount.mulDiv(_distributionRates[_feeRates[i]], BPS);
 
             amounts[i] = _amount;
             totalAmount += _amount;
