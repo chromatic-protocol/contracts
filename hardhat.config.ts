@@ -89,13 +89,13 @@ const config: HardhatUserConfig = {
       ...common,
       url: 'https://rpc.mantle.xyz/',
       chainId: 5000,
-      tags: ['keeper']
+      tags: ['core']
     },
     mantle_testnet: {
       ...common,
       url: 'https://rpc.testnet.mantle.xyz/',
       chainId: 5001,
-      tags: ['keeper']
+      tags: ['core']
     }
   },
   namedAccounts: {

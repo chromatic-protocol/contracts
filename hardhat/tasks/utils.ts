@@ -1,10 +1,12 @@
 import {
+  ChainlinkFeedOracle__factory,
   ChromaticMarketFactory,
   ChromaticMarketFactory__factory,
   IERC20Metadata,
   IERC20Metadata__factory,
   IOracleProvider,
-  IOracleProvider__factory
+  IOracleProvider__factory,
+  PythFeedOracle__factory
 } from '@chromatic/typechain-types'
 import { Token } from '@uniswap/sdk-core'
 import { DAI_ON, ID_TO_CHAIN_ID, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
@@ -30,31 +32,43 @@ export function execute(
   }
 }
 
-export async function findOracleProvider(
+export async function findChainlinkOracleProvider(
   factory: ChromaticMarketFactory,
   chainlinkAddress: string
 ): Promise<IOracleProvider | undefined> {
-  const abi = [
-    {
-      inputs: [],
-      name: 'aggregator',
-      outputs: [
-        {
-          internalType: 'ChainlinkAggregator',
-          name: '',
-          type: 'address'
-        }
-      ],
-      stateMutability: 'view',
-      type: 'function'
-    }
-  ]
-
   const providerAddresses = await factory.registeredOracleProviders()
   for (const providerAddress of providerAddresses) {
-    const provider = new ethers.Contract(providerAddress, abi, factory.runner)
-    if (chainlinkAddress.toLowerCase() == (await provider.aggregator()).toLowerCase()) {
-      return IOracleProvider__factory.connect(providerAddress, factory.runner)
+    const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
+    if ((await provider.oracleProviderName()).toLowerCase() === 'chainlink') {
+      if (
+        chainlinkAddress.toLowerCase() ===
+        (
+          await ChainlinkFeedOracle__factory.connect(providerAddress, factory.runner).aggregator()
+        ).toLowerCase()
+      ) {
+        return provider
+      }
+    }
+  }
+}
+
+export async function findPythOracleProvider(
+  factory: ChromaticMarketFactory,
+  pythAddress: string,
+  priceFeedId: string
+): Promise<IOracleProvider | undefined> {
+  const providerAddresses = await factory.registeredOracleProviders()
+  for (const providerAddress of providerAddresses) {
+    const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
+    if ((await provider.oracleProviderName()).toLowerCase() === 'pyth') {
+      const pythProvider = PythFeedOracle__factory.connect(providerAddress, factory.runner)
+      const datas = await Promise.all([pythProvider.pyth(), pythProvider.priceFeedId()])
+      if (
+        datas[0].toLowerCase() === pythAddress.toLowerCase() &&
+        datas[1].toLowerCase() === priceFeedId.toLowerCase()
+      ) {
+        return provider
+      }
     }
   }
 }

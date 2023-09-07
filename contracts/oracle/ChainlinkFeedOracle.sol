@@ -177,4 +177,8 @@ contract ChainlinkFeedOracle is IOracleProvider {
     function _latestPhaseId() private view returns (uint16) {
         return uint16(_phases.length - 1);
     }
+
+    function oracleProviderName() external pure override returns (string memory) {
+        return "chainlink";
+    }
 }

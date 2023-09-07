@@ -10,11 +10,13 @@ import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 contract PythFeedOracle is IOracleProvider {
     using SignedMath for int256;
 
+    error PriceFeedNotExist();
+
     int256 private constant DECIMALS = 18;
 
     /// @dev Chainlink feed aggregator address
     IPyth public immutable pyth;
-    bytes32 immutable priceFeedId;
+    bytes32 public immutable priceFeedId;
 
     string private _description;
 
@@ -26,7 +28,9 @@ contract PythFeedOracle is IOracleProvider {
 
     constructor(IPyth pyth_, bytes32 priceFeedId_, string memory description_) {
         pyth = pyth_;
-        require(pyth.priceFeedExists(priceFeedId_), "priceFeedNotExist");
+        if(pyth.priceFeedExists(priceFeedId_)){
+            revert PriceFeedNotExist();
+        }
         priceFeedId = priceFeedId_;
         _description = description_;
         sync();
@@ -75,5 +79,9 @@ contract PythFeedOracle is IOracleProvider {
      */
     function description() external view override returns (string memory) {
         return _description;
+    }
+
+    function oracleProviderName() external pure override returns (string memory) {
+        return "pyth";
     }
 }
