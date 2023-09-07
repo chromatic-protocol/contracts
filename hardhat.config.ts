@@ -116,8 +116,28 @@ const config: HardhatUserConfig = {
   docgen: docgenConfig,
   etherscan: {
     apiKey: {
-      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!
-    }
+      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!,
+      mantleTestnet: 'test', // prevent MissingApiKeyError
+      mantle: 'test' // prevent MissingApiKeyError
+    },
+    customChains: [
+      {
+        network: 'mantle',
+        chainId: 5000,
+        urls: {
+          apiURL: 'https://explorer.mantle.xyz/api',
+          browserURL: 'https://explorer.mantle.xyz/'
+        }
+      },
+      {
+        network: 'mantleTestnet',
+        chainId: 5001,
+        urls: {
+          apiURL: 'https://explorer.testnet.mantle.xyz/api',
+          browserURL: 'https://explorer.testnet.mantle.xyz/'
+        }
+      }
+    ]
   }
 }
 
