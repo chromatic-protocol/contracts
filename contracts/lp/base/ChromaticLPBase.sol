@@ -230,7 +230,9 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
         uint256[] memory binValues = _market.getBinValues(feeRates);
         uint256[] memory clbTokenAmounts = clbTokenBalances();
         for (uint256 i; i < binValues.length; ) {
-            value += clbTokenAmounts[i].mulDiv(binValues[i], clbSupplies[i]);
+            value += clbTokenAmounts[i] == 0
+                ? 0
+                : clbTokenAmounts[i].mulDiv(binValues[i], clbSupplies[i]);
             unchecked {
                 i++;
             }
@@ -601,12 +603,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
                 totalSupply()
             ) + withdrawnAmount;
 
-            SafeERC20.safeTransferFrom(
-                _market.settlementToken(),
-                address(this),
-                receipt.recipient,
-                withdrawAmount
-            );
+            SafeERC20.safeTransfer(_market.settlementToken(), receipt.recipient, withdrawAmount);
             // burningLP: withdrawAmount = totalSupply: totalValue
             // burningLP = withdrawAmount * totalSupply / totalValue
             // burn LPToken requested
@@ -616,12 +613,7 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             // transfer left lpTokens
             uint256 leftLpToken = receipt.amount - burningAmount;
             if (leftLpToken > 0) {
-                SafeERC20.safeTransferFrom(
-                    IERC20(this),
-                    address(this),
-                    receipt.recipient,
-                    leftLpToken
-                );
+                SafeERC20.safeTransfer(IERC20(this), receipt.recipient, leftLpToken);
             }
 
             emit RemoveLiquiditySettled({receiptId: receipt.id});
