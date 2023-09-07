@@ -24,7 +24,7 @@ task('oracle-provider:register', 'Register oracle provider')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const { deployments, getNamedAccounts, ethers } = hre
+        const { deployments, getNamedAccounts } = hre
         const { deployer } = await getNamedAccounts()
 
         const networkBase = hre.network.name.split('_')[0].toLowerCase()

@@ -73,6 +73,7 @@
   "dependencies": {
     "@chainlink/contracts": "^0.6.1",
     "@openzeppelin/contracts": "^4.9.3",
+    "@pythnetwork/pyth-sdk-solidity": "^2.2.1",
     "@uniswap/v3-periphery": "^1.4.3"
   },
   "resolutions": {

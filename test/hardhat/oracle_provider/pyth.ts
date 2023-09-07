@@ -1,8 +1,7 @@
-import { IPyth__factory, IPyth } from '@chromatic/typechain-types'
+import { AbstractPyth, AbstractPyth__factory } from '@chromatic/typechain-types'
 import { ethers } from 'hardhat'
 import { evmMainnet, evmTestnet } from './pythFeedIds'
 import { expect } from 'chai'
-import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 
 const IPYTH_ADDRESSES: { [key: string]: string } = {
   arbitrum_one: '0xff1a0f4744e8582DF1aE09D5611b887B6a12925C',
@@ -19,14 +18,14 @@ const priceFeedIdsMap: { [key: string]: { [key: string]: string } } = {
 }
 
 describe('pyth test', async function () {
-  var ipyth: IPyth
+  var ipyth: AbstractPyth
   var priceFeedIds: { [key: string]: string }
   before(async () => {
     const [signer] = await ethers.getSigners()
     const networkName = (signer.provider as any)['_networkName']
     if (IPYTH_ADDRESSES[networkName]) {
       console.log(networkName, IPYTH_ADDRESSES[networkName])
-      ipyth = IPyth__factory.connect(IPYTH_ADDRESSES[networkName], signer)
+      ipyth = AbstractPyth__factory.connect(IPYTH_ADDRESSES[networkName], signer)
       priceFeedIds = priceFeedIdsMap[networkName]
     }
   })

@@ -2,10 +2,17 @@ import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
-import { execute, findOracleProvider, findSettlementToken } from './utils'
+import {
+  execute,
+  findChainlinkOracleProvider,
+  findPythOracleProvider,
+  findSettlementToken
+} from './utils'
 
 task('market:create', 'Create new market')
-  .addParam('chainlinkAddress', 'The chainlink feed aggregator address')
+  .addOptionalParam('chainlinkAddress', 'The chainlink feed aggregator address')
+  .addOptionalParam('pythAddress', 'The pyth price feed address')
+  .addOptionalParam('priceFeedId', 'The price feed id of pyth')
   .addParam('tokenAddress', 'The settlement token address or symbol')
   .setAction(
     execute(
@@ -14,9 +21,17 @@ task('market:create', 'Create new market')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const { chainlinkAddress, tokenAddress } = taskArgs
+        const { chainlinkAddress, pythAddress, priceFeedId, tokenAddress } = taskArgs
 
-        const provider = await findOracleProvider(factory, chainlinkAddress)
+        // param check
+        if (!chainlinkAddress && !(pythAddress && priceFeedId)) {
+          console.log(chalk.red(`invaild param`))
+          return
+        }
+
+        const provider = chainlinkAddress
+          ? await findChainlinkOracleProvider(factory, chainlinkAddress)
+          : await findPythOracleProvider(factory, pythAddress, priceFeedId)
         if (!provider) {
           console.log(
             chalk.red(`Cannot found oracle provider for chainlink feed '${chainlinkAddress}'`)
@@ -30,7 +45,9 @@ task('market:create', 'Create new market')
           return
         }
 
-        await (await factory.createMarket(await provider.getAddress(), await token.getAddress())).wait()
+        await (
+          await factory.createMarket(await provider.getAddress(), await token.getAddress())
+        ).wait()
 
         console.log(
           chalk.green(
