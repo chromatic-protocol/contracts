@@ -558,7 +558,14 @@ contract ChromaticLPBase is IChromaticLP, IChromaticLiquidityCallback, ERC20, Au
             data,
             (RemoveLiquidityBatchCallbackData)
         );
-        callbackData.lpTokenAmount;
+        IERC1155(clbToken).safeBatchTransferFrom(
+            address(this),
+            msg.sender, // market
+            clbTokenIds,
+            callbackData.clbTokenAmounts,
+            bytes("")
+        );
+
         if (callbackData.provider != address(this)) {
             SafeERC20.safeTransferFrom(
                 IERC20(this),
