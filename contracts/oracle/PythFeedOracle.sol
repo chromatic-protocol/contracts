@@ -14,18 +14,30 @@ contract PythFeedOracle is IOracleProvider {
 
     int256 private constant DECIMALS = 18;
 
-    /// @dev Chainlink feed aggregator address
+    /// @dev Pyth address
     AbstractPyth public immutable pyth;
+
+    /// @dev The id of pyth price feed
     bytes32 public immutable priceFeedId;
 
+    /// @dev The description of the Oracle Provider('ETH/USD', 'BTC/USD'...)
     string private _description;
 
-    /// @dev Last roundID seen when `sync` was called
+    /// @dev Last version seen when `sync` was called
     uint256 private lastSyncedVersion;
-    /// for checking
+    
+    /// @dev Last publishTime seen when `sync` was called
     uint256 private lastSyncedPublishTime;
+
+    /// @dev Mapping of version to OracleVersion
     mapping(uint256 => OracleVersion) private oracleVersions;
 
+    /**
+     * @notice Initializes the contract state
+     * @param pyth_ Pyth address
+     * @param priceFeedId_ The id of pyth price feed
+     * @param description_ The description of the Oracle Provider('ETH/USD', 'BTC/USD'...)
+     */
     constructor(AbstractPyth pyth_, bytes32 priceFeedId_, string memory description_) {
         pyth = pyth_;
         if(!pyth.priceFeedExists(priceFeedId_)){
@@ -81,6 +93,9 @@ contract PythFeedOracle is IOracleProvider {
         return _description;
     }
 
+    /**
+     * @inheritdoc IOracleProvider
+     */
     function oracleProviderName() external pure override returns (string memory) {
         return "pyth";
     }
