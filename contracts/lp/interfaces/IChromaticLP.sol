@@ -45,7 +45,7 @@ interface IChromaticLP is IERC20, IERC1155Receiver {
 
     function settle(uint256 receiptId) external returns (bool);
 
-    function getReceiptIds(address owner) external view returns (uint256[] memory);
+    function getReceiptIdsOf(address owner) external view returns (uint256[] memory);
 
     function getReceipt(uint256 id) external view returns (ChromaticLPReceipt memory);
 
