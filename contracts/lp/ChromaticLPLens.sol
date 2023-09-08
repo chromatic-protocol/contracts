@@ -75,7 +75,7 @@ contract ChromaticLPLens is IChromaticLPLens {
         return IERC20(IChromaticLP(lp).settlementToken()).balanceOf(lp);
     }
 
-    function utitlity(address lp) external view override returns (uint256 currentUtility) {
+    function utilization(address lp) external view override returns (uint256 currentUtility) {
         (uint256 total, uint256 _clbValue, ) = values(lp);
         if (total == 0) return 0;
         currentUtility = _clbValue.mulDiv(BPS, total);

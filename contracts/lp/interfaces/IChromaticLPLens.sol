@@ -13,5 +13,5 @@ interface IChromaticLPLens {
 
     function holdingValue(address lp) external view returns (uint256);
 
-    function utitlity(address lp) external view returns (uint256);
+    function utilization(address lp) external view returns (uint256);
 }
