@@ -7,11 +7,15 @@ interface IChromaticLPLens {
 
     function values(
         address lp
-    ) external returns (uint256 _totalValue, uint256 _clbValue, uint256 _holdingValue);
+    ) external view returns (uint256 _totalValue, uint256 _clbValue, uint256 _holdingValue);
 
     function clbValue(address lp) external view returns (uint256);
 
     function holdingValue(address lp) external view returns (uint256);
 
     function utilization(address lp) external view returns (uint256);
+
+    function feeRates() external pure returns (int16[] memory _feeRates);
+
+    function clbTokenBalances(address lp) external view returns (uint256[] memory balances);
 }
