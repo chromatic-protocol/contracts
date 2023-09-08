@@ -14,11 +14,11 @@ uint16 constant BPS = 10000;
 contract ChromaticLPLens is IChromaticLPLens {
     using Math for uint256;
 
-    function feeRates() internal pure returns (int16[] memory _feeRates) {
-        _feeRates = new int16[](FEE_RATES_LENGTH);
+    function feeRates() public pure override returns (int16[] memory _feeRates) {
+        _feeRates = new int16[](FEE_RATES_LENGTH * 2);
         uint256[] memory clbTokenIds = CLBTokenLib.tokenIds();
 
-        for (uint256 i; i < FEE_RATES_LENGTH; ) {
+        for (uint256 i; i < clbTokenIds.length; ) {
             _feeRates[i] = CLBTokenLib.decodeId(clbTokenIds[i]);
             unchecked {
                 i++;
@@ -26,7 +26,7 @@ contract ChromaticLPLens is IChromaticLPLens {
         }
     }
 
-    function clbTokenBalances(address lp) internal view returns (uint256[] memory balances) {
+    function clbTokenBalances(address lp) public view override returns (uint256[] memory balances) {
         uint256[] memory clbTokenIds = CLBTokenLib.tokenIds();
         address[] memory _owners = new address[](clbTokenIds.length);
 
