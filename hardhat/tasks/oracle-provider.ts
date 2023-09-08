@@ -2,16 +2,10 @@ import { ChromaticMarketFactory, IPyth__factory } from '@chromatic/typechain-typ
 import chalk from 'chalk'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
-import { execute, findChainlinkOracleProvider, findPythOracleProvider } from './utils'
+import { execute, findChainlinkOracleProvider, findPythOracleProvider, getGasLimit } from './utils'
 
-// yarn hardhat:mantle_testnet oracle-provider:register --chainlink-address '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729'
-// yarn hardhat:mantle_testnet oracle-provider:register --pyth-address '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729'
 // yarn hardhat:mantle_testnet oracle-provider:register --pyth-address '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729' --price-feed-id '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6' --description 'ETH/USD'
-
 // yarn hardhat:arbitrum_goerli oracle-provider:register --chainlink-address '0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08'
-// yarn hardhat:arbitrum_goerli oracle-provider:register --pyth-address '0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900'
-// yarn hardhat:arbitrum_goerli oracle-provider:register --pyth-address '0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900' --price-feed-id '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6' --description 'ETH/USD'
-
 task('oracle-provider:register', 'Register oracle provider')
   .addOptionalParam('chainlinkAddress', 'The chainlink feed aggregator address')
   .addOptionalParam('pythAddress', 'The pyth price feed address')
@@ -84,11 +78,15 @@ task('oracle-provider:register', 'Register oracle provider')
         )
 
         await (
-          await factory.registerOracleProvider(deployResult.address!, {
-            minTakeProfitBPS: 1000, // 10%
-            maxTakeProfitBPS: 100000, // 1000%
-            leverageLevel: 0
-          })
+          await factory.registerOracleProvider(
+            deployResult.address!,
+            {
+              minTakeProfitBPS: 1000, // 10%
+              maxTakeProfitBPS: 100000, // 1000%
+              leverageLevel: 0
+            },
+            { gasLimit: getGasLimit(hre) }
+          )
         ).wait()
 
         console.log(

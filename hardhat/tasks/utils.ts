@@ -121,3 +121,13 @@ export function getToken(
 
   return IERC20Metadata__factory.connect(tokenAddress, runner)
 }
+
+// https://docs.mantle.xyz/network/for-devs/troubleshooting#contract-deploy-error-providererror-too-many-arguments-want-at-most-1
+// ProviderError: too many arguments, want at most 1
+// use hardhat <= 2.14.0 || set gasLimit '0x1000000'
+// https://github.com/NomicFoundation/hardhat/issues/4010
+// The problem is most probably caused by an outdated ethereum node (geth < 1.9.22 or similar) which doesn't support eth_estimateGas 2'nd argument (quantity / type, see https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_estimategas)
+// The mantle seems based on 1.9.10 (https://github.com/mantlenetworkio/mantle/blob/main/l2geth/params/version.go)
+export function getGasLimit(hre: HardhatRuntimeEnvironment) {
+  return hre.network.name.split('_')[0].toLowerCase() === 'mantle' ? '0x1000000' : undefined
+}

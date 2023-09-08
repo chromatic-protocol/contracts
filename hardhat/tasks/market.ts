@@ -6,7 +6,8 @@ import {
   execute,
   findChainlinkOracleProvider,
   findPythOracleProvider,
-  findSettlementToken
+  findSettlementToken,
+  getGasLimit
 } from './utils'
 
 task('market:create', 'Create new market')
@@ -46,7 +47,9 @@ task('market:create', 'Create new market')
         }
 
         await (
-          await factory.createMarket(await provider.getAddress(), await token.getAddress())
+          await factory.createMarket(await provider.getAddress(), await token.getAddress(), {
+            gasLimit: getGasLimit(hre)
+          })
         ).wait()
 
         console.log(
