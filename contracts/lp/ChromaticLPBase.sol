@@ -19,49 +19,16 @@ import {AutomateReady} from "@chromatic-protocol/contracts/core/base/gelato/Auto
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
+import {ChromaticLPStorage} from "@chromatic-protocol/contracts/lp/ChromaticLPStorage.sol";
 
-abstract contract ChromaticLPBase is AutomateReady {
+abstract contract ChromaticLPBase is ChromaticLPStorage {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
-
-    uint16 constant BPS = 10000;
-
-    struct AutomateParam {
-        address automate;
-        address opsProxyFactory;
-    }
-
-    struct Config {
-        IChromaticMarket market;
-        uint16 utilizationTargetBPS;
-        uint16 rebalanceBPS;
-        uint256 rebalnceCheckingInterval;
-        uint256 settleCheckingInterval;
-    }
-
-    struct Tasks {
-        bytes32 rebalanceTaskId;
-        mapping(uint256 => bytes32) settleTasks;
-    }
-
-    struct State {
-        int16[] feeRates;
-        mapping(int16 => uint16) distributionRates;
-        uint256[] clbTokenIds;
-
-        mapping(uint256 => ChromaticLPReceipt) receipts; // receiptId => receipt
-        mapping(uint256 => EnumerableSet.UintSet) lpReceiptMap; // receiptId => lpReceiptIds
-        mapping(uint256 => address) providerMap; // receiptId => provider
-        mapping(address => EnumerableSet.UintSet) providerReceiptIds; // provider => receiptIds
-        uint256 pendingAddAmount; // in settlement token
-        mapping(int16 => uint256) pendingRemoveClbAmounts; // feeRate => pending remove
-    }
 
     error InvalidUtilizationTarget(uint16 targetBPS);
     error InvalidRebalanceBPS();
     error NotMatchDistributionLength(uint256 feeLength, uint256 distributionLength);
     error InvalidDistributionSum();
-    error AlreadyRebalanceTaskExist();
 
     error NotMarket();
     error OnlyBatchCall();
@@ -70,26 +37,20 @@ abstract contract ChromaticLPBase is AutomateReady {
     error NotOwner();
     error AlreadySwapRouterConfigured();
     error NotKeeperCalled();
+    error AlreadyRebalanceTaskExist();
 
-    Config internal s_config;
-    Tasks internal s_task;
-    State internal s_state;
+    constructor(AutomateParam memory automateParam) ChromaticLPStorage(automateParam) {}
 
-    modifier verifyCallback() virtual {
-        if (address(s_config.market) != msg.sender) revert NotMarket();
-        _;
-    }
-
-    constructor(AutomateParam memory automateParam ) AutomateReady(
-        automateParam.automate, 
-        address(this), 
-        automateParam.opsProxyFactory
-        ) {
-    }
-
-    // region initialization
-    function _initialize(Config memory config, int16[] memory feeRates, uint16[] memory distributionRates) internal {
-        _validateConfig(config.utilizationTargetBPS, config.rebalanceBPS, feeRates, distributionRates
+    function _initialize(
+        Config memory config,
+        int16[] memory feeRates,
+        uint16[] memory distributionRates
+    ) internal {
+        _validateConfig(
+            config.utilizationTargetBPS,
+            config.rebalanceBPS,
+            feeRates,
+            distributionRates
         );
         s_config = Config({
             market: config.market,
@@ -114,10 +75,7 @@ abstract contract ChromaticLPBase is AutomateReady {
         if (utilizationTargetBPS <= rebalanceBPS) revert InvalidRebalanceBPS();
     }
 
-    function _setupState(
-        int16[] memory feeRates,
-        uint16[] memory distributionRates
-    ) private {
+    function _setupState(int16[] memory feeRates, uint16[] memory distributionRates) private {
         uint16 totalRate;
         for (uint256 i; i < distributionRates.length; ) {
             s_state.distributionRates[feeRates[i]] = distributionRates[i];
@@ -129,7 +87,7 @@ abstract contract ChromaticLPBase is AutomateReady {
         }
         if (totalRate != BPS) revert InvalidDistributionSum();
         s_state.feeRates = feeRates;
-        
+
         _setupClbTokenIds(feeRates);
     }
 
@@ -144,6 +102,60 @@ abstract contract ChromaticLPBase is AutomateReady {
         }
     }
 
-    // endregion
+    /**
+     * @inheritdoc ERC20
+     */
+    function name() public view virtual override returns (string memory) {
+        return string(abi.encodePacked("ChromaticLP - ", _tokenSymbol(), " - ", _indexName()));
+    }
 
+    /**
+     * @inheritdoc ERC20
+     */
+    function symbol() public view virtual override returns (string memory) {
+        return string(abi.encodePacked("cp", _tokenSymbol(), " - ", _indexName()));
+    }
+
+    function _tokenSymbol() private view returns (string memory) {
+        return s_config.market.settlementToken().symbol();
+    }
+
+    function _indexName() private view returns (string memory) {
+        return s_config.market.oracleProvider().description();
+    }
+
+    function _resolveRebalance(
+        function() external _rebalance
+    ) internal view returns (bool, bytes memory) {
+        (uint256 total, uint256 clbValue, ) = _poolValue();
+
+        if (total == 0) return (false, bytes(""));
+        uint256 currentUtility = clbValue.mulDiv(BPS, total);
+        if (uint256(s_config.utilizationTargetBPS + s_config.rebalanceBPS) > currentUtility) {
+            return (true, abi.encodeCall(_rebalance, ()));
+        } else if (
+            uint256(s_config.utilizationTargetBPS - s_config.rebalanceBPS) < currentUtility
+        ) {
+            return (true, abi.encodeCall(_rebalance, ()));
+        }
+        return (false, bytes(""));
+    }
+
+    function _resolveSettle(
+        uint256 receiptId,
+        function(uint256) external settleTask
+    ) internal view returns (bool, bytes memory) {
+        IOracleProvider.OracleVersion memory currentOracle = s_config
+            .market
+            .oracleProvider()
+            .currentVersion();
+
+        ChromaticLPReceipt memory receipt = s_state.receipts[receiptId];
+        if (receipt.id > 0 && receipt.oracleVersion < currentOracle.version) {
+            return (true, abi.encodeCall(settleTask, (receiptId)));
+        }
+
+        // for pending add/remove by user and by self
+        return (false, bytes(""));
+    }
 }
