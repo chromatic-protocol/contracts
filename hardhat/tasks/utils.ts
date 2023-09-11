@@ -6,7 +6,8 @@ import {
   IERC20Metadata__factory,
   IOracleProvider,
   IOracleProvider__factory,
-  PythFeedOracle__factory
+  PythFeedOracle__factory,
+  SupraFeedOracle__factory
 } from '@chromatic/typechain-types'
 import { Token } from '@uniswap/sdk-core'
 import { DAI_ON, ID_TO_CHAIN_ID, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
@@ -67,6 +68,24 @@ export async function findPythOracleProvider(
         datas[0].toLowerCase() === pythAddress.toLowerCase() &&
         datas[1].toLowerCase() === priceFeedId.toLowerCase()
       ) {
+        return provider
+      }
+    }
+  }
+}
+
+export async function findSupraOracleProvider(
+  factory: ChromaticMarketFactory,
+  supraAddress: string,
+  pairIndex: bigint
+): Promise<IOracleProvider | undefined> {
+  const providerAddresses = await factory.registeredOracleProviders()
+  for (const providerAddress of providerAddresses) {
+    const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
+    if ((await provider.oracleProviderName()).toLowerCase() === 'supra') {
+      const pythProvider = SupraFeedOracle__factory.connect(providerAddress, factory.runner)
+      const datas = await Promise.all([pythProvider.feed(), pythProvider.pairIndex()])
+      if (datas[0].toLowerCase() === supraAddress.toLowerCase() && datas[1] === BigInt(pairIndex)) {
         return provider
       }
     }

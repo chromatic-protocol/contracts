@@ -1,15 +1,25 @@
-import { ChromaticMarketFactory, IPyth__factory } from '@chromatic/typechain-types'
+import { ChromaticMarketFactory, IOracleProvider, IPyth__factory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
-import { execute, findChainlinkOracleProvider, findPythOracleProvider, getGasLimit } from './utils'
+import {
+  execute,
+  findChainlinkOracleProvider,
+  findPythOracleProvider,
+  findSupraOracleProvider,
+  getGasLimit
+} from './utils'
 
-// yarn hardhat:mantle_testnet oracle-provider:register --pyth-address '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729' --price-feed-id '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6' --description 'ETH/USD'
+// USAGE
 // yarn hardhat:arbitrum_goerli oracle-provider:register --chainlink-address '0x62CAe0FA2da220f43a51F86Db2EDb36DcA9A5A08'
+// yarn hardhat:mantle_testnet oracle-provider:register --pyth-address '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729' --price-feed-id '0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6' --description 'ETH/USD'
+// yarn hardhat:mantle_testnet oracle-provider:register --supra-address '0x4Ce261C19af540f1175CdeB9E3490DC8937D78e5' --pair-index 19 --description 'ETH/USD'
 task('oracle-provider:register', 'Register oracle provider')
   .addOptionalParam('chainlinkAddress', 'The chainlink feed aggregator address')
   .addOptionalParam('pythAddress', 'The pyth price feed address')
   .addOptionalParam('priceFeedId', 'The price feed id of pyth')
+  .addOptionalParam('supraAddress', 'The price feed id of pyth')
+  .addOptionalParam('pairIndex', 'The price feed id of pyth')
   .addOptionalParam('description', 'The price feed description')
   .setAction(
     execute(
@@ -21,35 +31,35 @@ task('oracle-provider:register', 'Register oracle provider')
         const { deployments, getNamedAccounts } = hre
         const { deployer } = await getNamedAccounts()
 
-        const networkBase = hre.network.name.split('_')[0].toLowerCase()
+        const { chainlinkAddress, pythAddress, priceFeedId, description, supraAddress, pairIndex } =
+          taskArgs
 
-        const { chainlinkAddress, pythAddress, priceFeedId, description } = taskArgs
-
-        // pyth only for mantle
-        if (networkBase === 'mantle' && !(pythAddress && priceFeedId && description)) {
-          console.log(chalk.red(`--pyth-address , --price-feed-id and --description are required`))
-          return
-        }
-
-        // network check
-        if (networkBase !== 'mantle' && networkBase !== 'arbitrum') {
-          console.log(chalk.red(`unsupported chain`))
-          return
-        }
-
-        // param check
-        if (!chainlinkAddress && !(pythAddress && priceFeedId && description)) {
+        let infoString: string
+        let provider: IOracleProvider | undefined
+        let contractName: string
+        let deployArgs: any[]
+        if (chainlinkAddress) {
+          // chainlink
+          infoString = `ChainlinkFeedAggregator: ${chainlinkAddress}`
+          provider = await findChainlinkOracleProvider(factory, chainlinkAddress)
+          contractName = 'ChainlinkFeedOracle'
+          deployArgs = [chainlinkAddress]
+        } else if (pythAddress && priceFeedId && description) {
+          // pyth
+          infoString = `Pyth: ${pythAddress}, priceFeedId: ${priceFeedId}`
+          provider = await findPythOracleProvider(factory, pythAddress, priceFeedId)
+          contractName = 'PythFeedOracle'
+          deployArgs = [pythAddress, priceFeedId, description]
+        } else if (supraAddress && pairIndex && description) {
+          // supra
+          infoString = `Supra: ${supraAddress}, pairIndex: ${pairIndex}`
+          provider = await findSupraOracleProvider(factory, supraAddress, pairIndex)
+          contractName = 'SupraFeedOracle'
+          deployArgs = [supraAddress, pairIndex, description]
+        } else {
           console.log(chalk.red(`invaild param`))
           return
         }
-
-        const infoString = chainlinkAddress
-          ? `ChainlinkFeedAggregator: ${chainlinkAddress}`
-          : `Pyth: ${pythAddress}, priceFeedId: ${priceFeedId}`
-
-        const provider = chainlinkAddress
-          ? await findChainlinkOracleProvider(factory, chainlinkAddress)
-          : await findPythOracleProvider(factory, pythAddress, priceFeedId)
 
         if (provider) {
           console.log(
@@ -60,16 +70,10 @@ task('oracle-provider:register', 'Register oracle provider')
           return
         }
 
-        const deployResult = chainlinkAddress
-          ? await deployments.deploy('ChainlinkFeedOracle', {
-              from: deployer,
-
-              args: [chainlinkAddress]
-            })
-          : await deployments.deploy('PythFeedOracle', {
-              from: deployer,
-              args: [pythAddress, priceFeedId, description]
-            })
+        const deployResult = await deployments.deploy(contractName, {
+          from: deployer,
+          args: deployArgs
+        })
 
         console.log(
           chalk.blue(
