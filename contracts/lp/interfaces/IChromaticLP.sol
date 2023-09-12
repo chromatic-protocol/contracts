@@ -6,26 +6,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 
 interface IChromaticLP is IERC20, IERC1155Receiver {
-    event AddLiquidity(
-        uint256 indexed receiptId,
-        address indexed recipient,
-        uint256 oracleVersion,
-        uint256 amount
-    );
-
-    event AddLiquiditySettled(uint256 indexed receiptId, uint256 lpTokenAmount);
-
-    event RemoveLiquidity(
-        uint256 indexed receiptId,
-        address indexed recipient,
-        uint256 oracleVersion,
-        uint256 lpTokenAmount
-    );
-
-    event RemoveLiquiditySettled(uint256 indexed receiptId);
-
-    event RebalanceLiquidity(uint256 indexed receiptId);
-    event RebalanceSettled(uint256 indexed receiptId);
 
     function market() external view returns (address);
 

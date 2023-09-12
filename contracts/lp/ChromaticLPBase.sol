@@ -115,14 +115,21 @@ abstract contract ChromaticLPBase is ChromaticLPStorage {
     function _resolveRebalance(
         function() external _rebalance
     ) internal view returns (bool, bytes memory) {
-        (uint256 total, uint256 clbValue, ) = _poolValue();
+        ValueInfo memory value = valueInfo();
 
-        if (total == 0) return (false, bytes(""));
-        uint256 currentUtility = clbValue.mulDiv(BPS, total);
-        if (uint256(s_config.utilizationTargetBPS + s_config.rebalanceBPS) > currentUtility) {
+        logLpValue();
+
+        if (value.total == 0) return (false, bytes(""));
+
+        uint256 currentUtility = (value.holdingClb + value.pending - value.pendingClb).mulDiv(
+            BPS,
+            value.total
+        );
+
+        if (uint256(s_config.utilizationTargetBPS + s_config.rebalanceBPS) < currentUtility) {
             return (true, abi.encodeCall(_rebalance, ()));
         } else if (
-            uint256(s_config.utilizationTargetBPS - s_config.rebalanceBPS) < currentUtility
+            uint256(s_config.utilizationTargetBPS - s_config.rebalanceBPS) > currentUtility
         ) {
             return (true, abi.encodeCall(_rebalance, ()));
         }
