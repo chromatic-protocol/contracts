@@ -39,6 +39,9 @@ contract ChromaticLPLogic is ChromaticLPLogicBase {
         ChromaticLPLogicBase(AutomateParam({automate: address(0), opsProxyFactory: address(0)}))
     {}
 
+    /**
+     * @dev implementation of IChromaticLP
+     */
     function addLiquidity(
         uint256 amount,
         address recipient
@@ -52,6 +55,9 @@ contract ChromaticLPLogic is ChromaticLPLogicBase {
         });
     }
 
+    /**
+     * @dev implementation of IChromaticLP
+     */
     function removeLiquidity(
         uint256 lpTokenAmount,
         address recipient
@@ -67,8 +73,10 @@ contract ChromaticLPLogic is ChromaticLPLogicBase {
         });
     }
 
-
-    function rebalance() public override onlyKeeper {
+    /**
+     * @dev implementation of IChromaticLP
+     */
+    function rebalance() external override onlyKeeper {
         uint256 receiptId = _rebalance();
         if (receiptId != 0) {
             emit RebalanceLiquidity({receiptId: receiptId});
@@ -76,6 +84,39 @@ contract ChromaticLPLogic is ChromaticLPLogicBase {
         }
     }
 
+    /**
+     * @dev implementation of IChromaticLiquidityCallback
+     */
+    function addLiquidityBatchCallback(
+        address settlementToken,
+        address vault,
+        bytes calldata data
+    ) external verifyCallback {
+        AddLiquidityBatchCallbackData memory callbackData = abi.decode(
+            data,
+            (AddLiquidityBatchCallbackData)
+        );
+        //slither-disable-next-line arbitrary-send-erc20
+        SafeERC20.safeTransferFrom(
+            IERC20(settlementToken),
+            callbackData.provider,
+            vault,
+            callbackData.liquidityAmount
+        );
+
+        if (callbackData.provider != address(this)) {
+            SafeERC20.safeTransferFrom(
+                IERC20(settlementToken),
+                callbackData.provider,
+                address(this),
+                callbackData.holdingAmount
+            );
+        }
+    }
+
+    /**
+     * @dev implementation of IChromaticLiquidityCallback
+     */
     function claimLiquidityBatchCallback(
         uint256[] calldata /* receiptIds */,
         int16[] calldata /* feeRates */,
@@ -96,6 +137,9 @@ contract ChromaticLPLogic is ChromaticLPLogicBase {
         }
     }
 
+    /**
+     * @dev implementation of IChromaticLiquidityCallback
+     */
     function removeLiquidityBatchCallback(
         address clbToken,
         uint256[] calldata clbTokenIds,
@@ -123,6 +167,9 @@ contract ChromaticLPLogic is ChromaticLPLogicBase {
         }
     }
 
+    /**
+     * @dev implementation of IChromaticLiquidityCallback
+     */
     function withdrawLiquidityBatchCallback(
         uint256[] calldata receiptIds,
         int16[] calldata feeRates,

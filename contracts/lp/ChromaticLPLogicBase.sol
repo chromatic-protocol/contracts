@@ -88,12 +88,13 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
     }
 
     function createSettleTask(uint256 receiptId) internal {
-        if (s_task.settleTasks[receiptId] != 0) return;
-        s_task.settleTasks[receiptId] = _createTask(
-            abi.encodeCall(this.resolveSettle, (receiptId)),
-            abi.encode(this.settleTask.selector),
-            s_config.settleCheckingInterval
-        );
+        if (s_task.settleTasks[receiptId] == 0) {
+            s_task.settleTasks[receiptId] = _createTask(
+                abi.encodeCall(this.resolveSettle, (receiptId)),
+                abi.encodeCall(this.settleTask, (receiptId)),
+                s_config.settleCheckingInterval
+            );
+        }
     }
 
     function cancelSettleTask(uint256 receiptId) internal {
@@ -259,7 +260,7 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
 
     function resolveSettle(uint256 receiptId) external view virtual returns (bool, bytes memory) {}
 
-    function rebalance() public virtual {}
+    function rebalance() external virtual {}
 
     function _addLiquidity(
         uint256 amount,
@@ -343,7 +344,6 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
             }
             ChromaticLPReceipt memory receipt = _removeLiquidity(clbTokenAmounts, 0, address(this));
             return receipt.id;
-            // emit RebalanceLiquidity({receiptId: receipt.id});
         } else if (
             uint256(s_config.utilizationTargetBPS - s_config.rebalanceBPS) < currentUtility
         ) {
@@ -352,7 +352,6 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
                 address(this)
             );
             return receipt.id;
-            // emit RebalanceLiquidity({receiptId: receipt.id});
         }
         return 0;
     }

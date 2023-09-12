@@ -37,7 +37,7 @@ contract ChromaticLP is ChromaticLPBase, Proxy, IChromaticLP, IChromaticLiquidit
         if (s_task.rebalanceTaskId != 0) revert AlreadyRebalanceTaskExist();
         s_task.rebalanceTaskId = _createTask(
             abi.encodeCall(this.resolveRebalance, ()),
-            abi.encode(this.rebalance.selector),
+            abi.encodeCall(this.rebalance, ()),
             s_config.rebalnceCheckingInterval
         );
     }
@@ -267,7 +267,7 @@ contract ChromaticLP is ChromaticLPBase, Proxy, IChromaticLP, IChromaticLiquidit
     }
 
     /**
-     * @dev called by Keeper only
+     * @dev called by keeper only
      */
     function rebalance() public {
         _fallback();

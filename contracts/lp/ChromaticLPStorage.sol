@@ -73,13 +73,7 @@ abstract contract ChromaticLPStorage is ERC20, AutomateReady {
         moduleData.args[1] = abi.encode(uint128(block.timestamp + interval), uint128(interval));
         moduleData.args[2] = bytes("");
 
-        return
-            automate.createTask(
-                address(this),
-                execSelector, // abi.encode(this.rebalance.selector),
-                moduleData,
-                ETH
-            );
+        return automate.createTask(address(this), execSelector, moduleData, ETH);
     }
 
     function _poolValue()
