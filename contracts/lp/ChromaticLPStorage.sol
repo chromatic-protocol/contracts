@@ -104,7 +104,7 @@ abstract contract ChromaticLPStorage is ERC20, AutomateReady, IChromaticLPLens {
         ValueInfo memory value = valueInfo();
         if (value.total == 0) return 0;
         currentUtility = uint16(
-            uint256(value.holdingClb + value.pending - value.pendingClb).mulDiv(BPS, value.total)
+            uint256(value.total - (value.holding + value.pendingClb)).mulDiv(BPS, value.total)
         );
     }
 
