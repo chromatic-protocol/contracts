@@ -118,8 +118,6 @@ abstract contract ChromaticLPBase is ChromaticLPStorage {
     ) internal view returns (bool, bytes memory) {
         ValueInfo memory value = valueInfo();
 
-        logLpValue();
-
         if (value.total == 0) return (false, bytes(""));
 
         uint256 currentUtility = (value.holdingClb + value.pending - value.pendingClb).mulDiv(

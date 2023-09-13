@@ -22,8 +22,6 @@ import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKe
 import {ChromaticLPStorage} from "@chromatic-protocol/contracts/lp/ChromaticLPStorage.sol";
 import {ValueInfo} from "@chromatic-protocol/contracts/lp/interfaces/IChromaticLPLens.sol";
 
-import "forge-std/console.sol";
-
 abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -363,10 +361,6 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
         if (receipt.recipient != address(this)) {
             uint256 total = totalValue();
 
-            logLpValue();
-
-            // FIXME
-
             uint256 lpTokenMint = total == receipt.amount
                 ? receipt.amount
                 : receipt.amount.mulDiv(totalSupply(), total - receipt.amount);
@@ -424,7 +418,6 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
 
         if (receipt.recipient != address(this)) {
             uint256 value = totalValue();
-            logLpValue();
 
             uint256 withdrawnAmount;
             for (uint256 i; i < receiptIds.length; ) {
@@ -466,8 +459,6 @@ abstract contract ChromaticLPLogicBase is ChromaticLPStorage {
     function _rebalance() internal returns (uint256) {
         // (uint256 total, uint256 clbValue, ) = _poolValue();
         ValueInfo memory value = valueInfo();
-
-        logLpValue();
 
         if (value.total == 0) return 0;
 

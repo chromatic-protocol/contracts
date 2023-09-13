@@ -13,8 +13,6 @@ import {ChromaticLPReceipt, ChromaticLPAction} from "@chromatic-protocol/contrac
 import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 import {IChromaticLPLens, ValueInfo} from "@chromatic-protocol/contracts/lp/interfaces/IChromaticLPLens.sol";
 
-import "forge-std/console.sol";
-
 abstract contract ChromaticLPStorage is ERC20, AutomateReady, IChromaticLPLens {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -196,18 +194,5 @@ abstract contract ChromaticLPStorage is ERC20, AutomateReady, IChromaticLPLens {
             _owners,
             s_state.clbTokenIds
         );
-    }
-
-    function logLpValue() internal view {
-        console.log("{");
-        console.log("LP values");
-        ValueInfo memory value = valueInfo();
-        console.log("  total: ", value.total / 10 ** 18);
-        console.log("  holding: ", value.holding / 10 ** 18);
-        console.log("  pending: ", value.pending / 10 ** 18);
-        console.log("  holdingClb: ", value.holdingClb / 10 ** 18);
-        console.log("  pendingClb: ", value.pendingClb / 10 ** 18);
-        console.log("  utilizationBPS: ", utilization());
-        console.log("}");
     }
 }
