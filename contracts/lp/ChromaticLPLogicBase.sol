@@ -20,6 +20,8 @@ import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/I
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {ChromaticLPStorage} from "@chromatic-protocol/contracts/lp/ChromaticLPStorage.sol";
+import {ValueInfo} from "@chromatic-protocol/contracts/lp/interfaces/IChromaticLPLens.sol";
+
 import "forge-std/console.sol";
 
 abstract contract ChromaticLPLogicBase is ChromaticLPStorage {

@@ -8,6 +8,7 @@ import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBToken
 import {ChromaticLPReceipt, ChromaticLPAction} from "@chromatic-protocol/contracts/lp/libraries/ChromaticLPReceipt.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ChromaticLPStorage} from "@chromatic-protocol/contracts/lp/ChromaticLPStorage.sol";
+import {ValueInfo} from "@chromatic-protocol/contracts/lp/interfaces/IChromaticLPLens.sol";
 
 abstract contract ChromaticLPBase is ChromaticLPStorage {
     using Math for uint256;

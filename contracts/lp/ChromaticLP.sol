@@ -269,7 +269,7 @@ contract ChromaticLP is ChromaticLPBase, Proxy, IChromaticLP, IChromaticLiquidit
     /**
      * @dev called by keeper only
      */
-    function rebalance() public {
+    function rebalance() external {
         _fallback();
     }
 
