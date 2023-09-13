@@ -180,3 +180,24 @@ export async function batchCall(params: BatchCallParam[]) {
 
   return datas.map((data: any) => data.result)
 }
+
+export type SupraPrice = {
+  round: bigint
+  decimal: bigint
+  timestamp: bigint
+  price: bigint
+}
+
+export function parseSupraPriace(bytes32: string): SupraPrice {
+  if (bytes32.length > 66) {
+    throw Error('overflow bytes32')
+  }
+  const maxBytes32 = BigInt(`0x${'FF'.repeat(32)}`)
+  const bigintData = BigInt(bytes32)
+  return {
+    round: bigintData >> 192n,
+    decimal: ((bigintData << 64n) & maxBytes32) >> 248n,
+    timestamp: ((bigintData << 72n) & maxBytes32) >> 192n,
+    price: ((bigintData << 136n) & maxBytes32) >> 160n
+  }
+}
