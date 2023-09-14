@@ -87,8 +87,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
     /**
      * @inheritdoc IKeeperFeePayer
-     * @dev
-     *      Throws a `KeeperFeeTransferFailure` error if the transfer of ETH to the keeper address fails.
+     * @dev Throws a `KeeperFeeTransferFailure` error if the transfer of ETH to the keeper address fails.
      *      Throws an `InvalidSwapValue` error if the remaining balance of the input token after the swap is insufficient.
      */
     function payKeeperFee(
