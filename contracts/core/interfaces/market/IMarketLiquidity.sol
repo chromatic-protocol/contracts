@@ -114,12 +114,12 @@ interface IMarketLiquidity {
      * @dev Emitted when liquidity is withdrawn from the market.
      * @param receipts An array of LP receipts.
      * @param amounts The amount list of liquidity withdrawn.
-     * @param remainedCLBTokenAmounts The amount list of not burned CLB tokens.
+     * @param burnedCLBTokenAmounts The amount list of burned CLB tokens.
      */
     event WithdrawLiquidityBatch(
         LpReceipt[] receipts,
         uint256[] amounts,
-        uint256[] remainedCLBTokenAmounts
+        uint256[] burnedCLBTokenAmounts
     );
 
     /**
