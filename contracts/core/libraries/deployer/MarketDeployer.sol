@@ -147,16 +147,18 @@ library MarketDeployerLib {
     function _marketLiquidityLensFacetCut(
         address marketLiquidityLensFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](9);
+        bytes4[] memory functionSelectors = new bytes4[](11);
         functionSelectors[0] = IMarketLiquidityLens.getBinLiquidity.selector;
         functionSelectors[1] = IMarketLiquidityLens.getBinFreeLiquidity.selector;
         functionSelectors[2] = IMarketLiquidityLens.getBinValues.selector;
-        functionSelectors[3] = IMarketLiquidityLens.getLpReceipt.selector;
-        functionSelectors[4] = IMarketLiquidityLens.pendingLiquidity.selector;
-        functionSelectors[5] = IMarketLiquidityLens.pendingLiquidityBatch.selector;
-        functionSelectors[6] = IMarketLiquidityLens.claimableLiquidity.selector;
-        functionSelectors[7] = IMarketLiquidityLens.claimableLiquidityBatch.selector;
-        functionSelectors[8] = IMarketLiquidityLens.liquidityBinStatuses.selector;
+        functionSelectors[3] = IMarketLiquidityLens.getBinValuesAt.selector;
+        functionSelectors[4] = IMarketLiquidityLens.getLpReceipt.selector;
+        functionSelectors[5] = IMarketLiquidityLens.getLpReceipts.selector;
+        functionSelectors[6] = IMarketLiquidityLens.pendingLiquidity.selector;
+        functionSelectors[7] = IMarketLiquidityLens.pendingLiquidityBatch.selector;
+        functionSelectors[8] = IMarketLiquidityLens.claimableLiquidity.selector;
+        functionSelectors[9] = IMarketLiquidityLens.claimableLiquidityBatch.selector;
+        functionSelectors[10] = IMarketLiquidityLens.liquidityBinStatuses.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketLiquidityLensFacet,
@@ -200,8 +202,9 @@ library MarketDeployerLib {
     function _marketSettleFacetCut(
         address marketSettleFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](1);
+        bytes4[] memory functionSelectors = new bytes4[](2);
         functionSelectors[0] = IMarketSettle.settle.selector;
+        functionSelectors[1] = IMarketSettle.settleAll.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketSettleFacet,

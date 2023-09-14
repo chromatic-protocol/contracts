@@ -68,11 +68,11 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^0.6.1",
-    "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/contracts": "^4.9.3",
     "@uniswap/v3-periphery": "^1.4.3"
   },
   "resolutions": {
-    "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/contracts": "^4.9.3",
     "minimatch": "^9.0.3"
   }
 }

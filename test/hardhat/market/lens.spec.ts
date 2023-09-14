@@ -254,7 +254,7 @@ describe('lens', async () => {
     // expect increse removable amount
     const currentBlockTime = await time.latest()
     console.log(
-      'after tranding fee 1% 50 ether position closed (1)',
+      'trading fee 1% after 50 ether position closed (1)',
       formatRemoveLiquidityValue(claimableLiquidities)
     )
 

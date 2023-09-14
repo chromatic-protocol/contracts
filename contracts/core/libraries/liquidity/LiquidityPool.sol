@@ -82,8 +82,34 @@ library LiquidityPoolLib {
      * @notice Settles the liquidity bins in the LiquidityPool.
      * @param self The reference to the LiquidityPool.
      * @param ctx The LpContext object.
+     * @param feeRates The feeRate list of liquidity bin to settle.
      */
-    function settle(LiquidityPool storage self, LpContext memory ctx) internal {
+    function settle(
+        LiquidityPool storage self,
+        LpContext memory ctx,
+        int16[] memory feeRates
+    ) internal {
+        for (uint256 i; i < feeRates.length; ) {
+            int16 feeRate = feeRates[i];
+
+            if (feeRate < 0) {
+                self._shortBins[uint16(-feeRate)].settle(ctx);
+            } else {
+                self._longBins[uint16(feeRate)].settle(ctx);
+            }
+
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    /**
+     * @notice Settles the liquidity bins in the LiquidityPool.
+     * @param self The reference to the LiquidityPool.
+     * @param ctx The LpContext object.
+     */
+    function settleAll(LiquidityPool storage self, LpContext memory ctx) internal {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
         for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 feeRate = _tradingFeeRates[i];
@@ -134,7 +160,7 @@ library LiquidityPoolLib {
         //slither-disable-next-line uninitialized-local
         uint256 cnt;
         uint256 remain = makerMargin;
-        for (; to < FEE_RATES_LENGTH; to++) {
+        for (; to < FEE_RATES_LENGTH; ) {
             if (remain == 0) break;
 
             LiquidityBin storage _bin = _bins[_tradingFeeRates[to]];
@@ -151,12 +177,16 @@ library LiquidityPoolLib {
                 }
                 cnt++;
             }
+
+            unchecked {
+                to++;
+            }
         }
 
         require(remain == 0, Errors.NOT_ENOUGH_FREE_LIQUIDITY);
 
         BinMargin[] memory binMargins = new BinMargin[](cnt);
-        for ((uint256 i, uint256 idx) = (0, 0); i < to; i++) {
+        for ((uint256 i, uint256 idx) = (0, 0); i < to; ) {
             if (_binMargins[i] != 0) {
                 binMargins[idx] = BinMargin({
                     tradingFeeRate: _tradingFeeRates[i],
@@ -166,6 +196,10 @@ library LiquidityPoolLib {
                 unchecked {
                     idx++;
                 }
+            }
+
+            unchecked {
+                i++;
             }
         }
 
@@ -817,16 +851,31 @@ library LiquidityPoolLib {
     /**
      * @dev Retrieves the value of a specific bin in the LiquidityPool storage for the provided trading fee rate.
      * @param self The reference to the LiquidityPool storage.
-     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
      * @param ctx The LP context containing relevant information for the calculation.
+     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
      * @return value The value of the specified bin.
      */
     function binValue(
         LiquidityPool storage self,
-        int16 _tradingFeeRate,
-        LpContext memory ctx
+        LpContext memory ctx,
+        int16 _tradingFeeRate
     ) internal view returns (uint256 value) {
         value = targetBin(self, _tradingFeeRate).value(ctx);
+    }
+
+    /**
+     * @dev Retrieves the value of a specific bin in the LiquidityPool storage at a specific oracle version.
+     * @param self The reference to the LiquidityPool storage.
+     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
+     * @param oracleVersion The oracle version for which to retrieve the bin value.
+     * @return value The LiquidityBinValue representing the value of the specified bin at the given oracle version.
+     */
+    function binValueAt(
+        LiquidityPool storage self,
+        int16 _tradingFeeRate,
+        uint256 oracleVersion
+    ) internal view returns (IMarketLiquidity.LiquidityBinValue memory value) {
+        value = targetBin(self, _tradingFeeRate).binValueAt[oracleVersion];
     }
 
     /**

@@ -168,7 +168,7 @@ contract LiquidityPoolTest is Test {
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = 90 ether;
 
-        liquidityPool.settle(ctx);
+        liquidityPool.settleAll(ctx);
         assertEq(liquidityPool._longBins[1].liquidity(), 1100 ether);
     }
 
@@ -183,7 +183,7 @@ contract LiquidityPoolTest is Test {
         ctx._currentVersionCache.timestamp = 2;
         ctx._currentVersionCache.price = 90 ether;
 
-        liquidityPool.settle(ctx);
+        liquidityPool.settleAll(ctx);
         assertEq(liquidityPool._longBins[1].liquidity(), 900 ether);
     }
 

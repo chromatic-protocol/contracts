@@ -35,17 +35,32 @@ interface IChromaticLiquidityCallback {
     /**
      * @notice Handles the callback after claiming liquidity from the Chromatic protocol.
      * @param receiptId The ID of the liquidity claim receipt.
+     * @param feeRate The trading fee rate associated with the liquidity claim.
+     * @param depositedAmount The amount of liquidity deposited.
+     * @param mintedCLBTokenAmount The amount of CLB tokens minted as liquidity.
      * @param data Additional data associated with the liquidity claim.
      */
-    function claimLiquidityCallback(uint256 receiptId, bytes calldata data) external;
+    function claimLiquidityCallback(
+        uint256 receiptId,
+        int16 feeRate,
+        uint256 depositedAmount,
+        uint256 mintedCLBTokenAmount,
+        bytes calldata data
+    ) external;
 
     /**
      * @notice Handles the callback after claiming liquidity from the Chromatic protocol.
      * @param receiptIds The array of the liquidity receipt IDs.
+     * @param feeRates The array of trading fee rates associated with each claim in the batch.
+     * @param depositedAmounts The array of deposited liquidity amounts for each receipt in the batch.
+     * @param mintedCLBTokenAmounts The array of CLB token amounts minted for each receipt in the batch.
      * @param data Additional data associated with the liquidity claim.
      */
     function claimLiquidityBatchCallback(
         uint256[] calldata receiptIds,
+        int16[] calldata feeRates,
+        uint256[] calldata depositedAmounts,
+        uint256[] calldata mintedCLBTokenAmounts,
         bytes calldata data
     ) external;
 
@@ -76,17 +91,32 @@ interface IChromaticLiquidityCallback {
     /**
      * @notice Handles the callback after withdrawing liquidity from the Chromatic protocol.
      * @param receiptId The ID of the liquidity withdrawal receipt.
+     * @param feeRate The trading fee rate associated with the liquidity withdrawal.
+     * @param withdrawnAmount The amount of liquidity that has been withdrawn.
+     * @param burnedCLBTokenAmount The amount of CLB tokens burned during the withdrawal.
      * @param data Additional data associated with the liquidity withdrawal.
      */
-    function withdrawLiquidityCallback(uint256 receiptId, bytes calldata data) external;
+    function withdrawLiquidityCallback(
+        uint256 receiptId,
+        int16 feeRate,
+        uint256 withdrawnAmount,
+        uint256 burnedCLBTokenAmount,
+        bytes calldata data
+    ) external;
 
     /**
      * @notice Handles the callback after withdrawing liquidity from the Chromatic protocol.
      * @param receiptIds The array of the liquidity receipt IDs.
+     * @param feeRates The array of trading fee rates associated with each withdrawal in the batch.
+     * @param withdrawnAmounts The array of withdrawn liquidity amounts for each receipt in the batch.
+     * @param burnedCLBTokenAmounts The array of CLB token amounts burned for each receipt in the batch.
      * @param data Additional data associated with the liquidity withdrawal.
      */
     function withdrawLiquidityBatchCallback(
         uint256[] calldata receiptIds,
+        int16[] calldata feeRates,
+        uint256[] calldata withdrawnAmounts,
+        uint256[] calldata burnedCLBTokenAmounts,
         bytes calldata data
     ) external;
 }

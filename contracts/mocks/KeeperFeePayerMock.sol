@@ -16,10 +16,6 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
         _;
     }
 
-    modifier onlyVault() {
-        require(msg.sender == factory.vault(), "only Vault can access");
-        _;
-    }
 
     constructor(IChromaticMarketFactory _factory) {
         factory = _factory;
@@ -35,7 +31,7 @@ contract KeeperFeePayerMock is IKeeperFeePayer {
         address tokenIn,
         uint256 amountOut,
         address keeperAddress
-    ) external onlyVault returns (uint256 amountIn) {
+    ) external returns (uint256 amountIn) {
         uint256 tokenBalance = IERC20(tokenIn).balanceOf(address(this));
 
         amountIn = amountOut;

@@ -3,10 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IMarketLiquidityLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidityLens.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
-import {MarketStorage, MarketStorageLib, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
+import {MarketStorage, MarketStorageLib, LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {MarketLiquidityFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacetBase.sol";
 
 /**
@@ -35,20 +36,39 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
      */
     function getBinValues(
         int16[] memory tradingFeeRates
-    ) external view override returns (uint256[] memory) {
+    ) external view override returns (uint256[] memory values) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
 
+        values = new uint256[](tradingFeeRates.length);
         LpContext memory ctx = newLpContext(ms);
-        uint256[] memory values = new uint256[](tradingFeeRates.length);
         for (uint256 i; i < tradingFeeRates.length; ) {
-            values[i] = liquidityPool.binValue(tradingFeeRates[i], ctx);
+            values[i] = liquidityPool.binValue(ctx, tradingFeeRates[i]);
 
             unchecked {
                 i++;
             }
         }
-        return values;
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidityLens
+     */
+    function getBinValuesAt(
+        uint256 oracleVersion,
+        int16[] memory tradingFeeRates
+    ) external view override returns (IMarketLiquidity.LiquidityBinValue[] memory values) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        LiquidityPool storage liquidityPool = ms.liquidityPool;
+
+        values = new IMarketLiquidity.LiquidityBinValue[](tradingFeeRates.length);
+        for (uint256 i; i < tradingFeeRates.length; ) {
+            values[i] = liquidityPool.binValueAt(tradingFeeRates[i], oracleVersion);
+
+            unchecked {
+                i++;
+            }
+        }
     }
 
     /**
@@ -57,6 +77,24 @@ contract MarketLiquidityLensFacet is MarketLiquidityFacetBase, IMarketLiquidityL
      */
     function getLpReceipt(uint256 receiptId) external view returns (LpReceipt memory receipt) {
         receipt = _getLpReceipt(LpReceiptStorageLib.lpReceiptStorage(), receiptId);
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidityLens
+     * @dev Throws a `NotExistLpReceipt` error if the liquidity receipt does not exist.
+     */
+    function getLpReceipts(
+        uint256[] calldata receiptIds
+    ) external view returns (LpReceipt[] memory receipts) {
+        receipts = new LpReceipt[](receiptIds.length);
+        LpReceiptStorage storage ls = LpReceiptStorageLib.lpReceiptStorage();
+        for (uint256 i; i < receiptIds.length; ) {
+            receipts[i] = _getLpReceipt(ls, receiptIds[i]);
+
+            unchecked {
+                i++;
+            }
+        }
     }
 
     /**

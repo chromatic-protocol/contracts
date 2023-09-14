@@ -191,7 +191,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function settle() {
-    return (await market.settle()).wait()
+    return (await market.settleAll()).wait()
   }
 
   return {

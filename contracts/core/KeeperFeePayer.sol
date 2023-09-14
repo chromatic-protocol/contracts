@@ -87,7 +87,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
 
     /**
      * @inheritdoc IKeeperFeePayer
-     * @dev Only the Vault can call this function.
+     * @dev
      *      Throws a `KeeperFeeTransferFailure` error if the transfer of ETH to the keeper address fails.
      *      Throws an `InvalidSwapValue` error if the remaining balance of the input token after the swap is insufficient.
      */
