@@ -4,13 +4,15 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
-import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {IMate2Automate} from "@chromatic-protocol/contracts/core/keeper/IMate2Automate.sol";
+import {IMate2Automation} from "@chromatic-protocol/contracts/core/keeper/IMate2Automation.sol";
 
 /**
  * @title Liquidator
  * @dev An abstract contract for liquidation functionality in the Chromatic protocol.
  */
-abstract contract Liquidator is IChromaticLiquidator {
+abstract contract Mate2Liquidator is IChromaticLiquidator, IMate2Automation {
     address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint256 private constant DEFAULT_LIQUIDATION_INTERVAL = 1 minutes;
     uint256 private constant DEFAULT_CLAIM_INTERVAL = 1 days;
@@ -22,6 +24,10 @@ abstract contract Liquidator is IChromaticLiquidator {
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
     mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
 
+    enum UpkeepType {
+        LiquidatePosition,
+        ClaimPosition
+    }
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
      */
@@ -62,9 +68,9 @@ abstract contract Liquidator is IChromaticLiquidator {
 
     /**
      * @dev Retrieves the IAutomate contract instance.
-     * @return IAutomate The IAutomate contract instance.
+     * @return IMate2Automate The IMate2Automate contract instance.
      */
-    function getAutomate() internal view virtual returns (IAutomate);
+    function getAutomate() internal view virtual returns (IMate2Automate);
 
     /**
      * @inheritdoc IChromaticLiquidator
@@ -89,7 +95,12 @@ abstract contract Liquidator is IChromaticLiquidator {
      * @dev Can only be called by a registered market.
      */
     function createLiquidationTask(uint256 positionId) external override onlyMarket {
-        _createTask(_liquidationTaskIds, positionId, this.resolveLiquidation, liquidationInterval);
+        _registerUpkeep(
+            _liquidationTaskIds,
+            positionId,
+            UpkeepType.LiquidatePosition,
+            liquidationInterval
+        );
     }
 
     /**
@@ -108,7 +119,7 @@ abstract contract Liquidator is IChromaticLiquidator {
         uint256 positionId
     ) external view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkLiquidation(positionId)) {
-            return (true, abi.encodeCall(this.liquidate, (_market, positionId)));
+            return (true, abi.encode(_market, positionId, UpkeepType.LiquidatePosition));
         }
 
         return (false, bytes(""));
@@ -122,7 +133,7 @@ abstract contract Liquidator is IChromaticLiquidator {
      */
     function _liquidate(address _market, uint256 positionId, uint256 fee) internal {
         IMarketLiquidate market = IMarketLiquidate(_market);
-        market.liquidate(positionId, getAutomate().gelato(), fee);
+        market.liquidate(positionId, address(getAutomate()), fee);
     }
 
     /**
@@ -130,7 +141,7 @@ abstract contract Liquidator is IChromaticLiquidator {
      * @dev Can only be called by a registered market.
      */
     function createClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _createTask(_claimPositionTaskIds, positionId, this.resolveClaimPosition, claimInterval);
+        _registerUpkeep(_claimPositionTaskIds, positionId, UpkeepType.ClaimPosition, claimInterval);
     }
 
     /**
@@ -149,7 +160,7 @@ abstract contract Liquidator is IChromaticLiquidator {
         uint256 positionId
     ) external view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkClaimPosition(positionId)) {
-            return (true, abi.encodeCall(this.claimPosition, (_market, positionId)));
+            return (true, abi.encode(_market, positionId, UpkeepType.ClaimPosition));
         }
 
         return (false, "");
@@ -163,20 +174,19 @@ abstract contract Liquidator is IChromaticLiquidator {
      */
     function _claimPosition(address _market, uint256 positionId, uint256 fee) internal {
         IMarketLiquidate market = IMarketLiquidate(_market);
-        market.claimPosition(positionId, getAutomate().gelato(), fee);
+        market.claimPosition(positionId, address(getAutomate()), fee);
     }
 
     /**
      * @dev Internal function to create a Gelato task for liquidation or claim position.
      * @param registry The mapping to store task IDs.
      * @param positionId The ID of the position.
-     * @param resolve The resolve function to be called by the Gelato automation system.
      * @param interval The interval between task executions.
      */
-    function _createTask(
+    function _registerUpkeep(
         mapping(address => mapping(uint256 => bytes32)) storage registry,
         uint256 positionId,
-        function(address, uint256) external view returns (bool, bytes memory) resolve,
+        UpkeepType upkeepType,
         uint256 interval
     ) internal {
         address market = msg.sender;
@@ -184,24 +194,16 @@ abstract contract Liquidator is IChromaticLiquidator {
             return;
         }
 
-        ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
-
-        moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = abi.encode(
+        uint256 upkeepId = getAutomate().registerUpkeep(
             address(this),
-            abi.encodeCall(resolve, (market, positionId))
+            1e6, //uint32 gasLimit,
+            msg.sender, // address admin,
+            false, // bool useTreasury,
+            true, // bool singleExec,
+            abi.encode(market, positionId, upkeepType)
         );
-        moduleData.args[1] = abi.encode(uint128(block.timestamp + interval), uint128(interval));
-        moduleData.args[2] = bytes("");
 
-        registry[market][positionId] = getAutomate().createTask(
-            address(this),
-            abi.encode(this.liquidate.selector),
-            moduleData,
-            ETH
-        );
+        registry[market][positionId] = bytes32(upkeepId);
     }
 
     /**
@@ -216,9 +218,30 @@ abstract contract Liquidator is IChromaticLiquidator {
         address market = msg.sender;
         bytes32 taskId = registry[market][positionId];
         if (taskId != bytes32(0)) {
-            getAutomate().cancelTask(taskId);
+            getAutomate().cancelUpkeep(uint256(taskId));
             delete registry[market][positionId];
         }
+    }
+
+    function checkUpkeep(
+        bytes calldata checkData
+    ) external view returns (bool upkeepNeeded, bytes memory performData) {
+        (address market, uint256 positionId, UpkeepType upkeepType) = abi.decode(
+            checkData,
+            (address, uint256, UpkeepType)
+        );
+        if (upkeepType == UpkeepType.LiquidatePosition)
+            return this.resolveLiquidation(market, positionId);
+        else if (upkeepType == UpkeepType.ClaimPosition)
+            return this.resolveClaimPosition(market, positionId);
+    }
+
+    function performUpkeep(bytes memory performData) external {
+        (address market, uint256 positionId, ) = abi.decode(
+            performData,
+            (address, uint256, UpkeepType)
+        );
+        this.liquidate(market, positionId);
     }
 
     function getLiquidationTaskId(

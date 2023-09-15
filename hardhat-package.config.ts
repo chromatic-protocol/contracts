@@ -20,7 +20,8 @@ export default {
   artifactFromDeployment: true,
   includesFromDeployed: [
     'ChromaticLens',
-    'ChromaticLiquidator',
+    'ChromaticGelatoLiquidator',
+    'ChromaticMate2Liquidator',
     'ChromaticMarketFactory',
     'ChromaticRouter',
     'ChromaticVault'
