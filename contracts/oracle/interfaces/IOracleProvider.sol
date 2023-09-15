@@ -47,4 +47,10 @@ interface IOracleProvider {
      * @return A string representing the description of the Oracle Provider.
      */
     function description() external view returns (string memory);
+
+    /**
+     * @notice Retrieves the name of the Oracle Provider.
+     * @return A string representing the name of the Oracle Provider.
+     */
+    function oracleProviderName() external view returns (string memory);
 }

@@ -74,7 +74,7 @@ const config: HardhatUserConfig = {
     arbitrum_goerli: {
       // testnet
       ...common,
-      url: 'https://goerli-rollup.arbitrum.io/rpc',
+      url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 421613,
       tags: ['core']
     },
@@ -83,6 +83,18 @@ const config: HardhatUserConfig = {
       ...common,
       url: 'https://arb1.arbitrum.io/rpc',
       chainId: 42161,
+      tags: ['core']
+    },
+    mantle: {
+      ...common,
+      url: 'https://rpc.mantle.xyz/',
+      chainId: 5000,
+      tags: ['core']
+    },
+    mantle_testnet: {
+      ...common,
+      url: 'https://rpc.testnet.mantle.xyz/',
+      chainId: 5001,
       tags: ['core']
     }
   },
@@ -104,8 +116,28 @@ const config: HardhatUserConfig = {
   docgen: docgenConfig,
   etherscan: {
     apiKey: {
-      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!
-    }
+      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!,
+      mantleTestnet: 'test', // prevent MissingApiKeyError
+      mantle: 'test' // prevent MissingApiKeyError
+    },
+    customChains: [
+      {
+        network: 'mantle',
+        chainId: 5000,
+        urls: {
+          apiURL: 'https://explorer.mantle.xyz/api',
+          browserURL: 'https://explorer.mantle.xyz/'
+        }
+      },
+      {
+        network: 'mantleTestnet',
+        chainId: 5001,
+        urls: {
+          apiURL: 'https://explorer.testnet.mantle.xyz/api',
+          browserURL: 'https://explorer.testnet.mantle.xyz/'
+        }
+      }
+    ]
   }
 }
 

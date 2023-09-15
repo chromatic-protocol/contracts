@@ -35,7 +35,7 @@ contract OracleProviderMock is IOracleProvider {
         uint256 version
     ) public view override returns (OracleVersion memory oracleVersion) {
         oracleVersion = oracleVersions[version];
-        if(oracleVersion.version == 0){
+        if (oracleVersion.version == 0) {
             oracleVersion.version = version;
         }
     }
@@ -55,5 +55,9 @@ contract OracleProviderMock is IOracleProvider {
                 i++;
             }
         }
+    }
+
+    function oracleProviderName() external pure override returns (string memory) {
+        return "chainlink";
     }
 }
