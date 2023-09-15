@@ -2,7 +2,7 @@ import { deployments, ethers, getNamedAccounts } from 'hardhat'
 import { DeployOptions } from 'hardhat-deploy/types'
 import util from 'util'
 import { logDeployed } from './log-utils'
-import { Interface, Result } from 'ethers'
+import { Interface, Result, TopicFilter } from 'ethers'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 
 export async function deployContract<T>(
@@ -200,4 +200,33 @@ export function parseSupraPriace(bytes32: string): SupraPrice {
     timestamp: ((bigintData << 72n) & maxBytes32) >> 192n,
     price: ((bigintData << 136n) & maxBytes32) >> 160n
   }
+}
+
+export type EthGetLogsParam = {
+  address: string
+  iface: Interface
+  eventName: string
+}
+
+export async function mantleGetLogs(param: EthGetLogsParam): Promise<Result[]> {
+  const hre = await import('hardhat')
+  const chainId = Number(await hre.getChainId())
+  const apiURL = hre.config.etherscan.customChains.filter((c) => c.chainId === chainId)[0].urls
+    .apiURL
+
+  const topicParam = `topic0=${param.iface.getEvent(param.eventName)!.topicHash}&`
+  const reqUrl = `${apiURL}?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${param.address}&${topicParam}`
+
+  console.log(reqUrl)
+
+  const res = await fetch(reqUrl, {
+    method: 'GET'
+  })
+
+  const json = await res.json()
+  const logs = json.result.map((e: any) =>
+    param.iface.decodeEventLog(param.eventName, e.data, e.topics)
+  )
+
+  return logs
 }
