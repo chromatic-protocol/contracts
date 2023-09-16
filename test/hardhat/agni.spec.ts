@@ -47,7 +47,7 @@ const ADDRESSES: { [key: string]: ChainAddresses } = {
     usdt: '0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE', // WMNT(10000-200 2500-50, 100-1,500-10) 100-1 10000-200 2500-50 500-10
     swapRouter: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421',
     quoterV2: '0x49C8bb51C6bb791e8D6C31310cE0C14f68492991',
-    WMNT: ''
+    WMNT: '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8'
   },
   mantle_testnet: {
     agniFactory: '0x503Ca2ad7C9C70F4157d14CF94D3ef5Fa96D7032',
@@ -85,12 +85,15 @@ describe('agni test', async function () {
     const token1SymbolParams: BatchCallByFunctionNameParam[] = []
     const erc20Iface = IERC20Metadata__factory.createInterface()
     const poolIface = IAgniPoolState__factory.createInterface()
+    const fees: number[] = []
     const from = await signer.getAddress()
     for (let i = 0; i < logs.length; i++) {
       const log = logs[i]
       const token0 = log[0]
       const token1 = log[1] // const fee = log[2] const tickSpacing = log[3]
       const pool = log[4]
+
+      fees.push(log[2])
       // prettier-ignore
       slot0Params.push({iface: poolIface, from, to: pool, functionName: 'slot0', data: []})
       // prettier-ignore
@@ -118,17 +121,25 @@ describe('agni test', async function () {
     for (let i = 0; i < slot0Arr.length; i++) {
       const sqrtPriceX96 = slot0Arr[i][0]
       const ratio = Number(sqrtPriceX96) ** 2 / 2 ** 192
+      const decimalGap = Number(token1Decimals[i]) - Number(token0Decimals[i])
+      const token1Price = ratio / 10 ** decimalGap
+      const token2Price = 1 / token1Price
 
       console.log(
-        chalk.yellow(`🫧  Pool: ${token0Symbol[i]} / ${token1Symbol[i]} ${slot0Params[i].to}`)
+        chalk.yellow(
+          `🫧  Pool: ${token0Symbol[i]} / ${token1Symbol[i]} ${fees[i]} - ${slot0Params[i].to}`
+        )
       )
-      console.log(`sqrtPriceX96 ${ratio}`)
-      console.log(`token0 - token1 ratio ${sqrtPriceX96}`)
+      console.log(`sqrtPriceX96 ${sqrtPriceX96}`)
+      console.log(`token0 - token1 ratio ${ratio}`)
+      console.log(`1 ${token0Symbol[i]} = ${token1Price} ${token1Symbol[i]}`)
+      console.log(`1 ${token1Symbol[i]} = ${token2Price} ${token0Symbol[i]}`)
+
       console.log(
-        `Token0 : Total Tokens Locked ${token0Balances[i]}, Decimal ${token0Decimals[i]}, ${token0Symbol[i]}${token0BalanceParams[i].to}`
+        `Token0 : Total Tokens Locked ${token0Balances[i]}, Decimal ${token0Decimals[i]}, ${token0Symbol[i]} ${token0BalanceParams[i].to}`
       )
       console.log(
-        `Token1 : Total Tokens Locked ${token1Balances[i]}, Decimal ${token1Decimals[i]}, ${token1Symbol[i]}${token1BalanceParams[i].to}`
+        `Token1 : Total Tokens Locked ${token1Balances[i]}, Decimal ${token1Decimals[i]}, ${token1Symbol[i]} ${token1BalanceParams[i].to}`
       )
     }
   })
