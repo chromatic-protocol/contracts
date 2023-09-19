@@ -1,23 +1,8 @@
-import {
-  AbstractPyth,
-  AbstractPyth__factory,
-  IAgniFactory__factory,
-  IAgniPoolImmutables__factory,
-  IAgniPoolState__factory,
-  IAgniQuoterV2__factory,
-  IAgniSwapRouter__factory,
-  IERC20Metadata__factory,
-  IERC20__factory,
-  ISwapRouter__factory,
-  IWETH9__factory,
-  PythFeedOracle__factory
-} from '@chromatic/typechain-types'
+import { IERC20Metadata__factory } from '@chromatic/typechain-types'
 import { ethers } from 'hardhat'
-import { expect } from 'chai'
-import { getGasLimit } from '@chromatic/hardhat/tasks/utils'
 import { BatchCallByFunctionNameParam, batchCallByFunctionName, mantleGetLogs } from './utils'
-import { Indexed, JsonRpcProvider } from 'ethers'
 import chalk from 'chalk'
+import { Interface } from 'ethers'
 
 // TODO ERC20 Deploy => Create Pool
 
@@ -62,19 +47,22 @@ const ADDRESSES: { [key: string]: ChainAddresses } = {
 const MNT = '0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111'
 
 // https://explorer.mantle.xyz/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=0x25780dc8Fc3cfBD75F33bFDAB65e969b603b2035&topic0=0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118
-describe('agni test', async function () {
-  it('pool state', async () => {
+describe('Swap pool state log', async function () {
+  // yarn hardhat test --grep 'AGNI pool state' --network mantle
+  it('AGNI pool state', async () => {
     const [signer] = await ethers.getSigners()
     const chain = (signer.provider as any)['_networkName']
     const addr = ADDRESSES[chain]
 
-    const factory = IAgniFactory__factory.connect(addr.agniFactory, signer)
+    const factoryIface = new Interface(factoryAbi)
 
     const logs = await mantleGetLogs({
       address: addr.agniFactory,
-      iface: factory.interface,
+      iface: factoryIface,
       eventName: 'PoolCreated'
     })
+
+    const poolStateIface = new Interface(poolAbi)
 
     const slot0Params: BatchCallByFunctionNameParam[] = []
     const token0BalanceParams: BatchCallByFunctionNameParam[] = []
@@ -84,7 +72,6 @@ describe('agni test', async function () {
     const token1DecimalParams: BatchCallByFunctionNameParam[] = []
     const token1SymbolParams: BatchCallByFunctionNameParam[] = []
     const erc20Iface = IERC20Metadata__factory.createInterface()
-    const poolIface = IAgniPoolState__factory.createInterface()
     const fees: number[] = []
     const from = await signer.getAddress()
     for (let i = 0; i < logs.length; i++) {
@@ -95,7 +82,7 @@ describe('agni test', async function () {
 
       fees.push(log[2])
       // prettier-ignore
-      slot0Params.push({iface: poolIface, from, to: pool, functionName: 'slot0', data: []})
+      slot0Params.push({iface: poolStateIface, from, to: pool, functionName: 'slot0', data: []})
       // prettier-ignore
       token0BalanceParams.push({iface: erc20Iface, from, to: token0, functionName: 'balanceOf', data: [pool]})
       // prettier-ignore
@@ -143,54 +130,89 @@ describe('agni test', async function () {
       )
     }
   })
-  // it('swap', async () => {
-  //   const [signer] = await ethers.getSigners()
-  //   const chain = (signer.provider as any)['_networkName']
-  //   const quoterV2 = IAgniQuoterV2__factory.connect(QUOTER_V2[chain], signer)
-
-  //   // TODO Revert msg parsing
-  //   // const output = await quoterV2.quoteExactOutputSingle.staticCall(
-  //   //   {
-  //   //     tokenIn: WMNT[chain],
-  //   //     tokenOut: USDC[chain],
-  //   //     amount: 123n * 10n ** 18n,
-  //   //     fee: 3000,
-  //   //     sqrtPriceLimitX96: 199
-  //   //   },
-  //   //   { gasLimit: '0x1000000' }
-  //   // )
-  //   // console.log(output)
-
-  //   const from = await signer.getAddress()
-  //   const router = IAgniSwapRouter__factory.connect(SWAP_ROUTER[chain], signer)
-  //   const iweth9 = IWETH9__factory.connect(WMNT[chain], signer)
-  //   const usdc = IERC20__factory.connect(USDC[chain], signer)
-  //   // await (await iweth9.deposit({ value: 12345n * 10n ** 18n, gasLimit: '0x1000000' })).wait()
-
-  //   console.log(await iweth9.balanceOf(from))
-  //   console.log(await usdc.balanceOf(from))
-
-  //   const swapTx = await router.exactOutputSingle(
-  //     {
-  //       tokenIn: WMNT[chain],
-  //       tokenOut: USDC[chain],
-  //       fee: 1000, // 10000 500 3000
-  //       recipient: from,
-  //       deadline: Math.ceil(Date.now() / 1000) + 30000,
-  //       amountOut: 1n * 10n ** 18n,
-  //       amountInMaximum: await iweth9.balanceOf(from),
-  //       sqrtPriceLimitX96: 0
-  //     },
-  //     { gasLimit: '0x1000000' }
-  //   )
-  //   await swapTx.wait()
-  //   console.log(await iweth9.balanceOf(from))
-  //   console.log(await usdc.balanceOf(from))
-  // })
 }).timeout(60000)
 
-// SWAP, CREATE POOL
-export const getMinTick = (tickSpacing: number) => Math.ceil(-887272 / tickSpacing) * tickSpacing
-export const getMaxTick = (tickSpacing: number) => Math.floor(887272 / tickSpacing) * tickSpacing
-export const getMaxLiquidityPerTick = (tickSpacing: number) =>
-  (2n ** 128n - 1n) / BigInt((getMaxTick(tickSpacing) - getMinTick(tickSpacing)) / tickSpacing + 1)
+const poolAbi = [
+  {
+    inputs: [],
+    name: 'slot0',
+    outputs: [
+      {
+        internalType: 'uint160',
+        name: 'sqrtPriceX96',
+        type: 'uint160'
+      },
+      {
+        internalType: 'int24',
+        name: 'tick',
+        type: 'int24'
+      },
+      {
+        internalType: 'uint16',
+        name: 'observationIndex',
+        type: 'uint16'
+      },
+      {
+        internalType: 'uint16',
+        name: 'observationCardinality',
+        type: 'uint16'
+      },
+      {
+        internalType: 'uint16',
+        name: 'observationCardinalityNext',
+        type: 'uint16'
+      },
+      {
+        internalType: 'uint8',
+        name: 'feeProtocol',
+        type: 'uint8'
+      },
+      {
+        internalType: 'bool',
+        name: 'unlocked',
+        type: 'bool'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  }
+]
+const factoryAbi = [
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'token0',
+        type: 'address'
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'token1',
+        type: 'address'
+      },
+      {
+        indexed: true,
+        internalType: 'uint24',
+        name: 'fee',
+        type: 'uint24'
+      },
+      {
+        indexed: false,
+        internalType: 'int24',
+        name: 'tickSpacing',
+        type: 'int24'
+      },
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'pool',
+        type: 'address'
+      }
+    ],
+    name: 'PoolCreated',
+    type: 'event'
+  }
+]
