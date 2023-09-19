@@ -2,33 +2,28 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
-import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
-import {IMate2Automation} from "@chromatic-protocol/contracts/core/keeper/IMate2Automation.sol";
-import {IMate2Automate} from "@chromatic-protocol/contracts/core/keeper/IMate2Automate.sol";
+import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
+import {IMate2Automation} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation.sol";
+import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 
 /**
- * @title ChromaticMate2Liquidator
+ * @title Mate2Liquidator
  * @dev A contract that handles the liquidation and claiming of positions in Chromatic markets.
- *      It implements the IChromaticLiquidator and the IMate2Automation interface.
+ *      It implements the ILiquidator and the IMate2Automation interface.
  */
-contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
-    IMate2Automate immutable automate;
-    address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 private constant DEFAULT_LIQUIDATION_INTERVAL = 1 minutes;
-    uint256 private constant DEFAULT_CLAIM_INTERVAL = 1 days;
-
+contract Mate2Liquidator is ILiquidator, IMate2Automation {
+    IMate2AutomationRegistry immutable automate;
     IChromaticMarketFactory immutable factory;
-    uint256 public liquidationInterval;
-    uint256 public claimInterval;
 
-    mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
-    mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
+    mapping(address => mapping(uint256 => uint256)) private _liquidationUpkeepIds;
+    mapping(address => mapping(uint256 => uint256)) private _claimPositionUpkeepIds;
 
     enum UpkeepType {
         LiquidatePosition,
         ClaimPosition
     }
+
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
      */
@@ -64,52 +59,27 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
      */
     constructor(IChromaticMarketFactory _factory, address _automate) {
         factory = _factory;
-        liquidationInterval = DEFAULT_LIQUIDATION_INTERVAL;
-        claimInterval = DEFAULT_CLAIM_INTERVAL;
-        automate = IMate2Automate(_automate);
+        automate = IMate2AutomationRegistry(_automate);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
-     * @dev Can only be called by the DAO
-     */
-    function updateLiquidationInterval(uint256 interval) external override {
-        liquidationInterval = interval;
-        emit UpdateLiquidationInterval(interval);
-    }
-
-    /**
-     * @inheritdoc IChromaticLiquidator
-     * @dev Can only be called by the DAO
-     */
-    function updateClaimInterval(uint256 interval) external override {
-        claimInterval = interval;
-        emit UpdateClaimInterval(interval);
-    }
-
-    /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function createLiquidationTask(uint256 positionId) external override onlyMarket {
-        _registerUpkeep(
-            _liquidationTaskIds,
-            positionId,
-            UpkeepType.LiquidatePosition,
-            liquidationInterval
-        );
+        _registerUpkeep(_liquidationUpkeepIds, positionId, UpkeepType.LiquidatePosition);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function cancelLiquidationTask(uint256 positionId) external override onlyMarket {
-        _cancelTask(_liquidationTaskIds, positionId);
+        _cancelTask(_liquidationUpkeepIds, positionId);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      */
     function resolveLiquidation(
         address _market,
@@ -123,23 +93,23 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function createClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _registerUpkeep(_claimPositionTaskIds, positionId, UpkeepType.ClaimPosition, claimInterval);
+        _registerUpkeep(_claimPositionUpkeepIds, positionId, UpkeepType.ClaimPosition);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function cancelClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _cancelTask(_claimPositionTaskIds, positionId);
+        _cancelTask(_claimPositionUpkeepIds, positionId);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      */
     function resolveClaimPosition(
         address _market,
@@ -167,16 +137,14 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
      * @dev Internal function to create a Gelato task for liquidation or claim position.
      * @param registry The mapping to store task IDs.
      * @param positionId The ID of the position.
-     * @param interval The interval between task executions.
      */
     function _registerUpkeep(
-        mapping(address => mapping(uint256 => bytes32)) storage registry,
+        mapping(address => mapping(uint256 => uint256)) storage registry,
         uint256 positionId,
-        UpkeepType upkeepType,
-        uint256 interval
+        UpkeepType upkeepType
     ) internal {
         address market = msg.sender;
-        if (registry[market][positionId] != bytes32(0)) {
+        if (registry[market][positionId] != 0) {
             return;
         }
 
@@ -189,7 +157,7 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
             abi.encode(market, positionId, upkeepType)
         );
 
-        registry[market][positionId] = bytes32(upkeepId);
+        registry[market][positionId] = upkeepId;
     }
 
     /**
@@ -198,13 +166,13 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
      * @param positionId The ID of the position.
      */
     function _cancelTask(
-        mapping(address => mapping(uint256 => bytes32)) storage registry,
+        mapping(address => mapping(uint256 => uint256)) storage registry,
         uint256 positionId
     ) internal {
         address market = msg.sender;
-        bytes32 taskId = registry[market][positionId];
-        if (taskId != bytes32(0)) {
-            getAutomate().cancelUpkeep(uint256(taskId));
+        uint256 upkeepId = registry[market][positionId];
+        if (upkeepId != 0) {
+            getAutomate().cancelUpkeep(upkeepId);
             delete registry[market][positionId];
         }
     }
@@ -233,27 +201,41 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
     function getLiquidationTaskId(
         address market,
         uint256 positionId
-    ) external view returns (bytes32 taskId) {
-        taskId = _liquidationTaskIds[market][positionId];
+    ) external view override returns (bytes32 taskId) {
+        taskId = bytes32(getLiquidationUpkeepId(market, positionId));
+    }
+
+    function getLiquidationUpkeepId(
+        address market,
+        uint256 positionId
+    ) public view returns (uint256 upkeepId) {
+        upkeepId = _liquidationUpkeepIds[market][positionId];
     }
 
     function getClaimPositionTaskId(
         address market,
         uint256 positionId
-    ) external view returns (bytes32 taskId) {
-        taskId = _claimPositionTaskIds[market][positionId];
+    ) external view override returns (bytes32 taskId) {
+        taskId = bytes32(getClaimPositionUpkeepId(market, positionId));
+    }
+
+    function getClaimPositionUpkeepId(
+        address market,
+        uint256 positionId
+    ) public view returns (uint256 upkeepId) {
+        upkeepId = _claimPositionUpkeepIds[market][positionId];
     }
 
     /**
      * @dev Retrieves the IAutomate contract instance.
-     * @return IMate2Automate The IMate2Automate contract instance.
+     * @return IMate2AutomationRegistry The IMate2AutomationRegistry contract instance.
      */
-    function getAutomate() internal view returns (IMate2Automate) {
-        return IMate2Automate(automate);
+    function getAutomate() internal view returns (IMate2AutomationRegistry) {
+        return IMate2AutomationRegistry(automate);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      */
     function liquidate(address market, uint256 positionId) external override {
         // feeToken is the native token because ETH is set as a fee token when creating task
@@ -262,7 +244,7 @@ contract ChromaticMate2Liquidator is IChromaticLiquidator, IMate2Automation {
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      */
     function claimPosition(address market, uint256 positionId) external override {
         // feeToken is the native token because ETH is set as a fee token when creating task

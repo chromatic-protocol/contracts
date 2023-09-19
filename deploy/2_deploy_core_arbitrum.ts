@@ -20,7 +20,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const deployOpts = { from: deployer }
   const factory = await deployments.get('ChromaticMarketFactory')
   const { address: liquidator, args: liquidatorArgs } = await deploy(
-    network.name === 'anvil' ? 'ChromaticGelatoLiquidatorMock' : 'ChromaticGelatoLiquidator',
+    network.name === 'anvil' ? 'GelatoLiquidatorMock' : 'GelatoLiquidator',
     {
       ...deployOpts,
       args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
@@ -30,7 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     address: liquidator,
     constructorArguments: liquidatorArgs
   })
-  console.log(chalk.yellow(`✨ ChromaticGelatoLiquidator: ${liquidator}`))
+  console.log(chalk.yellow(`✨ GelatoLiquidator: ${liquidator}`))
   const marketFactory = ChromaticMarketFactory__factory.connect(
     factory.address,
     await ethers.getSigner(deployer)

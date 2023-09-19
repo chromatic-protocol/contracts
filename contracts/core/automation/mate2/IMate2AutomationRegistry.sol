@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-interface IMate2Automate {
+interface IMate2AutomationRegistry {
     function registerUpkeep(
         address target,
         uint32 gasLimit,

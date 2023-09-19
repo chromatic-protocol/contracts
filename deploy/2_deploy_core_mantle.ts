@@ -16,7 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const deployOpts = { from: deployer }
   const factory = await deployments.get('ChromaticMarketFactory')
   const { address: liquidator, args: liquidatorArgs } = await deploy(
-    network.name === 'anvil' ? 'ChromaticMate2LiquidatorMock' : 'ChromaticMate2Liquidator',
+    network.name === 'anvil' ? 'Mate2LiquidatorMock' : 'Mate2Liquidator',
     {
       ...deployOpts,
       args: [factory, MATE2_AUTOMATION_ADDRESS]
@@ -26,7 +26,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     address: liquidator,
     constructorArguments: liquidatorArgs
   })
-  console.log(chalk.yellow(`✨ ChromaticMate2Liquidator: ${liquidator}`))
+  console.log(chalk.yellow(`✨ Mate2Liquidator: ${liquidator}`))
   const marketFactory = ChromaticMarketFactory__factory.connect(
     factory.address,
     await ethers.getSigner(deployer)

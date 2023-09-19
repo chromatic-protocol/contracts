@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
@@ -10,7 +10,7 @@ import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/Chromat
 import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
 import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProviderMock.sol";
 import {Token} from "@chromatic-protocol/contracts/mocks/Token.sol";
-import {ChromaticGelatoLiquidatorMock} from "@chromatic-protocol/contracts/mocks/ChromaticGelatoLiquidatorMock.sol";
+import {GelatoLiquidatorMock} from "@chromatic-protocol/contracts/mocks/GelatoLiquidatorMock.sol";
 import {ChromaticVaultMock} from "@chromatic-protocol/contracts/mocks/ChromaticVaultMock.sol";
 import {DiamondLoupeFacet} from "@chromatic-protocol/contracts/core/facets/DiamondLoupeFacet.sol";
 import {MarketDiamondCutFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketDiamondCutFacet.sol";
@@ -28,7 +28,7 @@ abstract contract BaseSetup is Test {
     Token usdc;
     ChromaticMarketFactory factory;
     ChromaticVaultMock vault;
-    ChromaticGelatoLiquidatorMock liquidator;
+    GelatoLiquidatorMock liquidator;
     IChromaticMarket market;
     ICLBToken clbToken;
     ChromaticRouter router;
@@ -86,7 +86,7 @@ abstract contract BaseSetup is Test {
         vault = new ChromaticVaultMock(factory, address(_automate), address(_opf));
         factory.setVault(address(vault));
 
-        liquidator = new ChromaticGelatoLiquidatorMock(factory, address(_automate), address(_opf));
+        liquidator = new GelatoLiquidatorMock(factory, address(_automate), address(_opf));
         factory.setLiquidator(address(liquidator));
 
         factory.registerOracleProvider(

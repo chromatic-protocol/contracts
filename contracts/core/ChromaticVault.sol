@@ -11,8 +11,8 @@ import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKe
 import {ILendingPool} from "@chromatic-protocol/contracts/core/interfaces/vault/ILendingPool.sol";
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {IChromaticFlashLoanCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticFlashLoanCallback.sol";
-import {AutomateReady} from "@chromatic-protocol/contracts/core/base/gelato/AutomateReady.sol";
-import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {AutomateReady} from "@chromatic-protocol/contracts/core/automation/gelato/AutomateReady.sol";
+import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**

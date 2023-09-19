@@ -20,11 +20,11 @@ export default {
   artifactFromDeployment: true,
   includesFromDeployed: [
     'ChromaticLens',
-    'ChromaticGelatoLiquidator',
-    'ChromaticMate2Liquidator',
     'ChromaticMarketFactory',
     'ChromaticRouter',
-    'ChromaticVault'
+    'ChromaticVault',
+    'GelatoLiquidator',
+    'Mate2Liquidator',
   ],
   excludesFromDeployed: ['*Mock'],
   excludeBytecode: true
