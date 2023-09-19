@@ -5,7 +5,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
-import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
+import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
@@ -18,7 +18,7 @@ struct MarketStorage {
     IOracleProvider oracleProvider;
     IERC20Metadata settlementToken;
     ICLBToken clbToken;
-    IChromaticLiquidator liquidator;
+    ILiquidator liquidator;
     IChromaticVault vault;
     IKeeperFeePayer keeperFeePayer;
     LiquidityPool liquidityPool;

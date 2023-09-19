@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IChromaticLiquidator} from "@chromatic-protocol/contracts/core/interfaces/IChromaticLiquidator.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
-import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
+import {AutomateReady} from "@chromatic-protocol/contracts/core/automation/gelato/AutomateReady.sol";
+import {ModuleData, Module, IAutomate} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 
 /**
- * @title Liquidator
- * @dev An abstract contract for liquidation functionality in the Chromatic protocol.
+ * @title GelatoLiquidator
+ * @dev A contract that handles the liquidation and claiming of positions in Chromatic markets.
+ *      It extends the AutomateReady contracts and implements the ILiquidator interface.
  */
-abstract contract Liquidator is IChromaticLiquidator {
-    address private constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+contract GelatoLiquidator is ILiquidator, AutomateReady {
     uint256 private constant DEFAULT_LIQUIDATION_INTERVAL = 1 minutes;
     uint256 private constant DEFAULT_CLAIM_INTERVAL = 1 days;
 
@@ -21,6 +22,18 @@ abstract contract Liquidator is IChromaticLiquidator {
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
     mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
+
+    /**
+     * @notice Emitted when the liquidation task interval is updated.
+     * @param interval The new liquidation task interval.
+     */
+    event UpdateLiquidationInterval(uint256 indexed interval);
+
+    /**
+     * @notice Emitted when the claim task interval is updated.
+     * @param interval The new claim task interval.
+     */
+    event UpdateClaimInterval(uint256 indexed interval);
 
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
@@ -51,41 +64,25 @@ abstract contract Liquidator is IChromaticLiquidator {
     }
 
     /**
-     * @dev Initializes the Liquidator contract.
-     * @param _factory The address of the ChromaticMarketFactory contract.
+     * @notice Updates the liquidation task interval.
+     * @param interval The new liquidation task interval.
      */
-    constructor(IChromaticMarketFactory _factory) {
-        factory = _factory;
-        liquidationInterval = DEFAULT_LIQUIDATION_INTERVAL;
-        claimInterval = DEFAULT_CLAIM_INTERVAL;
-    }
-
-    /**
-     * @dev Retrieves the IAutomate contract instance.
-     * @return IAutomate The IAutomate contract instance.
-     */
-    function getAutomate() internal view virtual returns (IAutomate);
-
-    /**
-     * @inheritdoc IChromaticLiquidator
-     * @dev Can only be called by the DAO
-     */
-    function updateLiquidationInterval(uint256 interval) external override {
+    function updateLiquidationInterval(uint256 interval) external {
         liquidationInterval = interval;
         emit UpdateLiquidationInterval(interval);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
-     * @dev Can only be called by the DAO
+     * @notice Updates the claim task interval.
+     * @param interval The new claim task interval.
      */
-    function updateClaimInterval(uint256 interval) external override {
+    function updateClaimInterval(uint256 interval) external {
         claimInterval = interval;
         emit UpdateClaimInterval(interval);
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function createLiquidationTask(uint256 positionId) external override onlyMarket {
@@ -93,7 +90,7 @@ abstract contract Liquidator is IChromaticLiquidator {
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function cancelLiquidationTask(uint256 positionId) external override onlyMarket {
@@ -101,7 +98,7 @@ abstract contract Liquidator is IChromaticLiquidator {
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      */
     function resolveLiquidation(
         address _market,
@@ -115,18 +112,7 @@ abstract contract Liquidator is IChromaticLiquidator {
     }
 
     /**
-     * @dev Internal function to perform the liquidation of a position.
-     * @param _market The address of the market contract.
-     * @param positionId The ID of the position to be liquidated.
-     * @param fee The fee to be paid for the liquidation.
-     */
-    function _liquidate(address _market, uint256 positionId, uint256 fee) internal {
-        IMarketLiquidate market = IMarketLiquidate(_market);
-        market.liquidate(positionId, getAutomate().gelato(), fee);
-    }
-
-    /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function createClaimPositionTask(uint256 positionId) external override onlyMarket {
@@ -134,7 +120,7 @@ abstract contract Liquidator is IChromaticLiquidator {
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      * @dev Can only be called by a registered market.
      */
     function cancelClaimPositionTask(uint256 positionId) external override onlyMarket {
@@ -142,7 +128,7 @@ abstract contract Liquidator is IChromaticLiquidator {
     }
 
     /**
-     * @inheritdoc IChromaticLiquidator
+     * @inheritdoc ILiquidator
      */
     function resolveClaimPosition(
         address _market,
@@ -153,17 +139,6 @@ abstract contract Liquidator is IChromaticLiquidator {
         }
 
         return (false, "");
-    }
-
-    /**
-     * @dev Internal function to perform the claim of a position.
-     * @param _market The address of the market contract.
-     * @param positionId The ID of the position to be claimed.
-     * @param fee The fee to be paid for the claim.
-     */
-    function _claimPosition(address _market, uint256 positionId, uint256 fee) internal {
-        IMarketLiquidate market = IMarketLiquidate(_market);
-        market.claimPosition(positionId, getAutomate().gelato(), fee);
     }
 
     /**
@@ -233,5 +208,58 @@ abstract contract Liquidator is IChromaticLiquidator {
         uint256 positionId
     ) external view returns (bytes32 taskId) {
         taskId = _claimPositionTaskIds[market][positionId];
+    }
+
+    /**
+     * @dev Constructor function.
+     * @param _factory The address of the Chromatic Market Factory contract.
+     * @param _automate The address of the Gelato Automate contract.
+     * @param opsProxyFactory The address of the Ops Proxy Factory contract.
+     */
+    constructor(
+        IChromaticMarketFactory _factory,
+        address _automate,
+        address opsProxyFactory
+    ) AutomateReady(_automate, address(this), opsProxyFactory) {
+        factory = _factory;
+        liquidationInterval = DEFAULT_LIQUIDATION_INTERVAL;
+        claimInterval = DEFAULT_CLAIM_INTERVAL;
+    }
+
+    /**
+     * @dev Retrieves the IAutomate contract instance.
+     * @return IAutomate The IAutomate contract instance.
+     */
+    function getAutomate() internal view returns (IAutomate) {
+        return automate;
+    }
+
+    /**
+     * @inheritdoc ILiquidator
+     */
+    function liquidate(address market, uint256 positionId) external override {
+        // feeToken is the native token because ETH is set as a fee token when creating task
+        (uint256 fee, ) = _getFeeDetails();
+        _liquidate(market, positionId, fee);
+    }
+
+    /**
+     * @dev Internal function to perform the liquidation of a position.
+     * @param _market The address of the market contract.
+     * @param positionId The ID of the position to be liquidated.
+     * @param fee The fee to be paid for the liquidation.
+     */
+    function _liquidate(address _market, uint256 positionId, uint256 fee) internal {
+        IMarketLiquidate market = IMarketLiquidate(_market);
+        market.liquidate(positionId, getAutomate().gelato(), fee);
+    }
+
+    /**
+     * @inheritdoc ILiquidator
+     */
+    function claimPosition(address market, uint256 positionId) external override {
+        // feeToken is the native token because ETH is set as a fee token when creating task
+        (uint256 fee, ) = _getFeeDetails();
+        IMarketLiquidate(market).claimPosition(positionId, getAutomate().gelato(), fee);
     }
 }

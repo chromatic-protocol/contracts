@@ -1,8 +1,6 @@
 import {
   ChromaticLens,
   ChromaticLens__factory,
-  ChromaticLiquidator,
-  ChromaticLiquidator__factory,
   ChromaticMarketFactory,
   ChromaticMarketFactory__factory,
   ChromaticRouter,
@@ -17,6 +15,8 @@ import {
   IChromaticMarket__factory,
   IERC20Metadata,
   IERC20Metadata__factory,
+  ILiquidator,
+  ILiquidator__factory,
   IOracleProvider,
   IOracleProvider__factory,
   ISwapRouter,
@@ -53,7 +53,7 @@ export class Contracts {
   private _signer!: Signer
   private _factory!: ChromaticMarketFactory
   private _vault!: ChromaticVault
-  private _liquidator!: ChromaticLiquidator
+  private _liquidator!: ILiquidator
   private _router!: ChromaticRouter
   private _lens!: ChromaticLens
   private _keeperFeePayer!: KeeperFeePayer
@@ -76,7 +76,9 @@ export class Contracts {
 
     this._factory = this.connectFactory(await this.addressOf('ChromaticMarketFactory'))
     this._vault = this.connectVault(await this.addressOf('ChromaticVault'))
-    this._liquidator = this.connectLiquidator(await this.addressOf('ChromaticLiquidator'))
+    this._liquidator = this.connectLiquidator(
+      (await this.addressOf('GelatoLiquidator')) || (await this.addressOf('Mate2Liquidator'))
+    )
     this._router = this.connectRouter(await this.addressOf('ChromaticRouter'))
     this._lens = this.connectLens(await this.addressOf('ChromaticLens'))
     this._keeperFeePayer = this.connectKeeperFeePayer(await this.addressOf('KeeperFeePayer'))
@@ -110,7 +112,7 @@ export class Contracts {
     return this._vault
   }
 
-  get liquidator(): ChromaticLiquidator {
+  get liquidator(): ILiquidator {
     return this._liquidator
   }
 
@@ -166,8 +168,8 @@ export class Contracts {
     return ChromaticVault__factory.connect(address, this._signer)
   }
 
-  connectLiquidator(address: string): ChromaticLiquidator {
-    return ChromaticLiquidator__factory.connect(address, this._signer)
+  connectLiquidator(address: string): ILiquidator {
+    return ILiquidator__factory.connect(address, this._signer)
   }
 
   connectRouter(address: string): ChromaticRouter {

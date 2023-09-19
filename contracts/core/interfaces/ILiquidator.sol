@@ -2,34 +2,10 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 /**
- * @title IChromaticLiquidator
+ * @title ILiquidator
  * @dev Interface for the Chromatic Liquidator contract.
  */
-interface IChromaticLiquidator {
-    /**
-     * @notice Emitted when the liquidation task interval is updated.
-     * @param interval The new liquidation task interval.
-     */
-    event UpdateLiquidationInterval(uint256 indexed interval);
-
-    /**
-     * @notice Emitted when the claim task interval is updated.
-     * @param interval The new claim task interval.
-     */
-    event UpdateClaimInterval(uint256 indexed interval);
-
-    /**
-     * @notice Updates the liquidation task interval.
-     * @param interval The new liquidation task interval.
-     */
-    function updateLiquidationInterval(uint256 interval) external;
-
-    /**
-     * @notice Updates the claim task interval.
-     * @param interval The new claim task interval.
-     */
-    function updateClaimInterval(uint256 interval) external;
-
+interface ILiquidator {
     /**
      * @notice Creates a liquidation task for a given position.
      * @param positionId The ID of the position to be liquidated.

@@ -1,7 +1,7 @@
 import {
-  ChromaticLiquidator,
   ChromaticMarketFactory,
   ChromaticVault,
+  GelatoLiquidator,
   KeeperFeePayerMock
 } from '@chromatic/typechain-types'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
@@ -64,7 +64,7 @@ export async function deploy() {
   })
   await (await marketFactory.setVault(vault.getAddress())).wait()
 
-  const liquidator = await deployContract<ChromaticLiquidator>('ChromaticLiquidator', {
+  const liquidator = await deployContract<GelatoLiquidator>('GelatoLiquidator', {
     args: [
       await marketFactory.getAddress(),
       GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,

@@ -1,9 +1,8 @@
 import * as Token from '@chromatic/deployments/anvil/Token.json'
 import {
   ChromaticAccount__factory,
-  ChromaticLiquidatorMock__factory,
-  ChromaticMarket__factory,
   ChromaticRouter__factory,
+  GelatoLiquidatorMock__factory,
   IChromaticMarketFactory__factory,
   IMarketLiquidate__factory,
   IMarketSettle__factory,
@@ -150,8 +149,8 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
     const marketFactory = IChromaticMarketFactory__factory.connect(marketFactoryAddress, deployer)
 
     const marketAddresses = await marketFactory.getMarkets()
-    const { address: liquidatorAddress } = await deployments.get('ChromaticLiquidatorMock')
-    const liquidator = ChromaticLiquidatorMock__factory.connect(liquidatorAddress, gelato)
+    const { address: liquidatorAddress } = await deployments.get('GelatoLiquidatorMock')
+    const liquidator = GelatoLiquidatorMock__factory.connect(liquidatorAddress, gelato)
 
     const { address: router } = await deployments.get('ChromaticRouter')
     const routerContract = ChromaticRouter__factory.connect(router, deployer)
@@ -180,7 +179,6 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
         }
       }
     }
-    
   })
 
   hre.currentOracleVersion = lazyFunction(() => async () => {

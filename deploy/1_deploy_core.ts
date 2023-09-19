@@ -8,7 +8,8 @@ import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
-
+//FIXME MATE2 automate contract address
+const MATE2_AUTOMATION_ADDRESS = '0x'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
@@ -130,24 +131,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await marketFactory.setVault(vault, deployOpts)
   console.log(chalk.yellow('✨ Set Vault'))
-
-  // deploy & set ChromaticLiquidator
-
-  const { address: liquidator, args: liquidatorArgs } = await deploy(
-    network.name === 'anvil' ? 'ChromaticLiquidatorMock' : 'ChromaticLiquidator',
-    {
-      ...deployOpts,
-      args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
-    }
-  )
-  await verify(hre, {
-    address: liquidator,
-    constructorArguments: liquidatorArgs
-  })
-  console.log(chalk.yellow(`✨ ChromaticLiquidator: ${liquidator}`))
-
-  await marketFactory.setLiquidator(liquidator, deployOpts)
-  console.log(chalk.yellow('✨ Set Liquidator'))
 }
 
 export default func

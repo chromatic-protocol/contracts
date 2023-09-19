@@ -11,7 +11,7 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
 import {OpenPositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import "forge-std/console.sol";
 
-contract ChromaticLiquidatorTest is
+contract LiquidatorTest is
     BaseSetup,
     IChromaticTradeCallback,
     IChromaticLiquidityCallback
