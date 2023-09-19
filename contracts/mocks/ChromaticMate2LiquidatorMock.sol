@@ -2,17 +2,13 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
-import {ChromaticGelatoLiquidator} from "@chromatic-protocol/contracts/core/ChromaticGelatoLiquidator.sol";
+import {ChromaticMate2Liquidator} from "@chromatic-protocol/contracts/core/ChromaticMate2Liquidator.sol";
 import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/base/gelato/Types.sol";
 
-contract ChromaticLiquidatorMock is ChromaticGelatoLiquidator {
+contract ChromaticMate2LiquidatorMock is ChromaticMate2Liquidator {
     constructor(
         IChromaticMarketFactory _factory,
         address _automate,
         address opsProxyFactory
-    ) ChromaticGelatoLiquidator(_factory, _automate, opsProxyFactory) {}
-
-    function liquidate(address market, uint256 positionId, uint256 fee) external {
-        _liquidate(market, positionId, fee);
-    }
+    ) ChromaticMate2Liquidator(_factory, _automate) {}
 }
