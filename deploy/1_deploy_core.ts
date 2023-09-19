@@ -7,7 +7,17 @@ import { ZeroAddress } from 'ethers'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
+const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
+  421613: '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86', // arbitrum_goerli UNISWAP
+  5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
+  5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
+}
+
+const WMNT: { [key: number]: string } = {
+  5000: '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8', // mantle
+  5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
+}
+
 //FIXME MATE2 automate contract address
 const MATE2_AUTOMATION_ADDRESS = '0x'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -20,10 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
 
-  const swapRouterAddress =
-    echainId === config.networks.arbitrum_goerli.chainId!
-      ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
-      : SWAP_ROUTER_02_ADDRESSES(echainId)
+  const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
 
   const deployOpts = { from: deployer }
 
@@ -104,9 +111,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // deploy & set KeeperFeePayer
 
+  const wrappedTokenAddress = WMNT[echainId] ?? WETH9[echainId].address
+
   const { address: keeperFeePayer, args: keeperFeePayerArgs } = await deploy('KeeperFeePayer', {
     ...deployOpts,
-    args: [factory, swapRouterAddress, WETH9[echainId].address]
+    args: [factory, swapRouterAddress, wrappedTokenAddress]
   })
   await verify(hre, {
     address: keeperFeePayer,
