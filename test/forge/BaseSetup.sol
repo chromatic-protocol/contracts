@@ -10,7 +10,7 @@ import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/Chromat
 import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
 import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProviderMock.sol";
 import {Token} from "@chromatic-protocol/contracts/mocks/Token.sol";
-import {ChromaticLiquidatorMock} from "@chromatic-protocol/contracts/mocks/ChromaticLiquidatorMock.sol";
+import {ChromaticGelatoLiquidatorMock} from "@chromatic-protocol/contracts/mocks/ChromaticGelatoLiquidatorMock.sol";
 import {ChromaticVaultMock} from "@chromatic-protocol/contracts/mocks/ChromaticVaultMock.sol";
 import {DiamondLoupeFacet} from "@chromatic-protocol/contracts/core/facets/DiamondLoupeFacet.sol";
 import {MarketDiamondCutFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketDiamondCutFacet.sol";
@@ -28,7 +28,7 @@ abstract contract BaseSetup is Test {
     Token usdc;
     ChromaticMarketFactory factory;
     ChromaticVaultMock vault;
-    ChromaticLiquidatorMock liquidator;
+    ChromaticGelatoLiquidatorMock liquidator;
     IChromaticMarket market;
     ICLBToken clbToken;
     ChromaticRouter router;
@@ -86,7 +86,7 @@ abstract contract BaseSetup is Test {
         vault = new ChromaticVaultMock(factory, address(_automate), address(_opf));
         factory.setVault(address(vault));
 
-        liquidator = new ChromaticLiquidatorMock(factory, address(_automate), address(_opf));
+        liquidator = new ChromaticGelatoLiquidatorMock(factory, address(_automate), address(_opf));
         factory.setLiquidator(address(liquidator));
 
         factory.registerOracleProvider(
