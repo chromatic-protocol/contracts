@@ -8,7 +8,8 @@ import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
-
+//FIXME MATE2 automate contract address
+const MATE2_AUTOMATION_ADDRESS = '0x'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
@@ -131,20 +132,37 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.setVault(vault, deployOpts)
   console.log(chalk.yellow('✨ Set Vault'))
 
+  // [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
   // deploy & set ChromaticLiquidator
-
+  let chromaticLiquidator = 'ChromaticLiquidatorMock'
+  let chromaticLiquidatorContractArgs = [factory]
+  switch (network.name) {
+    case 'anvil':
+      break
+    case 'arbitrum_one':
+    case 'arbitrum_nova':
+    case 'arbitrum_goerli':
+      chromaticLiquidator = 'ChromaticGelatoLiquidator'
+      chromaticLiquidatorContractArgs.push(GELATO_ADDRESSES[echainId].automate, ZeroAddress)
+      break
+    case 'mantle':
+    case 'mantle_testnet':
+      chromaticLiquidator = 'ChromaticMate2Liquidator'
+      chromaticLiquidatorContractArgs.push(MATE2_AUTOMATION_ADDRESS)
+      break
+  }
   const { address: liquidator, args: liquidatorArgs } = await deploy(
     network.name === 'anvil' ? 'ChromaticLiquidatorMock' : 'ChromaticLiquidator',
     {
       ...deployOpts,
-      args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+      args: chromaticLiquidatorContractArgs
     }
   )
   await verify(hre, {
     address: liquidator,
     constructorArguments: liquidatorArgs
   })
-  console.log(chalk.yellow(`✨ ChromaticLiquidator: ${liquidator}`))
+  console.log(chalk.yellow(`✨ ${chromaticLiquidator}: ${liquidator}`))
 
   await marketFactory.setLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
