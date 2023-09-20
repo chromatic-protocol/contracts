@@ -2,23 +2,15 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
 import {ChromaticVault} from "@chromatic-protocol/contracts/core/ChromaticVault.sol";
 import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 
 contract ChromaticVaultMock is ChromaticVault {
     constructor(
         IChromaticMarketFactory _factory,
-        address _automate,
-        address opsProxyFactory
-    ) ChromaticVault(_factory, _automate, opsProxyFactory) {}
-
-    function distributeMakerEarning(address token, uint256 keeperFee) external {
-        _distributeMakerEarning(token, keeperFee);
-    }
-
-    function distributeMarketEarning(address market, uint256 keeperFee) external {
-        _distributeMarketEarning(market, keeperFee);
-    }
+        IVaultEarningDistributor _earningDistributor
+    ) ChromaticVault(_factory, _earningDistributor) {}
 
     function setPendingMarketEarnings(address market, uint256 earning) external {
         pendingMarketEarnings[market] = earning;

@@ -8,11 +8,10 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
+import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
 import {ILendingPool} from "@chromatic-protocol/contracts/core/interfaces/vault/ILendingPool.sol";
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {IChromaticFlashLoanCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticFlashLoanCallback.sol";
-import {AutomateReady} from "@chromatic-protocol/contracts/core/automation/gelato/AutomateReady.sol";
-import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 
 /**
@@ -20,13 +19,12 @@ import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
  * @dev A contract that implements the ChromaticVault interface
  *      and provides functionality for managing positions, liquidity, and fees in Chromatic markets.
  */
-contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
+contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     using Math for uint256;
 
-    uint256 private constant DISTRIBUTION_INTERVAL = 1 hours;
-
-    IChromaticMarketFactory immutable factory;
-    IKeeperFeePayer immutable keeperFeePayer;
+    IChromaticMarketFactory public immutable factory;
+    IKeeperFeePayer public immutable keeperFeePayer;
+    IVaultEarningDistributor public immutable earningDistributor;
 
     mapping(address => uint256) public makerBalances; // settlement token => balance
     mapping(address => uint256) public takerBalances; // settlement token => balance
@@ -36,9 +34,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     mapping(address => uint256) public pendingMarketEarnings; // market => earning
     mapping(address => uint256) public pendingDeposits; // settlement token => deposit
     mapping(address => uint256) public pendingWithdrawals; // settlement token => deposit
-
-    mapping(address => bytes32) public makerEarningDistributionTaskIds; // settlement token => task id
-    mapping(address => bytes32) public marketEarningDistributionTaskIds; // market => task id
 
     /**
      * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
@@ -51,6 +46,11 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
     error OnlyAccessableByMarket();
 
     /**
+     * @dev Throws an error indicating that the caller is not the Vault earning distribute contract.
+     */
+    error OnlyAccessableByEarningDistributor();
+
+    /**
      * @dev Throws an error indicating that the flash loan amount exceeds the available balance in the vault.
      */
     error NotEnoughBalance();
@@ -59,16 +59,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      * @dev Throws an error indicating that the recipient has not paid the sufficient flash loan fee.
      */
     error NotEnoughFeePaid();
-
-    /**
-     * @dev Throws an error indicating that a maker earning distribution task already exists.
-     */
-    error ExistMakerEarningDistributionTask();
-
-    /**
-     * @dev Throws an error indicating that a market earning distribution task already exists.
-     */
-    error ExistMarketEarningDistributionTask();
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
@@ -88,19 +78,23 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
         _;
     }
+    /**
+     * @dev Modifier to restrict access to only the Vault earning distribute contract.
+     *      Throws an `OnlyAccessableByEarningDistributor` error if the caller is not the Vault earning distribute contract.
+     */
+    modifier onlyEarningDistributor() {
+        if (msg.sender != address(earningDistributor)) revert OnlyAccessableByEarningDistributor();
+        _;
+    }
 
     /**
      * @dev Constructs a new ChromaticVault instance.
      * @param _factory The address of the Chromatic Market Factory contract.
-     * @param _automate The address of the Gelato Automate contract.
-     * @param opsProxyFactory The address of the OpsProxyFactory contract.
+     * @param _earningDistributor The address of the Vault earning distribute contract.
      */
-    constructor(
-        IChromaticMarketFactory _factory,
-        address _automate,
-        address opsProxyFactory
-    ) AutomateReady(_automate, address(this), opsProxyFactory) {
+    constructor(IChromaticMarketFactory _factory, IVaultEarningDistributor _earningDistributor) {
         factory = _factory;
+        earningDistributor = _earningDistributor;
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
     }
 
@@ -378,82 +372,32 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
             );
     }
 
-    // gelato automate - distribute maker earning to each markets
-
-    /**
-     * @notice Resolves the maker earning distribution for a specific token.
-     * @param token The address of the settlement token.
-     * @return canExec True if the distribution can be executed, otherwise False.
-     * @return execPayload The payload for executing the distribution.
-     */
-    function resolveMakerEarningDistribution(
-        address token
-    ) external view returns (bool canExec, bytes memory execPayload) {
-        if (_makerEarningDistributable(token)) {
-            return (true, abi.encodeCall(this.distributeMakerEarning, token));
-        }
-
-        return (false, "");
-    }
-
-    /**
-     * @notice Distributes the maker earning for a token to the each markets.
-     * @param token The address of the settlement token.
-     */
-    function distributeMakerEarning(address token) external {
-        (uint256 fee, ) = _getFeeDetails();
-        _distributeMakerEarning(token, fee);
-    }
+    // automation - distribute maker earning to each markets
 
     /**
      * @inheritdoc IChromaticVault
-     * @dev This function can only be called by the Chromatic factory contract or the DAO.
-     *      Throws an `ExistMakerEarningDistributionTask` error if a maker earning distribution task already exists for the token.
      */
     function createMakerEarningDistributionTask(
         address token
     ) external virtual override onlyFactoryOrDao {
-        if (makerEarningDistributionTaskIds[token] != bytes32(0))
-            revert ExistMakerEarningDistributionTask();
-
-        ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
-
-        moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = _resolverModuleArg(
-            abi.encodeCall(this.resolveMakerEarningDistribution, token)
-        );
-        moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
-        moduleData.args[2] = _proxyModuleArg();
-
-        makerEarningDistributionTaskIds[token] = automate.createTask(
-            address(this),
-            abi.encode(this.distributeMakerEarning.selector),
-            moduleData,
-            ETH
-        );
+        earningDistributor.createMakerEarningDistributionTask(token);
     }
 
     /**
      * @inheritdoc IChromaticVault
      */
-    function cancelMakerEarningDistributionTask(
-        address token
-    ) external virtual override onlyFactoryOrDao {
-        bytes32 taskId = makerEarningDistributionTaskIds[token];
-        if (taskId != bytes32(0)) {
-            delete makerEarningDistributionTaskIds[token];
-            automate.cancelTask(taskId);
-        }
+    function cancelMakerEarningDistributionTask(address token) external override onlyFactoryOrDao {
+        earningDistributor.cancelMakerEarningDistributionTask(token);
     }
 
     /**
-     * @dev Internal function to distribute the maker earning for a token to the each markets.
-     * @param token The address of the settlement token.
-     * @param fee The keeper fee amount.
+     * @inheritdoc IChromaticVault
      */
-    function _distributeMakerEarning(address token, uint256 fee) internal {
+    function distributeMakerEarning(
+        address token,
+        uint256 fee,
+        address keeper
+    ) external override onlyEarningDistributor {
         if (!_makerEarningDistributable(token)) return;
 
         address[] memory markets = factory.getMarketsBySettlmentToken(token);
@@ -461,7 +405,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         uint256 earning = pendingMakerEarnings[token];
         delete pendingMakerEarnings[token];
 
-        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
+        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, keeper, fee, earning) : 0;
         emit TransferKeeperFee(fee, usedFee);
 
         uint256 remainBalance = makerBalances[token];
@@ -495,62 +439,15 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         return pendingMakerEarnings[token] >= factory.getEarningDistributionThreshold(token);
     }
 
-    // gelato automate - distribute market earning to each bins
-
-    /**
-     * @notice Resolves the market earning distribution for a market.
-     * @param market The address of the market.
-     * @return canExec True if the distribution can be executed.
-     * @return execPayload The payload for executing the distribution.
-     */
-    function resolveMarketEarningDistribution(
-        address market
-    ) external view returns (bool canExec, bytes memory execPayload) {
-        address token = address(IChromaticMarket(market).settlementToken());
-        if (_marketEarningDistributable(market, token)) {
-            return (true, abi.encodeCall(this.distributeMarketEarning, market));
-        }
-
-        return (false, "");
-    }
-
-    /**
-     * @notice Distributes the market earning for a market to the each bins.
-     * @param market The address of the market.
-     */
-    function distributeMarketEarning(address market) external {
-        (uint256 fee, ) = _getFeeDetails();
-        _distributeMarketEarning(market, fee);
-    }
+    // automation - distribute market earning to each bins
 
     /**
      * @inheritdoc IChromaticVault
-     * @dev This function can only be called by the Chromatic factory contract or the DAO.
-     *      Throws an `ExistMarketEarningDistributionTask` error if a market earning distribution task already exists for the market.
      */
     function createMarketEarningDistributionTask(
         address market
     ) external virtual override onlyFactoryOrDao {
-        if (marketEarningDistributionTaskIds[market] != bytes32(0))
-            revert ExistMarketEarningDistributionTask();
-
-        ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
-
-        moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = _resolverModuleArg(
-            abi.encodeCall(this.resolveMarketEarningDistribution, market)
-        );
-        moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
-        moduleData.args[2] = _proxyModuleArg();
-
-        marketEarningDistributionTaskIds[market] = automate.createTask(
-            address(this),
-            abi.encode(this.distributeMarketEarning.selector),
-            moduleData,
-            ETH
-        );
+        earningDistributor.createMarketEarningDistributionTask(market);
     }
 
     /**
@@ -558,27 +455,25 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
      */
     function cancelMarketEarningDistributionTask(
         address market
-    ) external virtual override onlyFactoryOrDao {
-        bytes32 taskId = marketEarningDistributionTaskIds[market];
-        if (taskId != bytes32(0)) {
-            delete marketEarningDistributionTaskIds[market];
-            automate.cancelTask(taskId);
-        }
+    ) external override onlyFactoryOrDao {
+        earningDistributor.cancelMarketEarningDistributionTask(market);
     }
 
     /**
-     * @dev Internal function to distribute the market earning for a market to the each bins.
-     * @param market The address of the market.
-     * @param fee The fee amount.
+     * @inheritdoc IChromaticVault
      */
-    function _distributeMarketEarning(address market, uint256 fee) internal {
+    function distributeMarketEarning(
+        address market,
+        uint256 fee,
+        address keeper
+    ) external override onlyEarningDistributor {
         address token = address(IChromaticMarket(market).settlementToken());
         if (!_marketEarningDistributable(market, token)) return;
 
         uint256 earning = pendingMarketEarnings[market];
         delete pendingMarketEarnings[market];
 
-        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, automate.gelato(), fee, earning) : 0;
+        uint256 usedFee = fee != 0 ? _transferKeeperFee(token, keeper, fee, earning) : 0;
         emit TransferKeeperFee(market, fee, usedFee);
 
         uint256 remainEarning = earning - usedFee;
@@ -603,20 +498,5 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard, AutomateReady {
         address token
     ) private view returns (bool) {
         return pendingMarketEarnings[market] >= factory.getEarningDistributionThreshold(token);
-    }
-
-    function _resolverModuleArg(bytes memory _resolverData) internal view returns (bytes memory) {
-        return abi.encode(address(this), _resolverData);
-    }
-
-    function _timeModuleArg(
-        uint256 _startTime,
-        uint256 _interval
-    ) internal pure returns (bytes memory) {
-        return abi.encode(uint128(_startTime), uint128(_interval));
-    }
-
-    function _proxyModuleArg() internal pure returns (bytes memory) {
-        return bytes("");
     }
 }

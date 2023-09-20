@@ -19,11 +19,42 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const deployOpts = { from: deployer }
   const factory = await deployments.get('ChromaticMarketFactory')
+  const marketFactory = ChromaticMarketFactory__factory.connect(
+    factory.address,
+    await ethers.getSigner(deployer)
+  )
+
+  // deploy & set ChromaticVault
+  const {address: distributor, args: distributorArgs} = await deploy('GelatoVaultEarningDistributor', {
+    ...deployOpts,
+    args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+  })
+  await verify(hre, {
+    address: distributor,
+    constructorArguments: distributorArgs
+  })
+  console.log(chalk.yellow(`✨ GelatoVaultEarningDistributor: ${distributor}`))
+
+  const { address: vault, args: vaultArgs } = await deploy('ChromaticVault', {
+    ...deployOpts,
+    args: [factory.address, distributor]
+  })
+  await verify(hre, {
+    address: vault,
+    constructorArguments: vaultArgs
+  })
+  console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
+
+  await marketFactory.setVault(vault, deployOpts)
+  console.log(chalk.yellow('✨ Set Vault'))
+
+  // deploy & set Liquidator
+  
   const { address: liquidator, args: liquidatorArgs } = await deploy(
     network.name === 'anvil' ? 'GelatoLiquidatorMock' : 'GelatoLiquidator',
     {
       ...deployOpts,
-      args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+      args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
     }
   )
   await verify(hre, {
@@ -31,10 +62,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     constructorArguments: liquidatorArgs
   })
   console.log(chalk.yellow(`✨ GelatoLiquidator: ${liquidator}`))
-  const marketFactory = ChromaticMarketFactory__factory.connect(
-    factory.address,
-    await ethers.getSigner(deployer)
-  )
+
   await marketFactory.setLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
 }

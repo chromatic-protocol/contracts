@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/ChromaticMarketFactory.sol";
 import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
@@ -83,7 +84,7 @@ abstract contract BaseSetup is Test {
         keeperFeePayer = new KeeperFeePayerMock(factory);
         factory.setKeeperFeePayer(address(keeperFeePayer));
 
-        vault = new ChromaticVaultMock(factory, address(_automate), address(_opf));
+        vault = new ChromaticVaultMock(factory, IVaultEarningDistributor(address(this)));
         factory.setVault(address(vault));
 
         liquidator = new GelatoLiquidatorMock(factory, address(_automate), address(_opf));

@@ -317,7 +317,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         vault.setPendingMarketEarnings(address(market), earning);
 
         // distribute market earning
-        vault.distributeMarketEarning(address(market), keeperFee);
+        vault.distributeMarketEarning(address(market), keeperFee, automate.gelato());
 
         // asserts
         assertEq(

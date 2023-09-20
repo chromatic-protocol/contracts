@@ -22,9 +22,7 @@ export default {
     'ChromaticLens',
     'ChromaticMarketFactory',
     'ChromaticRouter',
-    'ChromaticVault',
-    'GelatoLiquidator',
-    'Mate2Liquidator',
+    'ChromaticVault'
   ],
   excludesFromDeployed: ['*Mock'],
   excludeBytecode: true

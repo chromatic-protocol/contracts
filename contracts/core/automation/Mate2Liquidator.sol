@@ -6,15 +6,15 @@ import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquid
 import {IMate2Automation} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation.sol";
 import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
+import {LiquidatorBase} from "@chromatic-protocol/contracts/core/automation/LiquidatorBase.sol";
 
 /**
  * @title Mate2Liquidator
  * @dev A contract that handles the liquidation and claiming of positions in Chromatic markets.
  *      It implements the ILiquidator and the IMate2Automation interface.
  */
-contract Mate2Liquidator is ILiquidator, IMate2Automation {
-    IMate2AutomationRegistry immutable automate;
-    IChromaticMarketFactory immutable factory;
+contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
+    IMate2AutomationRegistry public immutable automate;
 
     mapping(address => mapping(uint256 => uint256)) private _liquidationUpkeepIds;
     mapping(address => mapping(uint256 => uint256)) private _claimPositionUpkeepIds;
@@ -25,40 +25,11 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
     }
 
     /**
-     * @dev Throws an error indicating that the caller is not the DAO.
-     */
-    error OnlyAccessableByDao();
-
-    /**
-     * @dev Throws an error indicating that the caller is not a registered market.
-     */
-    error OnlyAccessableByMarket();
-
-    /**
-     * @dev Modifier to restrict access to only the DAO.
-     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
-     */
-    modifier onlyDao() {
-        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
-        _;
-    }
-
-    /**
-     * @dev Modifier to check if the calling contract is a registered market.
-     *      Throws an `OnlyAccessableByMarket` error if the caller is not a registered market.
-     */
-    modifier onlyMarket() {
-        if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
-        _;
-    }
-
-    /**
      * @dev Constructor function.
      * @param _factory The address of the Chromatic Market Factory contract.
      * @param _automate The address of the Mate2 Automate contract.
      */
-    constructor(IChromaticMarketFactory _factory, address _automate) {
-        factory = _factory;
+    constructor(IChromaticMarketFactory _factory, address _automate) LiquidatorBase(_factory) {
         automate = IMate2AutomationRegistry(_automate);
     }
 
@@ -75,7 +46,7 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
      * @dev Can only be called by a registered market.
      */
     function cancelLiquidationTask(uint256 positionId) external override onlyMarket {
-        _cancelTask(_liquidationUpkeepIds, positionId);
+        _cancelUpkeep(_liquidationUpkeepIds, positionId);
     }
 
     /**
@@ -84,7 +55,7 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
     function resolveLiquidation(
         address _market,
         uint256 positionId
-    ) external view override returns (bool canExec, bytes memory execPayload) {
+    ) public view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkLiquidation(positionId)) {
             return (true, abi.encode(_market, positionId, UpkeepType.LiquidatePosition));
         }
@@ -105,7 +76,7 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
      * @dev Can only be called by a registered market.
      */
     function cancelClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _cancelTask(_claimPositionUpkeepIds, positionId);
+        _cancelUpkeep(_claimPositionUpkeepIds, positionId);
     }
 
     /**
@@ -114,7 +85,7 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
     function resolveClaimPosition(
         address _market,
         uint256 positionId
-    ) external view override returns (bool canExec, bytes memory execPayload) {
+    ) public view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkClaimPosition(positionId)) {
             return (true, abi.encode(_market, positionId, UpkeepType.ClaimPosition));
         }
@@ -123,18 +94,7 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
     }
 
     /**
-     * @dev Internal function to perform the claim of a position.
-     * @param _market The address of the market contract.
-     * @param positionId The ID of the position to be claimed.
-     * @param fee The fee to be paid for the claim.
-     */
-    function _claimPosition(address _market, uint256 positionId, uint256 fee) internal {
-        IMarketLiquidate market = IMarketLiquidate(_market);
-        market.claimPosition(positionId, address(getAutomate()), fee);
-    }
-
-    /**
-     * @dev Internal function to create a Gelato task for liquidation or claim position.
+     * @dev Internal function to create a Mate2 upkeep for liquidation or claim position.
      * @param registry The mapping to store task IDs.
      * @param positionId The ID of the position.
      */
@@ -148,10 +108,10 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
             return;
         }
 
-        uint256 upkeepId = getAutomate().registerUpkeep(
+        uint256 upkeepId = automate.registerUpkeep(
             address(this),
             1e6, //uint32 gasLimit,
-            msg.sender, // address admin,
+            address(this), // address admin,
             false, // bool useTreasury,
             true, // bool singleExec,
             abi.encode(market, positionId, upkeepType)
@@ -161,18 +121,18 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
     }
 
     /**
-     * @dev Internal function to cancel a Gelato task.
+     * @dev Internal function to cancel a Mate2 upkeep.
      * @param registry The mapping storing task IDs.
      * @param positionId The ID of the position.
      */
-    function _cancelTask(
+    function _cancelUpkeep(
         mapping(address => mapping(uint256 => uint256)) storage registry,
         uint256 positionId
     ) internal {
         address market = msg.sender;
         uint256 upkeepId = registry[market][positionId];
         if (upkeepId != 0) {
-            getAutomate().cancelUpkeep(upkeepId);
+            automate.cancelUpkeep(upkeepId);
             delete registry[market][positionId];
         }
     }
@@ -185,17 +145,21 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
             (address, uint256, UpkeepType)
         );
         if (upkeepType == UpkeepType.LiquidatePosition)
-            return this.resolveLiquidation(market, positionId);
+            return resolveLiquidation(market, positionId);
         else if (upkeepType == UpkeepType.ClaimPosition)
-            return this.resolveClaimPosition(market, positionId);
+            return resolveClaimPosition(market, positionId);
     }
 
     function performUpkeep(bytes memory performData) external {
-        (address market, uint256 positionId, ) = abi.decode(
+        (address market, uint256 positionId, UpkeepType upkeepType) = abi.decode(
             performData,
             (address, uint256, UpkeepType)
         );
-        this.liquidate(market, positionId);
+        if (upkeepType == UpkeepType.LiquidatePosition) {
+            liquidate(market, positionId);
+        } else if (upkeepType == UpkeepType.ClaimPosition) {
+            claimPosition(market, positionId);
+        }
     }
 
     function getLiquidationTaskId(
@@ -226,29 +190,8 @@ contract Mate2Liquidator is ILiquidator, IMate2Automation {
         upkeepId = _claimPositionUpkeepIds[market][positionId];
     }
 
-    /**
-     * @dev Retrieves the IAutomate contract instance.
-     * @return IMate2AutomationRegistry The IMate2AutomationRegistry contract instance.
-     */
-    function getAutomate() internal view returns (IMate2AutomationRegistry) {
-        return IMate2AutomationRegistry(automate);
-    }
-
-    /**
-     * @inheritdoc ILiquidator
-     */
-    function liquidate(address market, uint256 positionId) external override {
-        // feeToken is the native token because ETH is set as a fee token when creating task
-        uint256 fee = automate.getPerformUpkeepFee();
-        IMarketLiquidate(market).liquidate(positionId, address(getAutomate()), fee);
-    }
-
-    /**
-     * @inheritdoc ILiquidator
-     */
-    function claimPosition(address market, uint256 positionId) external override {
-        // feeToken is the native token because ETH is set as a fee token when creating task
-        uint256 fee = automate.getPerformUpkeepFee();
-        IMarketLiquidate(market).claimPosition(positionId, address(getAutomate()), fee);
+    function _getFeeInfo() internal view override returns (uint256 fee, address feePayee) {
+        fee = automate.getPerformUpkeepFee();
+        feePayee = address(automate);
     }
 }
