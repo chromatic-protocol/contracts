@@ -42,6 +42,10 @@ interface IChromaticVault is IVault, ILendingPool {
         uint256 marketBalance
     );
 
+    function pendingMakerEarnings(address token) external view returns (uint256);
+
+    function pendingMarketEarnings(address market) external view returns (uint256);
+
     /**
      * @notice Creates a maker earning distribution task for a token.
      * @param token The address of the settlement token.
@@ -55,6 +59,14 @@ interface IChromaticVault is IVault, ILendingPool {
     function cancelMakerEarningDistributionTask(address token) external;
 
     /**
+     * @notice Distributes the maker earning for a token to the each markets.
+     * @param token The address of the settlement token.
+     * @param fee The keeper fee amount.
+     * @param keeper The keeper address to receive fee.
+     */
+    function distributeMakerEarning(address token, uint256 fee, address keeper) external;
+
+    /**
      * @notice Creates a market earning distribution task for a market.
      * @param market The address of the market.
      */
@@ -65,4 +77,12 @@ interface IChromaticVault is IVault, ILendingPool {
      * @param market The address of the market.
      */
     function cancelMarketEarningDistributionTask(address market) external;
+
+    /**
+     * @notice Distributes the market earning for a market to the each bins.
+     * @param market The address of the market.
+     * @param fee The fee amount.
+     * @param keeper The keeper address to receive fee.
+     */
+    function distributeMarketEarning(address market, uint256 fee, address keeper) external;
 }

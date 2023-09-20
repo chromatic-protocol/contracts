@@ -125,21 +125,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await marketFactory.setKeeperFeePayer(keeperFeePayer, deployOpts)
   console.log(chalk.yellow('✨ Set KeeperFeePayer'))
-
-  // deploy & set ChromaticVault
-
-  const { address: vault, args: vaultArgs } = await deploy('ChromaticVault', {
-    ...deployOpts,
-    args: [factory, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
-  })
-  await verify(hre, {
-    address: vault,
-    constructorArguments: vaultArgs
-  })
-  console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
-
-  await marketFactory.setVault(vault, deployOpts)
-  console.log(chalk.yellow('✨ Set Vault'))
 }
 
 export default func

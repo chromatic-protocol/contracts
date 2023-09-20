@@ -4,6 +4,7 @@ import {
   GelatoLiquidator,
   KeeperFeePayerMock
 } from '@chromatic/typechain-types'
+import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatorVaultEarningDistributor.sol'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
@@ -55,12 +56,19 @@ export async function deploy() {
     })
   ).wait()
 
+  const distributor = await deployContract<GelatoVaultEarningDistributor>(
+    'GelatoVaultEarningDistributor',
+    {
+      args: [
+        await marketFactory.getAddress(),
+        GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
+        ZeroAddress
+      ]
+    }
+  )
+
   const vault = await deployContract<ChromaticVault>('ChromaticVault', {
-    args: [
-      await marketFactory.getAddress(),
-      GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-      ZeroAddress
-    ]
+    args: [await marketFactory.getAddress(), await distributor.getAddress()]
   })
   await (await marketFactory.setVault(vault.getAddress())).wait()
 
