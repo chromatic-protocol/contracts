@@ -8,7 +8,6 @@ import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/
 contract Mate2LiquidatorMock is Mate2Liquidator {
     constructor(
         IChromaticMarketFactory _factory,
-        address _automate,
-        address opsProxyFactory
+        address _automate
     ) Mate2Liquidator(_factory, _automate) {}
 }

@@ -4,7 +4,7 @@ import {
   GelatoLiquidator,
   KeeperFeePayerMock
 } from '@chromatic/typechain-types'
-import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatorVaultEarningDistributor.sol'
+import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatoVaultEarningDistributor'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
