@@ -2,13 +2,15 @@ import {
   ChromaticMarketFactory,
   ChromaticVault,
   Mate2Liquidator,
-  KeeperFeePayerMock
+  KeeperFeePayerMock,
+  IMate2AutomationRegistry__factory
 } from '@chromatic/typechain-types'
 import { Mate2VaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/Mate2VaultEarningDistributor'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
+import { MATE2_AUTOMATION_ADDRESS } from '../../../deploy/2_deploy_core_mantle'
 
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
@@ -59,13 +61,14 @@ export async function deploy() {
   const distributor = await deployContract<Mate2VaultEarningDistributor>(
     'Mate2VaultEarningDistributor',
     {
-      args: [
-        await marketFactory.getAddress(),
-        GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-        ZeroAddress
-      ]
+      args: [await marketFactory.getAddress(), MATE2_AUTOMATION_ADDRESS]
     }
   )
+  const mate2automate = IMate2AutomationRegistry__factory.connect(
+    MATE2_AUTOMATION_ADDRESS,
+    deployer
+  )
+  await (await mate2automate.addWhitelistedRegistrar(distributor)).wait()
 
   const vault = await deployContract<ChromaticVault>('ChromaticVault', {
     args: [await marketFactory.getAddress(), await distributor.getAddress()]
@@ -73,11 +76,7 @@ export async function deploy() {
   await (await marketFactory.setVault(vault.getAddress())).wait()
 
   const liquidator = await deployContract<Mate2Liquidator>('Mate2Liquidator', {
-    args: [
-      await marketFactory.getAddress(),
-      GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-      ZeroAddress
-    ]
+    args: [await marketFactory.getAddress(), MATE2_AUTOMATION_ADDRESS]
   })
   await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
 
