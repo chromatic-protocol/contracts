@@ -45,7 +45,7 @@ export function deploy(target: string = 'arbitrum') {
             BigInt('500'), // flashLoanFeeRate, 5%
             parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
             BigInt('3000'), // uniswapFeeRate, 0.3%),
-            { gasLimit: 1e6 }
+            { gasLimit: 3e7 }
           )
         ).wait()
       }
