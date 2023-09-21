@@ -14,7 +14,18 @@ import packageConfig from './hardhat-package.config'
 dotenv.config()
 
 const MNEMONIC_JUNK = 'test test test test test test test test test test test junk'
-
+const TEST_TARGET = process.env.TEST_TARGET
+console.log('testing target ', TEST_TARGET)
+let forkingOption = {
+  url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+  blockNumber: 19474553
+}
+if (TEST_TARGET == 'mantle') {
+  forkingOption = {
+    url: `https://rpc.ankr.com/mantle_testnet/${process.env.ANKR_KEY}`,
+    blockNumber: 21214623
+  }
+}
 const common = {
   accounts: {
     mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK,
@@ -36,14 +47,14 @@ const config: HardhatUserConfig = {
       }
     ]
   },
+  mocha: {
+    timeout: 400_000_000 // Error: Timeout of 40000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.
+  },
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       // localhost anvil
-      forking: {
-        url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 18064747
-      },
+      forking: forkingOption,
       ...common,
       accounts: {
         ...common.accounts,
@@ -62,7 +73,8 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
       tags: ['mockup', 'core'],
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
+      timeout: 100_000 // TransactionExecutionError: Headers Timeout Error
     },
     arbitrum_nova: {
       // mainnet AnyTrust chain

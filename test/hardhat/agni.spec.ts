@@ -52,14 +52,16 @@ describe('Swap pool state log', async function () {
   it('AGNI pool state', async () => {
     const [signer] = await ethers.getSigners()
     const chain = (signer.provider as any)['_networkName']
-    const addr = ADDRESSES[chain]
+    const addr = ADDRESSES[chain === 'anvil' ? 'mantle_testnet' : chain]
 
     const factoryIface = new Interface(factoryAbi)
 
+    // ProviderError: Fork Error: JsonRpcClientError(JsonRpcError(JsonRpcError { code: -32011, message: "no backends available for method", data: None }))
     const logs = await mantleGetLogs({
       address: addr.agniFactory,
       iface: factoryIface,
-      eventName: 'PoolCreated'
+      eventName: 'PoolCreated',
+      toBlock: await signer.provider.getBlockNumber()
     })
 
     const poolStateIface = new Interface(poolAbi)

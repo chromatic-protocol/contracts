@@ -25,10 +25,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   )
 
   // deploy & set ChromaticVault
-  const {address: distributor, args: distributorArgs} = await deploy('GelatoVaultEarningDistributor', {
-    ...deployOpts,
-    args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
-  })
+  console.log('gelato automate address', GELATO_ADDRESSES[echainId].automate)
+  const { address: distributor, args: distributorArgs } = await deploy(
+    'GelatoVaultEarningDistributor',
+    {
+      ...deployOpts,
+      args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+    }
+  )
   await verify(hre, {
     address: distributor,
     constructorArguments: distributorArgs
@@ -49,7 +53,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(chalk.yellow('✨ Set Vault'))
 
   // deploy & set Liquidator
-  
+
   const { address: liquidator, args: liquidatorArgs } = await deploy(
     network.name === 'anvil' ? 'GelatoLiquidatorMock' : 'GelatoLiquidator',
     {

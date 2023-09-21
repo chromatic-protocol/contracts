@@ -38,7 +38,7 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
         moduleData.modules[1] = Module.TIME;
         moduleData.modules[2] = Module.PROXY;
         moduleData.args[0] = _resolverModuleArg(
-            abi.encodeCall(this.resolveMakerEarningDistribution, token)
+            abi.encodeCall(this.resolveMakerEarningDistribution, (token))
         );
         moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
         moduleData.args[2] = _proxyModuleArg();

@@ -101,7 +101,7 @@ export async function batchDeploy(param: BatchDeployParam) {
 
   // wait mining
   const lastTxHash = txHashResults[txHashResults.length - 1].result
-  for (let _ = 0; _ < 15; _++) {
+  while(true) {
     await new Promise((resolve) => setTimeout(resolve, 1500))
     if (await param.signer.provider.getTransactionReceipt(lastTxHash)) {
       break
@@ -206,16 +206,21 @@ export type EthGetLogsParam = {
   address: string
   iface: Interface
   eventName: string
+  fromBlock?: number | string
+  toBlock?: number | string
 }
 
 export async function mantleGetLogs(param: EthGetLogsParam): Promise<Result[]> {
   const hre = await import('hardhat')
-  const chainId = Number(await hre.getChainId())
+  const realChainId = Number(await hre.getChainId())
+  const chainId = realChainId === 31337 ? 5001 : realChainId
   const apiURL = hre.config.etherscan.customChains.filter((c) => c.chainId === chainId)[0].urls
     .apiURL
 
+  const fromBlockParam = param.fromBlock ?? 0
+  const toBlockParam = param.toBlock ?? 'latest'
   const topicParam = `topic0=${param.iface.getEvent(param.eventName)!.topicHash}&`
-  const reqUrl = `${apiURL}?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${param.address}&${topicParam}`
+  const reqUrl = `${apiURL}?module=logs&action=getLogs&fromBlock=${fromBlockParam}&toBlock=${toBlockParam}&address=${param.address}&${topicParam}`
 
   console.log(reqUrl)
 

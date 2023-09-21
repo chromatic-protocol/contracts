@@ -5,7 +5,7 @@ import { MaxUint256, parseEther, parseUnits } from 'ethers'
 import { ethers } from 'hardhat'
 import { deploy as marketDeploy } from '../deployMarket'
 
-export const prepareMarketTest = async () => {
+export const prepareMarketTest = async (target: string = 'arbitrum') => {
   async function faucet(account: SignerWithAddress) {
     const faucetTx = await settlementToken.connect(account).faucet(parseEther('1000000000'))
     await faucetTx.wait()
@@ -19,7 +19,7 @@ export const prepareMarketTest = async () => {
     chromaticRouter,
     settlementToken,
     lens
-  } = await loadFixture(marketDeploy)
+  } = await loadFixture(marketDeploy(target))
   const [owner, tester, trader] = await ethers.getSigners()
   console.log('owner', owner.address)
 
@@ -31,8 +31,10 @@ export const prepareMarketTest = async () => {
   await faucet(tester)
   await faucet(trader)
 
-  const createAccountTx = await chromaticRouter.connect(trader).createAccount()
-  await createAccountTx.wait()
+  if ((await chromaticRouter.connect(trader).getAccount()) === ethers.ZeroAddress) {
+    const createAccountTx = await chromaticRouter.connect(trader).createAccount()
+    await createAccountTx.wait()
+  }
 
   const traderAccountAddr = await chromaticRouter.connect(trader).getAccount()
   const traderAccount = await ethers.getContractAt('ChromaticAccount', traderAccountAddr)

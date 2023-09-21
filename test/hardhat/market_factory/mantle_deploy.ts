@@ -1,16 +1,20 @@
 import {
   ChromaticMarketFactory,
   ChromaticVault,
-  Mate2Liquidator,
+  IMate2AutomationRegistry__factory,
   KeeperFeePayerMock,
-  IMate2AutomationRegistry__factory
+  Mate2Liquidator,
+  ChromaticAccount__factory,
+  IOwnable__factory
 } from '@chromatic/typechain-types'
 import { Mate2VaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/Mate2VaultEarningDistributor'
-import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
+
 import { deployContract } from '../utils'
-import { MATE2_AUTOMATION_ADDRESS } from '../../../deploy/2_deploy_core_mantle'
+
+const MATE2_AUTOMATION_ADDRESS = '0xA58c89bB5a9EA4F1ceA61fF661ED2342D845441B'
+const MATE2_CREATED_BLOCK_NUMBER = 21186953
 
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
@@ -50,7 +54,13 @@ export async function deploy() {
   const keeperFeePayer = await deployContract<KeeperFeePayerMock>('KeeperFeePayerMock', {
     args: [await marketFactory.getAddress()]
   })
-  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+
+  if ((await marketFactory.keeperFeePayer()) === ethers.ZeroAddress) {
+    await (
+      await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress(), { gasLimit: 1e6 })
+    ).wait()
+  }
+
   await (
     await deployer.sendTransaction({
       to: keeperFeePayer.getAddress(),
@@ -68,17 +78,46 @@ export async function deploy() {
     MATE2_AUTOMATION_ADDRESS,
     deployer
   )
-  await (await mate2automate.addWhitelistedRegistrar(distributor)).wait()
+
+  console.log('add mate2 automate whitelist target : ', await distributor.getAddress())
+
+  console.log(
+    'mate2 owner',
+    await IOwnable__factory.connect(
+      await mate2automate.getAddress(),
+      await ethers.getSigner(deployer.address)
+    ).owner()
+  )
+
+  try {
+    await (
+      await mate2automate.addWhitelistedRegistrar(await distributor.getAddress(), { gasLimit: 1e6 })
+    ).wait()
+  } catch (e) {
+    console.log('add to whitelist failed')
+  }
 
   const vault = await deployContract<ChromaticVault>('ChromaticVault', {
     args: [await marketFactory.getAddress(), await distributor.getAddress()]
   })
-  await (await marketFactory.setVault(vault.getAddress())).wait()
+  if ((await marketFactory.vault()) === ZeroAddress) {
+    await (await marketFactory.setVault(vault.getAddress(), { gasLimit: 1e6 })).wait()
+  }
 
   const liquidator = await deployContract<Mate2Liquidator>('Mate2Liquidator', {
     args: [await marketFactory.getAddress(), MATE2_AUTOMATION_ADDRESS]
   })
-  await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
+  try {
+    await (
+      await mate2automate.addWhitelistedRegistrar(await liquidator.getAddress(), { gasLimit: 1e6 })
+    ).wait()
+  } catch (e) {
+    console.log('add to whitelist failed(Mate2Liquidator)')
+  }
+
+  if ((await marketFactory.liquidator()) === ZeroAddress) {
+    await (await marketFactory.setLiquidator(liquidator.getAddress(), { gasLimit: 1e6 })).wait()
+  }
 
   return { marketFactory, keeperFeePayer, liquidator }
 }
