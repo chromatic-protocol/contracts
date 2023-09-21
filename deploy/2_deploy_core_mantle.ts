@@ -6,7 +6,7 @@ import {
 import chalk from 'chalk'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
-const MATE2_AUTOMATION_ADDRESS = '0xe1Fd27F4390DcBE165f4D60DBF821e4B9Bb02dEd'
+export const MATE2_AUTOMATION_ADDRESS = '0xe1Fd27F4390DcBE165f4D60DBF821e4B9Bb02dEd'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
