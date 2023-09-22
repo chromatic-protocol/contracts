@@ -1,14 +1,14 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { formatEther, parseEther } from 'ethers'
-import { helpers, prepareMarketTest } from './testHelper'
+import { helpers, prepareMarketTest } from '../testHelper'
 
 interface LiquidityConfig {
   tradingFee: bigint
   amount: bigint
 }
 
-export function test(getDeps: Function) {
+export function spec(getDeps: Function) {
   describe('interest fee test', async function () {
     console.log('deps in feespec', getDeps())
     const base = parseEther('10')

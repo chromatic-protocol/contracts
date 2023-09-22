@@ -6,10 +6,10 @@ import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { Result, formatEther, parseEther } from 'ethers'
 import util from 'util'
-import { helpers, prepareMarketTest } from './testHelper'
+import { helpers, prepareMarketTest } from '../testHelper'
 import { ethers } from 'hardhat'
 
-export function test(getDeps: Function) {
+export function spec(getDeps: Function) {
   describe('lens', async () => {
     const initialLiq = parseEther('100')
     let testData: Awaited<ReturnType<typeof prepareMarketTest>>

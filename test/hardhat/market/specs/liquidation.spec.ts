@@ -2,9 +2,9 @@ import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { parseEther, parseUnits } from 'ethers'
-import { helpers, prepareMarketTest } from './testHelper'
+import { helpers, prepareMarketTest } from '../testHelper'
 
-export function test(getDeps: Function) {
+export function spec(getDeps: Function) {
   describe('liquidation test', async () => {
     let testData: Awaited<ReturnType<typeof prepareMarketTest>>
     const eth100 = parseEther('100')

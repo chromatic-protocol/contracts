@@ -14,15 +14,12 @@ describe('[arbitrum]', async () => {
   beforeEach(async () => {
     await initChainSnapshot.restore()
   })
-  const { test: feeTest } = require('./fee.spec')
-  const { test: lensTest } = require('./lens.spec')
-  const { test: liquidationTest } = require('./liquidation.spec')
-  const { test: liuqidityTest } = require('./liquidity.spec')
-  const { test: tradeTest } = require('./trade.spec')
+  const { feeSpec, lensSpec, liquidationSpec, liuqiditySpec, tradeSpec } = require('./specs')
+
   const getDeps = () => deps
-  feeTest(getDeps)
-  lensTest(getDeps)
-  liquidationTest(getDeps)
-  liuqidityTest(getDeps)
-  tradeTest(getDeps)
+  feeSpec(getDeps)
+  lensSpec(getDeps)
+  liquidationSpec(getDeps)
+  liuqiditySpec(getDeps)
+  tradeSpec(getDeps)
 })

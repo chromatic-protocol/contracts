@@ -4,9 +4,9 @@ import { time } from '@nomicfoundation/hardhat-network-helpers'
 import bluebird from 'bluebird'
 import { expect } from 'chai'
 import { Result, formatEther, parseEther, parseUnits } from 'ethers'
-import { helpers, prepareMarketTest } from './testHelper'
+import { helpers, prepareMarketTest } from '../testHelper'
 
-export function test(getDeps: Function) {
+export function spec(getDeps: Function) {
   describe('position & account test', async function () {
     let testData: Awaited<ReturnType<typeof prepareMarketTest>>
     const base = parseEther('1000')

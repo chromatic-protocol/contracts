@@ -1,10 +1,10 @@
 import { CLBToken, IChromaticMarket } from '@chromatic/typechain-types'
 import { expect } from 'chai'
 import { BigNumberish, parseEther } from 'ethers'
-import { logLiquidity } from '../log-utils'
-import { helpers, prepareMarketTest } from './testHelper'
+import { logLiquidity } from '../../log-utils'
+import { helpers, prepareMarketTest } from '../testHelper'
 
-export function test(getDeps: Function) {
+export function spec(getDeps: Function) {
   describe('market test', async function () {
     const oneEther = parseEther('1')
 
