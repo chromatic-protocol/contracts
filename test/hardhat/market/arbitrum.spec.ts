@@ -18,9 +18,11 @@ describe('[arbitrum]', async () => {
   const { test: lensTest } = require('./lens.spec')
   const { test: liquidationTest } = require('./liquidation.spec')
   const { test: liuqidityTest } = require('./liquidity.spec')
+  const { test: tradeTest } = require('./trade.spec')
   const getDeps = () => deps
   feeTest(getDeps)
   lensTest(getDeps)
   liquidationTest(getDeps)
   liuqidityTest(getDeps)
+  tradeTest(getDeps)
 })
