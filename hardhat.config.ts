@@ -14,18 +14,7 @@ import packageConfig from './hardhat-package.config'
 dotenv.config()
 
 const MNEMONIC_JUNK = 'test test test test test test test test test test test junk'
-const TEST_TARGET = process.env.TEST_TARGET
-console.log('testing target ', TEST_TARGET)
-let forkingOption = {
-  url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-  blockNumber: 19474553
-}
-if (TEST_TARGET == 'mantle') {
-  forkingOption = {
-    url: `https://rpc.ankr.com/mantle_testnet/${process.env.ANKR_KEY}`,
-    blockNumber: 21214623
-  }
-}
+
 const common = {
   accounts: {
     mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK,
@@ -54,7 +43,10 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       // localhost anvil
-      forking: forkingOption,
+      forking: {
+        url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+        blockNumber: 19474553
+      },
       ...common,
       accounts: {
         ...common.accounts,

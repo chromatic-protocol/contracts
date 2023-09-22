@@ -9,14 +9,14 @@ import util from 'util'
 import { helpers, prepareMarketTest } from './testHelper'
 import { ethers } from 'hardhat'
 
-export function test(prepareMarketTestFn: Function) {
+export function test(getDeps: Function) {
   describe('lens', async () => {
     const initialLiq = parseEther('100')
     let testData: Awaited<ReturnType<typeof prepareMarketTest>>
     const feeRates = [100n, 200n, 300n]
     const amounts = [initialLiq, initialLiq, initialLiq]
     beforeEach(async () => {
-      testData = await prepareMarketTestFn()
+      testData = await getDeps()
       const {
         claimLiquidity,
         getLpReceiptIds,

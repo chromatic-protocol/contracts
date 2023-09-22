@@ -25,7 +25,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
 
   const approveTx = await settlementToken
     .connect(tester)
-    .approve(chromaticRouter.getAddress(), MaxUint256)
+    .approve(await chromaticRouter.getAddress(), MaxUint256)
   await approveTx.wait()
 
   await faucet(tester)
@@ -48,7 +48,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
 
   const traderRouter = chromaticRouter.connect(trader)
   await (
-    await settlementToken.connect(trader).approve(traderRouter.getAddress(), MaxUint256)
+    await settlementToken.connect(trader).approve(await traderRouter.getAddress(), MaxUint256)
   ).wait()
 
   const clbToken = CLBToken__factory.connect(await market.clbToken(), tester)
@@ -76,6 +76,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
 export const helpers = function (testData: Awaited<ReturnType<typeof prepareMarketTest>>) {
   const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } =
     testData
+
   async function updatePrice(price: number) {
     await (await oracleProvider.increaseVersion(parseUnits(price.toString(), 8))).wait()
   }
@@ -121,7 +122,8 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function getLpReceiptIds() {
-    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](market.getAddress())
+    console.log('tester : ', tester, 'market address', await market.getAddress())
+    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](await market.getAddress())
   }
 
   async function addLiquidityTx(amount: bigint, feeBinKey: bigint) {

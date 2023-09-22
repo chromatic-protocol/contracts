@@ -4,7 +4,7 @@ import { BigNumberish, parseEther } from 'ethers'
 import { logLiquidity } from '../log-utils'
 import { helpers, prepareMarketTest } from './testHelper'
 
-export function test(prepareMarketTestFn: Function) {
+export function test(getDeps: Function) {
   describe('market test', async function () {
     const oneEther = parseEther('1')
 
@@ -23,7 +23,7 @@ export function test(prepareMarketTestFn: Function) {
     let testData: Awaited<ReturnType<typeof prepareMarketTest>>
 
     beforeEach(async () => {
-      testData = await prepareMarketTestFn()
+      testData = await getDeps()
     })
 
     it('change oracle price ', async () => {

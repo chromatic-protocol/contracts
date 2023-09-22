@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import { parseEther, parseUnits } from 'ethers'
 import { helpers, prepareMarketTest } from './testHelper'
 
-export function test(prepareMarketTestFn: Function) {
+export function test(getDeps: Function) {
   describe('liquidation test', async () => {
     let testData: Awaited<ReturnType<typeof prepareMarketTest>>
     const eth100 = parseEther('100')
@@ -12,7 +12,7 @@ export function test(prepareMarketTestFn: Function) {
     let cnt = 1
 
     async function init() {
-      testData = await prepareMarketTestFn()
+      testData = await getDeps()
       console.log('='.repeat(50))
       console.log(
         `${cnt++} beforeEach getPositionIds`,

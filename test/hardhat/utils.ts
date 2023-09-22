@@ -4,6 +4,7 @@ import util from 'util'
 import { logDeployed } from './log-utils'
 import { Interface, Result, TopicFilter } from 'ethers'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import { reset } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
 export async function deployContract<T>(
   contractName: string,
@@ -101,7 +102,7 @@ export async function batchDeploy(param: BatchDeployParam) {
 
   // wait mining
   const lastTxHash = txHashResults[txHashResults.length - 1].result
-  while(true) {
+  while (true) {
     await new Promise((resolve) => setTimeout(resolve, 1500))
     if (await param.signer.provider.getTransactionReceipt(lastTxHash)) {
       break
@@ -234,4 +235,19 @@ export async function mantleGetLogs(param: EthGetLogsParam): Promise<Result[]> {
   )
 
   return logs
+}
+
+export const forkingOptions = {
+  arbitrum_goerli: {
+    url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+    blockNumber: 19474553
+  },
+  mantle_testnet: {
+    url: `https://rpc.ankr.com/mantle_testnet/${process.env.ANKR_KEY}`,
+    blockNumber: 21214623
+  }
+}
+
+export async function setChain(forkingOption: keyof typeof forkingOptions) {
+  await reset(forkingOptions[forkingOption].url, forkingOptions[forkingOption].blockNumber)
 }

@@ -8,18 +8,17 @@ interface LiquidityConfig {
   amount: bigint
 }
 
-  
-export function test(prepareMarketFn: Function) {
+export function test(getDeps: Function) {
   describe('interest fee test', async function () {
-    let testData: Awaited<ReturnType<typeof prepareMarketTest>>
+    console.log('deps in feespec', getDeps())
     const base = parseEther('10')
 
-    beforeEach(async () => {
-      testData = await prepareMarketFn()
-    })
+    // beforeEach(async () => {
+    //   testData = deps
+    // })
 
     async function initialize(liquidityMap: LiquidityConfig[]) {
-      const { addLiquidity, updatePrice, getLpReceiptIds, claimLiquidityBatch } = helpers(testData)
+      const { addLiquidity, updatePrice, getLpReceiptIds, claimLiquidityBatch } = helpers(getDeps())
       await updatePrice(1000)
       for (const conf of liquidityMap) {
         await addLiquidity(conf.amount, conf.tradingFee)
@@ -50,7 +49,7 @@ export function test(prepareMarketFn: Function) {
         let marginEth = parseEther(margin.toString())
         const takerMargin = marginEth
         const makerMargin = marginEth
-        const { traderAccount, market, traderRouter, settlementToken } = testData
+        const { traderAccount, market, traderRouter, settlementToken } = getDeps()
         const balanceBeforePositionPosition = await traderAccount.balance(
           settlementToken.getAddress()
         )
@@ -64,7 +63,12 @@ export function test(prepareMarketFn: Function) {
         for (let liquidity of availableLiquidity) {
           if (marginEth > 0n) {
             const holdMargin = marginEth - liquidity.amount >= 0n ? liquidity.amount : marginEth
-            console.log('hold margin', formatEther(holdMargin))
+            console.log(
+              'hold margin',
+              formatEther(holdMargin),
+              'liquidity trading fee : ',
+              liquidity.tradingFee
+            )
             tradingFee = tradingFee + (holdMargin * liquidity.tradingFee) / 10000n
 
             marginEth = marginEth - liquidity.amount
@@ -75,7 +79,7 @@ export function test(prepareMarketFn: Function) {
         console.log('total expected trading Fee', formatEther(tradingFee))
 
         console.log('balanceBeforePositionPosition', balanceBeforePositionPosition)
-        const { updatePrice, awaitTx } = helpers(testData)
+        const { updatePrice, awaitTx } = helpers(getDeps())
         await updatePrice(1000)
 
         // const tradingFee = makerMargin.div(10000)
@@ -88,8 +92,6 @@ export function test(prepareMarketFn: Function) {
             tradingFee // maxAllowFee (0.01% * makerMargin)
           )
         )
-        // 1682590676    1682590673
-        // 1682590680    1682590676
         await updatePrice(1000)
         const positionIds = await traderAccount.getPositionIds(market.getAddress())
         let wantedTimestamp = BigInt(initTimestamp) + BigInt(60 * 60 * 24 * 365) * year
@@ -106,15 +108,15 @@ export function test(prepareMarketFn: Function) {
           settlementToken.getAddress()
         )
 
-        console.log('after balance ', balanceOfAfterClosePosition)
+        console.log('balance after position closed', balanceOfAfterClosePosition)
         const paidFee = balanceBeforePositionPosition - balanceOfAfterClosePosition
         const interestFee = (makerMargin * year) / 10n // 10% annual fee
-
+        console.log('expected interestFee: ', interestFee)
         const totalFee = tradingFee + interestFee
         console.log(
           `duration ( ${
             ((wantedTimestamp - BigInt(initTimestamp)) * BigInt(24 * 365)) / 3600n
-          } year ) paid fee  `,
+          }) paid fee  `,
           formatEther(paidFee)
         )
         expect(paidFee).to.equal(totalFee)
