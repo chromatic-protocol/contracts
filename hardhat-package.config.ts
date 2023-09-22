@@ -3,6 +3,7 @@ export default {
     '**/IOracleProvider.sol/**',
     '**/IOracleProviderRegistry.sol/**',
     '**/IChromaticMarket.sol/**',
+    '**/ILiquidator.sol/**',
     '**/ChromaticMarketFactory.sol/**',
     '**/ChromaticVault.sol/**',
     '**/ChromaticAccount.sol/**',
