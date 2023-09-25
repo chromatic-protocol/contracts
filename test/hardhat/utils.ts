@@ -110,7 +110,7 @@ export const forkingOptions = {
   },
   mantle_testnet: {
     url: `https://rpc.ankr.com/mantle_testnet/${process.env.ANKR_KEY}`,
-    blockNumber: 21214623
+    blockNumber: 21717864
   }
 }
 
