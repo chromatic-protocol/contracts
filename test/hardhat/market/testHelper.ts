@@ -5,7 +5,7 @@ import { MaxUint256, parseEther, parseUnits } from 'ethers'
 import { ethers } from 'hardhat'
 import { deploy as marketDeploy } from '../deployMarket'
 
-export const prepareMarketTest = async () => {
+export const prepareMarketTest = async (target: string = 'arbitrum') => {
   async function faucet(account: SignerWithAddress) {
     const faucetTx = await settlementToken.connect(account).faucet(parseEther('1000000000'))
     await faucetTx.wait()
@@ -19,20 +19,22 @@ export const prepareMarketTest = async () => {
     chromaticRouter,
     settlementToken,
     lens
-  } = await loadFixture(marketDeploy)
+  } = await loadFixture(marketDeploy(target))
   const [owner, tester, trader] = await ethers.getSigners()
   console.log('owner', owner.address)
 
   const approveTx = await settlementToken
     .connect(tester)
-    .approve(chromaticRouter.getAddress(), MaxUint256)
+    .approve(await chromaticRouter.getAddress(), MaxUint256)
   await approveTx.wait()
 
   await faucet(tester)
   await faucet(trader)
 
-  const createAccountTx = await chromaticRouter.connect(trader).createAccount()
-  await createAccountTx.wait()
+  if ((await chromaticRouter.connect(trader).getAccount()) === ethers.ZeroAddress) {
+    const createAccountTx = await chromaticRouter.connect(trader).createAccount()
+    await createAccountTx.wait()
+  }
 
   const traderAccountAddr = await chromaticRouter.connect(trader).getAccount()
   const traderAccount = await ethers.getContractAt('ChromaticAccount', traderAccountAddr)
@@ -46,7 +48,7 @@ export const prepareMarketTest = async () => {
 
   const traderRouter = chromaticRouter.connect(trader)
   await (
-    await settlementToken.connect(trader).approve(traderRouter.getAddress(), MaxUint256)
+    await settlementToken.connect(trader).approve(await traderRouter.getAddress(), MaxUint256)
   ).wait()
 
   const clbToken = CLBToken__factory.connect(await market.clbToken(), tester)
@@ -74,6 +76,7 @@ export const prepareMarketTest = async () => {
 export const helpers = function (testData: Awaited<ReturnType<typeof prepareMarketTest>>) {
   const { oracleProvider, settlementToken, tester, chromaticRouter, market, traderRouter } =
     testData
+
   async function updatePrice(price: number) {
     await (await oracleProvider.increaseVersion(parseUnits(price.toString(), 8))).wait()
   }
@@ -119,7 +122,8 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function getLpReceiptIds() {
-    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](market.getAddress())
+    console.log('tester : ', tester, 'market address', await market.getAddress())
+    return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](await market.getAddress())
   }
 
   async function addLiquidityTx(amount: bigint, feeBinKey: bigint) {

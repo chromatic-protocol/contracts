@@ -3,13 +3,18 @@ import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-foundry'
 import '@nomicfoundation/hardhat-toolbox'
 import * as dotenv from 'dotenv'
+import { JsonRpcProvider, Network } from 'ethers'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import type { HardhatUserConfig } from 'hardhat/config'
+import { extendProvider } from 'hardhat/config'
+import { ProviderWrapper } from 'hardhat/plugins'
+import { EIP1193Provider, HttpNetworkConfig, RequestArguments } from 'hardhat/types'
 import 'solidity-docgen'
 import 'tsconfig-paths/register'
 import docgenConfig from './docs/docgen.config'
 import packageConfig from './hardhat-package.config'
+import './hardhat/tasks'
 
 dotenv.config()
 
@@ -36,13 +41,16 @@ const config: HardhatUserConfig = {
       }
     ]
   },
+  mocha: {
+    timeout: 400_000_000 // Error: Timeout of 40000ms exceeded. For async tests and hooks, ensure "done()" is called; if returning a Promise, ensure it resolves.
+  },
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
       // localhost anvil
       forking: {
         url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 18064747
+        blockNumber: 19474553
       },
       ...common,
       accounts: {
@@ -62,7 +70,8 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
       tags: ['mockup', 'core'],
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
+      timeout: 100_000 // TransactionExecutionError: Headers Timeout Error
     },
     arbitrum_nova: {
       // mainnet AnyTrust chain
@@ -140,5 +149,30 @@ const config: HardhatUserConfig = {
     ]
   }
 }
+
+class MantleProvider extends ProviderWrapper {
+  private _jsonRpcProvider: JsonRpcProvider
+
+  constructor(network: string, config: HttpNetworkConfig, _wrappedProvider: EIP1193Provider) {
+    super(_wrappedProvider)
+    this._jsonRpcProvider = new JsonRpcProvider(config.url, config.chainId, {
+      staticNetwork: new Network(network, config.chainId!)
+    })
+  }
+
+  public async request(args: RequestArguments) {
+    if (args.method === 'eth_estimateGas') {
+      return this._jsonRpcProvider.send(args.method, [(args.params as unknown[])[0]])
+    }
+
+    return this._wrappedProvider.request(args)
+  }
+}
+
+extendProvider(async (provider, config, network) => {
+  return network.startsWith('mantle')
+    ? new MantleProvider(network, config.networks[network] as HttpNetworkConfig, provider)
+    : provider
+})
 
 export default config

@@ -4,7 +4,7 @@ import {
   GelatoLiquidator,
   KeeperFeePayerMock
 } from '@chromatic/typechain-types'
-import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatorVaultEarningDistributor.sol'
+import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatoVaultEarningDistributor'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
@@ -48,14 +48,16 @@ export async function deploy() {
   const keeperFeePayer = await deployContract<KeeperFeePayerMock>('KeeperFeePayerMock', {
     args: [await marketFactory.getAddress()]
   })
-  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  if ((await marketFactory.keeperFeePayer()) === ethers.ZeroAddress) {
+    await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  }
   await (
     await deployer.sendTransaction({
       to: keeperFeePayer.getAddress(),
       value: parseEther('5')
     })
   ).wait()
-
+  console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate)
   const distributor = await deployContract<GelatoVaultEarningDistributor>(
     'GelatoVaultEarningDistributor',
     {
@@ -70,7 +72,9 @@ export async function deploy() {
   const vault = await deployContract<ChromaticVault>('ChromaticVault', {
     args: [await marketFactory.getAddress(), await distributor.getAddress()]
   })
-  await (await marketFactory.setVault(vault.getAddress())).wait()
+  if ((await marketFactory.vault()) === ZeroAddress) {
+    await (await marketFactory.setVault(vault.getAddress())).wait()
+  }
 
   const liquidator = await deployContract<GelatoLiquidator>('GelatoLiquidator', {
     args: [
@@ -79,7 +83,9 @@ export async function deploy() {
       ZeroAddress
     ]
   })
-  await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
+  if ((await marketFactory.liquidator()) === ZeroAddress) {
+    await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
+  }
 
   return { marketFactory, keeperFeePayer, liquidator }
 }
