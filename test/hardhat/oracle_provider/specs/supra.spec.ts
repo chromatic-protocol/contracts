@@ -1,15 +1,8 @@
-import {
-  AbstractPyth,
-  AbstractPyth__factory,
-  ISupraSValueFeed,
-  ISupraSValueFeed__factory,
-  PythFeedOracle__factory
-} from '@chromatic/typechain-types'
-import { ethers } from 'hardhat'
-import { evmMainnet, evmTestnet } from './pythFeedIds'
-import { expect } from 'chai'
-import { batchCallByFunctionName, batchDeploy, parseSupraPriace } from '../utils'
+import { ISupraSValueFeed, ISupraSValueFeed__factory } from '@chromatic/typechain-types'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import { expect } from 'chai'
+import { ethers } from 'hardhat'
+import { forkingOptions, parseSupraPriace } from '../../utils'
 
 const SUPRA_ADDRESSES: { [key: string]: string } = {
   arbitrum_one: '0x8a358F391d93f7558D5F5E61BDf533e2cc3Cf7a3',
@@ -18,54 +11,51 @@ const SUPRA_ADDRESSES: { [key: string]: string } = {
   anvil: '0x4Ce261C19af540f1175CdeB9E3490DC8937D78e5'
 }
 
-describe('supra test', async function () {
-  var isupra: ISupraSValueFeed
-  var supraAddress: string
-  var signer: HardhatEthersSigner
-  before(async () => {
-    const signers = await ethers.getSigners()
-    signer = signers[0]
-    const networkName = (signer.provider as any)['_networkName']
-    if (SUPRA_ADDRESSES[networkName]) {
+export function spec(networkName: keyof typeof forkingOptions) {
+  describe('supra test', async function () {
+    var isupra: ISupraSValueFeed
+    var supraAddress: string
+    var signer: HardhatEthersSigner
+    before(async () => {
+      console.log(networkName)
+      const signers = await ethers.getSigners()
+      signer = signers[0]
       supraAddress = SUPRA_ADDRESSES[networkName]
       console.log(networkName, supraAddress)
       isupra = ISupraSValueFeed__factory.connect(SUPRA_ADDRESSES[networkName], signer)
-    } else {
-      throw Error('Unsupported chain')
-    }
-  })
+    })
 
-  it('data parsing test', async () => {
-    const [data] = await isupra.getSvalue(pairIndex['eth_usd'])
-    const supraPrice = parseSupraPriace(data)
-    console.log(supraPrice)
-    expect(supraPrice.decimal).equal(8n)
-  })
+    it('data parsing test', async () => {
+      const [data] = await isupra.getSvalue(pairIndex['eth_usd'])
+      const supraPrice = parseSupraPriace(data)
+      console.log(supraPrice)
+      expect(supraPrice.decimal).equal(8n)
+    })
 
-  it('feed exist test', async () => {
-    const [data] = await isupra.getSvalue(pairIndex['eth_usd'])
-    const supraPrice = parseSupraPriace(data)
-    console.log(supraPrice)
-    const from = await signer.getAddress()
-    const results = await isupra.getSvalues(Object.values(pairIndex))
-    const datas = results[0]
-    const flags = results[1]
-    for (let i = 0; i < datas.length; i++) {
-      const data = datas[i]
-      const hasPrice = !flags[i]
-      let infoString = ''
-      if (hasPrice) {
-        const supraPrice = parseSupraPriace(data)
-        infoString = `decimals: ${supraPrice.price}, price: ${
-          supraPrice.price
-        } timestamp: ${new Date(Number(supraPrice.timestamp))}`
+    it('feed exist test', async () => {
+      const [data] = await isupra.getSvalue(pairIndex['eth_usd'])
+      const supraPrice = parseSupraPriace(data)
+      console.log(supraPrice)
+      const results = await isupra.getSvalues(Object.values(pairIndex))
+      const datas = results[0]
+      const flags = results[1]
+      for (let i = 0; i < datas.length; i++) {
+        const data = datas[i]
+        const hasPrice = !flags[i]
+        let infoString = ''
+        if (hasPrice) {
+          const supraPrice = parseSupraPriace(data)
+          infoString = `decimals: ${supraPrice.price}, price: ${
+            supraPrice.price
+          } timestamp: ${new Date(Number(supraPrice.timestamp))}`
+        }
+        console.log(`${Object.keys(pairIndex)[i]} has feed : ${hasPrice} ${infoString}`)
       }
-      console.log(`${Object.keys(pairIndex)[i]} has feed : ${hasPrice} ${infoString}`)
-    }
 
-    expect(datas.map((e) => e == `0x${'00'.repeat(32)}`)).to.deep.equal(flags)
+      expect(datas.map((e) => e == `0x${'00'.repeat(32)}`)).to.deep.equal(flags)
+    })
   })
-})
+}
 
 const pairIndex: { [key: string]: string } = {
   btc_usdt: '0',

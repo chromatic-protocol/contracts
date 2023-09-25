@@ -24,15 +24,11 @@ export function deploy(target: string = 'arbitrum') {
       const oracleProviderAddress = await oracleProvider.getAddress()
       if (!(await marketFactory.isRegisteredOracleProvider(oracleProviderAddress))) {
         await (
-          await marketFactory.registerOracleProvider(
-            oracleProviderAddress,
-            {
-              minTakeProfitBPS: 500, // 5%
-              maxTakeProfitBPS: 100000, // 1000%
-              leverageLevel: 0
-            },
-            { gasLimit: 1e6 }
-          )
+          await marketFactory.registerOracleProvider(oracleProviderAddress, {
+            minTakeProfitBPS: 500, // 5%
+            maxTakeProfitBPS: 100000, // 1000%
+            leverageLevel: 0
+          })
         ).wait()
       }
 
@@ -44,8 +40,7 @@ export function deploy(target: string = 'arbitrum') {
             BigInt('1000'), // interestRate, 10%
             BigInt('500'), // flashLoanFeeRate, 5%
             parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
-            BigInt('3000'), // uniswapFeeRate, 0.3%),
-            { gasLimit: 3e7 }
+            BigInt('3000') // uniswapFeeRate, 0.3%),
           )
         ).wait()
       }
@@ -59,8 +54,7 @@ export function deploy(target: string = 'arbitrum') {
         const marketCreateResult = await (
           await marketFactory.createMarket(
             oracleProvider.getAddress(),
-            settlementToken.getAddress(),
-            { gasLimit: '0x1000000' }
+            settlementToken.getAddress()
           )
         ).wait()
         const marketCreatedEvents = await marketFactory.queryFilter(

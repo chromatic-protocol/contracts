@@ -56,9 +56,7 @@ export async function deploy() {
   })
 
   if ((await marketFactory.keeperFeePayer()) === ethers.ZeroAddress) {
-    await (
-      await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress(), { gasLimit: 1e6 })
-    ).wait()
+    await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
   }
 
   await (
@@ -90,9 +88,7 @@ export async function deploy() {
   )
 
   try {
-    await (
-      await mate2automate.addWhitelistedRegistrar(await distributor.getAddress(), { gasLimit: 1e6 })
-    ).wait()
+    await (await mate2automate.addWhitelistedRegistrar(await distributor.getAddress())).wait()
   } catch (e) {
     console.log('add to whitelist failed')
   }
@@ -101,22 +97,20 @@ export async function deploy() {
     args: [await marketFactory.getAddress(), await distributor.getAddress()]
   })
   if ((await marketFactory.vault()) === ZeroAddress) {
-    await (await marketFactory.setVault(vault.getAddress(), { gasLimit: 1e6 })).wait()
+    await (await marketFactory.setVault(vault.getAddress())).wait()
   }
 
   const liquidator = await deployContract<Mate2Liquidator>('Mate2Liquidator', {
     args: [await marketFactory.getAddress(), MATE2_AUTOMATION_ADDRESS]
   })
   try {
-    await (
-      await mate2automate.addWhitelistedRegistrar(await liquidator.getAddress(), { gasLimit: 1e6 })
-    ).wait()
+    await (await mate2automate.addWhitelistedRegistrar(await liquidator.getAddress())).wait()
   } catch (e) {
     console.log('add to whitelist failed(Mate2Liquidator)')
   }
 
   if ((await marketFactory.liquidator()) === ZeroAddress) {
-    await (await marketFactory.setLiquidator(liquidator.getAddress(), { gasLimit: 1e6 })).wait()
+    await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
   }
 
   return { marketFactory, keeperFeePayer, liquidator }

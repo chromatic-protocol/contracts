@@ -3,13 +3,18 @@ import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-foundry'
 import '@nomicfoundation/hardhat-toolbox'
 import * as dotenv from 'dotenv'
+import { JsonRpcProvider, Network } from 'ethers'
 import 'hardhat-contract-sizer'
 import 'hardhat-deploy'
 import type { HardhatUserConfig } from 'hardhat/config'
+import { extendProvider } from 'hardhat/config'
+import { ProviderWrapper } from 'hardhat/plugins'
+import { EIP1193Provider, HttpNetworkConfig, RequestArguments } from 'hardhat/types'
 import 'solidity-docgen'
 import 'tsconfig-paths/register'
 import docgenConfig from './docs/docgen.config'
 import packageConfig from './hardhat-package.config'
+import './hardhat/tasks'
 
 dotenv.config()
 
@@ -144,5 +149,30 @@ const config: HardhatUserConfig = {
     ]
   }
 }
+
+class MantleProvider extends ProviderWrapper {
+  private _jsonRpcProvider: JsonRpcProvider
+
+  constructor(network: string, config: HttpNetworkConfig, _wrappedProvider: EIP1193Provider) {
+    super(_wrappedProvider)
+    this._jsonRpcProvider = new JsonRpcProvider(config.url, config.chainId, {
+      staticNetwork: new Network(network, config.chainId!)
+    })
+  }
+
+  public async request(args: RequestArguments) {
+    if (args.method === 'eth_estimateGas') {
+      return this._jsonRpcProvider.send(args.method, [(args.params as unknown[])[0]])
+    }
+
+    return this._wrappedProvider.request(args)
+  }
+}
+
+extendProvider(async (provider, config, network) => {
+  return network.startsWith('mantle')
+    ? new MantleProvider(network, config.networks[network] as HttpNetworkConfig, provider)
+    : provider
+})
 
 export default config
