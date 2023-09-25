@@ -10,7 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const deployOpts = { from: deployer }
+  const deployOpts = { from: deployer, gasLimit: '0x1000000' }
   const { address: oracleProviderAddress } = await deploy('OracleProviderMock', deployOpts)
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
@@ -38,7 +38,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deployOpts
   )
   console.log(chalk.yellow('✨ Register OracleProvider'))
-    
+
   // await marketFactory.registerSettlementToken(
   //   USDC_ARBITRUM_GOERLI.address,
   //   parseUnits('10', USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
