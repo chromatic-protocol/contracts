@@ -109,7 +109,7 @@ export const forkingOptions = {
     blockNumber: 19474553
   },
   mantle_testnet: {
-    url: `https://rpc.ankr.com/mantle_testnet/${process.env.ANKR_KEY}`,
+    url: `https://lb.drpc.org/ogrpc?network=mantle-testnet&dkey=${process.env.DRPC_KEY}`,
     blockNumber: 21717864
   }
 }
