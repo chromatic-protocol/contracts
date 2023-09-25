@@ -14,7 +14,6 @@ import 'solidity-docgen'
 import 'tsconfig-paths/register'
 import docgenConfig from './docs/docgen.config'
 import packageConfig from './hardhat-package.config'
-import './hardhat/tasks'
 
 dotenv.config()
 
