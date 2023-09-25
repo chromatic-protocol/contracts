@@ -89,7 +89,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
      */
     modifier onlyDao() {
-        if (msg.sender != dao) revert OnlyAccessableByDao();
+        _checkDao();
         _;
     }
 
@@ -149,6 +149,13 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         marketTradeFacet = _marketTradeFacet;
         marketLiquidateFacet = _marketLiquidateFacet;
         marketSettleFacet = _marketSettleFacet;
+    }
+
+    /**
+    * @dev This function can only be called by the modifier onlyDao.
+    */
+    function _checkDao() internal view{
+        if (msg.sender != dao) revert OnlyAccessableByDao();
     }
 
     /**
