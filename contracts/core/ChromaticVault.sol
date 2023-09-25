@@ -75,7 +75,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      *      Throws an `OnlyAccessableByMarket` error if the caller is not a registered market.
      */
     modifier onlyMarket() {
-        if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
+        _checkMarket();
         _;
     }
     /**
@@ -97,6 +97,16 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         earningDistributor = _earningDistributor;
         keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
     }
+
+    // Internal Functions
+    
+    /**
+    * @dev This function can only be called by the modifier onlyMarket.
+    */
+    function _checkMarket() internal view {
+        if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
+    }
+
 
     // implement IVault
 
