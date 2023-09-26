@@ -8,8 +8,6 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract SupraFeedOracle is IOracleProvider {
     using SafeMath for uint256;
 
-    error PriceFeedNotExist();
-
     uint256 private constant BASE = 1e18;
 
     /// @dev Supra feed address (https://supraoracles.com/docs/price-feeds/networks)
@@ -24,8 +22,8 @@ contract SupraFeedOracle is IOracleProvider {
     /// @dev Last version seen when `sync` was called
     uint256 private lastSyncedVersion;
 
-    /// @dev Last publishTime seen when `sync` was called
-    uint256 private lastSyncedTimestamp;
+    /// @dev Last round seen when `sync` was called
+    uint256 private lastSyncedRound;
 
     /// @dev Mapping of version to OracleVersion
     mapping(uint256 => OracleVersion) private oracleVersions;
@@ -50,12 +48,9 @@ contract SupraFeedOracle is IOracleProvider {
         (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
             pairIndex
         );
-        if (round == 0) {
-            revert PriceFeedNotExist();
-        }
-        if (lastSyncedTimestamp < timestamp) {
+        if (lastSyncedRound < round) {
             lastSyncedVersion++;
-            lastSyncedTimestamp = timestamp;
+            lastSyncedRound = round;
 
             oracleVersions[lastSyncedVersion] = OracleVersion({
                 version: lastSyncedVersion,
@@ -73,17 +68,13 @@ contract SupraFeedOracle is IOracleProvider {
         (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
             pairIndex
         );
-        if (round == 0) {
-            revert PriceFeedNotExist();
-        }
-        oracleVersion = oracleVersions[lastSyncedVersion];
-        if (timestamp > oracleVersion.timestamp) {
-            oracleVersion = OracleVersion({
+        oracleVersion = lastSyncedRound < round
+            ? oracleVersion = OracleVersion({
                 version: lastSyncedVersion + 1,
                 timestamp: timestamp,
                 price: int256(price.mul(BASE).div(10 ** supraDecimal))
-            });
-        }
+            })
+            : oracleVersions[lastSyncedVersion];
     }
 
     /**

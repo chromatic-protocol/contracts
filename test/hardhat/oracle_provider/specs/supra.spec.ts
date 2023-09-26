@@ -1,4 +1,7 @@
-import { ISupraSValueFeed, ISupraSValueFeed__factory } from '@chromatic/typechain-types'
+import {
+  ISupraSValueFeed,
+  ISupraSValueFeed__factory,
+} from '@chromatic/typechain-types'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
@@ -53,6 +56,29 @@ export function spec(networkName: keyof typeof forkingOptions) {
       }
 
       expect(datas.map((e) => e == `0x${'00'.repeat(32)}`)).to.deep.equal(flags)
+    })
+
+    it('SupraFeedOracle test', async () => {
+      const oracleF = await ethers.getContractFactory('SupraFeedOracle')
+      const validOracle = await oracleF.deploy(supraAddress, pairIndex['eth_usd'], 'ETH/USD')
+      const currentVersion = await validOracle.currentVersion()
+      expect(currentVersion.version).equal(1n)
+      await expect(oracleF.deploy(supraAddress, 10000, 'ETH/USD')).revertedWith('PriceFeedNotExist')
+    })
+
+    it('round test', async () => {
+      // real data from mantle_testnet eth_usd pair
+      const datas = [
+        '0x0000018ad10b7a68080000018ad10b7b080000000000000024f7d8c040000000',
+        '0x0000018ad10c5910080000018ad10c59ae0000000000000024f51ad8c0000000',
+        '0x0000018ad10cfd20080000018ad10cfdc50000000000000024f5016a55000000',
+        '0x0000018ad10de780080000018ad10de8310000000000000024f4ed1200000000',
+        '0x0000018ad10ee950080000018ad10ee9f50000000000000024f0f8e76a000000',
+        '0x0000018ad10fa4d0080000018ad10fa5760000000000000024f4824240000000'
+      ]
+      const rounds = datas.map(data=> parseSupraPriace(data).round)
+      const roundsSet = new Set(rounds)
+      expect(rounds.length).equal(roundsSet.size)
     })
   })
 }
