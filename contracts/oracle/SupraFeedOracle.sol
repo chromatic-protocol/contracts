@@ -70,7 +70,20 @@ contract SupraFeedOracle is IOracleProvider {
      * @inheritdoc IOracleProvider
      */
     function currentVersion() public view returns (OracleVersion memory oracleVersion) {
-        return oracleVersions[lastSyncedVersion];
+        (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
+            pairIndex
+        );
+        if (round == 0) {
+            revert PriceFeedNotExist();
+        }
+        oracleVersion = oracleVersions[lastSyncedVersion];
+        if (timestamp > oracleVersion.timestamp) {
+            oracleVersion = OracleVersion({
+                version: lastSyncedVersion + 1,
+                timestamp: timestamp,
+                price: int256(price.mul(BASE).div(10 ** supraDecimal))
+            });
+        }
     }
 
     /**

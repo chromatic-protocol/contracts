@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
+import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
+import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 
 /**
- * @title IMarketLiquidityLens
+ * @title IMarketLens
  * @dev The interface for liquidity information retrieval in a market.
  */
-interface IMarketLiquidityLens {
+interface IMarketLens {
     /**
      * @dev Retrieves the total liquidity amount for a specific trading fee rate in the liquidity pool.
      * @param tradingFeeRate The trading fee rate for which to retrieve the liquidity amount.
@@ -43,7 +44,7 @@ interface IMarketLiquidityLens {
     function getBinValuesAt(
         uint256 oracleVersion,
         int16[] calldata tradingFeeRates
-    ) external view returns (IMarketLiquidity.LiquidityBinValue[] memory values);
+    ) external view returns (LiquidityBinValue[] memory values);
 
     /**
      * @dev Retrieves the liquidity receipt with the given receipt ID.
@@ -68,9 +69,7 @@ interface IMarketLiquidityLens {
      * @param tradingFeeRate The trading fee rate for which to retrieve the pending liquidity.
      * @return pendingLiquidity An instance of PendingLiquidity representing the pending liquidity information.
      */
-    function pendingLiquidity(
-        int16 tradingFeeRate
-    ) external view returns (IMarketLiquidity.PendingLiquidity memory);
+    function pendingLiquidity(int16 tradingFeeRate) external view returns (PendingLiquidity memory);
 
     /**
      * @dev Retrieves the pending liquidity information for multiple trading fee rates from the associated LiquidityPool.
@@ -79,7 +78,7 @@ interface IMarketLiquidityLens {
      */
     function pendingLiquidityBatch(
         int16[] calldata tradingFeeRates
-    ) external view returns (IMarketLiquidity.PendingLiquidity[] memory);
+    ) external view returns (PendingLiquidity[] memory);
 
     /**
      * @dev Retrieves the claimable liquidity information for a specific trading fee rate and oracle version from the associated LiquidityPool.
@@ -90,7 +89,7 @@ interface IMarketLiquidityLens {
     function claimableLiquidity(
         int16 tradingFeeRate,
         uint256 oracleVersion
-    ) external view returns (IMarketLiquidity.ClaimableLiquidity memory);
+    ) external view returns (ClaimableLiquidity memory);
 
     /**
      * @dev Retrieves the claimable liquidity information for multiple trading fee rates and a specific oracle version from the associated LiquidityPool.
@@ -101,14 +100,60 @@ interface IMarketLiquidityLens {
     function claimableLiquidityBatch(
         int16[] calldata tradingFeeRates,
         uint256 oracleVersion
-    ) external view returns (IMarketLiquidity.ClaimableLiquidity[] memory);
+    ) external view returns (ClaimableLiquidity[] memory);
 
     /**
      * @dev Retrieves the liquidity bin statuses for the caller's liquidity pool.
      * @return statuses An array of LiquidityBinStatus representing the liquidity bin statuses.
      */
-    function liquidityBinStatuses()
-        external
-        view
-        returns (IMarketLiquidity.LiquidityBinStatus[] memory);
+    function liquidityBinStatuses() external view returns (LiquidityBinStatus[] memory);
+
+    /**
+     * @dev Retrieves the position with the given position ID.
+     *      It throws NotExistPosition if the specified position ID does not exist.
+     * @param positionId The ID of the position to retrieve.
+     * @return position The position with the specified ID.
+     */
+    function getPosition(uint256 positionId) external view returns (Position memory);
+
+    /**
+     * @dev Retrieves multiple positions by their IDs.
+     * @param positionIds The IDs of the positions to retrieve.
+     * @return positions An array of retrieved positions.
+     */
+    function getPositions(
+        uint256[] calldata positionIds
+    ) external view returns (Position[] memory positions);
+
+    /**
+     * @dev Retrieves the pending position information for a specific trading fee rate from the associated LiquidityPool.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the pending position.
+     * @return pendingPosition An instance of PendingPosition representing the pending position information.
+     */
+    function pendingPosition(int16 tradingFeeRate) external view returns (PendingPosition memory);
+
+    /**
+     * @dev Retrieves the pending position information for multiple trading fee rates from the associated LiquidityPool.
+     * @param tradingFeeRates The list of trading fee rates for which to retrieve the pending position.
+     * @return pendingPositionBatch An array of PendingPosition instances representing the pending position information for each trading fee rate.
+     */
+    function pendingPositionBatch(
+        int16[] calldata tradingFeeRates
+    ) external view returns (PendingPosition[] memory);
+
+    /**
+     * @dev Retrieves the closing position information for a specific trading fee rate from the associated LiquidityPool.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the closing position.
+     * @return closingPosition An instance of PendingPosition representing the closing position information.
+     */
+    function closingPosition(int16 tradingFeeRate) external view returns (ClosingPosition memory);
+
+    /**
+     * @dev Retrieves the closing position information for multiple trading fee rates from the associated LiquidityPool.
+     * @param tradingFeeRates The list of trading fee rates for which to retrieve the closing position.
+     * @return pendingPositionBatch An array of PendingPosition instances representing the closing position information for each trading fee rate.
+     */
+    function closingPositionBatch(
+        int16[] calldata tradingFeeRates
+    ) external view returns (ClosingPosition[] memory);
 }

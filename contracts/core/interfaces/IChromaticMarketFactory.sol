@@ -47,6 +47,12 @@ interface IChromaticMarketFactory is
     event SetKeeperFeePayer(address indexed keeperFeePayer);
 
     /**
+     * @notice Emitted when the market settlement task address is set.
+     * @param marketSettlement The market settlement task address.
+     */
+    event SetMarketSettlement(address indexed marketSettlement);
+
+    /**
      * @notice Emitted when a market is created.
      * @param oracleProvider The address of the oracle provider.
      * @param settlementToken The address of the settlement token.
@@ -89,6 +95,12 @@ interface IChromaticMarketFactory is
     function keeperFeePayer() external view returns (address);
 
     /**
+     * @notice Returns the address of the market settlement task.
+     * @return The address of the market settlement task.
+     */
+    function marketSettlement() external view returns (address);
+
+    /**
      * @notice Updates the DAO address.
      * @param _dao The new DAO address.
      */
@@ -117,6 +129,12 @@ interface IChromaticMarketFactory is
      * @param _keeperFeePayer The keeper fee payer address.
      */
     function setKeeperFeePayer(address _keeperFeePayer) external;
+
+    /**
+     * @notice Sets the market settlement task address.
+     * @param _marketSettlement The market settlement task address.
+     */
+    function setMarketSettlement(address _marketSettlement) external;
 
     /**
      * @notice Returns an array of all market addresses.

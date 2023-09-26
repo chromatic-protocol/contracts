@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
-import {ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 /**
  * @title IChromaticTradeCallback

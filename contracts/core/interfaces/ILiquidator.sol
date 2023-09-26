@@ -20,7 +20,7 @@ interface ILiquidator {
 
     /**
      * @notice Resolves the liquidation of a position.
-     * @dev This function is called by the Gelato automation system.
+     * @dev This function is called by the automation system.
      * @param market The address of the market contract.
      * @param positionId The ID of the position to be liquidated.
      * @return canExec Whether the liquidation can be executed.
@@ -52,7 +52,7 @@ interface ILiquidator {
 
     /**
      * @notice Resolves the claim of a position.
-     * @dev This function is called by the Gelato automation system.
+     * @dev This function is called by the automation system.
      * @param market The address of the market contract.
      * @param positionId The ID of the position to be claimed.
      * @return canExec Whether the claim can be executed.

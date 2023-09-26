@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
@@ -152,12 +153,12 @@ contract ChromaticLens {
      * @dev Retrieves the pending liquidity information for a specific trading fee rate in the given Chromatic market.
      * @param market The Chromatic market from which to retrieve the pending liquidity information.
      * @param tradingFeeRate The trading fee rate for which to retrieve the pending liquidity.
-     * @return pendingLiquidity An instance of IChromaticMarket.PendingLiquidity representing the pending liquidity information.
+     * @return pendingLiquidity An instance of PendingLiquidity representing the pending liquidity information.
      */
     function pendingLiquidity(
         IChromaticMarket market,
         int16 tradingFeeRate
-    ) external view returns (IChromaticMarket.PendingLiquidity memory) {
+    ) external view returns (PendingLiquidity memory) {
         return market.pendingLiquidity(tradingFeeRate);
     }
 
@@ -165,12 +166,12 @@ contract ChromaticLens {
      * @dev Retrieves the pending liquidity information for a list of trading fee rates in the given Chromatic market.
      * @param market The Chromatic market from which to retrieve the pending liquidity information.
      * @param tradingFeeRates The list of trading fee rates for which to retrieve the pending liquidity.
-     * @return pendingLiquidityList An array of IChromaticMarket.PendingLiquidity representing the pending liquidity information for each trading fee rate.
+     * @return pendingLiquidityList An array of PendingLiquidity representing the pending liquidity information for each trading fee rate.
      */
     function pendingLiquidityBatch(
         IChromaticMarket market,
         int16[] calldata tradingFeeRates
-    ) external view returns (IChromaticMarket.PendingLiquidity[] memory) {
+    ) external view returns (PendingLiquidity[] memory) {
         return market.pendingLiquidityBatch(tradingFeeRates);
     }
 
@@ -179,13 +180,13 @@ contract ChromaticLens {
      * @param market The Chromatic Market from which to retrieve the claimable liquidity information.
      * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
      * @param _oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidity An instance of IChromaticMarket.ClaimableLiquidity representing the claimable liquidity information.
+     * @return claimableLiquidity An instance of ClaimableLiquidity representing the claimable liquidity information.
      */
     function claimableLiquidity(
         IChromaticMarket market,
         int16 tradingFeeRate,
         uint256 _oracleVersion
-    ) external view returns (IChromaticMarket.ClaimableLiquidity memory) {
+    ) external view returns (ClaimableLiquidity memory) {
         return market.claimableLiquidity(tradingFeeRate, _oracleVersion);
     }
 
@@ -194,13 +195,13 @@ contract ChromaticLens {
      * @param market The Chromatic Market from which to retrieve the claimable liquidity information.
      * @param tradingFeeRates The list of trading fee rates for which to retrieve the claimable liquidity.
      * @param _oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidityList An array of IChromaticMarket.ClaimableLiquidity representing the claimable liquidity information for each trading fee rate and the oracle version.
+     * @return claimableLiquidityList An array of ClaimableLiquidity representing the claimable liquidity information for each trading fee rate and the oracle version.
      */
     function claimableLiquidityBatch(
         IChromaticMarket market,
         int16[] calldata tradingFeeRates,
         uint256 _oracleVersion
-    ) external view returns (IChromaticMarket.ClaimableLiquidity[] memory) {
+    ) external view returns (ClaimableLiquidity[] memory) {
         return market.claimableLiquidityBatch(tradingFeeRates, _oracleVersion);
     }
 
@@ -211,7 +212,7 @@ contract ChromaticLens {
      */
     function liquidityBinStatuses(
         IChromaticMarket market
-    ) external view returns (IChromaticMarket.LiquidityBinStatus[] memory) {
+    ) external view returns (LiquidityBinStatus[] memory) {
         return market.liquidityBinStatuses();
     }
 }

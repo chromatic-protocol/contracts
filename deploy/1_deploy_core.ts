@@ -1,9 +1,7 @@
 import { verify } from '@chromatic/deploy/verify'
 import { ChromaticMarketFactory } from '@chromatic/typechain-types'
-import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
-import { ZeroAddress } from 'ethers'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -18,8 +16,6 @@ const WMNT: { [key: number]: string } = {
   5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
 }
 
-//FIXME MATE2 automate contract address
-const MATE2_AUTOMATION_ADDRESS = '0x'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
@@ -61,9 +57,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await verify(hre, { address: marketLiquidityFacet })
   console.log(chalk.yellow(`✨ MarketLiquidityFacet: ${marketLiquidityFacet}`))
 
-  const { address: marketLiquidityLensFacet } = await deploy('MarketLiquidityLensFacet', deployOpts)
-  await verify(hre, { address: marketLiquidityLensFacet })
-  console.log(chalk.yellow(`✨ MarketLiquidityLensFacet: ${marketLiquidityLensFacet}`))
+  const { address: marketLensFacet } = await deploy('MarketLensFacet', deployOpts)
+  await verify(hre, { address: marketLensFacet })
+  console.log(chalk.yellow(`✨ MarketLensFacet: ${marketLensFacet}`))
 
   const { address: marketTradeFacet } = await deploy('MarketTradeFacet', deployOpts)
   await verify(hre, { address: marketTradeFacet })
@@ -88,7 +84,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       marketLoupeFacet,
       marketStateFacet,
       marketLiquidityFacet,
-      marketLiquidityLensFacet,
+      marketLensFacet,
       marketTradeFacet,
       marketLiquidateFacet,
       marketSettleFacet

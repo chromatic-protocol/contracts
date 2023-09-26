@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
+import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {BinLiquidity, BinLiquidityLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinLiquidity.sol";
 import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPosition.sol";
 import {BinClosedPosition, BinClosedPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinClosedPosition.sol";
@@ -24,7 +24,7 @@ struct LiquidityBin {
     BinLiquidity _liquidity;
     BinPosition _position;
     BinClosedPosition _closedPosition;
-    mapping(uint256 => IMarketLiquidity.LiquidityBinValue) binValueAt; // oracleVersion => binValue
+    mapping(uint256 => LiquidityBinValue) binValueAt; // oracleVersion => binValue
 }
 
 /**
@@ -64,7 +64,7 @@ library LiquidityBinLib {
             uint256 totalSupply = ctx.clbToken.totalSupply(clbTokenId);
 
             uint256 oracleVersion = ctx.currentOracleVersion().version;
-            self.binValueAt[oracleVersion] = IMarketLiquidity.LiquidityBinValue({
+            self.binValueAt[oracleVersion] = LiquidityBinValue({
                 binValue: binValue,
                 clbTokenTotalSupply: totalSupply
             });
@@ -292,11 +292,11 @@ library LiquidityBinLib {
     /**
      * @dev Retrieves the pending liquidity information from a LiquidityBin.
      * @param self The reference to the LiquidityBin struct.
-     * @return pendingLiquidity An instance of IMarketLiquidity.PendingLiquidity representing the pending liquidity information.
+     * @return pendingLiquidity An instance of PendingLiquidity representing the pending liquidity information.
      */
     function pendingLiquidity(
         LiquidityBin storage self
-    ) internal view returns (IMarketLiquidity.PendingLiquidity memory) {
+    ) internal view returns (PendingLiquidity memory) {
         return self._liquidity.pendingLiquidity();
     }
 
@@ -304,12 +304,34 @@ library LiquidityBinLib {
      * @dev Retrieves the claimable liquidity information for a specific oracle version from a LiquidityBin.
      * @param self The reference to the LiquidityBin struct.
      * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidity An instance of IMarketLiquidity.ClaimableLiquidity representing the claimable liquidity information.
+     * @return claimableLiquidity An instance of ClaimableLiquidity representing the claimable liquidity information.
      */
     function claimableLiquidity(
         LiquidityBin storage self,
         uint256 oracleVersion
-    ) internal view returns (IMarketLiquidity.ClaimableLiquidity memory) {
+    ) internal view returns (ClaimableLiquidity memory) {
         return self._liquidity.claimableLiquidity(oracleVersion);
+    }
+
+    /**
+     * @dev Retrieves the pending position information from a LiquidityBin.
+     * @param self The reference to the LiquidityBin struct.
+     * @return pendingPosition An instance of PendingPosition representing the pending position information.
+     */
+    function pendingPosition(
+        LiquidityBin storage self
+    ) internal view returns (PendingPosition memory) {
+        return self._position.pendingPosition();
+    }
+
+    /**
+     * @dev Retrieves the closing position information from a LiquidityBin.
+     * @param self The reference to the LiquidityBin struct.
+     * @return closingPosition An instance of ClosingPosition representing the closing position information.
+     */
+    function closingPosition(
+        LiquidityBin storage self
+    ) internal view returns (ClosingPosition memory) {
+        return self._closedPosition.closingPosition();
     }
 }

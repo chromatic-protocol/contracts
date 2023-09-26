@@ -9,58 +9,6 @@ import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.
  */
 interface IMarketLiquidity {
     /**
-     * @dev A struct representing pending liquidity information.
-     * @param oracleVersion The oracle version of pending liqudity.
-     * @param mintingTokenAmountRequested The amount of settlement tokens requested for minting.
-     * @param burningCLBTokenAmountRequested The amount of CLB tokens requested for burning.
-     */
-    struct PendingLiquidity {
-        uint256 oracleVersion;
-        uint256 mintingTokenAmountRequested;
-        uint256 burningCLBTokenAmountRequested;
-    }
-
-    /**
-     * @dev A struct representing claimable liquidity information.
-     * @param mintingTokenAmountRequested The amount of settlement tokens requested for minting.
-     * @param mintingCLBTokenAmount The actual amount of CLB tokens minted.
-     * @param burningCLBTokenAmountRequested The amount of CLB tokens requested for burning.
-     * @param burningCLBTokenAmount The actual amount of CLB tokens burned.
-     * @param burningTokenAmount The amount of settlement tokens equal in value to the burned CLB tokens.
-     */
-    struct ClaimableLiquidity {
-        uint256 mintingTokenAmountRequested;
-        uint256 mintingCLBTokenAmount;
-        uint256 burningCLBTokenAmountRequested;
-        uint256 burningCLBTokenAmount;
-        uint256 burningTokenAmount;
-    }
-
-    /**
-     * @dev A struct representing status of the liquidity bin.
-     * @param liquidity The total liquidity amount in the bin
-     * @param freeLiquidity The amount of free liquidity available in the bin.
-     * @param binValue The current value of the bin.
-     * @param tradingFeeRate The trading fee rate for the liquidity.
-     */
-    struct LiquidityBinStatus {
-        uint256 liquidity;
-        uint256 freeLiquidity;
-        uint256 binValue;
-        int16 tradingFeeRate;
-    }
-
-    /**
-     * @dev A struct representing value of the liquidity bin.
-     * @param binValue The value of liquidity bin expressed in amount of settlement token.
-     * @param clbTokenTotalSupply The total supply amount of the CLB token.
-     */
-    struct LiquidityBinValue {
-        uint256 binValue;
-        uint256 clbTokenTotalSupply;
-    }
-
-    /**
      * @dev Emitted when liquidity is added to the market.
      * @param receipt The liquidity receipt.
      */
