@@ -17,7 +17,7 @@ import {DiamondLoupeFacet} from "@chromatic-protocol/contracts/core/facets/Diamo
 import {MarketDiamondCutFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketDiamondCutFacet.sol";
 import {MarketStateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketStateFacet.sol";
 import {MarketLiquidityFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacet.sol";
-import {MarketLiquidityLensFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityLensFacet.sol";
+import {MarketLensFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLensFacet.sol";
 import {MarketTradeFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacet.sol";
 import {MarketLiquidateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidateFacet.sol";
 import {MarketSettleFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketSettleFacet.sol";
@@ -75,7 +75,7 @@ abstract contract BaseSetup is Test {
             address(new DiamondLoupeFacet()),
             address(new MarketStateFacet()),
             address(new MarketLiquidityFacet()),
-            address(new MarketLiquidityLensFacet()),
+            address(new MarketLensFacet()),
             address(new MarketTradeFacet()),
             address(new MarketLiquidateFacet()),
             address(new MarketSettleFacet())

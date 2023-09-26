@@ -6,11 +6,17 @@ import {
 import chalk from 'chalk'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
-export const MATE2_AUTOMATION_ADDRESS = '0x09D58Aa214826265A03255CBF04897B6031944C1'
+
+export const MATE2_AUTOMATION_ADDRESS: { [key: number]: string } = {
+  31337: '0xe1Fd27F4390DcBE165f4D60DBF821e4B9Bb02dEd',
+  5001: '0x09D58Aa214826265A03255CBF04897B6031944C1'
+}
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
+  const automationAddress = MATE2_AUTOMATION_ADDRESS[network.config.chainId!]
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
 
@@ -25,7 +31,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     'Mate2VaultEarningDistributor',
     {
       ...deployOpts,
-      args: [factory.address, MATE2_AUTOMATION_ADDRESS]
+      args: [factory.address, automationAddress]
     }
   )
 
@@ -35,7 +41,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ Mate2VaultEarningDistributor: ${distributor}`))
   const mate2automate = IMate2AutomationRegistry__factory.connect(
-    MATE2_AUTOMATION_ADDRESS,
+    automationAddress,
     await ethers.getSigner(deployer)
   )
   await (await mate2automate.addWhitelistedRegistrar(distributor)).wait()
@@ -54,7 +60,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     network.name === 'anvil' ? 'Mate2LiquidatorMock' : 'Mate2Liquidator',
     {
       ...deployOpts,
-      args: [factory.address, MATE2_AUTOMATION_ADDRESS]
+      args: [factory.address, automationAddress]
     }
   )
 
@@ -66,6 +72,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await marketFactory.setLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
+
+  const { address: marketSettlement, args: marketSettlementArgs } = await deploy(
+    'Mate2MarketSettlement',
+    {
+      ...deployOpts,
+      args: [factory.address, automationAddress]
+    }
+  )
+
+  await verify(hre, {
+    address: marketSettlement,
+    constructorArguments: marketSettlementArgs
+  })
+  console.log(chalk.yellow(`✨ Mate2MarketSettlement: ${marketSettlement}`))
+
+  await (await mate2automate.addWhitelistedRegistrar(marketSettlement)).wait()
+  await marketFactory.setMarketSettlement(marketSettlement, deployOpts)
+  console.log(chalk.yellow('✨ Set MarketSettlement'))
 }
 
 export default func

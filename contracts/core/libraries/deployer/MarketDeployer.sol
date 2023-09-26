@@ -7,7 +7,7 @@ import {IDiamondCut} from "@chromatic-protocol/contracts/core/interfaces/IDiamon
 import {IDiamondLoupe} from "@chromatic-protocol/contracts/core/interfaces/IDiamondLoupe.sol";
 import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
-import {IMarketLiquidityLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidityLens.sol";
+import {IMarketLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLens.sol";
 import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {IMarketSettle} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketSettle.sol";
@@ -42,7 +42,7 @@ library MarketDeployerLib {
      * @param marketLoupeFacet The market loupe facet address.
      * @param marketStateFacet The market state facet address.
      * @param marketLiquidityFacet The market liquidity facet address.
-     * @param marketLiquidityLensFacet The market liquidity lens facet address.
+     * @param marketLensFacet The market liquidity lens facet address.
      * @param marketTradeFacet The market trade facet address.
      * @param marketLiquidateFacet The market liquidate facet address.
      * @param marketSettleFacet The market settle facet address.
@@ -56,7 +56,7 @@ library MarketDeployerLib {
         address marketLoupeFacet,
         address marketStateFacet,
         address marketLiquidityFacet,
-        address marketLiquidityLensFacet,
+        address marketLensFacet,
         address marketTradeFacet,
         address marketLiquidateFacet,
         address marketSettleFacet
@@ -76,7 +76,7 @@ library MarketDeployerLib {
         cut[0] = _marketLoupeFacetCut(marketLoupeFacet);
         cut[1] = _marketStateFacetCut(marketStateFacet);
         cut[2] = _marketLiquidityFacetCut(marketLiquidityFacet);
-        cut[3] = _marketLiquidityLensFacetCut(marketLiquidityLensFacet);
+        cut[3] = _marketLensFacetCut(marketLensFacet);
         cut[4] = _marketTradeFacetCut(marketTradeFacet);
         cut[5] = _marketLiquidateFacetCut(marketLiquidateFacet);
         cut[6] = _marketSettleFacetCut(marketSettleFacet);
@@ -144,24 +144,30 @@ library MarketDeployerLib {
         });
     }
 
-    function _marketLiquidityLensFacetCut(
-        address marketLiquidityLensFacet
+    function _marketLensFacetCut(
+        address marketLensFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](11);
-        functionSelectors[0] = IMarketLiquidityLens.getBinLiquidity.selector;
-        functionSelectors[1] = IMarketLiquidityLens.getBinFreeLiquidity.selector;
-        functionSelectors[2] = IMarketLiquidityLens.getBinValues.selector;
-        functionSelectors[3] = IMarketLiquidityLens.getBinValuesAt.selector;
-        functionSelectors[4] = IMarketLiquidityLens.getLpReceipt.selector;
-        functionSelectors[5] = IMarketLiquidityLens.getLpReceipts.selector;
-        functionSelectors[6] = IMarketLiquidityLens.pendingLiquidity.selector;
-        functionSelectors[7] = IMarketLiquidityLens.pendingLiquidityBatch.selector;
-        functionSelectors[8] = IMarketLiquidityLens.claimableLiquidity.selector;
-        functionSelectors[9] = IMarketLiquidityLens.claimableLiquidityBatch.selector;
-        functionSelectors[10] = IMarketLiquidityLens.liquidityBinStatuses.selector;
+        bytes4[] memory functionSelectors = new bytes4[](17);
+        functionSelectors[0] = IMarketLens.getBinLiquidity.selector;
+        functionSelectors[1] = IMarketLens.getBinFreeLiquidity.selector;
+        functionSelectors[2] = IMarketLens.getBinValues.selector;
+        functionSelectors[3] = IMarketLens.getBinValuesAt.selector;
+        functionSelectors[4] = IMarketLens.getLpReceipt.selector;
+        functionSelectors[5] = IMarketLens.getLpReceipts.selector;
+        functionSelectors[6] = IMarketLens.pendingLiquidity.selector;
+        functionSelectors[7] = IMarketLens.pendingLiquidityBatch.selector;
+        functionSelectors[8] = IMarketLens.claimableLiquidity.selector;
+        functionSelectors[9] = IMarketLens.claimableLiquidityBatch.selector;
+        functionSelectors[10] = IMarketLens.liquidityBinStatuses.selector;
+        functionSelectors[11] = IMarketLens.getPosition.selector;
+        functionSelectors[12] = IMarketLens.getPositions.selector;
+        functionSelectors[13] = IMarketLens.pendingPosition.selector;
+        functionSelectors[14] = IMarketLens.pendingPositionBatch.selector;
+        functionSelectors[15] = IMarketLens.closingPosition.selector;
+        functionSelectors[16] = IMarketLens.closingPositionBatch.selector;
 
         cut = IDiamondCut.FacetCut({
-            facetAddress: marketLiquidityLensFacet,
+            facetAddress: marketLensFacet,
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: functionSelectors
         });
@@ -170,11 +176,10 @@ library MarketDeployerLib {
     function _marketTradeFacetCut(
         address marketTradeFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](4);
+        bytes4[] memory functionSelectors = new bytes4[](3);
         functionSelectors[0] = IMarketTrade.openPosition.selector;
         functionSelectors[1] = IMarketTrade.closePosition.selector;
         functionSelectors[2] = IMarketTrade.claimPosition.selector;
-        functionSelectors[3] = IMarketTrade.getPositions.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketTradeFacet,

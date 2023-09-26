@@ -8,7 +8,7 @@ import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/in
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
-import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCallback {
     function setUp() public override {

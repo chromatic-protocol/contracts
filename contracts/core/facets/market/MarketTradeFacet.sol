@@ -9,7 +9,8 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
-import {IMarketTrade, OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
@@ -289,24 +290,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         emit ClaimPosition(position.owner, pnl, interest, position);
 
         ms.liquidator.cancelClaimPositionTask(position.id);
-    }
-
-    /**
-     * @inheritdoc IMarketTrade
-     */
-    function getPositions(
-        uint256[] calldata positionIds
-    ) external view returns (Position[] memory _positions) {
-        PositionStorage storage ps = PositionStorageLib.positionStorage();
-
-        _positions = new Position[](positionIds.length);
-        for (uint i; i < positionIds.length; ) {
-            _positions[i] = ps.getPosition(positionIds[i]);
-
-            unchecked {
-                i++;
-            }
-        }
     }
 
     function _newPosition(

@@ -75,7 +75,18 @@ contract PythFeedOracle is IOracleProvider {
      * @inheritdoc IOracleProvider
      */
     function currentVersion() public view returns (OracleVersion memory oracleVersion) {
-        return oracleVersions[lastSyncedVersion];
+        PythStructs.Price memory latestPrice = pyth.getPriceUnsafe(priceFeedId);
+        oracleVersion = oracleVersions[lastSyncedVersion];
+        if (latestPrice.publishTime > oracleVersion.timestamp) {
+            int256 pythDecimal = int256(10 ** int256(latestPrice.expo).abs());
+            oracleVersion = OracleVersion({
+                version: lastSyncedVersion + 1,
+                timestamp: latestPrice.publishTime,
+                price: latestPrice.expo > 0
+                    ? int256(latestPrice.price).mul(BASE).mul(pythDecimal)
+                    : int256(latestPrice.price).mul(BASE).div(pythDecimal)
+            });
+        }
     }
 
     /**

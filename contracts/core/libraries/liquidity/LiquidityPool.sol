@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
+import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
@@ -874,7 +874,7 @@ library LiquidityPoolLib {
         LiquidityPool storage self,
         int16 _tradingFeeRate,
         uint256 oracleVersion
-    ) internal view returns (IMarketLiquidity.LiquidityBinValue memory value) {
+    ) internal view returns (LiquidityBinValue memory value) {
         value = targetBin(self, _tradingFeeRate).binValueAt[oracleVersion];
     }
 
@@ -882,17 +882,12 @@ library LiquidityPoolLib {
      * @dev Retrieves the pending liquidity information for a specific trading fee rate from a LiquidityPool.
      * @param self The reference to the LiquidityPool struct.
      * @param tradingFeeRate The trading fee rate for which to retrieve the pending liquidity.
-     * @return pendingLiquidity An instance of IMarketLiquidity.PendingLiquidity representing the pending liquidity information.
+     * @return pendingLiquidity An instance of PendingLiquidity representing the pending liquidity information.
      */
     function pendingLiquidity(
         LiquidityPool storage self,
         int16 tradingFeeRate
-    )
-        internal
-        view
-        _validTradingFeeRate(tradingFeeRate)
-        returns (IMarketLiquidity.PendingLiquidity memory)
-    {
+    ) internal view _validTradingFeeRate(tradingFeeRate) returns (PendingLiquidity memory) {
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         return bin.pendingLiquidity();
     }
@@ -902,18 +897,13 @@ library LiquidityPoolLib {
      * @param self The reference to the LiquidityPool struct.
      * @param tradingFeeRate The trading fee rate for which to retrieve the claimable liquidity.
      * @param oracleVersion The oracle version for which to retrieve the claimable liquidity.
-     * @return claimableLiquidity An instance of IMarketLiquidity.ClaimableLiquidity representing the claimable liquidity information.
+     * @return claimableLiquidity An instance of ClaimableLiquidity representing the claimable liquidity information.
      */
     function claimableLiquidity(
         LiquidityPool storage self,
         int16 tradingFeeRate,
         uint256 oracleVersion
-    )
-        internal
-        view
-        _validTradingFeeRate(tradingFeeRate)
-        returns (IMarketLiquidity.ClaimableLiquidity memory)
-    {
+    ) internal view _validTradingFeeRate(tradingFeeRate) returns (ClaimableLiquidity memory) {
         LiquidityBin storage bin = targetBin(self, tradingFeeRate);
         return bin.claimableLiquidity(oracleVersion);
     }
@@ -922,28 +912,27 @@ library LiquidityPoolLib {
      * @dev Retrieves the liquidity bin statuses for the LiquidityPool using the provided context.
      * @param self The LiquidityPool storage instance.
      * @param ctx The LpContext containing the necessary context for calculating the bin statuses.
-     * @return stats An array of IMarketLiquidity.LiquidityBinStatus representing the liquidity bin statuses.
+     * @return stats An array of LiquidityBinStatus representing the liquidity bin statuses.
      */
     function liquidityBinStatuses(
         LiquidityPool storage self,
         LpContext memory ctx
-    ) internal view returns (IMarketLiquidity.LiquidityBinStatus[] memory) {
+    ) internal view returns (LiquidityBinStatus[] memory) {
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
 
-        IMarketLiquidity.LiquidityBinStatus[]
-            memory stats = new IMarketLiquidity.LiquidityBinStatus[](FEE_RATES_LENGTH * 2);
+        LiquidityBinStatus[] memory stats = new LiquidityBinStatus[](FEE_RATES_LENGTH * 2);
         for (uint256 i; i < FEE_RATES_LENGTH; ) {
             uint16 _feeRate = _tradingFeeRates[i];
             LiquidityBin storage longBin = targetBin(self, int16(_feeRate));
             LiquidityBin storage shortBin = targetBin(self, -int16(_feeRate));
 
-            stats[i] = IMarketLiquidity.LiquidityBinStatus({
+            stats[i] = LiquidityBinStatus({
                 tradingFeeRate: int16(_feeRate),
                 liquidity: longBin.liquidity(),
                 freeLiquidity: longBin.freeLiquidity(),
                 binValue: longBin.value(ctx)
             });
-            stats[i + FEE_RATES_LENGTH] = IMarketLiquidity.LiquidityBinStatus({
+            stats[i + FEE_RATES_LENGTH] = LiquidityBinStatus({
                 tradingFeeRate: -int16(_feeRate),
                 liquidity: shortBin.liquidity(),
                 freeLiquidity: shortBin.freeLiquidity(),
@@ -956,5 +945,33 @@ library LiquidityPoolLib {
         }
 
         return stats;
+    }
+
+    /**
+     * @dev Retrieves the pending position information for a specific trading fee rate from a LiquidityPool.
+     * @param self The reference to the LiquidityPool struct.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the pending position.
+     * @return pendingPositin An instance of PendingPositin representing the pending position information.
+     */
+    function pendingPosition(
+        LiquidityPool storage self,
+        int16 tradingFeeRate
+    ) internal view _validTradingFeeRate(tradingFeeRate) returns (PendingPosition memory) {
+        LiquidityBin storage bin = targetBin(self, tradingFeeRate);
+        return bin.pendingPosition();
+    }
+
+    /**
+     * @dev Retrieves the closing position information for a specific trading fee rate from a LiquidityPool.
+     * @param self The reference to the LiquidityPool struct.
+     * @param tradingFeeRate The trading fee rate for which to retrieve the pending position.
+     * @return closingPositin An instance of ClosingPositin representing the closing position information.
+     */
+    function closingPosition(
+        LiquidityPool storage self,
+        int16 tradingFeeRate
+    ) internal view _validTradingFeeRate(tradingFeeRate) returns (ClosingPosition memory) {
+        LiquidityBin storage bin = targetBin(self, tradingFeeRate);
+        return bin.closingPosition();
     }
 }

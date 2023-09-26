@@ -8,6 +8,7 @@ import {BinClosingPosition, BinClosingPositionLib} from "@chromatic-protocol/con
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
+import {ClosingPosition} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 /**
  * @dev Represents a closed position within an LiquidityBin.
@@ -167,6 +168,24 @@ library BinClosedPositionLib {
      */
     function totalTakerMargin(BinClosedPosition storage self) internal view returns (uint256) {
         return self._totalTakerMargin + self._closing.totalTakerMargin;
+    }
+
+    /**
+     * @dev Retrieves the closing position information.
+     * @param self The reference to the BinClosedPosition struct.
+     * @return closingPosition An instance of ClosingPosition representing the closing position information.
+     */
+    function closingPosition(
+        BinClosedPosition storage self
+    ) internal view returns (ClosingPosition memory) {
+        return
+            ClosingPosition({
+                closeVersion: self._closing.closeVersion,
+                totalQty: self._closing.totalQty,
+                totalEntryAmount: self._closing.totalEntryAmount,
+                totalMakerMargin: self._closing.totalMakerMargin,
+                totalTakerMargin: self._closing.totalTakerMargin
+            });
     }
 
     /**

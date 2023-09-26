@@ -6,6 +6,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {IInterestCalculator} from "@chromatic-protocol/contracts/core/interfaces/IInterestCalculator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
+import {IMarketSettlement} from "@chromatic-protocol/contracts/core/interfaces/IMarketSettlement.sol";
 import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/factory/IMarketDeployer.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
@@ -31,12 +32,13 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address public override vault;
     address public override keeperFeePayer;
     address public override treasury;
+    address public override marketSettlement;
 
     address private immutable marketDiamondCutFacet;
     address private immutable marketLoupeFacet;
     address private immutable marketStateFacet;
     address private immutable marketLiquidityFacet;
-    address private immutable marketLiquidityLensFacet;
+    address private immutable marketLensFacet;
     address private immutable marketTradeFacet;
     address private immutable marketLiquidateFacet;
     address private immutable marketSettleFacet;
@@ -68,6 +70,11 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @dev Throws an error indicating that the keeper fee payer address is already set.
      */
     error AlreadySetKeeperFeePayer();
+
+    /**
+     * @dev Throws an error indicating that the market settlement task address is already set.
+     */
+    error AlreadySetMarketSettlement();
 
     /**
      * @dev Throws an error indicating that the oracle provider is not registered.
@@ -145,7 +152,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         marketLoupeFacet = _marketLoupeFacet;
         marketStateFacet = _marketStateFacet;
         marketLiquidityFacet = _marketLiquidityFacet;
-        marketLiquidityLensFacet = _marketLiquidityLensFacet;
+        marketLensFacet = _marketLiquidityLensFacet;
         marketTradeFacet = _marketTradeFacet;
         marketLiquidateFacet = _marketLiquidateFacet;
         marketSettleFacet = _marketSettleFacet;
@@ -219,6 +226,19 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
     /**
      * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     *      Throws an `AlreadySetMarketSettlement` error if the market settlement task address has already been set.
+     */
+    function setMarketSettlement(address _marketSettlement) external override onlyDao {
+        require(_marketSettlement != address(0));
+        if (marketSettlement != address(0)) revert AlreadySetMarketSettlement();
+
+        marketSettlement = _marketSettlement;
+        emit SetMarketSettlement(marketSettlement);
+    }
+
+    /**
+     * @inheritdoc IChromaticMarketFactory
      */
     function getMarkets() external view override returns (address[] memory) {
         return _markets.values();
@@ -286,7 +306,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             marketLoupeFacet,
             marketStateFacet,
             marketLiquidityFacet,
-            marketLiquidityLensFacet,
+            marketLensFacet,
             marketTradeFacet,
             marketLiquidateFacet,
             marketSettleFacet
@@ -301,6 +321,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         emit MarketCreated(oracleProvider, settlementToken, market);
 
         IChromaticVault(vault).createMarketEarningDistributionTask(market);
+        if (marketSettlement != address(0)) {
+            IMarketSettlement(marketSettlement).createSettlementTask(market);
+        }
     }
 
     /**

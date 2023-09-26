@@ -11,6 +11,7 @@ import {AccruedInterest, AccruedInterestLib} from "@chromatic-protocol/contracts
 import {BinPendingPosition, BinPendingPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPendingPosition.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {PRICE_PRECISION} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
+import {PendingPosition} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 /**
  * @dev Represents a position in the LiquidityBin
@@ -161,6 +162,23 @@ library BinPositionLib {
         } else {
             return -(Math.min(absPnl, totalMakerMargin(self)).toInt256());
         }
+    }
+
+    /**
+     * @dev Retrieves the pending position information.
+     * @param self The reference to the BinPosition struct.
+     * @return pendingPosition An instance of PendingPosition representing the pending position information.
+     */
+    function pendingPosition(
+        BinPosition storage self
+    ) internal view returns (PendingPosition memory) {
+        return
+            PendingPosition({
+                openVersion: self._pending.openVersion,
+                totalQty: self._pending.totalQty,
+                totalMakerMargin: self._pending.totalMakerMargin,
+                totalTakerMargin: self._pending.totalTakerMargin
+            });
     }
 
     /**

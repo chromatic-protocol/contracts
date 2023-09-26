@@ -12,6 +12,7 @@ export async function deployContract<T>(
   return hardhatErrorPrettyPrint(async () => {
     const { deployer } = await getNamedAccounts()
 
+    await deployments.delete(contractName)
     const result = await deployments.deploy(contractName, {
       from: options?.from || deployer,
       ...options
