@@ -6,8 +6,7 @@ import {
   execute,
   findChainlinkOracleProvider,
   findPythOracleProvider,
-  findSupraOracleProvider,
-  getGasLimit
+  findSupraOracleProvider
 } from './utils'
 
 // USAGE
@@ -18,8 +17,8 @@ task('oracle-provider:register', 'Register oracle provider')
   .addOptionalParam('chainlinkAddress', 'The chainlink feed aggregator address')
   .addOptionalParam('pythAddress', 'The pyth price feed address')
   .addOptionalParam('priceFeedId', 'The price feed id of pyth')
-  .addOptionalParam('supraAddress', 'The price feed id of pyth')
-  .addOptionalParam('pairIndex', 'The price feed id of pyth')
+  .addOptionalParam('supraAddress', 'The price feed id of supra')
+  .addOptionalParam('pairIndex', 'The price feed id of supra')
   .addOptionalParam('description', 'The price feed description')
   .setAction(
     execute(
@@ -82,15 +81,11 @@ task('oracle-provider:register', 'Register oracle provider')
         )
 
         await (
-          await factory.registerOracleProvider(
-            deployResult.address!,
-            {
-              minTakeProfitBPS: 1000, // 10%
-              maxTakeProfitBPS: 100000, // 1000%
-              leverageLevel: 0
-            },
-            { gasLimit: getGasLimit(hre) }
-          )
+          await factory.registerOracleProvider(deployResult.address!, {
+            minTakeProfitBPS: 1000, // 10%
+            maxTakeProfitBPS: 100000, // 1000%
+            leverageLevel: 0
+          })
         ).wait()
 
         console.log(

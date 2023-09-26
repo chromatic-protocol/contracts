@@ -7,13 +7,15 @@ import {
   findChainlinkOracleProvider,
   findPythOracleProvider,
   findSettlementToken,
-  getGasLimit
+  findSupraOracleProvider
 } from './utils'
 
 task('market:create', 'Create new market')
   .addOptionalParam('chainlinkAddress', 'The chainlink feed aggregator address')
   .addOptionalParam('pythAddress', 'The pyth price feed address')
   .addOptionalParam('priceFeedId', 'The price feed id of pyth')
+  .addOptionalParam('supraAddress', 'The price feed id of supra')
+  .addOptionalParam('pairIndex', 'The price feed id of pyth or supra')
   .addParam('tokenAddress', 'The settlement token address or symbol')
   .setAction(
     execute(
@@ -22,17 +24,19 @@ task('market:create', 'Create new market')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const { chainlinkAddress, pythAddress, priceFeedId, tokenAddress } = taskArgs
+        const { chainlinkAddress, pythAddress, priceFeedId, supraAddress, pairIndex, tokenAddress } = taskArgs
 
         // param check
-        if (!chainlinkAddress && !(pythAddress && priceFeedId)) {
+        if (!chainlinkAddress && !(pythAddress && priceFeedId) && !(supraAddress && pairIndex)) {
           console.log(chalk.red(`invaild param`))
           return
         }
 
         const provider = chainlinkAddress
           ? await findChainlinkOracleProvider(factory, chainlinkAddress)
-          : await findPythOracleProvider(factory, pythAddress, priceFeedId)
+          : pythAddress
+          ? await findPythOracleProvider(factory, pythAddress, priceFeedId)
+          : await findSupraOracleProvider(factory, supraAddress, pairIndex)
         if (!provider) {
           console.log(
             chalk.red(`Cannot found oracle provider for chainlink feed '${chainlinkAddress}'`)
@@ -47,9 +51,7 @@ task('market:create', 'Create new market')
         }
 
         await (
-          await factory.createMarket(await provider.getAddress(), await token.getAddress(), {
-            gasLimit: getGasLimit(hre)
-          })
+          await factory.createMarket(await provider.getAddress(), await token.getAddress())
         ).wait()
 
         console.log(

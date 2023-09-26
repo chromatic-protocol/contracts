@@ -10,8 +10,8 @@ import {
   SupraFeedOracle__factory
 } from '@chromatic/typechain-types'
 import { Token } from '@uniswap/sdk-core'
-import { DAI_ON, ID_TO_CHAIN_ID, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
-import { ContractRunner, ethers, getAddress, isAddress } from 'ethers'
+import { DAI_ON, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
+import { ContractRunner, getAddress, isAddress } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
 export function execute(
@@ -83,8 +83,8 @@ export async function findSupraOracleProvider(
   for (const providerAddress of providerAddresses) {
     const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
     if ((await provider.oracleProviderName()).toLowerCase() === 'supra') {
-      const pythProvider = SupraFeedOracle__factory.connect(providerAddress, factory.runner)
-      const datas = await Promise.all([pythProvider.feed(), pythProvider.pairIndex()])
+      const supraProvider = SupraFeedOracle__factory.connect(providerAddress, factory.runner)
+      const datas = await Promise.all([supraProvider.feed(), supraProvider.pairIndex()])
       if (datas[0].toLowerCase() === supraAddress.toLowerCase() && datas[1] === BigInt(pairIndex)) {
         return provider
       }
@@ -113,6 +113,11 @@ export async function findSettlementToken(
   }
 }
 
+const WMNT: { [key: number]: string } = {
+  5000: '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8', // mantle
+  5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
+}
+
 const TOKEN_SYMBOLS: Record<string, (chainId: keyof typeof WETH9) => Token> = {
   DAI: DAI_ON,
   USDC: USDC_ON,
@@ -120,6 +125,13 @@ const TOKEN_SYMBOLS: Record<string, (chainId: keyof typeof WETH9) => Token> = {
   WETH: (chainId) => {
     const weth = WETH9[chainId]
     if (weth) return weth
+    throw new Error(`Chain id: ${chainId} not supported`)
+  },
+  WMNT: (chainId) => {
+    const wmntAddress = WMNT[chainId]
+    if (wmntAddress) {
+      return new Token(chainId, wmntAddress, 18)
+    }
     throw new Error(`Chain id: ${chainId} not supported`)
   }
 }
@@ -132,21 +144,10 @@ export function getToken(
   const { config, network } = hre
   const echainId =
     network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
-  const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
 
   const tokenAddress = TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()]
-    ? TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()](chainId).address
+    ? TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()](echainId).address
     : getAddress(addressOrSymbol)
 
   return IERC20Metadata__factory.connect(tokenAddress, runner)
-}
-
-// https://docs.mantle.xyz/network/for-devs/troubleshooting#contract-deploy-error-providererror-too-many-arguments-want-at-most-1
-// ProviderError: too many arguments, want at most 1
-// use hardhat <= 2.14.0 || set gasLimit '0x1000000'
-// https://github.com/NomicFoundation/hardhat/issues/4010
-// The problem is most probably caused by an outdated ethereum node (geth < 1.9.22 or similar) which doesn't support eth_estimateGas 2'nd argument (quantity / type, see https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_estimategas)
-// The mantle seems based on 1.9.10 (https://github.com/mantlenetworkio/mantle/blob/main/l2geth/params/version.go)
-export function getGasLimit(hre: HardhatRuntimeEnvironment) {
-  return hre.network.name.split('_')[0].toLowerCase() === 'mantle' ? '0x1000000' : undefined
 }
