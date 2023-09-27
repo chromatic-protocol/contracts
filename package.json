@@ -1,6 +1,6 @@
 {
   "name": "@chromatic-protocol/contracts",
-  "version": "0.0.1-rc.239",
+  "version": "0.0.1-rc.240",
   "license": "BUSL-1.1",
   "scripts": {
     "test": "forge test -vvv",
