@@ -7,6 +7,7 @@ import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/I
 import {IMarketSettlement} from "@chromatic-protocol/contracts/core/interfaces/IMarketSettlement.sol";
 import {IMate2Automation} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation.sol";
 import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
+import {IUpkeepTreasury} from "@chromatic-protocol/contracts/core/automation/mate2/IUpkeepTreasury.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {PendingPosition, ClosingPosition, PendingLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
@@ -18,6 +19,11 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     mapping(address => uint256) public marketSettlementUpkeepIds; // market => upkeep id
 
     /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
+    error OnlyAccessableByDao();
+
+    /**
      * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
      */
     error OnlyAccessableByFactoryOrDao();
@@ -26,6 +32,15 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
      * @dev Throws an error indicating that a market settlement task already exists.
      */
     error ExistMarketSettlementTask();
+
+    /**
+     * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
+     */
+    modifier onlyDao() {
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
+        _;
+    }
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
@@ -85,7 +100,9 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         uint256 upkeepId = marketSettlementUpkeepIds[market];
         if (upkeepId != 0) {
             delete marketSettlementUpkeepIds[market];
-            automate.cancelUpkeep(upkeepId);
+            try automate.cancelUpkeep(upkeepId) {} catch {
+                // ignore
+            }
         }
     }
 
@@ -146,5 +163,19 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
             rates[i] = int16(_tradingFeeRates[i]);
             rates[i + FEE_RATES_LENGTH] = -int16(_tradingFeeRates[i]);
         }
+    }
+
+    // for management
+    function balanceOfUpkeepTreasury() external view returns (uint256) {
+        IUpkeepTreasury treasury = IUpkeepTreasury(automate.getUpkeepTreasury());
+        return treasury.userBalance(address(this));
+    }
+
+    function withdrawUpkeepTreasuryFunds(
+        address payable _receiver,
+        uint256 _amount
+    ) external onlyDao {
+        IUpkeepTreasury treasury = IUpkeepTreasury(automate.getUpkeepTreasury());
+        treasury.withdrawFunds(_receiver, _amount);
     }
 }

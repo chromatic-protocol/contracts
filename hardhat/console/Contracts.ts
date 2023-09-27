@@ -25,6 +25,8 @@ import {
   IWETH9__factory,
   KeeperFeePayer,
   KeeperFeePayer__factory,
+  Mate2MarketSettlement,
+  Mate2MarketSettlement__factory,
   Token,
   Token__factory
 } from '@chromatic/typechain-types'
@@ -35,7 +37,7 @@ import {
   USDC_ON,
   WETH9
 } from '@uniswap/smart-order-router'
-import { MaxUint256, Signer, Wallet, parseUnits } from 'ethers'
+import { MaxUint256, Signer, Wallet, ZeroAddress, parseUnits } from 'ethers'
 import gaussian from 'gaussian'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -76,6 +78,7 @@ export class Contracts {
   private _usdc!: IERC20Metadata
   private _chrm: Token | undefined
   private _swapRouter!: ISwapRouter
+  private _marketSettlement: Mate2MarketSettlement | undefined
 
   constructor(public readonly hre: HardhatRuntimeEnvironment) {}
 
@@ -114,6 +117,14 @@ export class Contracts {
     const wmntAddress = WMNT[echainId]
     if (wmntAddress) {
       this._wmnt = IWETH9__factory.connect(wmntAddress, this._signer!)
+    }
+
+    const marketSettlementAddress = await this.factory.marketSettlement()
+    if (marketSettlementAddress != ZeroAddress) {
+      this._marketSettlement = Mate2MarketSettlement__factory.connect(
+        marketSettlementAddress,
+        this._signer
+      )
     }
   }
 
@@ -167,6 +178,10 @@ export class Contracts {
 
   get swapRouter(): ISwapRouter {
     return this._swapRouter
+  }
+
+  get marketSettlement(): Mate2MarketSettlement | undefined {
+    return this._marketSettlement
   }
 
   connectOracleProvider(address: string): IOracleProvider {
