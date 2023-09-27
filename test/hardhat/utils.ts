@@ -1,5 +1,5 @@
 import { reset } from '@nomicfoundation/hardhat-toolbox/network-helpers'
-import { Interface, Result } from 'ethers'
+import { Interface, Result, TransactionReceipt } from 'ethers'
 import { deployments, ethers, getNamedAccounts } from 'hardhat'
 import { DeployOptions } from 'hardhat-deploy/types'
 import util from 'util'
@@ -117,4 +117,18 @@ export const forkingOptions = {
 
 export async function setChain(forkingOption: keyof typeof forkingOptions) {
   await reset(forkingOptions[forkingOption].url, forkingOptions[forkingOption].blockNumber)
+}
+
+export type GetEventFromTxReceiptParam = {
+  receipt: TransactionReceipt
+  eventName: string
+  iface: Interface
+}
+
+export function getEventFromTxReceipt(param: GetEventFromTxReceiptParam) {
+  const topicHash = param.iface.getEvent(param.eventName)!.topicHash.toLowerCase()
+  const log = param.receipt!.logs.filter(
+    (log) => log.topics.length > 0 && log.topics[0].toLowerCase() === topicHash
+  )[0]
+  return param.iface.decodeEventLog(param.eventName, log.data)[0]
 }
