@@ -11,7 +11,9 @@ function getDeployments(packageConfig: any) {
   const chainIds = {
     anvil: 31337,
     arbitrum_goerli: 421613,
-    arbitrum_one: 42161
+    arbitrum_one: 42161,
+    mantle: 5000,
+    mantle_testnet: 5001
   }
 
   for (let contract of contracts) {
