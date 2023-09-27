@@ -95,13 +95,13 @@ const config: HardhatUserConfig = {
     },
     mantle: {
       ...common,
-      url: 'https://rpc.mantle.xyz/',
+      url: `https://lb.drpc.org/ogrpc?network=mantle&dkey=${process.env.DRPC_KEY}`,
       chainId: 5000,
       tags: ['core']
     },
     mantle_testnet: {
       ...common,
-      url: 'https://rpc.testnet.mantle.xyz/',
+      url: `https://lb.drpc.org/ogrpc?network=mantle-testnet&dkey=${process.env.DRPC_KEY}`,
       chainId: 5001,
       tags: ['core']
     }

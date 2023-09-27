@@ -8,8 +8,6 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract SupraFeedOracle is IOracleProvider {
     using SafeMath for uint256;
 
-    error PriceFeedNotExist();
-
     uint256 private constant BASE = 1e18;
 
     /// @dev Supra feed address (https://supraoracles.com/docs/price-feeds/networks)
@@ -23,9 +21,6 @@ contract SupraFeedOracle is IOracleProvider {
 
     /// @dev Last version seen when `sync` was called
     uint256 private lastSyncedVersion;
-
-    /// @dev Last publishTime seen when `sync` was called
-    uint256 private lastSyncedTimestamp;
 
     /// @dev Mapping of version to OracleVersion
     mapping(uint256 => OracleVersion) private oracleVersions;
@@ -46,36 +41,25 @@ contract SupraFeedOracle is IOracleProvider {
     /**
      * @inheritdoc IOracleProvider
      */
-    function sync() public returns (OracleVersion memory) {
-        (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
-            pairIndex
-        );
-        if (round == 0) {
-            revert PriceFeedNotExist();
-        }
-        if (lastSyncedTimestamp < timestamp) {
+    function sync() public returns (OracleVersion memory oracleVersion) {
+        (uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(pairIndex);
+        oracleVersion = oracleVersions[lastSyncedVersion];
+        if (timestamp > oracleVersion.timestamp) {
             lastSyncedVersion++;
-            lastSyncedTimestamp = timestamp;
-
-            oracleVersions[lastSyncedVersion] = OracleVersion({
+            oracleVersion = OracleVersion({
                 version: lastSyncedVersion,
                 timestamp: timestamp,
                 price: int256(price.mul(BASE).div(10 ** supraDecimal))
             });
+            oracleVersions[lastSyncedVersion] = oracleVersion;
         }
-        return oracleVersions[lastSyncedVersion];
     }
 
     /**
      * @inheritdoc IOracleProvider
      */
     function currentVersion() public view returns (OracleVersion memory oracleVersion) {
-        (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
-            pairIndex
-        );
-        if (round == 0) {
-            revert PriceFeedNotExist();
-        }
+        (uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(pairIndex);
         oracleVersion = oracleVersions[lastSyncedVersion];
         if (timestamp > oracleVersion.timestamp) {
             oracleVersion = OracleVersion({

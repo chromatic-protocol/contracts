@@ -61,6 +61,7 @@ library LiquidityBinLib {
         if (self._liquidity.needSettle(ctx)) {
             uint256 binValue = self.value(ctx);
             uint256 clbTokenId = self.clbTokenId;
+            //slither-disable-next-line calls-loop
             uint256 totalSupply = ctx.clbToken.totalSupply(clbTokenId);
 
             uint256 oracleVersion = ctx.currentOracleVersion().version;
