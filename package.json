@@ -51,6 +51,7 @@
     "bluebird": "^3.7.2",
     "boxen": "^5",
     "chai": "^4.2.0",
+    "console-table-printer": "^2.11.2",
     "date-fns": "^2.30.0",
     "dotenv": "^16.0.3",
     "dotenv-cli": "^7.2.1",
