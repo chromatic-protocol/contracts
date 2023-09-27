@@ -78,7 +78,7 @@ export function spec(getDeps: Function) {
         receipt: removeLiqTxReceipt!,
         eventName: 'RemoveLiquidity',
         iface: market.interface
-      }).id
+      })[0].id
 
       await updatePrice(1000)
 

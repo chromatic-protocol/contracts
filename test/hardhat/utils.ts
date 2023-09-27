@@ -130,5 +130,5 @@ export function getEventFromTxReceipt(param: GetEventFromTxReceiptParam) {
   const log = param.receipt!.logs.filter(
     (log) => log.topics.length > 0 && log.topics[0].toLowerCase() === topicHash
   )[0]
-  return param.iface.decodeEventLog(param.eventName, log.data)[0]
+  return param.iface.decodeEventLog(param.eventName, log.data)
 }
