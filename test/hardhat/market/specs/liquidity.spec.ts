@@ -3,6 +3,7 @@ import { expect } from 'chai'
 import { BigNumberish, parseEther } from 'ethers'
 import { logLiquidity } from '../../log-utils'
 import { helpers, prepareMarketTest } from '../testHelper'
+import { getEventFromTxReceipt } from '../../utils'
 
 export function spec(getDeps: Function) {
   describe('market test', async function () {
@@ -71,12 +72,17 @@ export function spec(getDeps: Function) {
       const expectedAmount = await _expectedAmount(market, clbToken, feeRate, removeLiqAmount)
 
       await (await clbToken.setApprovalForAll(chromaticRouter.getAddress(), true)).wait()
+      const removeLiqTxReceipt = await (await removeLiquidity(removeLiqAmount, feeRate)).wait()
 
-      await (await removeLiquidity(removeLiqAmount, feeRate)).wait()
+      const removeLiqReceiptId = getEventFromTxReceipt({
+        receipt: removeLiqTxReceipt!,
+        eventName: 'RemoveLiquidity',
+        iface: market.interface
+      })[0].id
 
       await updatePrice(1000)
 
-      await expect(withdrawLiquidity((await getLpReceiptIds())[0])).to.changeTokenBalance(
+      await expect(withdrawLiquidity(removeLiqReceiptId)).to.changeTokenBalance(
         settlementToken,
         tester,
         expectedAmount
