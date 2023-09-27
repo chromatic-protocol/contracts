@@ -80,6 +80,7 @@
   },
   "resolutions": {
     "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "minimatch": "^9.0.3"
   }
 }

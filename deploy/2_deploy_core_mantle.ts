@@ -34,12 +34,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       args: [factory.address, automationAddress]
     }
   )
-
   await verify(hre, {
     address: distributor,
     constructorArguments: distributorArgs
   })
   console.log(chalk.yellow(`✨ Mate2VaultEarningDistributor: ${distributor}`))
+
   const mate2automate = IMate2AutomationRegistry__factory.connect(
     automationAddress,
     await ethers.getSigner(deployer)
@@ -56,13 +56,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.setVault(vault, deployOpts)
   console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
 
-  const { address: liquidator, args: liquidatorArgs } = await deploy(
-    network.name === 'anvil' ? 'Mate2LiquidatorMock' : 'Mate2Liquidator',
-    {
-      ...deployOpts,
-      args: [factory.address, automationAddress]
-    }
-  )
+  const { address: liquidator, args: liquidatorArgs } = await deploy('Mate2Liquidator', {
+    ...deployOpts,
+    args: [factory.address, automationAddress]
+  })
 
   await verify(hre, {
     address: liquidator,
@@ -70,6 +67,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ Mate2Liquidator: ${liquidator}`))
 
+  await (await mate2automate.addWhitelistedRegistrar(liquidator)).wait()
   await marketFactory.setLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
 

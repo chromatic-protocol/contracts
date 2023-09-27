@@ -30,6 +30,7 @@ import {
 } from '@chromatic/typechain-types'
 import {
   ID_TO_CHAIN_ID,
+  SUPPORTED_CHAINS,
   SWAP_ROUTER_02_ADDRESSES,
   USDC_ON,
   WETH9
@@ -38,8 +39,21 @@ import { MaxUint256, Signer, Wallet, parseUnits } from 'ethers'
 import gaussian from 'gaussian'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
-const ARB_GOERLI_CHRM_ADDRESS = '0x29A6AC3D416F8Ca85A3df95da209eDBfaF6E522d'
+const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
+  421613: '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86', // arbitrum_goerli UNISWAP
+  5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
+  5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
+}
+
+const CHRM_ADDRESS: { [key: number]: string } = {
+  421613: '0x29A6AC3D416F8Ca85A3df95da209eDBfaF6E522d',
+  5001: '0xB4D851cC4632b3B6f73b2686037e4433767e5D41'
+}
+
+const WMNT: { [key: number]: string } = {
+  5000: '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8', // mantle
+  5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
+}
 
 // prettier-ignore
 const fees = [
@@ -58,6 +72,7 @@ export class Contracts {
   private _lens!: ChromaticLens
   private _keeperFeePayer!: KeeperFeePayer
   private _weth!: IWETH9
+  private _wmnt!: IWETH9
   private _usdc!: IERC20Metadata
   private _chrm: Token | undefined
   private _swapRouter!: ISwapRouter
@@ -68,36 +83,42 @@ export class Contracts {
     const { config, network, ethers } = this.hre
     const echainId =
       network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
-    const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
 
     this._signer = privateKey
       ? new Wallet(privateKey, ethers.provider)
       : (await ethers.getSigners())[0]
 
-    this._factory = this.connectFactory(await this.addressOf('ChromaticMarketFactory'))
-    this._vault = this.connectVault(await this.addressOf('ChromaticVault'))
+    this._factory = this.connectFactory((await this.addressOf('ChromaticMarketFactory'))!)
+    this._vault = this.connectVault((await this.addressOf('ChromaticVault'))!)
     this._liquidator = this.connectLiquidator(
-      (await this.addressOf('GelatoLiquidator')) || (await this.addressOf('Mate2Liquidator'))
+      (await this.addressOf('GelatoLiquidator')) || (await this.addressOf('Mate2Liquidator'))!
     )
-    this._router = this.connectRouter(await this.addressOf('ChromaticRouter'))
-    this._lens = this.connectLens(await this.addressOf('ChromaticLens'))
-    this._keeperFeePayer = this.connectKeeperFeePayer(await this.addressOf('KeeperFeePayer'))
-    this._weth = IWETH9__factory.connect(WETH9[chainId].address, this._signer!)
-    this._usdc = this.connectToken(USDC_ON(chainId).address)
-    this._chrm =
-      echainId === config.networks.arbitrum_goerli.chainId!
-        ? Token__factory.connect(ARB_GOERLI_CHRM_ADDRESS, this._signer)
-        : undefined
+    this._router = this.connectRouter((await this.addressOf('ChromaticRouter'))!)
+    this._lens = this.connectLens((await this.addressOf('ChromaticLens'))!)
+    this._keeperFeePayer = this.connectKeeperFeePayer((await this.addressOf('KeeperFeePayer'))!)
 
-    const swapRouterAddress =
-      echainId === config.networks.arbitrum_goerli.chainId!
-        ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
-        : SWAP_ROUTER_02_ADDRESSES(echainId)
+    const chrmAddress = CHRM_ADDRESS[echainId]
+    if (chrmAddress) {
+      this._chrm = Token__factory.connect(chrmAddress, this._signer)
+    }
+
+    const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
     this._swapRouter = ISwapRouter__factory.connect(swapRouterAddress, this._signer)
+
+    if (SUPPORTED_CHAINS.includes(echainId)) {
+      const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
+      this._weth = IWETH9__factory.connect(WETH9[chainId].address, this._signer!)
+      this._usdc = this.connectToken(USDC_ON(chainId).address)
+    }
+
+    const wmntAddress = WMNT[echainId]
+    if (wmntAddress) {
+      this._wmnt = IWETH9__factory.connect(wmntAddress, this._signer!)
+    }
   }
 
-  private async addressOf(name: string): Promise<string> {
-    return (await this.hre.deployments.get(name)).address
+  private async addressOf(name: string): Promise<string | undefined> {
+    return (await this.hre.deployments.getOrNull(name))?.address
   }
 
   get signer(): Signer {
@@ -130,6 +151,10 @@ export class Contracts {
 
   get weth(): IWETH9 {
     return this._weth
+  }
+
+  get wmnt(): IWETH9 {
+    return this._wmnt
   }
 
   get usdc(): IERC20Metadata {

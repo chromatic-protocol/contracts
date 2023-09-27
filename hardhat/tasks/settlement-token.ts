@@ -3,7 +3,7 @@ import chalk from 'chalk'
 import { formatUnits, parseUnits } from 'ethers'
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
-import { execute, getGasLimit, getToken } from './utils'
+import { execute, getToken } from './utils'
 
 task('settlement-token', 'Show settlement token information')
   .addParam('address', 'The settlement token address or symbol')
@@ -88,8 +88,7 @@ task('settlement-token:register', 'Register settlement token')
             parseUnits(taskArgs.interestRate.toString(), 2),
             parseUnits(taskArgs.flashloanFeeRate.toString(), 2),
             parseUnits(taskArgs.earningDistributionThreshold.toString(), decimals),
-            parseUnits(taskArgs.uniswapFeeRate.toString(), 4),
-            { gasLimit: getGasLimit(hre) }
+            parseUnits(taskArgs.uniswapFeeRate.toString(), 4)
           )
         ).wait()
         console.log(
@@ -139,32 +138,28 @@ task('settlement-token:set', 'Register settlement token')
         if (taskArgs.minMargin) {
           await factory.setMinimumMargin(
             tokenAddress,
-            parseUnits(taskArgs.minMargin.toString(), decimals),
-            { gasLimit: getGasLimit(hre) }
+            parseUnits(taskArgs.minMargin.toString(), decimals)
           )
           console.log(chalk.green('MinMargin is updated'))
         }
         if (taskArgs.flashloanFeeRate) {
           await factory.setFlashLoanFeeRate(
             tokenAddress,
-            parseUnits(taskArgs.flashloanFeeRate.toString(), 2),
-            { gasLimit: getGasLimit(hre) }
+            parseUnits(taskArgs.flashloanFeeRate.toString(), 2)
           )
           console.log(chalk.green('FlashloanFeeRate is updated'))
         }
         if (taskArgs.earningDistributionThreshold) {
           await factory.setEarningDistributionThreshold(
             tokenAddress,
-            parseUnits(taskArgs.earningDistributionThreshold.toString(), decimals),
-            { gasLimit: getGasLimit(hre) }
+            parseUnits(taskArgs.earningDistributionThreshold.toString(), decimals)
           )
           console.log(chalk.green('EarningDistributionThreshold is updated'))
         }
         if (taskArgs.uniswapFeeRate) {
           await factory.setUniswapFeeTier(
             tokenAddress,
-            parseUnits(taskArgs.uniswapFeeRate.toString(), 4),
-            { gasLimit: getGasLimit(hre) }
+            parseUnits(taskArgs.uniswapFeeRate.toString(), 4)
           )
           console.log(chalk.green('UniswapFeeRate is updated'))
         }
