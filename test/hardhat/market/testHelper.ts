@@ -7,8 +7,14 @@ import { deploy as marketDeploy } from '../deployMarket'
 
 export const prepareMarketTest = async (target: string = 'arbitrum') => {
   async function faucet(account: SignerWithAddress) {
-    const faucetTx = await settlementToken.connect(account).faucet(parseEther('1000000000'))
-    await faucetTx.wait()
+    const tokenOwnerAddress = await settlementToken.connect(account).owner()
+    // owner is deployer
+    // await ethers.provider.send('hardhat_impersonateAccount', [tokenOwnerAddress])
+    const tokenOwner = await ethers.getSigner(tokenOwnerAddress)
+    const token = settlementToken.connect(tokenOwner)
+    const amount = parseEther('1000000000')
+    await (await token.faucet(amount)).wait()
+    await (await token.transfer(account, amount)).wait()
   }
   const {
     marketFactory,
