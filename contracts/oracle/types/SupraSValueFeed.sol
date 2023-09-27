@@ -13,7 +13,7 @@ library SupraSValueFeedLib {
     function getPrice(
         SupraSValueFeed self,
         uint64 pareIndex
-    ) internal view returns (uint256 round, uint256 decimal, uint256 timestamp, uint256 price) {
+    ) internal view returns (uint256 decimal, uint256 timestamp, uint256 price) {
         // 
         /**
          * flag indicating if the value is available or not.
@@ -26,7 +26,7 @@ library SupraSValueFeedLib {
 
         require(!flag, "PriceFeedNotExist");
 
-        round = bytesToUint256(abi.encodePacked(data >> 192));
+        // round = bytesToUint256(abi.encodePacked(data >> 192));
         decimal = bytesToUint256(abi.encodePacked((data << 64) >> 248));
         timestamp = bytesToUint256(abi.encodePacked((data << 72) >> 192));
         price = bytesToUint256(abi.encodePacked((data << 136) >> 160));

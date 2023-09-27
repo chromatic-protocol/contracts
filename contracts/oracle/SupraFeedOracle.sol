@@ -22,9 +22,6 @@ contract SupraFeedOracle is IOracleProvider {
     /// @dev Last version seen when `sync` was called
     uint256 private lastSyncedVersion;
 
-    /// @dev Last round seen when `sync` was called
-    uint256 private lastSyncedRound;
-
     /// @dev Mapping of version to OracleVersion
     mapping(uint256 => OracleVersion) private oracleVersions;
 
@@ -44,37 +41,33 @@ contract SupraFeedOracle is IOracleProvider {
     /**
      * @inheritdoc IOracleProvider
      */
-    function sync() public returns (OracleVersion memory) {
-        (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
-            pairIndex
-        );
-        if (lastSyncedRound < round) {
+    function sync() public returns (OracleVersion memory oracleVersion) {
+        (uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(pairIndex);
+        oracleVersion = oracleVersions[lastSyncedVersion];
+        if (timestamp > oracleVersion.timestamp) {
             lastSyncedVersion++;
-            lastSyncedRound = round;
-
-            oracleVersions[lastSyncedVersion] = OracleVersion({
+            oracleVersion = OracleVersion({
                 version: lastSyncedVersion,
                 timestamp: timestamp,
                 price: int256(price.mul(BASE).div(10 ** supraDecimal))
             });
+            oracleVersions[lastSyncedVersion] = oracleVersion;
         }
-        return oracleVersions[lastSyncedVersion];
     }
 
     /**
      * @inheritdoc IOracleProvider
      */
     function currentVersion() public view returns (OracleVersion memory oracleVersion) {
-        (uint256 round, uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(
-            pairIndex
-        );
-        oracleVersion = lastSyncedRound < round
-            ? oracleVersion = OracleVersion({
+        (uint256 supraDecimal, uint256 timestamp, uint256 price) = feed.getPrice(pairIndex);
+        oracleVersion = oracleVersions[lastSyncedVersion];
+        if (timestamp > oracleVersion.timestamp) {
+            oracleVersion = OracleVersion({
                 version: lastSyncedVersion + 1,
                 timestamp: timestamp,
                 price: int256(price.mul(BASE).div(10 ** supraDecimal))
-            })
-            : oracleVersions[lastSyncedVersion];
+            });
+        }
     }
 
     /**
