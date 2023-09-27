@@ -9,7 +9,7 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 export const MATE2_AUTOMATION_ADDRESS: { [key: number]: string } = {
   31337: '0xe1Fd27F4390DcBE165f4D60DBF821e4B9Bb02dEd',
-  5001: '0x09D58Aa214826265A03255CBF04897B6031944C1'
+  5001: '0xF4564c2310680c4F19f2625842E3875A98c110A3'
 }
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
