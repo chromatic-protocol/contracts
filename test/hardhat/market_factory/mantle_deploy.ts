@@ -12,8 +12,8 @@ import { ethers } from 'hardhat'
 
 import { deployContract } from '../utils'
 
-const MATE2_AUTOMATION_ADDRESS = '0xA58c89bB5a9EA4F1ceA61fF661ED2342D845441B'
-const MATE2_CREATED_BLOCK_NUMBER = 21186953
+const MATE2_AUTOMATION_ADDRESS = '0xF4564c2310680c4F19f2625842E3875A98c110A3'
+const MATE2_CREATED_BLOCK_NUMBER = 21936742
 
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
