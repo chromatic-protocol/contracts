@@ -1,4 +1,3 @@
-import { verify } from '@chromatic/deploy/verify'
 import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
@@ -42,42 +41,30 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(chalk.yellow(`✨ MarketDeployerLib: ${marketDeployer}`))
 
   const { address: marketDiamondCutFacet } = await deploy('MarketDiamondCutFacet', deployOpts)
-  await verify(hre, { address: marketDiamondCutFacet })
   console.log(chalk.yellow(`✨ MarketDiamondCutFacet: ${marketDiamondCutFacet}`))
 
   const { address: marketLoupeFacet } = await deploy('DiamondLoupeFacet', deployOpts)
-  await verify(hre, { address: marketLoupeFacet })
   console.log(chalk.yellow(`✨ DiamondLoupeFacet: ${marketLoupeFacet}`))
 
   const { address: marketStateFacet } = await deploy('MarketStateFacet', deployOpts)
-  await verify(hre, { address: marketStateFacet })
   console.log(chalk.yellow(`✨ MarketStateFacet: ${marketStateFacet}`))
 
   const { address: marketLiquidityFacet } = await deploy('MarketLiquidityFacet', deployOpts)
-  await verify(hre, { address: marketLiquidityFacet })
   console.log(chalk.yellow(`✨ MarketLiquidityFacet: ${marketLiquidityFacet}`))
 
   const { address: marketLensFacet } = await deploy('MarketLensFacet', deployOpts)
-  await verify(hre, { address: marketLensFacet })
   console.log(chalk.yellow(`✨ MarketLensFacet: ${marketLensFacet}`))
 
   const { address: marketTradeFacet } = await deploy('MarketTradeFacet', deployOpts)
-  await verify(hre, { address: marketTradeFacet })
   console.log(chalk.yellow(`✨ MarketTradeFacet: ${marketTradeFacet}`))
 
   const { address: marketLiquidateFacet } = await deploy('MarketLiquidateFacet', deployOpts)
-  await verify(hre, { address: marketLiquidateFacet })
   console.log(chalk.yellow(`✨ MarketLiquidateFacet: ${marketLiquidateFacet}`))
 
   const { address: marketSettleFacet } = await deploy('MarketSettleFacet', deployOpts)
-  await verify(hre, { address: marketSettleFacet })
   console.log(chalk.yellow(`✨ MarketSettleFacet: ${marketSettleFacet}`))
 
-  const {
-    address: factory,
-    args: factoryArgs,
-    libraries: factoryLibraries
-  } = await deploy('ChromaticMarketFactory', {
+  const { address: factory, libraries: factoryLibraries } = await deploy('ChromaticMarketFactory', {
     ...deployOpts,
     args: [
       marketDiamondCutFacet,
@@ -93,11 +80,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       MarketDeployerLib: marketDeployer
     }
   })
-  await verify(hre, {
-    address: factory,
-    constructorArguments: factoryArgs,
-    libraries: factoryLibraries
-  })
   console.log(chalk.yellow(`✨ ChromaticMarketFactory: ${factory}`))
 
   const MarketFactory = await ethers.getContractFactory('ChromaticMarketFactory', {
@@ -109,13 +91,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const wrappedTokenAddress = WMNT[echainId] ?? WETH9[echainId].address
 
-  const { address: keeperFeePayer, args: keeperFeePayerArgs } = await deploy('KeeperFeePayer', {
+  const { address: keeperFeePayer } = await deploy('KeeperFeePayer', {
     ...deployOpts,
     args: [factory, swapRouterAddress, wrappedTokenAddress]
-  })
-  await verify(hre, {
-    address: keeperFeePayer,
-    constructorArguments: keeperFeePayerArgs
   })
   console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
