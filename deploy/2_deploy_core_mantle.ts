@@ -1,4 +1,3 @@
-import { verify } from '@chromatic/deploy/verify'
 import {
   ChromaticMarketFactory__factory,
   IMate2AutomationRegistry__factory
@@ -27,16 +26,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await ethers.getSigner(deployer)
   )
 
-  const { address: distributor, args: distributorArgs } = await deploy(
-    'Mate2VaultEarningDistributor',
-    {
-      ...deployOpts,
-      args: [factory.address, automationAddress]
-    }
-  )
-  await verify(hre, {
-    address: distributor,
-    constructorArguments: distributorArgs
+  const { address: distributor } = await deploy('Mate2VaultEarningDistributor', {
+    ...deployOpts,
+    args: [factory.address, automationAddress]
   })
   console.log(chalk.yellow(`✨ Mate2VaultEarningDistributor: ${distributor}`))
 
@@ -45,25 +37,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await ethers.getSigner(deployer)
   )
   await (await mate2automate.addWhitelistedRegistrar(distributor)).wait()
-  const { address: vault, args: vaultArgs } = await deploy('ChromaticVault', {
+  const { address: vault } = await deploy('ChromaticVault', {
     ...deployOpts,
     args: [factory.address, distributor]
-  })
-  await verify(hre, {
-    address: vault,
-    constructorArguments: vaultArgs
   })
   await marketFactory.setVault(vault, deployOpts)
   console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
 
-  const { address: liquidator, args: liquidatorArgs } = await deploy('Mate2Liquidator', {
+  const { address: liquidator } = await deploy('Mate2Liquidator', {
     ...deployOpts,
     args: [factory.address, automationAddress]
-  })
-
-  await verify(hre, {
-    address: liquidator,
-    constructorArguments: liquidatorArgs
   })
   console.log(chalk.yellow(`✨ Mate2Liquidator: ${liquidator}`))
 
@@ -71,17 +54,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.setLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
 
-  const { address: marketSettlement, args: marketSettlementArgs } = await deploy(
-    'Mate2MarketSettlement',
-    {
-      ...deployOpts,
-      args: [factory.address, automationAddress]
-    }
-  )
-
-  await verify(hre, {
-    address: marketSettlement,
-    constructorArguments: marketSettlementArgs
+  const { address: marketSettlement } = await deploy('Mate2MarketSettlement', {
+    ...deployOpts,
+    args: [factory.address, automationAddress]
   })
   console.log(chalk.yellow(`✨ Mate2MarketSettlement: ${marketSettlement}`))
 

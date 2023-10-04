@@ -1,4 +1,3 @@
-import { verify } from '@chromatic/deploy/verify'
 import { ChromaticMarketFactory__factory } from '@chromatic/typechain-types'
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { WETH9 } from '@uniswap/smart-order-router'
@@ -26,26 +25,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // deploy & set ChromaticVault
   console.log('gelato automate address', GELATO_ADDRESSES[echainId].automate)
-  const { address: distributor, args: distributorArgs } = await deploy(
-    'GelatoVaultEarningDistributor',
-    {
-      ...deployOpts,
-      args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
-    }
-  )
-  await verify(hre, {
-    address: distributor,
-    constructorArguments: distributorArgs
+  const { address: distributor } = await deploy('GelatoVaultEarningDistributor', {
+    ...deployOpts,
+    args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
   })
   console.log(chalk.yellow(`✨ GelatoVaultEarningDistributor: ${distributor}`))
 
-  const { address: vault, args: vaultArgs } = await deploy('ChromaticVault', {
+  const { address: vault } = await deploy('ChromaticVault', {
     ...deployOpts,
     args: [factory.address, distributor]
-  })
-  await verify(hre, {
-    address: vault,
-    constructorArguments: vaultArgs
   })
   console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
 
@@ -54,17 +42,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // deploy & set Liquidator
 
-  const { address: liquidator, args: liquidatorArgs } = await deploy(
+  const { address: liquidator } = await deploy(
     network.name === 'anvil' ? 'GelatoLiquidatorMock' : 'GelatoLiquidator',
     {
       ...deployOpts,
       args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
     }
   )
-  await verify(hre, {
-    address: liquidator,
-    constructorArguments: liquidatorArgs
-  })
   console.log(chalk.yellow(`✨ GelatoLiquidator: ${liquidator}`))
 
   await marketFactory.setLiquidator(liquidator, deployOpts)
