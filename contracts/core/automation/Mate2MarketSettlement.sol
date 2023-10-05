@@ -100,8 +100,8 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         uint256 upkeepId = marketSettlementUpkeepIds[market];
         if (upkeepId != 0) {
             delete marketSettlementUpkeepIds[market];
-            try automate.cancelUpkeep(upkeepId) {} catch {
-                // ignore
+            try automate.cancelUpkeep(upkeepId) {} catch Error(string memory reason) {
+                emit catchErr("cancelUpkeep", reason);
             }
         }
     }

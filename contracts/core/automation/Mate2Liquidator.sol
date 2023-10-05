@@ -133,8 +133,8 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
         uint256 upkeepId = registry[market][positionId];
         if (upkeepId != 0) {
             delete registry[market][positionId];
-            try automate.cancelUpkeep(upkeepId) {} catch {
-                // ignore
+            try automate.cancelUpkeep(upkeepId) {} catch Error(string memory reason) {
+                emit catchErr("cancelUpkeep", reason);
             }
         }
     }
