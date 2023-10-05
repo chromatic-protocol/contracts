@@ -1,6 +1,7 @@
 import { execute } from '@chromatic/hardhat/tasks/utils'
 import {
   ChromaticMarketFactory,
+  ChromaticVault,
   ChromaticVault__factory,
   IChromaticMarket,
   IChromaticMarket__factory,
@@ -62,10 +63,10 @@ task('upkeep:vault:maker', 'List vault maker earning distribution upkeeps').setA
 
 task('upkeep:vault:maker:clear', 'Clear vault maker earning distribution upkeeps').setAction(
   execute(
-    withDistributor(async (factory, ditributor, taskArgs, hre) => {
+    withVault(async (factory, vault, taskArgs, hre) => {
       const settlementTokens = await factory.registeredSettlementTokens()
       for (const token of settlementTokens) {
-        await ditributor.cancelMakerEarningDistributionTask(token)
+        await vault.cancelMakerEarningDistributionTask(token)
       }
     })
   )
@@ -102,10 +103,10 @@ task('upkeep:vault:market', 'List vault market earning distribution upkeeps').se
 
 task('upkeep:vault:market:clear', 'Clear vault market earning distribution upkeeps').setAction(
   execute(
-    withDistributor(async (factory, ditributor, taskArgs, hre) => {
+    withVault(async (factory, vault, taskArgs, hre) => {
       const markets = await factory.getMarkets()
       for (const market of markets) {
-        await ditributor.cancelMarketEarningDistributionTask(market)
+        await vault.cancelMarketEarningDistributionTask(market)
       }
       await hre.run('upkeep:settlement:withdraw')
     })
@@ -212,10 +213,10 @@ async function upkeepTreasury(settlement: Mate2MarketSettlement): Promise<IUpkee
   return IUpkeepTreasury__factory.connect(await registry.getUpkeepTreasury(), settlement.runner)
 }
 
-function withDistributor(
+function withVault(
   action: (
     factory: ChromaticMarketFactory,
-    ditributor: Mate2VaultEarningDistributor,
+    vault: ChromaticVault,
     taskArgs: TaskArguments,
     hre: HardhatRuntimeEnvironment
   ) => Promise<any>
@@ -230,13 +231,37 @@ function withDistributor(
     hre: HardhatRuntimeEnvironment
   ): Promise<any> => {
     const vault = ChromaticVault__factory.connect(await factory.vault(), factory.runner)
-    const distributor = Mate2VaultEarningDistributor__factory.connect(
-      await vault.earningDistributor(),
-      factory.runner
-    )
-
-    return action(factory, distributor, taskArgs, hre)
+    return action(factory, vault, taskArgs, hre)
   }
+}
+
+function withDistributor(
+  action: (
+    factory: ChromaticMarketFactory,
+    ditributor: Mate2VaultEarningDistributor,
+    taskArgs: TaskArguments,
+    hre: HardhatRuntimeEnvironment
+  ) => Promise<any>
+): (
+  factory: ChromaticMarketFactory,
+  taskArgs: TaskArguments,
+  hre: HardhatRuntimeEnvironment
+) => Promise<any> {
+  return withVault(
+    async (
+      factory: ChromaticMarketFactory,
+      vault: ChromaticVault,
+      taskArgs: TaskArguments,
+      hre: HardhatRuntimeEnvironment
+    ): Promise<any> => {
+      const distributor = Mate2VaultEarningDistributor__factory.connect(
+        await vault.earningDistributor(),
+        factory.runner
+      )
+
+      return action(factory, distributor, taskArgs, hre)
+    }
+  )
 }
 
 function withSettlement(
