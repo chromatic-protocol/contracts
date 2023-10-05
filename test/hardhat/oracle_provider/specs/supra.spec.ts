@@ -10,8 +10,7 @@ import { forkingOptions, parseSupraPriace } from '../../utils'
 const SUPRA_ADDRESSES: { [key: string]: string } = {
   arbitrum_one: '0x8a358F391d93f7558D5F5E61BDf533e2cc3Cf7a3',
   arbitrum_goerli: '0xFfFB8022d4cB9B42762f38f116F955776d9D2a34',
-  mantle_testnet: '0x4Ce261C19af540f1175CdeB9E3490DC8937D78e5',
-  anvil: '0x4Ce261C19af540f1175CdeB9E3490DC8937D78e5'
+  mantle_testnet: '0x4Ce261C19af540f1175CdeB9E3490DC8937D78e5'
 }
 
 export function spec(networkName: keyof typeof forkingOptions) {
@@ -76,7 +75,7 @@ export function spec(networkName: keyof typeof forkingOptions) {
         '0x0000018ad10ee950080000018ad10ee9f50000000000000024f0f8e76a000000',
         '0x0000018ad10fa4d0080000018ad10fa5760000000000000024f4824240000000'
       ]
-      const rounds = datas.map(data=> parseSupraPriace(data).round)
+      const rounds = datas.map((data) => parseSupraPriace(data).round)
       const roundsSet = new Set(rounds)
       expect(rounds.length).equal(roundsSet.size)
     })

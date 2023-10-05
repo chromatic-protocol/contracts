@@ -80,8 +80,9 @@ export type EthGetLogsParam = {
 
 export async function mantleGetLogs(param: EthGetLogsParam): Promise<Result[]> {
   const hre = await import('hardhat')
-  const realChainId = Number(await hre.getChainId())
-  const chainId = realChainId === 31337 ? 5001 : realChainId
+  // const realChainId = Number(await hre.getChainId())
+  // const chainId = realChainId === 31337 ? 5001 : realChainId
+  const chainId = 5001
   const apiURL = hre.config.etherscan.customChains.filter((c) => c.chainId === chainId)[0].urls
     .apiURL
 

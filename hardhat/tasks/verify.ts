@@ -155,7 +155,7 @@ task('verify:periphery').setAction(
 )
 
 async function verify(hre: HardhatRuntimeEnvironment, args: any) {
-  if (hre.network.name != 'anvil') {
+  if (!hre.network.name.startsWith('anvil')) {
     for (let i = 0; i < 5; i++) {
       try {
         await hre.run('verify:verify', args)

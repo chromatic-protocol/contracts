@@ -25,9 +25,12 @@ const ORACLE_PROVIDER_DECIMALS = 18
 
 extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   const { config, deployments, network } = hre
-  const echainId = (
-    network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
-  ) as keyof typeof WETH9
+  const echainId: keyof typeof WETH9 =
+    network.name === 'anvil'
+      ? config.networks.arbitrum_goerli.chainId!
+      : network.name === 'anvil_mantle'
+      ? config.networks.mantle_testnet.chainId!
+      : network.config.chainId!
 
   hre.w = lazyObject(() =>
     SIGNERS.reduce((w: { [accountName: string]: any }, s) => {

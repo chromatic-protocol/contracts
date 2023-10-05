@@ -1,6 +1,6 @@
+import util from 'util'
 import config from './hardhat.config'
 import './hardhat/repl'
-import util from 'util'
 const MNEMONIC_JUNK = 'test test test test test test test test test test test junk'
 const hardhatConfig = {
   ...config,
@@ -9,6 +9,13 @@ const hardhatConfig = {
     anvil: {
       // localhost anvil
       ...config.networks?.anvil,
+      accounts: {
+        mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK
+      }
+    },
+    anvil_mantle: {
+      // localhost anvil_mantle
+      ...config.networks?.anvil_mantle,
       accounts: {
         mnemonic: process.env.MNEMONIC || MNEMONIC_JUNK
       }
