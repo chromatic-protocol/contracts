@@ -63,6 +63,7 @@ jobs:
         env:
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_CHROMATIC }}
+          DRPC_KEY: ${{ secrets.DRPC_KEY }}
         run: |
           yarn clean
           yarn build
