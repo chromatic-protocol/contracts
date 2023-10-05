@@ -28,7 +28,7 @@ library SupraSValueFeedLib {
 
         // round = bytesToUint256(abi.encodePacked(data >> 192));
         decimal = bytesToUint256(abi.encodePacked((data << 64) >> 248));
-        timestamp = bytesToUint256(abi.encodePacked((data << 72) >> 192));
+        timestamp = bytesToUint256(abi.encodePacked((data << 72) >> 192)) / 1000; // MillSecond to Second
         price = bytesToUint256(abi.encodePacked((data << 136) >> 160));
     }
 

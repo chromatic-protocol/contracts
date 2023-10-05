@@ -63,6 +63,7 @@ export function spec(networkName: keyof typeof forkingOptions) {
       const validOracle = await oracleF.deploy(supraAddress, pairIndex['eth_usd'], 'ETH/USD')
       const currentVersion = await validOracle.currentVersion()
       expect(currentVersion.version).equal(1n)
+      expect(new Date(Number(currentVersion.timestamp) * 1000).getUTCFullYear()).equal(new Date().getUTCFullYear())
       await expect(oracleF.deploy(supraAddress, 10000, 'ETH/USD')).revertedWith('PriceFeedNotExist')
     })
 
