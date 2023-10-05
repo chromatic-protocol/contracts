@@ -84,8 +84,12 @@ export class Contracts {
 
   async connect(privateKey: string | undefined) {
     const { config, network, ethers } = this.hre
-    const echainId =
-      network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
+    const echainId: keyof typeof WETH9 =
+      network.name === 'anvil'
+        ? config.networks.arbitrum_goerli.chainId!
+        : network.name === 'anvil_mantle'
+        ? config.networks.mantle_testnet.chainId!
+        : network.config.chainId!
 
     this._signer = privateKey
       ? new Wallet(privateKey, ethers.provider)

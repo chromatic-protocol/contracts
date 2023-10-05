@@ -13,15 +13,13 @@ const IPYTH_ADDRESSES: { [key: string]: string } = {
   arbitrum_goerli: '0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900',
   mantle: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
   mantle_testnet: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
-  anvil: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729'
 }
 
 const priceFeedIdsMap: { [key: string]: { [key: string]: string } } = {
   arbitrum_one: evmMainnet,
   arbitrum_goerli: evmTestnet,
   mantle: evmMainnet,
-  mantle_testnet: evmTestnet,
-  anvil: evmTestnet
+  mantle_testnet: evmTestnet
 }
 
 export function spec(networkName: keyof typeof forkingOptions) {

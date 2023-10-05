@@ -46,7 +46,6 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      // localhost anvil
       forking: {
         url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
         blockNumber: 19474553
@@ -68,7 +67,18 @@ const config: HardhatUserConfig = {
       },
       url: 'http://127.0.0.1:8545',
       chainId: 31337,
-      tags: ['mockup', 'core'],
+      allowUnlimitedContractSize: true,
+      timeout: 100_000 // TransactionExecutionError: Headers Timeout Error
+    },
+    anvil_mantle: {
+      // localhost anvil
+      ...common,
+      accounts: {
+        ...common.accounts,
+        mnemonic: MNEMONIC_JUNK
+      },
+      url: 'http://127.0.0.1:8545',
+      chainId: 31338,
       allowUnlimitedContractSize: true,
       timeout: 100_000 // TransactionExecutionError: Headers Timeout Error
     },
@@ -76,34 +86,29 @@ const config: HardhatUserConfig = {
       // mainnet AnyTrust chain
       ...common,
       url: 'https://nova.arbitrum.io/rpc',
-      chainId: 42170,
-      tags: ['core']
+      chainId: 42170
     },
     arbitrum_goerli: {
       // testnet
       ...common,
       url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-      chainId: 421613,
-      tags: ['core']
+      chainId: 421613
     },
     arbitrum_one: {
       // mainnet
       ...common,
       url: 'https://arb1.arbitrum.io/rpc',
-      chainId: 42161,
-      tags: ['core']
+      chainId: 42161
     },
     mantle: {
       ...common,
       url: `https://lb.drpc.org/ogrpc?network=mantle&dkey=${process.env.DRPC_KEY}`,
-      chainId: 5000,
-      tags: ['core']
+      chainId: 5000
     },
     mantle_testnet: {
       ...common,
       url: `https://lb.drpc.org/ogrpc?network=mantle-testnet&dkey=${process.env.DRPC_KEY}`,
-      chainId: 5001,
-      tags: ['core']
+      chainId: 5001
     }
   },
   namedAccounts: {

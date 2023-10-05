@@ -143,7 +143,11 @@ export function getToken(
 ): IERC20Metadata {
   const { config, network } = hre
   const echainId =
-    network.name === 'anvil' ? config.networks.arbitrum_goerli.chainId! : network.config.chainId!
+    network.name === 'anvil'
+      ? config.networks.arbitrum_goerli.chainId!
+      : network.name === 'anvil_mantle'
+      ? config.networks.mantle_testnet.chainId!
+      : network.config.chainId!
 
   const tokenAddress = TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()]
     ? TOKEN_SYMBOLS[addressOrSymbol.toUpperCase()](echainId).address

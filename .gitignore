@@ -35,5 +35,5 @@ docs/out
 .env.*
 !.env.example
 
-deployments/anvil
+deployments/anvil*
 wagmi/
