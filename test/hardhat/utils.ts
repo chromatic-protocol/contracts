@@ -65,7 +65,7 @@ export function parseSupraPriace(bytes32: string): SupraPrice {
   return {
     round: bigintData >> 192n,
     decimal: ((bigintData << 64n) & maxBytes32) >> 248n,
-    timestamp: ((bigintData << 72n) & maxBytes32) >> 192n,
+    timestamp: (((bigintData << 72n) & maxBytes32) >> 192n) / 1000n,
     price: ((bigintData << 136n) & maxBytes32) >> 160n
   }
 }
