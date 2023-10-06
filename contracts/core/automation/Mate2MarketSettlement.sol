@@ -85,7 +85,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
 
         marketSettlementUpkeepIds[market] = automate.registerUpkeep(
             address(this),
-            1e7, //uint32 gasLimit,
+            2e7, //uint32 gasLimit,
             address(this), // address admin,
             true, // bool useTreasury,
             false, // bool singleExec,
