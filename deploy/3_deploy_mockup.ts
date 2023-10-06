@@ -1,9 +1,8 @@
-import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
+import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { parseUnits } from 'ethers'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, ethers } = hre
@@ -28,15 +27,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   const marketFactory = MarketFactory.attach(marketFactoryAddress) as ChromaticMarketFactory
 
-  await marketFactory.registerOracleProvider(
-    oracleProviderAddress,
-    {
-      minTakeProfitBPS: 1000, // 10%
-      maxTakeProfitBPS: 100000, // 1000%
-      leverageLevel: 0
-    },
-    deployOpts
-  )
+  await (
+    await marketFactory.registerOracleProvider(
+      oracleProviderAddress,
+      {
+        minTakeProfitBPS: 1000, // 10%
+        maxTakeProfitBPS: 100000, // 1000%
+        leverageLevel: 0
+      },
+      deployOpts
+    )
+  ).wait()
   console.log(chalk.yellow('✨ Register OracleProvider'))
 
   // await marketFactory.registerSettlementToken(
@@ -49,18 +50,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //   deployOpts
   // )
   // console.log(chalk.yellow('✨ Register SettlementToken'))
+  await (
+    await marketFactory.registerSettlementToken(
+      chromaticTokenAddress,
+      parseUnits('10', 18), // minimumMargin
+      BigInt('1000'), // interestRate, 10%
+      BigInt('500'), // flashLoanFeeRate, 5%
+      parseUnits('1000', 18), // earningDistributionThreshold, $1000
+      BigInt('3000'), // uniswapFeeRate, 0.3%
+      deployOpts
+    )
+  ).wait()
 
-  await marketFactory.registerSettlementToken(
-    chromaticTokenAddress,
-    parseUnits('10', 18), // minimumMargin
-    BigInt('1000'), // interestRate, 10%
-    BigInt('500'), // flashLoanFeeRate, 5%
-    parseUnits('1000', 18), // earningDistributionThreshold, $1000
-    BigInt('3000'), // uniswapFeeRate, 0.3%
-    deployOpts
-  )
   console.log(chalk.yellow('✨ Register SettlementToken (CHRM)'))
-  await marketFactory.createMarket(oracleProviderAddress, chromaticTokenAddress, deployOpts)
+
+  await (
+    await marketFactory.createMarket(oracleProviderAddress, chromaticTokenAddress, deployOpts)
+  ).wait()
+
   console.log(chalk.yellow('✨ Create Market (CHRM)'))
   // await marketFactory.createMarket(oracleProviderAddress, USDC_ARBITRUM_GOERLI.address, deployOpts)
   // console.log(chalk.yellow('✨ Create Market'))
