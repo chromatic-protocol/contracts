@@ -21,3 +21,10 @@ sidebar_position: 3
 {{/hsection}}
 {{/if}}
 {{/each}}
+
+## Custom Error Selectors
+| Signature | Error name |
+| ---- | ---- |
+{{#each (dedupeErrors items)}}
+|0x{{this.errorSelector}}|{{this.signature}}|
+{{/each}}

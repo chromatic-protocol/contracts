@@ -20,3 +20,21 @@ export function formatVariable(v: VariableDeclaration): string {
 export function getConstantValue(v: VariableDeclaration): string {
   return (v as any).value?.value
 }
+
+export function dedupeErrors(
+  items: (DocItemWithContext & { errors: any })[]
+): { errorSelector: string; signature: string }[] {
+  const allErrors: { errorSelector: string; signature: string }[] = []
+  items.forEach((item) => {
+    item.errors?.forEach((err: any) => {
+      if (allErrors.filter((allErr) => allErr.errorSelector === err.errorSelector).length === 0) {
+        allErrors.push({
+          errorSelector: err.errorSelector,
+          signature: err.signature.replace('error ', '')
+        })
+      }
+    })
+  })
+
+  return allErrors
+}
