@@ -24,7 +24,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     error OnlyAccessableByDao();
 
     /**
-     * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
+     * @dev Throws an error indicating that the caller is neither the chromatic factory contract nor the DAO.
      */
     error OnlyAccessableByFactoryOrDao();
 
@@ -44,7 +44,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
-     *      Throws an `OnlyAccessableByFactoryOrDao` error if the caller is nether the chormatic factory contract nor the DAO.
+     *      Throws an `OnlyAccessableByFactoryOrDao` error if the caller is neither the chromatic factory contract nor the DAO.
      */
     modifier onlyFactoryOrDao() {
         if (msg.sender != address(factory) && msg.sender != factory.dao())
@@ -120,29 +120,41 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         PendingPosition[] memory pendingPositions = IChromaticMarket(market).pendingPositionBatch(
             feeRates
         );
-        for (uint256 i; i < pendingPositions.length; i++) {
+        for (uint256 i; i < pendingPositions.length;) {
             PendingPosition memory _pos = pendingPositions[i];
             if (_pos.openVersion != 0 && _pos.openVersion < currentOracleVersion.version) {
                 return (true, abi.encode(market));
+            }
+
+            unchecked {
+                ++i;
             }
         }
 
         ClosingPosition[] memory closingPositions = IChromaticMarket(market).closingPositionBatch(
             feeRates
         );
-        for (uint256 i; i < closingPositions.length; i++) {
+        for (uint256 i; i < closingPositions.length;) {
             ClosingPosition memory _pos = closingPositions[i];
             if (_pos.closeVersion != 0 && _pos.closeVersion < currentOracleVersion.version) {
                 return (true, abi.encode(market));
+            }
+
+            unchecked {
+                ++i;
             }
         }
 
         PendingLiquidity[] memory pendingLiquidities = IChromaticMarket(market)
             .pendingLiquidityBatch(feeRates);
-        for (uint256 i; i < pendingLiquidities.length; i++) {
+        for (uint256 i; i < pendingLiquidities.length;) {
             PendingLiquidity memory _liq = pendingLiquidities[i];
             if (_liq.oracleVersion != 0 && _liq.oracleVersion < currentOracleVersion.version) {
                 return (true, abi.encode(market));
+            }
+
+            unchecked {
+                ++i;
             }
         }
 
@@ -159,9 +171,13 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     function _feeRates() private pure returns (int16[] memory rates) {
         rates = new int16[](FEE_RATES_LENGTH * 2);
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
-        for (uint i; i < FEE_RATES_LENGTH; i++) {
+        for (uint i; i < FEE_RATES_LENGTH;) {
             rates[i] = int16(_tradingFeeRates[i]);
             rates[i + FEE_RATES_LENGTH] = -int16(_tradingFeeRates[i]);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 
