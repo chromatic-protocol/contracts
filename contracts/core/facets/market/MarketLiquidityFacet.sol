@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
@@ -26,8 +25,6 @@ contract MarketLiquidityFacet is
     IERC1155Receiver,
     ReentrancyGuard
 {
-    using Math for uint256;
-
     /**
      * @dev Throws an error indicating that the amount of liquidity is too small.
      *      This error is thrown when attempting to remove liquidity with an amount of zero.
