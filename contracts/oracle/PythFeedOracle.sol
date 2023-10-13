@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./interfaces/IOracleProvider.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
