@@ -76,6 +76,7 @@ jobs:
         with:
           app_id: ${{ secrets.PR_ACTION_APP_ID }}
           private_key: ${{ secrets.PR_ACTION_PRIVATE }}
+
       # make a PR to chromatic-protocol/sdk
       - uses: actions/checkout@v3
         with:
@@ -99,6 +100,28 @@ jobs:
             packages/sdk-ethers-v5/src/gen/**
             packages/sdk-ethers-v6/src/gen/**
             packages/sdk-viem/src/gen/index.ts
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: ${{ github.event.pull_request.title }}
+          title: Changes from contracts
+
+      # make a PR to chromatic-protocol/liquidity-provider-tasks
+      - uses: actions/checkout@v3
+        with:
+          repository: chromatic-protocol/liquidity-provider-tasks
+          ref: main
+          path: tasks
+          token: ${{ steps.generate-token.outputs.token }}
+      - run: |
+          rm -rf tasks/src/gen/market/*
+          cp -r wagmi/* tasks/src/gen/market/
+      - name: pull-request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          base: main
+          branch: develop
+          path: tasks
+          add-paths: |
+            src/gen/market/**
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: ${{ github.event.pull_request.title }}
           title: Changes from contracts
