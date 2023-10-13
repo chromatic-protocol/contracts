@@ -130,8 +130,8 @@ Official documentation for Chromatic Protocol can be found [here](https://chroma
 
 ## License
 
-The primary license for Chromatic Protocol is the Businiess Source License 1.1 ( `BUSL-1.1`), see [LICENSE](./LICENSE). However, solidity code files have own SPDX headers, some files are dual licensed under `MIT`.
+The primary license for Chromatic Protocol is the Business Source License 1.1 ( `BUSL-1.1`), see [LICENSE](./LICENSE). However, solidity code files have own SPDX headers, some files are dual licensed under `MIT`.
   - All files in `contracts/core/interfaces` and `contracts/periphery/interfaces` are licensed under `MIT`
-  - Some files in `contracts/oracle` are redistributed under `Apache-2.0` orginated from [@equilibria/root](https://github.com/equilibria-xyz/root)
-  - All files in `contracts/core/base/gelato` and `contracts/mocks/gelato` are orginated from [`@gelatodigital/automate`](https://github.com/gelatodigital/automate) under `ISC` license.
+  - Some files in `contracts/oracle` are redistributed under `Apache-2.0` originated from [@equilibria/root](https://github.com/equilibria-xyz/root)
+  - All files in `contracts/core/base/gelato` and `contracts/mocks/gelato` are originated from [`@gelatodigital/automate`](https://github.com/gelatodigital/automate) under `ISC` license.
 
