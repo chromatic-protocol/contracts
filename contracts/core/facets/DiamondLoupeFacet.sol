@@ -31,9 +31,9 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         uint256 numFacets;
         uint256 selectorIndex;
         // loop through function selectors
-        for (uint256 slotIndex; selectorIndex < ds.selectorCount; slotIndex++) {
+        for (uint256 slotIndex; selectorIndex < ds.selectorCount;) {
             bytes32 slot = ds.selectorSlots[slotIndex];
-            for (uint256 selectorSlotIndex; selectorSlotIndex < 8; selectorSlotIndex++) {
+            for (uint256 selectorSlotIndex; selectorSlotIndex < 8;) {
                 selectorIndex++;
                 if (selectorIndex > ds.selectorCount) {
                     break;
@@ -42,7 +42,7 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
                 bytes4 selector = bytes4(slot << (selectorSlotIndex << 5));
                 address facetAddress_ = address(bytes20(ds.facets[selector]));
                 bool continueLoop;
-                for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
+                for (uint256 facetIndex; facetIndex < numFacets;) {
                     if (facets_[facetIndex].facetAddress == facetAddress_) {
                         facets_[facetIndex].functionSelectors[
                             numFacetSelectors[facetIndex]
@@ -53,6 +53,10 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
                         continueLoop = true;
                         break;
                     }
+
+                    unchecked {
+                        ++facetIndex;
+                    }
                 }
                 if (continueLoop) {
                     continue;
@@ -62,9 +66,17 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
                 facets_[numFacets].functionSelectors[0] = selector;
                 numFacetSelectors[numFacets] = 1;
                 numFacets++;
+
+                unchecked {
+                    ++selectorSlotIndex;
+                }
+            }
+
+            unchecked {
+                ++slotIndex;
             }
         }
-        for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
+        for (uint256 facetIndex; facetIndex < numFacets;) {
             uint256 numSelectors = numFacetSelectors[facetIndex];
             bytes4[] memory selectors = facets_[facetIndex].functionSelectors;
             // setting the number of selectors
@@ -75,6 +87,10 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         // setting the number of facets
         assembly {
             mstore(facets_, numFacets)
+        }
+
+        unchecked {
+            ++facetIndex;
         }
     }
 
@@ -89,9 +105,9 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         _facetFunctionSelectors = new bytes4[](ds.selectorCount);
         uint256 selectorIndex;
         // loop through function selectors
-        for (uint256 slotIndex; selectorIndex < ds.selectorCount; slotIndex++) {
+        for (uint256 slotIndex; selectorIndex < ds.selectorCount;) {
             bytes32 slot = ds.selectorSlots[slotIndex];
-            for (uint256 selectorSlotIndex; selectorSlotIndex < 8; selectorSlotIndex++) {
+            for (uint256 selectorSlotIndex; selectorSlotIndex < 8;) {
                 selectorIndex++;
                 if (selectorIndex > ds.selectorCount) {
                     break;
@@ -103,6 +119,14 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
                     _facetFunctionSelectors[numSelectors] = selector;
                     numSelectors++;
                 }
+
+                unchecked {
+                    ++selectorSlotIndex;
+                }
+            }
+
+            unchecked {
+                ++slotIndex;
             }
         }
         // Set the number of selectors in the array
@@ -119,9 +143,9 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         uint256 numFacets;
         uint256 selectorIndex;
         // loop through function selectors
-        for (uint256 slotIndex; selectorIndex < ds.selectorCount; slotIndex++) {
+        for (uint256 slotIndex; selectorIndex < ds.selectorCount;) {
             bytes32 slot = ds.selectorSlots[slotIndex];
-            for (uint256 selectorSlotIndex; selectorSlotIndex < 8; selectorSlotIndex++) {
+            for (uint256 selectorSlotIndex; selectorSlotIndex < 8;) {
                 selectorIndex++;
                 if (selectorIndex > ds.selectorCount) {
                     break;
@@ -130,10 +154,14 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
                 bytes4 selector = bytes4(slot << (selectorSlotIndex << 5));
                 address facetAddress_ = address(bytes20(ds.facets[selector]));
                 bool continueLoop;
-                for (uint256 facetIndex; facetIndex < numFacets; facetIndex++) {
+                for (uint256 facetIndex; facetIndex < numFacets;) {
                     if (facetAddress_ == facetAddresses_[facetIndex]) {
                         continueLoop = true;
                         break;
+                    }
+
+                    unchecked {
+                        ++facetIndex;
                     }
                 }
                 if (continueLoop) {
@@ -141,6 +169,14 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
                 }
                 facetAddresses_[numFacets] = facetAddress_;
                 numFacets++;
+
+                unchecked {
+                    ++selectorSlotIndex;
+                }
+            }
+
+            unchecked {
+                ++slotIndex;
             }
         }
         // Set the number of facet addresses in the array
