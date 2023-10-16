@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
@@ -16,8 +15,8 @@ import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.
  * @param makerMargin The margin amount provided by the maker
  * @param openTimestamp The timestamp of the position's open transaction
  * @param closeTimestamp The timestamp of the position's close transaction
- * @param _entryVersionCache Caches the settle oracle version for the position's entry
- * @param _exitVersionCache Caches the settle oracle version for the position's exit
+ * @param _entryVersionCache Caches the settled oracle version for the position's entry
+ * @param _exitVersionCache Caches the settled oracle version for the position's exit
  */
 struct PositionParam {
     uint256 openVersion;
@@ -38,11 +37,10 @@ using PositionParamLib for PositionParam global;
  * @notice Library for manipulating PositionParam struct.
  */
 library PositionParamLib {
-    using Math for uint256;
     using SignedMath for int256;
 
     /**
-     * @notice Returns the settle version for the position's entry.
+     * @notice Returns the settled version for the position's entry.
      * @param self The PositionParam struct.
      * @return uint256 The settle version for the position's entry.
      */
@@ -82,7 +80,7 @@ library PositionParamLib {
     }
 
     /**
-     * @notice Retrieves the settle oracle version for the position's entry.
+     * @notice Retrieves the settled oracle version for the position's entry.
      * @param self The PositionParam struct.
      * @param ctx The LpContext struct.
      * @return OracleVersion The settle oracle version for the position's entry.

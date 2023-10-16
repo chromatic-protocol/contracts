@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
@@ -17,7 +16,6 @@ import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfac
  * @dev A contract that provides utility functions for interacting with Chromatic markets.
  */
 contract ChromaticLens {
-    using Math for uint256;
 
     struct CLBBalance {
         uint256 tokenId;
@@ -35,7 +33,7 @@ contract ChromaticLens {
     /**
      * @dev Retrieves the OracleVersion for the specified oracle version in the given Chromatic market.
      * @param market The address of the Chromatic market contract.
-     * @param version An oracle versions.
+     * @param version An oracle version.
      * @return oracleVersion The OracleVersion for the specified oracle version.
      */
     function oracleVersion(

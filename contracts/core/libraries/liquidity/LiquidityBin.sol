@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {BinLiquidity, BinLiquidityLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinLiquidity.sol";
@@ -32,7 +31,6 @@ struct LiquidityBin {
  * @notice Library for managing liquidity bin
  */
 library LiquidityBinLib {
-    using Math for uint256;
     using SignedMath for int256;
     using LiquidityBinLib for LiquidityBin;
     using BinLiquidityLib for BinLiquidity;
