@@ -10,7 +10,7 @@ import "forge-std/console.sol";
 contract GasUsage is BaseSetup, IERC1155Receiver {
     function setUp() public override {
         super.setUp();
-        usdc.approve(address(router), type(uint256).max);
+        ctst.approve(address(router), type(uint256).max);
         clbToken.setApprovalForAll(address(router), true);
     }
 

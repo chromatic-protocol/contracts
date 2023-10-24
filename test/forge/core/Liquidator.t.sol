@@ -74,7 +74,7 @@ contract LiquidatorTest is
 
     function addLiquidityCallback(address, address vault, bytes calldata data) external override {
         uint256 amount = abi.decode(data, (uint256));
-        usdc.transfer(vault, amount);
+        ctst.transfer(vault, amount);
     }
 
     function addLiquidityBatchCallback(
@@ -83,7 +83,7 @@ contract LiquidatorTest is
         bytes calldata data
     ) external override {
         uint256 amount = abi.decode(data, (uint256));
-        usdc.transfer(vault, amount);
+        ctst.transfer(vault, amount);
     }
 
     function claimLiquidityCallback(

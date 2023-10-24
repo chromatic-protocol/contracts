@@ -1,9 +1,9 @@
 import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
-import { parseUnits } from 'ethers'
+import { parseEther, parseUnits } from 'ethers'
 
 import { ethers } from 'hardhat'
 
-import { ChromaticLens, ChromaticRouter, Token } from '../../typechain-types'
+import { ChromaticLens, ChromaticRouter, TestSettlementToken } from '../../typechain-types'
 import { deploy as arbitrumMarketFactoryDeploy } from './market_factory/arbitrum_deploy'
 import { deploy as mantleMarketFactoryDeploy } from './market_factory/mantle_deploy'
 import { deploy as oracleProviderDeploy } from './oracle_provider/deploy'
@@ -17,8 +17,8 @@ export function deploy(target: string = 'arbitrum') {
         target === 'arbitrum' ? arbitrumMarketFactoryDeploy : mantleMarketFactoryDeploy
       const { marketFactory, keeperFeePayer, liquidator } = await marketFactoryDeploy()
       const oracleProvider = await oracleProviderDeploy()
-      const settlementToken = await deployContract<Token>('Token', {
-        args: ['Token', 'ST']
+      const settlementToken = await deployContract<TestSettlementToken>('TestSettlementToken', {
+        args: ['Token', 'ST', parseEther("1000"), 86400]
       })
 
       const oracleProviderAddress = await oracleProvider.getAddress()

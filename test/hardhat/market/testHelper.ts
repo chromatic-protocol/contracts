@@ -13,8 +13,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
     const tokenOwner = await ethers.getSigner(tokenOwnerAddress)
     const token = settlementToken.connect(tokenOwner)
     const amount = parseEther('1000000000')
-    await (await token.faucet(amount)).wait()
-    await (await token.transfer(account, amount)).wait()
+    await (await token.mint(account, amount)).wait()
   }
   const {
     marketFactory,

@@ -70,11 +70,11 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         assertEq(liquidityAmount + position1.tradingFee, market.getBinLiquidity(1));
         assertEq(position1.tradingFee, market.getBinFreeLiquidity(1));
 
-        uint256 balanceBefore = usdc.balanceOf(address(this));
+        uint256 balanceBefore = ctst.balanceOf(address(this));
 
         market.claimPosition(position1.id, address(this), bytes(""));
 
-        assertEq(2 ether, usdc.balanceOf(address(this)) - balanceBefore);
+        assertEq(2 ether, ctst.balanceOf(address(this)) - balanceBefore);
         assertEq(liquidityAmount + position1.tradingFee - 1 ether, market.getBinLiquidity(1));
         assertEq(liquidityAmount + position1.tradingFee - 1 ether, market.getBinFreeLiquidity(1));
 
@@ -95,13 +95,13 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         assertEq(position2.tradingFee, market.getBinFreeLiquidity(2));
 
         // withdraw liquidity at oracle version 5
-        balanceBefore = usdc.balanceOf(address(this));
+        balanceBefore = ctst.balanceOf(address(this));
 
         market.withdrawLiquidity(receipt3.id, bytes(""));
 
         assertEq(
             liquidityAmount + position1.tradingFee - 1 ether,
-            usdc.balanceOf(address(this)) - balanceBefore
+            ctst.balanceOf(address(this)) - balanceBefore
         );
         assertEq(0, clbToken.balanceOf(address(this), 1));
     }
@@ -127,7 +127,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
 
     function addLiquidityCallback(address, address vault, bytes calldata data) external override {
         uint256 amount = abi.decode(data, (uint256));
-        usdc.transfer(vault, amount);
+        ctst.transfer(vault, amount);
     }
 
     function addLiquidityBatchCallback(
@@ -136,7 +136,7 @@ contract TradeTest is BaseSetup, IChromaticLiquidityCallback, IChromaticTradeCal
         bytes calldata data
     ) external override {
         uint256 amount = abi.decode(data, (uint256));
-        usdc.transfer(vault, amount);
+        ctst.transfer(vault, amount);
     }
 
     function claimLiquidityCallback(

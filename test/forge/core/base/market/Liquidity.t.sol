@@ -27,8 +27,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             1,
             abi.encode(addLongAmount)
         );
-        assertEq(addLongAmount, usdc.balanceOf(address(vault)));
-        assertEq(0, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount, ctst.balanceOf(address(vault)));
+        assertEq(0, vault.makerBalances(address(ctst)));
         assertEq(0, vault.makerMarketBalances(address(market)));
         assertEq(0, market.getBinLiquidity(1));
         assertEq(0, clbToken.balanceOf(address(market), receipt1.clbTokenId()));
@@ -38,8 +38,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
         // settle oracle version 2
         market.settleAll();
-        assertEq(addLongAmount, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount, ctst.balanceOf(address(vault)));
+        assertEq(addLongAmount, vault.makerBalances(address(ctst)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
         assertEq(addLongAmount, market.getBinLiquidity(1));
         assertEq(addLongAmount, clbToken.balanceOf(address(market), receipt1.clbTokenId()));
@@ -55,8 +55,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             -10,
             abi.encode(addShortAmount)
         );
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
+        assertEq(addLongAmount, vault.makerBalances(address(ctst)));
         assertEq(addLongAmount, vault.makerMarketBalances(address(market)));
         assertEq(0, market.getBinLiquidity(-10));
         assertEq(0, clbToken.balanceOf(address(market), receipt2.clbTokenId()));
@@ -66,8 +66,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
         // settle oracle version 3
         market.settleAll();
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(ctst)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
         assertEq(addShortAmount, market.getBinLiquidity(-10));
         assertEq(addShortAmount, clbToken.balanceOf(address(market), receipt2.clbTokenId()));
@@ -83,8 +83,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             1,
             abi.encode(removeLongAmount)
         );
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(ctst)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
         assertEq(addLongAmount, market.getBinLiquidity(1));
         assertEq(removeLongAmount, clbToken.balanceOf(address(market), receipt3.clbTokenId()));
@@ -94,10 +94,10 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
         // settle oracle version 4
         market.settleAll();
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount,
-            vault.makerBalances(address(usdc))
+            vault.makerBalances(address(ctst))
         );
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount,
@@ -107,11 +107,11 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(0, clbToken.balanceOf(address(market), receipt3.clbTokenId()));
 
         // withdraw liquidity at oracle version 4
-        uint256 beforeAt4 = usdc.balanceOf(address(this));
+        uint256 beforeAt4 = ctst.balanceOf(address(this));
         market.withdrawLiquidity(receipt3.id, bytes(""));
-        assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount - removeLongAmount, ctst.balanceOf(address(vault)));
         assertEq(0, clbToken.balanceOf(address(market), receipt3.clbTokenId()));
-        assertEq(beforeAt4 + removeLongAmount, usdc.balanceOf(address(this)));
+        assertEq(beforeAt4 + removeLongAmount, ctst.balanceOf(address(this)));
         assertEq(
             addLongAmount - removeLongAmount,
             clbToken.balanceOf(address(this), receipt3.clbTokenId())
@@ -123,10 +123,10 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             -10,
             abi.encode(removeShortAmount)
         );
-        assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount - removeLongAmount, ctst.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount,
-            vault.makerBalances(address(usdc))
+            vault.makerBalances(address(ctst))
         );
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount,
@@ -140,10 +140,10 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
         // settle oracle version 5
         market.settleAll();
-        assertEq(addLongAmount + addShortAmount - removeLongAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount - removeLongAmount, ctst.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-            vault.makerBalances(address(usdc))
+            vault.makerBalances(address(ctst))
         );
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
@@ -153,14 +153,14 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         assertEq(0, clbToken.balanceOf(address(market), receipt4.clbTokenId()));
 
         // withdraw liquidity at oracle version 5
-        uint256 beforeAt5 = usdc.balanceOf(address(this));
+        uint256 beforeAt5 = ctst.balanceOf(address(this));
         market.withdrawLiquidity(receipt4.id, bytes(""));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-            usdc.balanceOf(address(vault))
+            ctst.balanceOf(address(vault))
         );
         assertEq(0, clbToken.balanceOf(address(market), receipt4.clbTokenId()));
-        assertEq(beforeAt5 + removeShortAmount, usdc.balanceOf(address(this)));
+        assertEq(beforeAt5 + removeShortAmount, ctst.balanceOf(address(this)));
         assertEq(
             addShortAmount - removeShortAmount,
             clbToken.balanceOf(address(this), receipt4.clbTokenId())
@@ -194,8 +194,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             addAmounts,
             abi.encode(addLongAmount + addShortAmount)
         );
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
-        assertEq(0, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
+        assertEq(0, vault.makerBalances(address(ctst)));
         assertEq(0, vault.makerMarketBalances(address(market)));
         assertEq(0, market.getBinLiquidity(1));
         assertEq(0, clbToken.balanceOf(address(market), receipts1[0].clbTokenId()));
@@ -206,8 +206,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
         // settle oracle version 2
         market.settleAll();
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(ctst)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
         assertEq(addLongAmount, market.getBinLiquidity(1));
         assertEq(addShortAmount, market.getBinLiquidity(-10));
@@ -235,8 +235,8 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
             removeAmounts,
             abi.encode(removeAmounts)
         );
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
-        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(usdc)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, vault.makerBalances(address(ctst)));
         assertEq(addLongAmount + addShortAmount, vault.makerMarketBalances(address(market)));
         assertEq(addLongAmount, market.getBinLiquidity(1));
         assertEq(addShortAmount, market.getBinLiquidity(-10));
@@ -248,10 +248,10 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
         // settle oracle version 4
         market.settleAll();
-        assertEq(addLongAmount + addShortAmount, usdc.balanceOf(address(vault)));
+        assertEq(addLongAmount + addShortAmount, ctst.balanceOf(address(vault)));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-            vault.makerBalances(address(usdc))
+            vault.makerBalances(address(ctst))
         );
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
@@ -267,17 +267,17 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         receiptIds2[0] = receipts2[0].id;
         receiptIds2[1] = receipts2[1].id;
 
-        uint256 beforeWithdraw = usdc.balanceOf(address(this));
+        uint256 beforeWithdraw = ctst.balanceOf(address(this));
         market.withdrawLiquidityBatch(receiptIds2, bytes(""));
         assertEq(
             addLongAmount + addShortAmount - removeLongAmount - removeShortAmount,
-            usdc.balanceOf(address(vault))
+            ctst.balanceOf(address(vault))
         );
         assertEq(0, clbToken.balanceOf(address(market), receipts2[0].clbTokenId()));
         assertEq(0, clbToken.balanceOf(address(market), receipts2[1].clbTokenId()));
         assertEq(
             beforeWithdraw + removeLongAmount + removeShortAmount,
-            usdc.balanceOf(address(this))
+            ctst.balanceOf(address(this))
         );
         assertEq(
             addLongAmount - removeLongAmount,
@@ -313,7 +313,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         market.settleAll();
 
         // set markint earning
-        usdc.transfer(address(vault), earning);
+        ctst.transfer(address(vault), earning);
         vault.setPendingMarketEarnings(address(market), earning);
 
         // distribute market earning
@@ -322,11 +322,11 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         // asserts
         assertEq(
             addLongAmount + addShortAmount + earning - keeperFee,
-            usdc.balanceOf(address(vault))
+            ctst.balanceOf(address(vault))
         );
         assertEq(
             addLongAmount + addShortAmount + earning - keeperFee,
-            vault.makerBalances(address(usdc))
+            vault.makerBalances(address(ctst))
         );
         assertEq(
             addLongAmount + addShortAmount + earning - keeperFee,
@@ -340,7 +340,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
 
     function addLiquidityCallback(address, address vault, bytes calldata data) external override {
         uint256 amount = abi.decode(data, (uint256));
-        usdc.transfer(vault, amount);
+        ctst.transfer(vault, amount);
     }
 
     function addLiquidityBatchCallback(
@@ -349,7 +349,7 @@ contract LiquidityTest is BaseSetup, IChromaticLiquidityCallback {
         bytes calldata data
     ) external override {
         uint256 amount = abi.decode(data, (uint256));
-        usdc.transfer(vault, amount);
+        ctst.transfer(vault, amount);
     }
 
     function claimLiquidityCallback(
