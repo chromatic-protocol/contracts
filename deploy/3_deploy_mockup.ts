@@ -1,6 +1,6 @@
 import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
-import { parseUnits } from 'ethers'
+import { parseEther, parseUnits } from 'ethers'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -13,11 +13,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { address: oracleProviderAddress } = await deploy('OracleProviderMock', deployOpts)
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
-  const { address: chromaticTokenAddress } = await deploy('Token', {
-    args: ['CHROMATIC', 'CHRM'],
+  const { address: settlementTokenAddress } = await deploy('TestSettlementToken', {
+    args: ['TestSettlementToken', 'cTST', parseEther("100"), 86400],
     ...deployOpts
   })
-  console.log(chalk.yellow('✨ CHRM Token', chromaticTokenAddress))
+  console.log(chalk.yellow('✨ Test Settlement Token', settlementTokenAddress))
   const { address: marketFactoryAddress, libraries: marketFactoryLibaries } = await deployments.get(
     'ChromaticMarketFactory'
   )
@@ -52,7 +52,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // console.log(chalk.yellow('✨ Register SettlementToken'))
   await (
     await marketFactory.registerSettlementToken(
-      chromaticTokenAddress,
+      settlementTokenAddress,
       parseUnits('10', 18), // minimumMargin
       BigInt('1000'), // interestRate, 10%
       BigInt('500'), // flashLoanFeeRate, 5%
@@ -62,13 +62,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     )
   ).wait()
 
-  console.log(chalk.yellow('✨ Register SettlementToken (CHRM)'))
+  console.log(chalk.yellow('✨ Register SettlementToken (cTST)'))
 
   await (
-    await marketFactory.createMarket(oracleProviderAddress, chromaticTokenAddress, deployOpts)
+    await marketFactory.createMarket(oracleProviderAddress, settlementTokenAddress, deployOpts)
   ).wait()
 
-  console.log(chalk.yellow('✨ Create Market (CHRM)'))
+  console.log(chalk.yellow('✨ Create Market (cTST)'))
   // await marketFactory.createMarket(oracleProviderAddress, USDC_ARBITRUM_GOERLI.address, deployOpts)
   // console.log(chalk.yellow('✨ Create Market'))
   console.log(chalk.yellow('✨ Done!'))

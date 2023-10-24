@@ -22,7 +22,8 @@ export default {
     'ChromaticLens',
     'ChromaticMarketFactory',
     'ChromaticRouter',
-    'ChromaticVault'
+    'ChromaticVault',
+    'TestSettlementToken'
   ],
   excludesFromDeployed: ['*Mock'],
   excludeBytecode: true

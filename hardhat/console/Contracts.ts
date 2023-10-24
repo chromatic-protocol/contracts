@@ -27,8 +27,8 @@ import {
   KeeperFeePayer__factory,
   Mate2MarketSettlement,
   Mate2MarketSettlement__factory,
-  Token,
-  Token__factory
+  TestSettlementToken,
+  TestSettlementToken__factory
 } from '@chromatic/typechain-types'
 import {
   ID_TO_CHAIN_ID,
@@ -45,11 +45,6 @@ const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
   421613: '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86', // arbitrum_goerli UNISWAP
   5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
   5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
-}
-
-const CHRM_ADDRESS: { [key: number]: string } = {
-  421613: '0x29A6AC3D416F8Ca85A3df95da209eDBfaF6E522d',
-  5001: '0xB4D851cC4632b3B6f73b2686037e4433767e5D41'
 }
 
 const WMNT: { [key: number]: string } = {
@@ -76,7 +71,7 @@ export class Contracts {
   private _weth!: IWETH9
   private _wmnt!: IWETH9
   private _usdc!: IERC20Metadata
-  private _chrm: Token | undefined
+  private _ctst: TestSettlementToken | undefined
   private _swapRouter!: ISwapRouter
   private _marketSettlement: Mate2MarketSettlement | undefined
 
@@ -104,9 +99,9 @@ export class Contracts {
     this._lens = this.connectLens((await this.addressOf('ChromaticLens'))!)
     this._keeperFeePayer = this.connectKeeperFeePayer((await this.addressOf('KeeperFeePayer'))!)
 
-    const chrmAddress = CHRM_ADDRESS[echainId]
-    if (chrmAddress) {
-      this._chrm = Token__factory.connect(chrmAddress, this._signer)
+    const ctstAddress = await this.addressOf('TestSettlementToken')
+    if (ctstAddress) {
+      this._ctst = this.connectTestSettlementToken(ctstAddress)
     }
 
     const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
@@ -176,8 +171,8 @@ export class Contracts {
     return this._usdc
   }
 
-  get chrm(): Token | undefined {
-    return this._chrm
+  get ctst(): TestSettlementToken | undefined {
+    return this._ctst
   }
 
   get swapRouter(): ISwapRouter {
@@ -228,6 +223,10 @@ export class Contracts {
     return KeeperFeePayer__factory.connect(address, this._signer)
   }
 
+  connectTestSettlementToken(address: string): TestSettlementToken {
+    return TestSettlementToken__factory.connect(address, this._signer)
+  }
+
   async addLiquidityWithGaussianDistribution(
     marketAddress: string,
     minAmount: number,
@@ -236,13 +235,13 @@ export class Contracts {
     const distribution = gaussian(0, 0.2)
 
     const market = this.connectMarket(marketAddress)
-    if ((await market.settlementToken()) != (await this.chrm!.getAddress())) {
+    if ((await market.settlementToken()) != (await this.ctst!.getAddress())) {
       console.error('invalid settlement token')
       return
     }
 
     const scale = maxAmount - minAmount
-    const decimals = await this.chrm!.decimals()
+    const decimals = await this.ctst!.decimals()
 
     const longAmounts = fees.map((_, idx) => {
       const p = distribution.pdf((idx + Math.random()) / fees.length)
@@ -256,9 +255,10 @@ export class Contracts {
 
     const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0n)
 
-    const chrmBalance = await this.chrm!.balanceOf(this.signer)
-    if (chrmBalance < totalAmount) await (await this.chrm!.faucet(totalAmount - chrmBalance)).wait()
-    await (await this.chrm!.approve(this.router, MaxUint256)).wait()
+    const ctstBalance = await this.ctst!.balanceOf(this.signer)
+    if (ctstBalance < totalAmount)
+      await (await this.ctst!.mint(this.signer, totalAmount - ctstBalance)).wait()
+    await (await this.ctst!.approve(this.router, MaxUint256)).wait()
 
     await (
       await this.router.addLiquidityBatch(
