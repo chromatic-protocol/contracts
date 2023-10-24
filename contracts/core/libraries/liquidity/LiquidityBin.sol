@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
+import {PendingPosition, ClosingPosition, PendingLiquidity, ClaimableLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {BinLiquidity, BinLiquidityLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinLiquidity.sol";
 import {BinPosition, BinPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinPosition.sol";
 import {BinClosedPosition, BinClosedPositionLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/BinClosedPosition.sol";
@@ -23,7 +23,6 @@ struct LiquidityBin {
     BinLiquidity _liquidity;
     BinPosition _position;
     BinClosedPosition _closedPosition;
-    mapping(uint256 => LiquidityBinValue) binValueAt; // oracleVersion => binValue
 }
 
 /**
@@ -57,23 +56,14 @@ library LiquidityBinLib {
         self._closedPosition.settleClosingPosition(ctx);
         self._position.settlePendingPosition(ctx);
         if (self._liquidity.needSettle(ctx)) {
-            uint256 binValue = self.value(ctx);
             uint256 clbTokenId = self.clbTokenId;
-            //slither-disable-next-line calls-loop
-            uint256 totalSupply = ctx.clbToken.totalSupply(clbTokenId);
-
-            uint256 oracleVersion = ctx.currentOracleVersion().version;
-            self.binValueAt[oracleVersion] = LiquidityBinValue({
-                binValue: binValue,
-                clbTokenTotalSupply: totalSupply
-            });
 
             self._liquidity.settlePendingLiquidity(
                 ctx,
-                binValue,
+                self.value(ctx),
                 self.freeLiquidity(),
                 clbTokenId,
-                totalSupply
+                ctx.clbToken.totalSupply(clbTokenId)
             );
         }
     }

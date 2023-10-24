@@ -127,13 +127,3 @@ struct LiquidityBinStatus {
     uint256 binValue;
     int16 tradingFeeRate;
 }
-
-/**
- * @dev A struct representing value of the liquidity bin.
- * @param binValue The value of liquidity bin expressed in amount of settlement token.
- * @param clbTokenTotalSupply The total supply amount of the CLB token.
- */
-struct LiquidityBinValue {
-    uint256 binValue;
-    uint256 clbTokenTotalSupply;
-}

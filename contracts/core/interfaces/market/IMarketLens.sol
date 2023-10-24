@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
+import {PendingPosition, ClosingPosition, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 
@@ -33,18 +33,6 @@ interface IMarketLens {
     function getBinValues(
         int16[] calldata tradingFeeRates
     ) external view returns (uint256[] memory values);
-
-    /**
-     * @dev Retrieves the values of specific trading fee rates' bins in the liquidity pool at a specific oracle version.
-     *      The value of a bin represents the total valuation of the liquidity in the bin.
-     * @param oracleVersion The oracle version for which to retrieve the bin values.
-     * @param tradingFeeRates The list of trading fee rates for which to retrieve the bin values.
-     * @return values The array of LiquidityBinValue representing the values of the bins for the specified trading fee rates and oracle version.
-     */
-    function getBinValuesAt(
-        uint256 oracleVersion,
-        int16[] calldata tradingFeeRates
-    ) external view returns (LiquidityBinValue[] memory values);
 
     /**
      * @dev Retrieves the liquidity receipt with the given receipt ID.

@@ -147,24 +147,23 @@ library MarketDeployerLib {
     function _marketLensFacetCut(
         address marketLensFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](17);
+        bytes4[] memory functionSelectors = new bytes4[](16);
         functionSelectors[0] = IMarketLens.getBinLiquidity.selector;
         functionSelectors[1] = IMarketLens.getBinFreeLiquidity.selector;
         functionSelectors[2] = IMarketLens.getBinValues.selector;
-        functionSelectors[3] = IMarketLens.getBinValuesAt.selector;
-        functionSelectors[4] = IMarketLens.getLpReceipt.selector;
-        functionSelectors[5] = IMarketLens.getLpReceipts.selector;
-        functionSelectors[6] = IMarketLens.pendingLiquidity.selector;
-        functionSelectors[7] = IMarketLens.pendingLiquidityBatch.selector;
-        functionSelectors[8] = IMarketLens.claimableLiquidity.selector;
-        functionSelectors[9] = IMarketLens.claimableLiquidityBatch.selector;
-        functionSelectors[10] = IMarketLens.liquidityBinStatuses.selector;
-        functionSelectors[11] = IMarketLens.getPosition.selector;
-        functionSelectors[12] = IMarketLens.getPositions.selector;
-        functionSelectors[13] = IMarketLens.pendingPosition.selector;
-        functionSelectors[14] = IMarketLens.pendingPositionBatch.selector;
-        functionSelectors[15] = IMarketLens.closingPosition.selector;
-        functionSelectors[16] = IMarketLens.closingPositionBatch.selector;
+        functionSelectors[3] = IMarketLens.getLpReceipt.selector;
+        functionSelectors[4] = IMarketLens.getLpReceipts.selector;
+        functionSelectors[5] = IMarketLens.pendingLiquidity.selector;
+        functionSelectors[6] = IMarketLens.pendingLiquidityBatch.selector;
+        functionSelectors[7] = IMarketLens.claimableLiquidity.selector;
+        functionSelectors[8] = IMarketLens.claimableLiquidityBatch.selector;
+        functionSelectors[9] = IMarketLens.liquidityBinStatuses.selector;
+        functionSelectors[10] = IMarketLens.getPosition.selector;
+        functionSelectors[11] = IMarketLens.getPositions.selector;
+        functionSelectors[12] = IMarketLens.pendingPosition.selector;
+        functionSelectors[13] = IMarketLens.pendingPositionBatch.selector;
+        functionSelectors[14] = IMarketLens.closingPosition.selector;
+        functionSelectors[15] = IMarketLens.closingPositionBatch.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketLensFacet,
