@@ -4,7 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
+import {PendingPosition, ClosingPosition, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {LiquidityBin, LiquidityBinLib} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityBin.sol";
 import {PositionParam} from "@chromatic-protocol/contracts/core/libraries/liquidity/PositionParam.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
@@ -861,21 +861,6 @@ library LiquidityPoolLib {
         int16 _tradingFeeRate
     ) internal view returns (uint256 value) {
         value = targetBin(self, _tradingFeeRate).value(ctx);
-    }
-
-    /**
-     * @dev Retrieves the value of a specific bin in the LiquidityPool storage at a specific oracle version.
-     * @param self The reference to the LiquidityPool storage.
-     * @param _tradingFeeRate The trading fee rate for which to calculate the bin value.
-     * @param oracleVersion The oracle version for which to retrieve the bin value.
-     * @return value The LiquidityBinValue representing the value of the specified bin at the given oracle version.
-     */
-    function binValueAt(
-        LiquidityPool storage self,
-        int16 _tradingFeeRate,
-        uint256 oracleVersion
-    ) internal view returns (LiquidityBinValue memory value) {
-        value = targetBin(self, _tradingFeeRate).binValueAt[oracleVersion];
     }
 
     /**

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0 <0.9.0;
 
-import {PendingPosition, ClosingPosition, LiquidityBinValue, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
+import {PendingPosition, ClosingPosition, PendingLiquidity, ClaimableLiquidity, LiquidityBinStatus} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IMarketLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLens.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -46,26 +46,6 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
         LpContext memory ctx = newLpContext(ms);
         for (uint256 i; i < tradingFeeRates.length; ) {
             values[i] = liquidityPool.binValue(ctx, tradingFeeRates[i]);
-
-            unchecked {
-                i++;
-            }
-        }
-    }
-
-    /**
-     * @inheritdoc IMarketLens
-     */
-    function getBinValuesAt(
-        uint256 oracleVersion,
-        int16[] memory tradingFeeRates
-    ) external view override returns (LiquidityBinValue[] memory values) {
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-        LiquidityPool storage liquidityPool = ms.liquidityPool;
-
-        values = new LiquidityBinValue[](tradingFeeRates.length);
-        for (uint256 i; i < tradingFeeRates.length; ) {
-            values[i] = liquidityPool.binValueAt(tradingFeeRates[i], oracleVersion);
 
             unchecked {
                 i++;
