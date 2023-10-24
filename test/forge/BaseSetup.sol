@@ -10,7 +10,7 @@ import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken
 import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/ChromaticMarketFactory.sol";
 import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
 import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProviderMock.sol";
-import {Token} from "@chromatic-protocol/contracts/mocks/Token.sol";
+import {TestSettlementToken} from "@chromatic-protocol/contracts/mocks/TestSettlementToken.sol";
 import {GelatoLiquidatorMock} from "@chromatic-protocol/contracts/mocks/GelatoLiquidatorMock.sol";
 import {ChromaticVaultMock} from "@chromatic-protocol/contracts/mocks/ChromaticVaultMock.sol";
 import {DiamondLoupeFacet} from "@chromatic-protocol/contracts/core/facets/DiamondLoupeFacet.sol";
@@ -26,7 +26,7 @@ import {ChromaticRouter} from "@chromatic-protocol/contracts/periphery/Chromatic
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;
     OracleProviderMock oracleProvider;
-    Token usdc;
+    TestSettlementToken usdc;
     ChromaticMarketFactory factory;
     ChromaticVaultMock vault;
     GelatoLiquidatorMock liquidator;
@@ -67,8 +67,8 @@ abstract contract BaseSetup is Test {
         oracleProvider = new OracleProviderMock();
         oracleProvider.increaseVersion(1 ether);
 
-        usdc = new Token("USDC", "USDC");
-        usdc.faucet(1000000 ether);
+        usdc = new TestSettlementToken("USDC", "USDC", 1000000 ether, 1);
+        usdc.faucet();
 
         factory = new ChromaticMarketFactory(
             address(new MarketDiamondCutFacet()),
