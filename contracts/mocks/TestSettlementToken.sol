@@ -31,7 +31,10 @@ contract TestSettlementToken is ERC20, Ownable {
     }
 
     function faucet() external {
-        if (block.timestamp - _lastFaucetTimestamp[msg.sender] < _faucetMinInterval) {
+        if (
+            _lastFaucetTimestamp[msg.sender] > 0 &&
+            block.timestamp - _lastFaucetTimestamp[msg.sender] < _faucetMinInterval
+        ) {
             revert AlreadyFaucetedInInterval();
         }
 

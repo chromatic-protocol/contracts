@@ -1,4 +1,4 @@
-import * as Token from '@chromatic/deployments/anvil/Token.json'
+import * as TestSettlementToken from '@chromatic/deployments/anvil/TestSettlementToken.json'
 import {
   ChromaticAccount__factory,
   ChromaticRouter__factory,
@@ -77,7 +77,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
       }
 
       await setSlotBalance(USDC_ARBITRUM_GOERLI.address, 33, erc20Amount, 6)
-      await setSlotBalance(Token.address, 0, erc20Amount, 18)
+      await setSlotBalance(TestSettlementToken.address, 0, erc20Amount, 18)
     }
   )
 

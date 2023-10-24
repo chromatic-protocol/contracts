@@ -26,7 +26,7 @@ import {ChromaticRouter} from "@chromatic-protocol/contracts/periphery/Chromatic
 abstract contract BaseSetup is Test {
     KeeperFeePayerMock keeperFeePayer;
     OracleProviderMock oracleProvider;
-    TestSettlementToken usdc;
+    TestSettlementToken ctst;
     ChromaticMarketFactory factory;
     ChromaticVaultMock vault;
     GelatoLiquidatorMock liquidator;
@@ -67,8 +67,8 @@ abstract contract BaseSetup is Test {
         oracleProvider = new OracleProviderMock();
         oracleProvider.increaseVersion(1 ether);
 
-        usdc = new TestSettlementToken("USDC", "USDC", 1000000 ether, 1);
-        usdc.faucet();
+        ctst = new TestSettlementToken("cTST", "cTST", 1000000 ether, 86400);
+        ctst.faucet();
 
         factory = new ChromaticMarketFactory(
             address(new MarketDiamondCutFacet()),
@@ -99,7 +99,7 @@ abstract contract BaseSetup is Test {
             })
         );
         factory.registerSettlementToken(
-            address(usdc),
+            address(ctst),
             1 ether, // minimumMargin
             1000, // interestRate, 10%
             500, // flashLoanFeeRate, 5%
@@ -107,7 +107,7 @@ abstract contract BaseSetup is Test {
             3000 // uniswapFeeRate, 0.3%
         );
 
-        factory.createMarket(address(oracleProvider), address(usdc));
+        factory.createMarket(address(oracleProvider), address(ctst));
         market = IChromaticMarket(factory.getMarkets()[0]);
         clbToken = market.clbToken();
         router = new ChromaticRouter(address(factory));
