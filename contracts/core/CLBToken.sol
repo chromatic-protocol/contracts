@@ -17,7 +17,7 @@ import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
  * @dev CLBToken is an ERC1155 token contract that represents Liquidity Bin tokens.
  *      CLBToken allows minting and burning of tokens by the Chromatic Market contract.
  */
-contract CLBToken is ERC1155Supply, ICLBToken {
+contract CLBToken is ICLBToken, ERC1155Supply {
     using Strings for uint256;
     using Strings for uint128;
     using SafeCast for uint256;
