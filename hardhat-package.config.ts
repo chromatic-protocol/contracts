@@ -24,7 +24,8 @@ export default {
     'ChromaticMarketFactory',
     'ChromaticRouter',
     'ChromaticVault',
-    'TestSettlementToken'
+    'cETH',
+    'cBTC'
   ],
   excludesFromDeployed: ['*Mock'],
   excludeBytecode: true

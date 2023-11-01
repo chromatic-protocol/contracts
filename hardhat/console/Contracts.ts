@@ -71,7 +71,8 @@ export class Contracts {
   private _weth!: IWETH9
   private _wmnt!: IWETH9
   private _usdc!: IERC20Metadata
-  private _ctst: TestSettlementToken | undefined
+  private _ceth: TestSettlementToken | undefined
+  private _cbtc: TestSettlementToken | undefined
   private _swapRouter!: ISwapRouter
   private _marketSettlement: Mate2MarketSettlement | undefined
 
@@ -99,9 +100,13 @@ export class Contracts {
     this._lens = this.connectLens((await this.addressOf('ChromaticLens'))!)
     this._keeperFeePayer = this.connectKeeperFeePayer((await this.addressOf('KeeperFeePayer'))!)
 
-    const ctstAddress = await this.addressOf('TestSettlementToken')
-    if (ctstAddress) {
-      this._ctst = this.connectTestSettlementToken(ctstAddress)
+    const cethAddress = await this.addressOf('cETH')
+    if (cethAddress) {
+      this._ceth = this.connectTestSettlementToken(cethAddress)
+    }
+    const cbtcAddress = await this.addressOf('cBTC')
+    if (cbtcAddress) {
+      this._cbtc = this.connectTestSettlementToken(cbtcAddress)
     }
 
     const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
@@ -171,8 +176,12 @@ export class Contracts {
     return this._usdc
   }
 
-  get ctst(): TestSettlementToken | undefined {
-    return this._ctst
+  get ceth(): TestSettlementToken | undefined {
+    return this._ceth
+  }
+
+  get cbtc(): TestSettlementToken | undefined {
+    return this._cbtc
   }
 
   get swapRouter(): ISwapRouter {
@@ -227,6 +236,7 @@ export class Contracts {
     return TestSettlementToken__factory.connect(address, this._signer)
   }
 
+  /*
   async addLiquidityWithGaussianDistribution(
     marketAddress: string,
     minAmount: number,
@@ -269,6 +279,7 @@ export class Contracts {
       )
     ).wait()
   }
+  */
 
   async getOrDeployFlashLoanExample(): Promise<FlashLoanExample> {
     const deployed = await this.hre.deployments.getOrNull('FlashLoanExample')
