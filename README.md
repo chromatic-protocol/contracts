@@ -126,7 +126,7 @@ Make sure to customize the deployment script (`deploy/*.ts`) with any additional
 
 ## Documentation
 
-Official documentation for Chromatic Protocol can be found [here](https://chromatic-protocol.github.io/docs-preview).
+Official documentation for Chromatic Protocol can be found [here](https://chromatic.finance/docs/contracts/intro).
 
 ## License
 
