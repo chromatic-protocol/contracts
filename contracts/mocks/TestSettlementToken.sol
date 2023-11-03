@@ -10,7 +10,7 @@ contract TestSettlementToken is ERC20, Ownable {
     uint256 private _faucetAmount;
     uint256 private _faucetMinInterval;
 
-    mapping(address => uint256) private _lastFaucetTimestamp;
+    mapping(address => uint256) public lastFaucetTimestamp;
 
     error AlreadyFaucetedInInterval();
 
@@ -32,8 +32,8 @@ contract TestSettlementToken is ERC20, Ownable {
 
     function faucet() external {
         if (
-            _lastFaucetTimestamp[msg.sender] > 0 &&
-            block.timestamp - _lastFaucetTimestamp[msg.sender] < _faucetMinInterval
+            lastFaucetTimestamp[msg.sender] > 0 &&
+            block.timestamp - lastFaucetTimestamp[msg.sender] < _faucetMinInterval
         ) {
             revert AlreadyFaucetedInInterval();
         }
@@ -72,4 +72,5 @@ contract TestSettlementToken is ERC20, Ownable {
     function setFaucetMinInterval(uint256 faucetMinInterval_) external onlyOwner {
         _faucetMinInterval = faucetMinInterval_;
     }
+
 }
