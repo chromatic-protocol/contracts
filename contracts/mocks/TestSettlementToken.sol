@@ -37,7 +37,7 @@ contract TestSettlementToken is ERC20, Ownable {
         ) {
             revert AlreadyFaucetedInInterval();
         }
-
+        lastFaucetTimestamp[msg.sender] = block.timestamp;
         _mint(msg.sender, _faucetAmount);
     }
 
@@ -72,5 +72,4 @@ contract TestSettlementToken is ERC20, Ownable {
     function setFaucetMinInterval(uint256 faucetMinInterval_) external onlyOwner {
         _faucetMinInterval = faucetMinInterval_;
     }
-
 }
