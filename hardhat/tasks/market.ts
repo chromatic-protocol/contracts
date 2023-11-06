@@ -2,20 +2,10 @@ import { ChromaticMarketFactory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
-import {
-  execute,
-  findChainlinkOracleProvider,
-  findPythOracleProvider,
-  findSettlementToken,
-  findSupraOracleProvider
-} from './utils'
+import { execute, findSettlementToken } from './utils'
 
 task('market:create', 'Create new market')
-  .addOptionalParam('chainlinkAddress', 'The chainlink feed aggregator address')
-  .addOptionalParam('pythAddress', 'The pyth price feed address')
-  .addOptionalParam('priceFeedId', 'The price feed id of pyth')
-  .addOptionalParam('supraAddress', 'The price feed id of supra')
-  .addOptionalParam('pairIndex', 'The price feed id of pyth or supra')
+  .addParam('oracleProvider', 'The deployed oracle provider address')
   .addParam('tokenAddress', 'The settlement token address or symbol')
   .setAction(
     execute(
@@ -24,22 +14,16 @@ task('market:create', 'Create new market')
         taskArgs: TaskArguments,
         hre: HardhatRuntimeEnvironment
       ): Promise<any> => {
-        const { chainlinkAddress, pythAddress, priceFeedId, supraAddress, pairIndex, tokenAddress } = taskArgs
+        const { deployments } = hre
 
-        // param check
-        if (!chainlinkAddress && !(pythAddress && priceFeedId) && !(supraAddress && pairIndex)) {
-          console.log(chalk.red(`invaild param`))
-          return
-        }
+        const { oracleProvider, tokenAddress } = taskArgs
+        const { address: oracleProviderAddress } = await deployments.get(oracleProvider)
 
-        const provider = chainlinkAddress
-          ? await findChainlinkOracleProvider(factory, chainlinkAddress)
-          : pythAddress
-          ? await findPythOracleProvider(factory, pythAddress, priceFeedId)
-          : await findSupraOracleProvider(factory, supraAddress, pairIndex)
-        if (!provider) {
+        if (!(await factory.isRegisteredOracleProvider(oracleProviderAddress))) {
           console.log(
-            chalk.red(`Cannot found oracle provider for chainlink feed '${chainlinkAddress}'`)
+            chalk.blue(
+              `Not registered oracle provider [${oracleProvider}: ${oracleProviderAddress}]`
+            )
           )
           return
         }
@@ -50,13 +34,11 @@ task('market:create', 'Create new market')
           return
         }
 
-        await (
-          await factory.createMarket(await provider.getAddress(), await token.getAddress())
-        ).wait()
+        await (await factory.createMarket(oracleProviderAddress, await token.getAddress())).wait()
 
         console.log(
           chalk.green(
-            `Success create new market [OracleProvider: ${await provider.getAddress()}, SettlementToken: ${await token.getAddress()}]`
+            `Success create new market [${oracleProvider}: ${oracleProviderAddress}, SettlementToken: ${await token.getAddress()}]`
           )
         )
       }

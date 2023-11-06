@@ -8,6 +8,7 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 /**
  * @dev A registry for managing settlement tokens and their associated parameters.
  * @param _tokens Set of registered settlement tokens
+ * @param _oracleProviders Mapping of settlement tokens to their oracle provider address
  * @param _interestRateRecords Mapping of settlement tokens to their interest rate records
  * @param _minimumMargins Mapping of settlement tokens to their minimum margins
  * @param _flashLoanFeeRates Mapping of settlement tokens to their flash loan fee rates
@@ -16,6 +17,7 @@ import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
  */
 struct SettlementTokenRegistry {
     EnumerableSet.AddressSet _tokens;
+    mapping(address => address) _oracleProviders;
     mapping(address => InterestRate.Record[]) _interestRateRecords;
     mapping(address => uint256) _minimumMargins;
     mapping(address => uint256) _flashLoanFeeRates;
@@ -47,6 +49,7 @@ library SettlementTokenRegistryLib {
      * @dev Throws an error with the code `Errors.ALREADY_REGISTERED_TOKEN` if the settlement token is already registered.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the token to register.
+     * @param oracleProvider The oracle provider address for the token.
      * @param minimumMargin The minimum margin for the token.
      * @param interestRate The initial interest rate for the token.
      * @param flashLoanFeeRate The flash loan fee rate for the token.
@@ -56,6 +59,7 @@ library SettlementTokenRegistryLib {
     function register(
         SettlementTokenRegistry storage self,
         address token,
+        address oracleProvider,
         uint256 minimumMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
@@ -64,6 +68,7 @@ library SettlementTokenRegistryLib {
     ) internal {
         require(self._tokens.add(token), Errors.ALREADY_REGISTERED_TOKEN);
 
+        self._oracleProviders[token] = oracleProvider;
         self._interestRateRecords[token].initialize(interestRate);
         self._minimumMargins[token] = minimumMargin;
         self._flashLoanFeeRates[token] = flashLoanFeeRate;
@@ -93,6 +98,33 @@ library SettlementTokenRegistryLib {
         address token
     ) internal view returns (bool) {
         return self._tokens.contains(token);
+    }
+
+    /**
+     * @notice Retrieves the oracle provider address for a asettlement token.
+     * @param self The SettlementTokenRegistry storage.
+     * @param token The address of the asettlement token.
+     * @return address The oralce provider address for the asettlement token.
+     */
+    function getOracleProvider(
+        SettlementTokenRegistry storage self,
+        address token
+    ) internal view returns (address) {
+        return self._oracleProviders[token];
+    }
+
+    /**
+     * @notice Sets the oracle provider address for asettlement token.
+     * @param self The SettlementTokenRegistry storage.
+     * @param token The address of the settlement token.
+     * @param oracleProvider The new oracle provider address for the settlement token.
+     */
+    function setOracleProvider(
+        SettlementTokenRegistry storage self,
+        address token,
+        address oracleProvider
+    ) internal {
+        self._oracleProviders[token] = oracleProvider;
     }
 
     /**

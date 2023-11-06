@@ -10,7 +10,7 @@
     "sizer": "forge build --sizes",
     "sizer:hardhat": "hardhat size-contracts",
     "deploy": "hardhat deploy",
-    "deploy:arbitrum_goerli": "yarn hardhat:arbitrum_goerli deploy --tags core,arbitrum,periphery",
+    "deploy:arbitrum_goerli": "yarn hardhat:arbitrum_goerli deploy --tags core,arbitrum,periphery,oracle_providers_arbitrum",
     "deploy:mantle_testnet": "yarn hardhat:mantle_testnet deploy --tags core,mantle,periphery",
     "chain": "yarn anvil:start & sleep 3; yarn hardhat deploy --network anvil --reset --tags core,arbitrum,periphery,mockup ; yarn hardhat typechain ; wait",
     "chain:mantle": "yarn anvil:start:mantle & sleep 3; yarn hardhat deploy --network anvil_mantle --reset --tags core,mantle,periphery,mockup ; yarn hardhat typechain ; wait",

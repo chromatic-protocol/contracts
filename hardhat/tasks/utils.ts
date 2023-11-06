@@ -33,65 +33,6 @@ export function execute(
   }
 }
 
-export async function findChainlinkOracleProvider(
-  factory: ChromaticMarketFactory,
-  chainlinkAddress: string
-): Promise<IOracleProvider | undefined> {
-  const providerAddresses = await factory.registeredOracleProviders()
-  for (const providerAddress of providerAddresses) {
-    const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
-    if ((await provider.oracleProviderName()).toLowerCase() === 'chainlink') {
-      if (
-        chainlinkAddress.toLowerCase() ===
-        (
-          await ChainlinkFeedOracle__factory.connect(providerAddress, factory.runner).aggregator()
-        ).toLowerCase()
-      ) {
-        return provider
-      }
-    }
-  }
-}
-
-export async function findPythOracleProvider(
-  factory: ChromaticMarketFactory,
-  pythAddress: string,
-  priceFeedId: string
-): Promise<IOracleProvider | undefined> {
-  const providerAddresses = await factory.registeredOracleProviders()
-  for (const providerAddress of providerAddresses) {
-    const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
-    if ((await provider.oracleProviderName()).toLowerCase() === 'pyth') {
-      const pythProvider = PythFeedOracle__factory.connect(providerAddress, factory.runner)
-      const datas = await Promise.all([pythProvider.pyth(), pythProvider.priceFeedId()])
-      if (
-        datas[0].toLowerCase() === pythAddress.toLowerCase() &&
-        datas[1].toLowerCase() === priceFeedId.toLowerCase()
-      ) {
-        return provider
-      }
-    }
-  }
-}
-
-export async function findSupraOracleProvider(
-  factory: ChromaticMarketFactory,
-  supraAddress: string,
-  pairIndex: bigint
-): Promise<IOracleProvider | undefined> {
-  const providerAddresses = await factory.registeredOracleProviders()
-  for (const providerAddress of providerAddresses) {
-    const provider = IOracleProvider__factory.connect(providerAddress, factory.runner)
-    if ((await provider.oracleProviderName()).toLowerCase() === 'supra') {
-      const supraProvider = SupraFeedOracle__factory.connect(providerAddress, factory.runner)
-      const datas = await Promise.all([supraProvider.feed(), supraProvider.pairIndex()])
-      if (datas[0].toLowerCase() === supraAddress.toLowerCase() && datas[1] === BigInt(pairIndex)) {
-        return provider
-      }
-    }
-  }
-}
-
 export async function findSettlementToken(
   factory: ChromaticMarketFactory,
   tokenAddressOrSymbol: string

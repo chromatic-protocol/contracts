@@ -28,6 +28,11 @@ task('settlement-token', 'Show settlement token information')
         console.log(chalk.green(`Decimals: ${decimals}`))
         console.log(
           chalk.green(
+            `OracleProvider: ${await factory.getSettlementTokenOracleProvider(tokenAddress)}`
+          )
+        )
+        console.log(
+          chalk.green(
             `MinMargin: ${formatUnits(await factory.getMinimumMargin(tokenAddress), decimals)}`
           )
         )
@@ -60,6 +65,7 @@ task('settlement-token', 'Show settlement token information')
 
 task('settlement-token:register', 'Register settlement token')
   .addParam('address', 'The settlement token address or symbol')
+  .addParam('oracleProvider', 'The deployed oracle provider address')
   .addParam('minMargin', 'The minimum margin for trading', 10, types.float)
   .addParam('interestRate', 'The annual interest rate as a percentage', 10, types.float)
   .addParam('flashloanFeeRate', 'The flashloan fee rate as a percentage', 5, types.float)
@@ -80,10 +86,15 @@ task('settlement-token:register', 'Register settlement token')
           return
         }
 
+        const { address: oracleProviderAddress } = await hre.deployments.get(
+          taskArgs.oracleProvider
+        )
+
         const decimals = await token.decimals()
         await (
           await factory.registerSettlementToken(
             tokenAddress,
+            oracleProviderAddress,
             parseUnits(taskArgs.minMargin.toString(), decimals),
             parseUnits(taskArgs.interestRate.toString(), 2),
             parseUnits(taskArgs.flashloanFeeRate.toString(), 2),
@@ -100,6 +111,7 @@ task('settlement-token:register', 'Register settlement token')
 
 task('settlement-token:set', 'Register settlement token')
   .addParam('address', 'The settlement token address or symbol')
+  .addOptionalParam('oracleProvider', 'The deployed oracle provider address')
   .addOptionalParam('minMargin', 'The minimum margin for trading', undefined, types.int)
   .addOptionalParam(
     'flashloanFeeRate',
@@ -135,6 +147,13 @@ task('settlement-token:set', 'Register settlement token')
           return
         }
 
+        if (taskArgs.oracleProvider) {
+          const { address: oracleProviderAddress } = await hre.deployments.get(
+            taskArgs.oracleProvider
+          )
+          await factory.setSettlementTokenOracleProvider(tokenAddress, oracleProviderAddress)
+          console.log(chalk.green('OracleProvider is updated'))
+        }
         if (taskArgs.minMargin) {
           await factory.setMinimumMargin(
             tokenAddress,
