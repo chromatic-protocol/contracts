@@ -11,6 +11,7 @@ interface ISettlementTokenRegistry {
     /**
      * @dev Emitted when a new settlement token is registered.
      * @param token The address of the registered settlement token.
+     * @param oracleProvider The oracle provider address for the settlement token.
      * @param minimumMargin The minimum margin for the markets using this settlement token.
      * @param interestRate The interest rate for the settlement token.
      * @param flashLoanFeeRate The flash loan fee rate for the settlement token.
@@ -19,12 +20,20 @@ interface ISettlementTokenRegistry {
      */
     event SettlementTokenRegistered(
         address indexed token,
-        uint256 indexed minimumMargin,
-        uint256 indexed interestRate,
+        address indexed oracleProvider,
+        uint256 minimumMargin,
+        uint256 interestRate,
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     );
+
+    /**
+     * @dev Emitted when the oracle provider address for a settlement token is set.
+     * @param token The address of the settlement token.
+     * @param oracleProvider The oracle provider address for the settlement token.
+     */
+    event SetSettlementTokenOracleProvider(address indexed token, address indexed oracleProvider);
 
     /**
      * @dev Emitted when the minimum margin for a settlement token is set.
@@ -84,6 +93,7 @@ interface ISettlementTokenRegistry {
     /**
      * @notice Registers a new settlement token.
      * @param token The address of the settlement token to register.
+     * @param oracleProvider The oracle provider address for the settlement token.
      * @param minimumMargin The minimum margin for the settlement token.
      * @param interestRate The interest rate for the settlement token.
      * @param flashLoanFeeRate The flash loan fee rate for the settlement token.
@@ -92,6 +102,7 @@ interface ISettlementTokenRegistry {
      */
     function registerSettlementToken(
         address token,
+        address oracleProvider,
         uint256 minimumMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
@@ -111,6 +122,20 @@ interface ISettlementTokenRegistry {
      * @return True if the settlement token is registered, false otherwise.
      */
     function isRegisteredSettlementToken(address token) external view returns (bool);
+
+    /**
+     * @notice Gets the oracle provider address for a settlement token.
+     * @param token The address of the settlement token.
+     * @return The oracle provider address for the settlement token.
+     */
+    function getSettlementTokenOracleProvider(address token) external view returns (address);
+
+    /**
+     * @notice Sets the oracle provider address for a settlement token.
+     * @param token The address of the settlement token.
+     * @param oracleProvider The new oracle provider address for the settlement token.
+     */
+    function setSettlementTokenOracleProvider(address token, address oracleProvider) external;
 
     /**
      * @notice Gets the minimum margin for a settlement token.

@@ -36,6 +36,7 @@ export function deploy(target: string = 'arbitrum') {
         await (
           await marketFactory.registerSettlementToken(
             settlementToken.getAddress(),
+            oracleProviderAddress,
             parseUnits('10', USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
             BigInt('1000'), // interestRate, 10%
             BigInt('500'), // flashLoanFeeRate, 5%

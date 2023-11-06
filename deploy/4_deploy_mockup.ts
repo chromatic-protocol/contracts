@@ -53,6 +53,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await (
     await marketFactory.registerSettlementToken(
       settlementTokenAddress,
+      oracleProviderAddress,
       parseUnits('10', 18), // minimumMargin
       BigInt('1000'), // interestRate, 10%
       BigInt('500'), // flashLoanFeeRate, 5%

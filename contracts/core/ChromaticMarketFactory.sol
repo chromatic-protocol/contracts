@@ -159,9 +159,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     }
 
     /**
-    * @dev This function can only be called by the modifier onlyDao.
-    */
-    function _checkDao() internal view{
+     * @dev This function can only be called by the modifier onlyDao.
+     */
+    function _checkDao() internal view {
         if (msg.sender != dao) revert OnlyAccessableByDao();
     }
 
@@ -447,14 +447,19 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function registerSettlementToken(
         address token,
+        address oracleProvider,
         uint256 minimumMargin,
         uint256 interestRate,
         uint256 flashLoanFeeRate,
         uint256 earningDistributionThreshold,
         uint24 uniswapFeeTier
     ) external override onlyDao {
+        require(token != address(0));
+        require(oracleProvider != address(0));
+
         _settlementTokenRegistry.register(
             token,
+            oracleProvider,
             minimumMargin,
             interestRate,
             flashLoanFeeRate,
@@ -464,6 +469,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         emit SettlementTokenRegistered(
             token,
+            oracleProvider,
             minimumMargin,
             interestRate,
             flashLoanFeeRate,
@@ -487,6 +493,26 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function isRegisteredSettlementToken(address token) external view override returns (bool) {
         return _settlementTokenRegistry.isRegistered(token);
+    }
+
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     */
+    function getSettlementTokenOracleProvider(address token) external view returns (address) {
+        return _settlementTokenRegistry.getOracleProvider(token);
+    }
+
+    /**
+     * @inheritdoc ISettlementTokenRegistry
+     * @dev This function can only be called by the DAO address.
+     */
+    function setSettlementTokenOracleProvider(
+        address token,
+        address oracleProvider
+    ) external onlyDao {
+        require(oracleProvider != address(0));
+        _settlementTokenRegistry.setOracleProvider(token, oracleProvider);
+        emit SetSettlementTokenOracleProvider(token, oracleProvider);
     }
 
     /**
