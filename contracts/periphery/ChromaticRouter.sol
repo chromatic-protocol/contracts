@@ -259,7 +259,17 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external override returns (OpenPositionInfo memory openPositionInfo) {
+    ) external override returns (OpenPositionInfo memory) {
+        return _openPosition(market, qty, takerMargin, makerMargin, maxAllowableTradingFee);
+    }
+
+    function _openPosition(
+        address market,
+        int256 qty,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint256 maxAllowableTradingFee
+    ) internal returns (OpenPositionInfo memory openPositionInfo) {
         ChromaticAccount account = _getAccount(msg.sender);
         openPositionInfo = account.openPosition(
             market,
@@ -275,7 +285,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             address(account),
             openPositionInfo.tradingFee,
             _calcUsdPrice(market, openPositionInfo.tradingFee),
-            address(0) // TODO
+            referralStorage.referredBy(msg.sender)
         );
     }
 
@@ -286,11 +296,12 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      * @return The price in USD as an int256.
      */
     function _calcUsdPrice(address market, uint256 amount) internal view returns (int256) {
-        IChromaticMarketFactory marketFactory = IChromaticMarket(market).factory();
         IERC20Metadata settlementToken = IChromaticMarket(market).settlementToken();
 
         IOracleProvider oracleProvider = IOracleProvider(
-            marketFactory.getSettlementTokenOracleProvider(address(settlementToken))
+            IChromaticMarketFactory(marketFactory).getSettlementTokenOracleProvider(
+                address(settlementToken)
+            )
         );
 
         int256 latestPrice = oracleProvider.currentVersion().price;
@@ -313,14 +324,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         if (address(referralStorage) != address(0)) {
             referralStorage.setReferrer(msg.sender, referrer);
         }
-        return
-            _getAccount(msg.sender).openPosition(
-                market,
-                qty,
-                takerMargin,
-                makerMargin,
-                maxAllowableTradingFee
-            );
+        return _openPosition(market, qty, takerMargin, makerMargin, maxAllowableTradingFee);
     }
 
     /**
