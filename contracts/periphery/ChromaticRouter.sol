@@ -279,6 +279,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             maxAllowableTradingFee
         );
 
+        //slither-disable-next-line reentrancy-events
         emit OpenPosition(
             market,
             msg.sender,
