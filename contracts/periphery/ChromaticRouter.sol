@@ -18,6 +18,8 @@ import {AccountFactory} from "@chromatic-protocol/contracts/periphery/base/Accou
 import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
 import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
 import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
 /**
  * @title ChromaticRouter
@@ -257,15 +259,44 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external override returns (OpenPositionInfo memory) {
-        return
-            _getAccount(msg.sender).openPosition(
-                market,
-                qty,
-                takerMargin,
-                makerMargin,
-                maxAllowableTradingFee
-            );
+    ) external override returns (OpenPositionInfo memory openPositionInfo) {
+        ChromaticAccount account = _getAccount(msg.sender);
+        openPositionInfo = account.openPosition(
+            market,
+            qty,
+            takerMargin,
+            makerMargin,
+            maxAllowableTradingFee
+        );
+
+        emit OpenPosition(
+            market,
+            msg.sender,
+            address(account),
+            openPositionInfo.tradingFee,
+            _calcUsdPrice(market, openPositionInfo.tradingFee),
+            address(0) // TODO
+        );
+    }
+
+    /**
+     * @dev Calculates the price in USD for a specified amount of the settlement token in a ChromaticMarket.
+     * @param market The address of the ChromaticMarket contract.
+     * @param amount The amount of the settlement token.
+     * @return The price in USD as an int256.
+     */
+    function _calcUsdPrice(address market, uint256 amount) internal view returns (int256) {
+        IChromaticMarketFactory marketFactory = IChromaticMarket(market).factory();
+        IERC20Metadata settlementToken = IChromaticMarket(market).settlementToken();
+
+        IOracleProvider oracleProvider = IOracleProvider(
+            marketFactory.getSettlementTokenOracleProvider(address(settlementToken))
+        );
+
+        int256 latestPrice = oracleProvider.currentVersion().price;
+
+        // token amount * oracle price / token decimals
+        return (int256(amount) * latestPrice) / int256(10 ** settlementToken.decimals());
     }
 
     /**
