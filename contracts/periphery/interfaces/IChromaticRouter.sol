@@ -36,6 +36,25 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
     ) external returns (OpenPositionInfo memory);
 
     /**
+     * @dev Opens a new position in a ChromaticMarket contract.
+     * @param market The address of the ChromaticMarket contract.
+     * @param qty The quantity of the position.
+     * @param takerMargin The margin amount for the taker.
+     * @param makerMargin The margin amount for the maker.
+     * @param maxAllowableTradingFee The maximum allowable trading fee.
+     * @param referrer The referrer address.
+     * @return position The new position.
+     */
+    function openPositionWithReferrer(
+        address market,
+        int256 qty,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint256 maxAllowableTradingFee,
+        address referrer
+    ) external returns (OpenPositionInfo memory);
+
+    /**
      * @notice Closes a position in a ChromaticMarket contract.
      * @param market The address of the ChromaticMarket contract.
      * @param positionId The ID of the position to close.
@@ -99,6 +118,14 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      *      Emits an `AccountCreated` event upon successful creation.
      */
     function createAccount() external;
+
+    /**
+     * @notice Creates a new user account.
+     * @dev Only one account can be created per user.
+     *      Emits an `AccountCreated` event upon successful creation.
+     * @param referrer The referrer address.
+     */
+    function createAccountWithReferrer(address referrer) external;
 
     /**
      * @notice Retrieves the account of the caller.

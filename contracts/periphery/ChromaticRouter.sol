@@ -271,6 +271,30 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
     /**
      * @inheritdoc IChromaticRouter
      */
+    function openPositionWithReferrer(
+        address market,
+        int256 qty,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint256 maxAllowableTradingFee,
+        address referrer
+    ) external override returns (OpenPositionInfo memory) {
+        if (address(referralStorage) != address(0)) {
+            referralStorage.setReferrer(msg.sender, referrer);
+        }
+        return
+            _getAccount(msg.sender).openPosition(
+                market,
+                qty,
+                takerMargin,
+                makerMargin,
+                maxAllowableTradingFee
+            );
+    }
+
+    /**
+     * @inheritdoc IChromaticRouter
+     */
     function closePosition(address market, uint256 positionId) external override {
         _getAccount(msg.sender).closePosition(market, positionId);
     }
