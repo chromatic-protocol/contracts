@@ -2,7 +2,9 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticRouter.sol";
+import {IReferralStorage} from "@chromatic-protocol/contracts/periphery/interfaces/IReferralStorage.sol";
 import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
 
 /**
@@ -13,6 +15,23 @@ abstract contract AccountFactory is IChromaticRouter {
     ChromaticAccount public immutable accountBase;
     address private marketFactory;
     mapping(address => address) private accounts;
+
+    IReferralStorage public referralStorage;
+
+    /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
+    error OnlyAccessableByDao();
+
+    /**
+     * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
+     */
+    modifier onlyDao() {
+        if (msg.sender != IChromaticMarketFactory(marketFactory).dao())
+            revert OnlyAccessableByDao();
+        _;
+    }
 
     /**
      * @dev Initializes the AccountFactory contract with the provided router and market factory addresses.
@@ -26,8 +45,21 @@ abstract contract AccountFactory is IChromaticRouter {
     /**
      * @inheritdoc IChromaticRouter
      */
-    function createAccount() external {
-        address owner = msg.sender;
+    function createAccount() external override {
+        _createAccount(msg.sender);
+    }
+
+    /**
+     * @inheritdoc IChromaticRouter
+     */
+    function createAccountWithReferrer(address referrer) external override {
+        if (address(referralStorage) != address(0)) {
+            referralStorage.setReferrer(msg.sender, referrer);
+        }
+        _createAccount(msg.sender);
+    }
+
+    function _createAccount(address owner) private {
         require(accounts[owner] == address(0));
 
         ChromaticAccount newAccount = ChromaticAccount(Clones.clone(address(accountBase)));
@@ -41,7 +73,7 @@ abstract contract AccountFactory is IChromaticRouter {
     /**
      * @inheritdoc IChromaticRouter
      */
-    function getAccount() external view returns (address) {
+    function getAccount() external view override returns (address) {
         return accounts[msg.sender];
     }
 
@@ -52,5 +84,11 @@ abstract contract AccountFactory is IChromaticRouter {
      */
     function getAccount(address accountAddress) internal view returns (address) {
         return accounts[accountAddress];
+    }
+
+    // =============== ReferralStorage ===============
+
+    function setReferralStorage(IReferralStorage referralStorage_) external onlyDao {
+        referralStorage = referralStorage_;
     }
 }
