@@ -1,4 +1,3 @@
-import { ChromaticRouter } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -21,21 +20,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     args: [routerAddress]
   })
   console.log(chalk.yellow(`✨ ChromaticLens: ${lensAddress}`))
-
-  const { address: referralStorageAddress, args: referralStorageArgs } = await deploy(
-    'ReferralStorage',
-    {
-      from: deployer,
-      args: [routerAddress]
-    }
-  )
-  console.log(chalk.yellow(`✨ ReferralStorage: ${referralStorageAddress}`))
-
-  const RouterFactory = await ethers.getContractFactory('ChromaticRouter')
-  const router = RouterFactory.attach(routerAddress) as ChromaticRouter
-
-  await router.setReferralStorage(referralStorageAddress)
-  console.log(chalk.yellow('✨ Set ReferralStorage'))
 }
 
 export default func

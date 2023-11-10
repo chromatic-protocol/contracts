@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfaces/IChromaticRouter.sol";
-import {IReferralStorage} from "@chromatic-protocol/contracts/periphery/interfaces/IReferralStorage.sol";
 import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
 
 /**
@@ -15,8 +14,6 @@ abstract contract AccountFactory is IChromaticRouter {
     ChromaticAccount public immutable accountBase;
     address private marketFactory;
     mapping(address => address) private accounts;
-
-    IReferralStorage public referralStorage;
 
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
@@ -49,17 +46,6 @@ abstract contract AccountFactory is IChromaticRouter {
         _createAccount(msg.sender);
     }
 
-    /**
-     * @inheritdoc IChromaticRouter
-     */
-    function createAccountWithReferrer(address referrer) external override {
-        if (address(referralStorage) != address(0)) {
-            referralStorage.setReferrer(msg.sender, referrer);
-        }
-        //slither-disable-next-line reentrancy-events
-        _createAccount(msg.sender);
-    }
-
     function _createAccount(address owner) private {
         require(accounts[owner] == address(0));
 
@@ -85,11 +71,5 @@ abstract contract AccountFactory is IChromaticRouter {
      */
     function getAccount(address accountAddress) internal view returns (address) {
         return accounts[accountAddress];
-    }
-
-    // =============== ReferralStorage ===============
-
-    function setReferralStorage(IReferralStorage referralStorage_) external onlyDao {
-        referralStorage = referralStorage_;
     }
 }
