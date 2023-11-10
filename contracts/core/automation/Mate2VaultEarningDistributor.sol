@@ -83,6 +83,7 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
         if (upkeepId != 0) {
             delete makerEarningDistributionUpkeepIds[token];
             try automate.cancelUpkeep(upkeepId) {} catch Error(string memory reason) {
+                //slither-disable-next-line reentrancy-events
                 emit catchErr("cancelUpkeep", reason);
             }
         }
@@ -128,6 +129,7 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
         if (upkeepId != 0) {
             delete marketEarningDistributionUpkeepIds[market];
             try automate.cancelUpkeep(upkeepId) {} catch Error(string memory reason) {
+                //slither-disable-next-line reentrancy-events
                 emit catchErr("cancelUpkeep", reason);
             }
         }
