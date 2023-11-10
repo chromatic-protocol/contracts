@@ -11,6 +11,25 @@ import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/ma
  * @dev Interface for the ChromaticRouter contract.
  */
 interface IChromaticRouter is IChromaticLiquidityCallback {
+
+    /**
+     * @dev Emitted when a position is opened.
+     * @param marketAddress The address of the market.
+     * @param trader The owner of The account
+     * @param account The account The address of the account opening the position.
+     * @param tradingFee The trading fee associated with the position.
+     * @param tradingFeeUSD The trading fee in USD
+     * @param referrer The address of a referrer
+     */
+    event OpenPosition(
+        address indexed marketAddress,
+        address indexed trader,
+        address indexed account,
+        uint256 tradingFee,
+        uint256 tradingFeeUSD,
+        address referrer
+    );
+
     /**
      * @dev Emitted when a new account is created.
      * @param account The address of the created account.

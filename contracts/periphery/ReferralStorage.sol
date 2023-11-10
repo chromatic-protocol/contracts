@@ -6,7 +6,7 @@ import {IReferralStorage} from "@chromatic-protocol/contracts/periphery/interfac
 contract ReferralStorage is IReferralStorage {
     mapping(address trader => address referrer) public override referredBy;
 
-    address public router;
+    address public immutable router;
 
     error OnlyAccessableByRouter();
 
@@ -16,6 +16,7 @@ contract ReferralStorage is IReferralStorage {
     }
 
     constructor(address router_) {
+        require(router_ != address(0));
         router = router_;
     }
 

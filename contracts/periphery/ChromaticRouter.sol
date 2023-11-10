@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -18,12 +19,15 @@ import {AccountFactory} from "@chromatic-protocol/contracts/periphery/base/Accou
 import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
 import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
 import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
 /**
  * @title ChromaticRouter
  * @dev A router contract that facilitates liquidity provision and trading on Chromatic.
  */
 contract ChromaticRouter is AccountFactory, VerifyCallback {
+    using Math for uint256;
     using SignedMath for int256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -258,14 +262,57 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
     ) external override returns (OpenPositionInfo memory) {
-        return
-            _getAccount(msg.sender).openPosition(
-                market,
-                qty,
-                takerMargin,
-                makerMargin,
-                maxAllowableTradingFee
-            );
+        return _openPosition(market, qty, takerMargin, makerMargin, maxAllowableTradingFee);
+    }
+
+    function _openPosition(
+        address market,
+        int256 qty,
+        uint256 takerMargin,
+        uint256 makerMargin,
+        uint256 maxAllowableTradingFee
+    ) internal returns (OpenPositionInfo memory openPositionInfo) {
+        ChromaticAccount account = _getAccount(msg.sender);
+        openPositionInfo = account.openPosition(
+            market,
+            qty,
+            takerMargin,
+            makerMargin,
+            maxAllowableTradingFee
+        );
+
+        //slither-disable-next-line reentrancy-events
+        emit OpenPosition(
+            market,
+            msg.sender,
+            address(account),
+            openPositionInfo.tradingFee,
+            _calcUsdPrice(market, openPositionInfo.tradingFee),
+            referralStorage.referredBy(msg.sender)
+        );
+    }
+
+    /**
+     * @dev Calculates the price in USD for a specified amount of the settlement token in a ChromaticMarket.
+     * @param market The address of the ChromaticMarket contract.
+     * @param amount The amount of the settlement token.
+     * @return The price in USD as an int256.
+     */
+    function _calcUsdPrice(address market, uint256 amount) internal view returns (uint256) {
+        IERC20Metadata settlementToken = IChromaticMarket(market).settlementToken();
+
+        IOracleProvider oracleProvider = IOracleProvider(
+            IChromaticMarketFactory(marketFactory).getSettlementTokenOracleProvider(
+                address(settlementToken)
+            )
+        );
+
+        int256 latestPrice = oracleProvider.currentVersion().price;
+
+        uint256 unsignedLatestPrice = uint256(latestPrice.max(0));
+
+        // token amount * oracle price / token decimals
+        return amount.mulDiv(unsignedLatestPrice, 10 ** settlementToken.decimals());
     }
 
     /**
@@ -282,14 +329,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
         if (address(referralStorage) != address(0)) {
             referralStorage.setReferrer(msg.sender, referrer);
         }
-        return
-            _getAccount(msg.sender).openPosition(
-                market,
-                qty,
-                takerMargin,
-                makerMargin,
-                maxAllowableTradingFee
-            );
+        return _openPosition(market, qty, takerMargin, makerMargin, maxAllowableTradingFee);
     }
 
     /**

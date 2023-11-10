@@ -56,6 +56,7 @@ abstract contract AccountFactory is IChromaticRouter {
         if (address(referralStorage) != address(0)) {
             referralStorage.setReferrer(msg.sender, referrer);
         }
+        //slither-disable-next-line reentrancy-events
         _createAccount(msg.sender);
     }
 
