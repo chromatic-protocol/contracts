@@ -11,7 +11,6 @@ import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/ma
  * @dev Interface for the ChromaticRouter contract.
  */
 interface IChromaticRouter is IChromaticLiquidityCallback {
-
     /**
      * @dev Emitted when a position is opened.
      * @param marketAddress The address of the market.
@@ -19,15 +18,13 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      * @param account The account The address of the account opening the position.
      * @param tradingFee The trading fee associated with the position.
      * @param tradingFeeUSD The trading fee in USD
-     * @param referrer The address of a referrer
      */
     event OpenPosition(
         address indexed marketAddress,
         address indexed trader,
         address indexed account,
         uint256 tradingFee,
-        uint256 tradingFeeUSD,
-        address referrer
+        uint256 tradingFeeUSD
     );
 
     /**
@@ -52,25 +49,6 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
         uint256 takerMargin,
         uint256 makerMargin,
         uint256 maxAllowableTradingFee
-    ) external returns (OpenPositionInfo memory);
-
-    /**
-     * @dev Opens a new position in a ChromaticMarket contract.
-     * @param market The address of the ChromaticMarket contract.
-     * @param qty The quantity of the position.
-     * @param takerMargin The margin amount for the taker.
-     * @param makerMargin The margin amount for the maker.
-     * @param maxAllowableTradingFee The maximum allowable trading fee.
-     * @param referrer The referrer address.
-     * @return position The new position.
-     */
-    function openPositionWithReferrer(
-        address market,
-        int256 qty,
-        uint256 takerMargin,
-        uint256 makerMargin,
-        uint256 maxAllowableTradingFee,
-        address referrer
     ) external returns (OpenPositionInfo memory);
 
     /**
@@ -137,14 +115,6 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
      *      Emits an `AccountCreated` event upon successful creation.
      */
     function createAccount() external;
-
-    /**
-     * @notice Creates a new user account.
-     * @dev Only one account can be created per user.
-     *      Emits an `AccountCreated` event upon successful creation.
-     * @param referrer The referrer address.
-     */
-    function createAccountWithReferrer(address referrer) external;
 
     /**
      * @notice Retrieves the account of the caller.

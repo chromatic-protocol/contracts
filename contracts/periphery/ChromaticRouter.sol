@@ -287,8 +287,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             msg.sender,
             address(account),
             openPositionInfo.tradingFee,
-            _calcUsdPrice(market, openPositionInfo.tradingFee),
-            referralStorage.referredBy(msg.sender)
+            _calcUsdPrice(market, openPositionInfo.tradingFee)
         );
     }
 
@@ -313,23 +312,6 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
 
         // token amount * oracle price / token decimals
         return amount.mulDiv(unsignedLatestPrice, 10 ** settlementToken.decimals());
-    }
-
-    /**
-     * @inheritdoc IChromaticRouter
-     */
-    function openPositionWithReferrer(
-        address market,
-        int256 qty,
-        uint256 takerMargin,
-        uint256 makerMargin,
-        uint256 maxAllowableTradingFee,
-        address referrer
-    ) external override returns (OpenPositionInfo memory) {
-        if (address(referralStorage) != address(0)) {
-            referralStorage.setReferrer(msg.sender, referrer);
-        }
-        return _openPosition(market, qty, takerMargin, makerMargin, maxAllowableTradingFee);
     }
 
     /**
