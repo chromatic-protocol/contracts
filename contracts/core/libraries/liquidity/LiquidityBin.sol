@@ -58,6 +58,7 @@ library LiquidityBinLib {
         if (self._liquidity.needSettle(ctx)) {
             uint256 clbTokenId = self.clbTokenId;
 
+            //slither-disable-next-line calls-loop
             self._liquidity.settlePendingLiquidity(
                 ctx,
                 self.value(ctx),
