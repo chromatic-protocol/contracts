@@ -26,7 +26,7 @@ interface IChromaticRouter is IChromaticLiquidityCallback {
         address indexed trader,
         address indexed account,
         uint256 tradingFee,
-        int256 tradingFeeUSD,
+        uint256 tradingFeeUSD,
         address referrer
     );
 

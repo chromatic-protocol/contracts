@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -26,6 +27,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
  * @dev A router contract that facilitates liquidity provision and trading on Chromatic.
  */
 contract ChromaticRouter is AccountFactory, VerifyCallback {
+    using Math for uint256;
     using SignedMath for int256;
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -296,7 +298,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
      * @param amount The amount of the settlement token.
      * @return The price in USD as an int256.
      */
-    function _calcUsdPrice(address market, uint256 amount) internal view returns (int256) {
+    function _calcUsdPrice(address market, uint256 amount) internal view returns (uint256) {
         IERC20Metadata settlementToken = IChromaticMarket(market).settlementToken();
 
         IOracleProvider oracleProvider = IOracleProvider(
@@ -307,8 +309,10 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
 
         int256 latestPrice = oracleProvider.currentVersion().price;
 
+        uint256 unsignedLatestPrice = uint256(latestPrice.max(0));
+
         // token amount * oracle price / token decimals
-        return (int256(amount) * latestPrice) / int256(10 ** settlementToken.decimals());
+        return amount.mulDiv(unsignedLatestPrice, 10 ** settlementToken.decimals());
     }
 
     /**
