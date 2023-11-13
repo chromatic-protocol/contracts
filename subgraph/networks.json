@@ -1,0 +1,8 @@
+{
+  "arbitrum-goerli": {
+    "ChromaticRouter": {
+      "address": "0x63ecE4C05B8fB272D16844E96702Ea2f26370982",
+      "startBlock": 0
+    }
+  }
+}

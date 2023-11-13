@@ -1,0 +1,27 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ChromaticRouter
+    network: arbitrum-goerli
+    source:
+      address: "0x63ecE4C05B8fB272D16844E96702Ea2f26370982"
+      abi: ChromaticRouter
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AccountCreated
+        - OpenPosition
+      abis:
+        - name: ChromaticRouter
+          file: ./abis/ChromaticRouter.json
+      eventHandlers:
+        - event: AccountCreated(indexed address,indexed address)
+          handler: handleAccountCreated
+        - event: OpenPosition(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleOpenPosition
+      file: ./src/chromatic-router.ts

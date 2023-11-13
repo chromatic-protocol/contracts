@@ -1,0 +1,20 @@
+type AccountCreated @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  owner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OpenPosition @entity(immutable: true) {
+  id: Bytes!
+  marketAddress: Bytes! # address
+  trader: Bytes! # address
+  account: Bytes! # address
+  tradingFee: BigInt! # uint256
+  tradingFeeUSD: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

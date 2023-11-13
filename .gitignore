@@ -37,3 +37,6 @@ docs/out
 
 deployments/anvil*
 wagmi/
+
+subgraph/build
+subgraph/generated
