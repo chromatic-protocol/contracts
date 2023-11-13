@@ -1,0 +1,27 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ChromaticRouter
+    network: '{{network}}'
+    source:
+      address: '{{ChromaticRouter}}'
+      abi: ChromaticRouter
+      startBlock: {{blockNumber}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AccountCreated
+        - OpenPosition
+      abis:
+        - name: ChromaticRouter
+          file: ./abis/ChromaticRouter.json
+      eventHandlers:
+        - event: AccountCreated(indexed address,indexed address)
+          handler: handleAccountCreated
+        - event: OpenPosition(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleOpenPosition
+      file: ./src/chromatic-router.ts
