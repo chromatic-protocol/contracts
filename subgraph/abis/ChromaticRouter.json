@@ -1,13 +1,25 @@
 [
   {
     "inputs": [
-      { "internalType": "address", "name": "_marketFactory", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_marketFactory",
+        "type": "address"
+      }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
-  { "inputs": [], "name": "NotMarket", "type": "error" },
-  { "inputs": [], "name": "OnlyAccessableByDao", "type": "error" },
+  {
+    "inputs": [],
+    "name": "NotMarket",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyAccessableByDao",
+    "type": "error"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -79,29 +91,61 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "int16", "name": "feeRate", "type": "int16" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" },
-      { "internalType": "address", "name": "recipient", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "int16",
+        "name": "feeRate",
+        "type": "int16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
     ],
     "name": "addLiquidity",
     "outputs": [
       {
         "components": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "oracleVersion",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "amount", "type": "uint256" },
-          { "internalType": "address", "name": "recipient", "type": "address" },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
           {
             "internalType": "enum LpAction",
             "name": "action",
             "type": "uint8"
           },
-          { "internalType": "int16", "name": "tradingFeeRate", "type": "int16" }
+          {
+            "internalType": "int16",
+            "name": "tradingFeeRate",
+            "type": "int16"
+          }
         ],
         "internalType": "struct LpReceipt",
         "name": "receipt",
@@ -113,29 +157,61 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "address", "name": "recipient", "type": "address" },
-      { "internalType": "int16[]", "name": "feeRates", "type": "int16[]" },
-      { "internalType": "uint256[]", "name": "amounts", "type": "uint256[]" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "int16[]",
+        "name": "feeRates",
+        "type": "int16[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "amounts",
+        "type": "uint256[]"
+      }
     ],
     "name": "addLiquidityBatch",
     "outputs": [
       {
         "components": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "oracleVersion",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "amount", "type": "uint256" },
-          { "internalType": "address", "name": "recipient", "type": "address" },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
           {
             "internalType": "enum LpAction",
             "name": "action",
             "type": "uint8"
           },
-          { "internalType": "int16", "name": "tradingFeeRate", "type": "int16" }
+          {
+            "internalType": "int16",
+            "name": "tradingFeeRate",
+            "type": "int16"
+          }
         ],
         "internalType": "struct LpReceipt[]",
         "name": "lpReceipts",
@@ -152,8 +228,16 @@
         "name": "settlementToken",
         "type": "address"
       },
-      { "internalType": "address", "name": "vault", "type": "address" },
-      { "internalType": "bytes", "name": "data", "type": "bytes" }
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
     ],
     "name": "addLiquidityBatchCallback",
     "outputs": [],
@@ -167,8 +251,16 @@
         "name": "settlementToken",
         "type": "address"
       },
-      { "internalType": "address", "name": "vault", "type": "address" },
-      { "internalType": "bytes", "name": "data", "type": "bytes" }
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
     ],
     "name": "addLiquidityCallback",
     "outputs": [],
@@ -177,8 +269,16 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "uint256", "name": "receiptId", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "receiptId",
+        "type": "uint256"
+      }
     ],
     "name": "claimLiquidity",
     "outputs": [],
@@ -187,7 +287,11 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
       {
         "internalType": "uint256[]",
         "name": "_receiptIds",
@@ -206,10 +310,26 @@
         "name": "_receiptIds",
         "type": "uint256[]"
       },
-      { "internalType": "int16[]", "name": "", "type": "int16[]" },
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
-      { "internalType": "bytes", "name": "", "type": "bytes" }
+      {
+        "internalType": "int16[]",
+        "name": "",
+        "type": "int16[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
     ],
     "name": "claimLiquidityBatchCallback",
     "outputs": [],
@@ -218,11 +338,31 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "receiptId", "type": "uint256" },
-      { "internalType": "int16", "name": "", "type": "int16" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "bytes", "name": "", "type": "bytes" }
+      {
+        "internalType": "uint256",
+        "name": "receiptId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int16",
+        "name": "",
+        "type": "int16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
     ],
     "name": "claimLiquidityCallback",
     "outputs": [],
@@ -231,8 +371,16 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "uint256", "name": "positionId", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "positionId",
+        "type": "uint256"
+      }
     ],
     "name": "claimPosition",
     "outputs": [],
@@ -241,8 +389,16 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "uint256", "name": "positionId", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "positionId",
+        "type": "uint256"
+      }
     ],
     "name": "closePosition",
     "outputs": [],
@@ -259,39 +415,81 @@
   {
     "inputs": [],
     "name": "getAccount",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "address", "name": "owner", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
     ],
     "name": "getLpReceiptIds",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      }
     ],
     "name": "getLpReceiptIds",
     "outputs": [
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" }
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "int256", "name": "qty", "type": "int256" },
-      { "internalType": "uint256", "name": "takerMargin", "type": "uint256" },
-      { "internalType": "uint256", "name": "makerMargin", "type": "uint256" },
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "int256",
+        "name": "qty",
+        "type": "int256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "takerMargin",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "makerMargin",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "maxAllowableTradingFee",
@@ -302,13 +500,21 @@
     "outputs": [
       {
         "components": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "openVersion",
             "type": "uint256"
           },
-          { "internalType": "int256", "name": "qty", "type": "int256" },
+          {
+            "internalType": "int256",
+            "name": "qty",
+            "type": "int256"
+          },
           {
             "internalType": "uint256",
             "name": "openTimestamp",
@@ -324,7 +530,11 @@
             "name": "makerMargin",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "tradingFee", "type": "uint256" }
+          {
+            "internalType": "uint256",
+            "name": "tradingFee",
+            "type": "uint256"
+          }
         ],
         "internalType": "struct OpenPositionInfo",
         "name": "",
@@ -336,33 +546,61 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "int16", "name": "feeRate", "type": "int16" },
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "int16",
+        "name": "feeRate",
+        "type": "int16"
+      },
       {
         "internalType": "uint256",
         "name": "clbTokenAmount",
         "type": "uint256"
       },
-      { "internalType": "address", "name": "recipient", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
     ],
     "name": "removeLiquidity",
     "outputs": [
       {
         "components": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "oracleVersion",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "amount", "type": "uint256" },
-          { "internalType": "address", "name": "recipient", "type": "address" },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
           {
             "internalType": "enum LpAction",
             "name": "action",
             "type": "uint8"
           },
-          { "internalType": "int16", "name": "tradingFeeRate", "type": "int16" }
+          {
+            "internalType": "int16",
+            "name": "tradingFeeRate",
+            "type": "int16"
+          }
         ],
         "internalType": "struct LpReceipt",
         "name": "receipt",
@@ -374,9 +612,21 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "address", "name": "recipient", "type": "address" },
-      { "internalType": "int16[]", "name": "feeRates", "type": "int16[]" },
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "int16[]",
+        "name": "feeRates",
+        "type": "int16[]"
+      },
       {
         "internalType": "uint256[]",
         "name": "clbTokenAmounts",
@@ -387,20 +637,36 @@
     "outputs": [
       {
         "components": [
-          { "internalType": "uint256", "name": "id", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "oracleVersion",
             "type": "uint256"
           },
-          { "internalType": "uint256", "name": "amount", "type": "uint256" },
-          { "internalType": "address", "name": "recipient", "type": "address" },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
           {
             "internalType": "enum LpAction",
             "name": "action",
             "type": "uint8"
           },
-          { "internalType": "int16", "name": "tradingFeeRate", "type": "int16" }
+          {
+            "internalType": "int16",
+            "name": "tradingFeeRate",
+            "type": "int16"
+          }
         ],
         "internalType": "struct LpReceipt[]",
         "name": "lpReceipts",
@@ -412,13 +678,21 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "clbToken", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "clbToken",
+        "type": "address"
+      },
       {
         "internalType": "uint256[]",
         "name": "clbTokenIds",
         "type": "uint256[]"
       },
-      { "internalType": "bytes", "name": "data", "type": "bytes" }
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
     ],
     "name": "removeLiquidityBatchCallback",
     "outputs": [],
@@ -427,9 +701,21 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "clbToken", "type": "address" },
-      { "internalType": "uint256", "name": "clbTokenId", "type": "uint256" },
-      { "internalType": "bytes", "name": "data", "type": "bytes" }
+      {
+        "internalType": "address",
+        "name": "clbToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "clbTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
     ],
     "name": "removeLiquidityCallback",
     "outputs": [],
@@ -438,8 +724,16 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
-      { "internalType": "uint256", "name": "receiptId", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "receiptId",
+        "type": "uint256"
+      }
     ],
     "name": "withdrawLiquidity",
     "outputs": [],
@@ -448,7 +742,11 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "market", "type": "address" },
+      {
+        "internalType": "address",
+        "name": "market",
+        "type": "address"
+      },
       {
         "internalType": "uint256[]",
         "name": "_receiptIds",
@@ -467,10 +765,26 @@
         "name": "_receiptIds",
         "type": "uint256[]"
       },
-      { "internalType": "int16[]", "name": "", "type": "int16[]" },
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
-      { "internalType": "uint256[]", "name": "", "type": "uint256[]" },
-      { "internalType": "bytes", "name": "", "type": "bytes" }
+      {
+        "internalType": "int16[]",
+        "name": "",
+        "type": "int16[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
     ],
     "name": "withdrawLiquidityBatchCallback",
     "outputs": [],
@@ -479,11 +793,31 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "receiptId", "type": "uint256" },
-      { "internalType": "int16", "name": "", "type": "int16" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "bytes", "name": "", "type": "bytes" }
+      {
+        "internalType": "uint256",
+        "name": "receiptId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int16",
+        "name": "",
+        "type": "int16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
     ],
     "name": "withdrawLiquidityCallback",
     "outputs": [],
