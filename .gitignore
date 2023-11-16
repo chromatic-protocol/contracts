@@ -40,3 +40,4 @@ wagmi/
 
 subgraph/build
 subgraph/generated
+subgraph/subgraph.yaml
