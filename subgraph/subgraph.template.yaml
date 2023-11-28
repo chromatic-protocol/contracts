@@ -2,7 +2,7 @@ specVersion: 0.0.5
 schema:
   file: ./schema.graphql
 dataSources:
-  - kind: ethereum
+  - kind: ethereum/contract
     name: ChromaticRouter
     network: '{{network}}'
     source:
@@ -25,3 +25,26 @@ dataSources:
         - event: OpenPosition(indexed address,indexed address,indexed address,uint256,uint256)
           handler: handleOpenPosition
       file: ./src/chromatic-router.ts
+
+  - kind: ethereum/contract
+    name: IChromaticAccount
+    network: '{{network}}'
+    source:
+      abi: IChromaticAccount
+      startBlock: {{blockNumber}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - OpenPosition
+        - ClosePosition
+      abis:
+        - name: IChromaticAccount
+          file: ./abis/IChromaticAccount.json
+      eventHandlers:
+        - event: OpenPosition(indexed address,indexed uint256,uint256,int256,uint256,uint256,uint256,uint256)
+          handler: handleOpenPosition
+        - event: ClosePosition(indexed address,indexed uint256,uint256,uint256)
+          handler: handleClosePosition
+      file: ./src/chromatic-account.ts
