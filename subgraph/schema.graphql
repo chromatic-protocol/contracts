@@ -18,3 +18,22 @@ type OpenPosition @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+type Position @entity(immutable: true) {
+  id: ID!
+  marketAddress: Bytes! # address
+  positionId: BigInt!
+  qty: BigInt!
+  takerMargin: BigInt!
+  makerMargin: BigInt!
+  tradingFee: BigInt!
+  openVersion: BigInt!
+  openTimestamp: BigInt!
+}
+
+type ClosedPosition @entity(immutable: true) {
+  id: ID!
+  position: Position!
+  closeVersion: BigInt!
+  closeTimestamp: BigInt!
+}
