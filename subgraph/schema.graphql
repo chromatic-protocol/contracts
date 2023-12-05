@@ -48,4 +48,5 @@ type ClaimedPosition @entity(immutable: true) {
   realizedPnl: BigInt!
   interest: BigInt!
   cause: String!
+  blockTimestamp: BigInt!
 }

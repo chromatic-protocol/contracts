@@ -46,6 +46,7 @@ export function handleClaimPosition(event: ClaimPositionEvent): void {
     entity.realizedPnl = event.params.realizedPnl
     entity.interest = event.params.interest
     entity.cause = event.params.cause.toString()
+    entity.blockTimestamp = event.block.timestamp
 
     entity.save()
   }
