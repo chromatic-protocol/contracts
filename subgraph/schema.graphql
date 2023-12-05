@@ -21,6 +21,7 @@ type OpenPosition @entity(immutable: true) {
 
 type Position @entity(immutable: true) {
   id: ID!
+  account: Bytes! # address
   marketAddress: Bytes! # address
   positionId: BigInt!
   qty: BigInt!

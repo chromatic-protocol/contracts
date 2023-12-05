@@ -12,6 +12,7 @@ function id(marketAddress: Address, positionId: BigInt): string {
 
 export function handleOpenPosition(event: OpenPositionEvent): void {
   let entity = new Position(id(event.params.marketAddress, event.params.positionId))
+  entity.account = event.address
   entity.marketAddress = event.params.marketAddress
   entity.positionId = event.params.positionId
   entity.qty = event.params.qty
