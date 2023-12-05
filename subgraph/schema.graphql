@@ -29,6 +29,8 @@ type Position @entity(immutable: true) {
   tradingFee: BigInt!
   openVersion: BigInt!
   openTimestamp: BigInt!
+  closedPosition: ClosedPosition @derivedFrom(field: "position")
+  claimedPosition: ClaimedPosition @derivedFrom(field: "position")
 }
 
 type ClosedPosition @entity(immutable: true) {
@@ -36,4 +38,14 @@ type ClosedPosition @entity(immutable: true) {
   position: Position!
   closeVersion: BigInt!
   closeTimestamp: BigInt!
+}
+
+type ClaimedPosition @entity(immutable: true) {
+  id: ID!
+  position: Position!
+  entryPrice: BigInt!
+  exitPrice: BigInt!
+  realizedPnl: BigInt!
+  interest: BigInt!
+  cause: String!
 }
