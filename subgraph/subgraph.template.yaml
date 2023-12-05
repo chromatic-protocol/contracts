@@ -47,4 +47,6 @@ dataSources:
           handler: handleOpenPosition
         - event: ClosePosition(indexed address,indexed uint256,uint256,uint256)
           handler: handleClosePosition
+        - event: ClaimPosition(indexed address,indexed uint256,uint256,uint256,int256,uint256,bytes4)
+          handler: handleClaimPosition
       file: ./src/chromatic-account.ts
