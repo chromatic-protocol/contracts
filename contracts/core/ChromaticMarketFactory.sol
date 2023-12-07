@@ -11,6 +11,7 @@ import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/fac
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
 import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
+import {OracleProviderProperties, OracleProviderPropertiesLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
@@ -349,6 +350,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address oracleProvider,
         OracleProviderProperties memory properties
     ) external override onlyDao {
+        require(OracleProviderPropertiesLib.checkValidLeverageLevel(properties.leverageLevel));
         _oracleProviderRegistry.register(
             oracleProvider,
             properties.minTakeProfitBPS,
@@ -434,7 +436,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address oracleProvider,
         uint8 level
     ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
-        require(level <= 1);
+        require(OracleProviderPropertiesLib.checkValidLeverageLevel(level));
         _oracleProviderRegistry.setLeverageLevel(oracleProvider, level);
         emit UpdateLeverageLevel(oracleProvider, level);
     }
