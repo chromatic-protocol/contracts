@@ -7,6 +7,7 @@ import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interf
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
+import {OracleProviderProperties} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
 import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/ChromaticMarketFactory.sol";
 import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
 import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProviderMock.sol";
@@ -92,7 +93,7 @@ abstract contract BaseSetup is Test {
 
         factory.registerOracleProvider(
             address(oracleProvider),
-            IOracleProviderRegistry.OracleProviderProperties({
+            OracleProviderProperties({
                 minTakeProfitBPS: 1000, // 10%
                 maxTakeProfitBPS: 100000, // 1000%
                 leverageLevel: 0

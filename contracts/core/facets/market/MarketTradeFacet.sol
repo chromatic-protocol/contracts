@@ -18,6 +18,7 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
 import {MarketStorage, MarketStorageLib, PositionStorage, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
+import {OracleProviderProperties} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
 import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacetBase.sol";
 
 /**
@@ -134,12 +135,12 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
-        IOracleProviderRegistry.OracleProviderProperties memory properties
+        OracleProviderProperties memory properties
     ) private pure {
         uint256 absQty = qty.abs();
         uint256 leverage = absQty.mulDiv(LEVERAGE_PRECISION, takerMargin);
 
-        uint256 maxAllowableLeverage = (properties.leverageLevel + 1) * 10;
+        uint256 maxAllowableLeverage = properties.maxAllowableLeverage();
         if (leverage > maxAllowableLeverage * LEVERAGE_PRECISION)
             revert ExceedMaxAllowableLeverage();
 
