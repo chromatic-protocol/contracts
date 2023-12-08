@@ -102,16 +102,15 @@ library MarketDeployerLib {
     function _marketStateFacetCut(
         address marketStateFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](9);
+        bytes4[] memory functionSelectors = new bytes4[](8);
         functionSelectors[0] = IMarketState.factory.selector;
         functionSelectors[1] = IMarketState.settlementToken.selector;
         functionSelectors[2] = IMarketState.oracleProvider.selector;
         functionSelectors[3] = IMarketState.clbToken.selector;
         functionSelectors[4] = IMarketState.liquidator.selector;
         functionSelectors[5] = IMarketState.vault.selector;
-        functionSelectors[6] = IMarketState.keeperFeePayer.selector;
-        functionSelectors[7] = IMarketState.feeProtocol.selector;
-        functionSelectors[8] = IMarketState.setFeeProtocol.selector;
+        functionSelectors[6] = IMarketState.feeProtocol.selector;
+        functionSelectors[7] = IMarketState.setFeeProtocol.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketStateFacet,

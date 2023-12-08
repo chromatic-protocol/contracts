@@ -23,7 +23,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     using Math for uint256;
 
     IChromaticMarketFactory public immutable factory;
-    IKeeperFeePayer public immutable keeperFeePayer;
     IVaultEarningDistributor public immutable earningDistributor;
 
     mapping(address => uint256) public makerBalances; // settlement token => balance
@@ -95,18 +94,16 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     constructor(IChromaticMarketFactory _factory, IVaultEarningDistributor _earningDistributor) {
         factory = _factory;
         earningDistributor = _earningDistributor;
-        keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
     }
 
     // Internal Functions
-    
+
     /**
-    * @dev This function can only be called by the modifier onlyMarket.
-    */
+     * @dev This function can only be called by the modifier onlyMarket.
+     */
     function _checkMarket() internal view {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
     }
-
 
     // implement IVault
 
@@ -261,6 +258,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     ) internal returns (uint256 usedFee) {
         if (fee == 0) return 0;
 
+        IKeeperFeePayer keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
         // swap to native token
         SafeERC20.safeTransfer(IERC20(token), address(keeperFeePayer), margin);
 
