@@ -5,7 +5,6 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
-import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
@@ -17,7 +16,6 @@ struct MarketStorage {
     IOracleProvider oracleProvider;
     IERC20Metadata settlementToken;
     ICLBToken clbToken;
-    ILiquidator liquidator;
     IChromaticVault vault;
     LiquidityPool liquidityPool;
     uint8 feeProtocol;
@@ -114,6 +112,7 @@ library PositionStorageLib {
         _p.closeTimestamp = position.closeTimestamp;
         _p.takerMargin = position.takerMargin;
         _p.owner = position.owner;
+        _p.liquidator = position.liquidator;
         _p._feeProtocol = position._feeProtocol;
         // can not convert memory array to storage array
         delete _p._binMargins;

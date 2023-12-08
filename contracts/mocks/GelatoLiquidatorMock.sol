@@ -9,9 +9,8 @@ import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/ma
 contract GelatoLiquidatorMock is GelatoLiquidator {
     constructor(
         IChromaticMarketFactory _factory,
-        address _automate,
-        address opsProxyFactory
-    ) GelatoLiquidator(_factory, _automate, opsProxyFactory) {}
+        address _automate
+    ) GelatoLiquidator(_factory, _automate) {}
 
     // for test
     function liquidate(address market, uint256 positionId, uint256 fee) external {

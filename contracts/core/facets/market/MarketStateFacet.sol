@@ -4,7 +4,6 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
-import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
@@ -41,13 +40,6 @@ contract MarketStateFacet is MarketFacetBase, IMarketState {
      */
     function clbToken() external view returns (ICLBToken _token) {
         _token = MarketStorageLib.marketStorage().clbToken;
-    }
-
-    /**
-     * @inheritdoc IMarketState
-     */
-    function liquidator() external view returns (ILiquidator _liquidator) {
-        _liquidator = MarketStorageLib.marketStorage().liquidator;
     }
 
     /**

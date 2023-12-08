@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/PositionUtil.sol";
@@ -41,8 +42,9 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external override nonReentrant onlyLiquidator {
+    ) external override nonReentrant {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
+        if (msg.sender != position.liquidator) revert OnlyAccessableByLiquidator();
 
         MarketStorage storage ms = MarketStorageLib.marketStorage();
 
@@ -71,7 +73,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         );
         emit ClaimPositionByKeeper(position.owner, pnl, interest, usedKeeperFee, position);
 
-        ms.liquidator.cancelClaimPositionTask(position.id);
+        ILiquidator(position.liquidator).cancelClaimPositionTask(position.id);
     }
 
     /**
@@ -86,8 +88,9 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external override nonReentrant onlyLiquidator {
+    ) external override nonReentrant {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
+        if (msg.sender != position.liquidator) revert OnlyAccessableByLiquidator();
         if (position.closeVersion != 0) revert AlreadyClosedPosition();
 
         MarketStorage storage ms = MarketStorageLib.marketStorage();
@@ -116,7 +119,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
             _pnl > 0 ? CLAIM_TP : CLAIM_SL
         );
 
-        ms.liquidator.cancelLiquidationTask(positionId);
+        ILiquidator(position.liquidator).cancelLiquidationTask(positionId);
 
         emit Liquidate(position.owner, _pnl, interest, usedKeeperFee, position);
     }

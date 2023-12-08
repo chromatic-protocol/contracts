@@ -16,6 +16,7 @@ import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.
  * @param closeTimestamp The timestamp when the position was closed
  * @param takerMargin The amount of collateral that a trader must provide
  * @param owner The owner of the position, usually it is the account address of trader
+ * @param liquidator The liquidator contract address
  * @param _binMargins The bin margins for the position, it represents the amount of collateral for each bin
  * @param _feeProtocol The protocol fee for the market
  */
@@ -28,6 +29,7 @@ struct Position {
     uint256 closeTimestamp;
     uint256 takerMargin;
     address owner;
+    address liquidator;
     BinMargin[] _binMargins;
     uint8 _feeProtocol;
 }

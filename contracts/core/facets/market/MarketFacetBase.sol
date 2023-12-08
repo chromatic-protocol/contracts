@@ -33,16 +33,6 @@ abstract contract MarketFacetBase {
     }
 
     /**
-     * @dev Modifier to restrict access to only the liquidator contract.
-     *      Throws an `OnlyAccessableByLiquidator` error if the caller is not the chromatic liquidator contract.
-     */
-    modifier onlyLiquidator() {
-        if (msg.sender != address(MarketStorageLib.marketStorage().liquidator))
-            revert OnlyAccessableByLiquidator();
-        _;
-    }
-
-    /**
      * @dev Modifier to restrict a function to be called only by the vault contract.
      *      Throws an `OnlyAccessableByVault` error if the caller is not the chromatic vault contract.
      */
@@ -57,7 +47,6 @@ abstract contract MarketFacetBase {
      * @return The LP context.
      */
     function newLpContext(MarketStorage storage ms) internal view returns (LpContext memory) {
-        
         //slither-disable-next-line uninitialized-local
         IOracleProvider.OracleVersion memory _currentVersionCache;
         return

@@ -58,11 +58,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     error OnlyAccessableByDao();
 
     /**
-     * @dev Throws an error indicating that the chromatic liquidator address is already set.
-     */
-    error AlreadySetLiquidator();
-
-    /**
      * @dev Throws an error indicating that the chromatic vault address is already set.
      */
     error AlreadySetVault();
@@ -188,8 +183,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function setLiquidator(address _liquidator) external override onlyDao {
         require(_liquidator != address(0));
-        if (liquidator != address(0)) revert AlreadySetLiquidator();
-
         liquidator = _liquidator;
         emit SetLiquidator(liquidator);
     }
@@ -210,11 +203,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
-     *      Throws an `AlreadySetKeeperFeePayer` error if the keeper fee payer address has already been set.
      */
     function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
         require(_keeperFeePayer != address(0));
-
         keeperFeePayer = _keeperFeePayer;
         emit SetKeeperFeePayer(keeperFeePayer);
     }
