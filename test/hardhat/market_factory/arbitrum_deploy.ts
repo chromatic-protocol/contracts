@@ -1,11 +1,15 @@
 import {
   ChromaticMarketFactory,
   ChromaticVault,
+  FixedPriceSwapRouter,
   GelatoLiquidator,
-  KeeperFeePayerMock
+  GelatoVaultEarningDistributor,
+  IWETH9__factory,
+  KeeperFeePayer
 } from '@chromatic/typechain-types'
-import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatoVaultEarningDistributor'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
+import { ChainId } from '@uniswap/sdk-core'
+import { WETH9 } from '@uniswap/smart-order-router'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
@@ -45,18 +49,22 @@ export async function deploy() {
     }
   })
 
-  const keeperFeePayer = await deployContract<KeeperFeePayerMock>('KeeperFeePayerMock', {
-    args: [await marketFactory.getAddress()]
+  const weth = IWETH9__factory.connect(WETH9[ChainId.ARBITRUM_GOERLI].address).connect(deployer)
+  const fixedPriceSwapRouter = await deployContract<FixedPriceSwapRouter>('FixedPriceSwapRouter', {
+    args: [await weth.getAddress()]
   })
-  if ((await marketFactory.keeperFeePayer()) === ethers.ZeroAddress) {
-    await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
-  }
-  await (
-    await deployer.sendTransaction({
-      to: keeperFeePayer.getAddress(),
-      value: parseEther('5')
-    })
-  ).wait()
+  await (await weth.deposit({ value: parseEther('5') })).wait()
+
+  const keeperFeePayer = await deployContract<KeeperFeePayer>('KeeperFeePayer', {
+    args: [
+      await marketFactory.getAddress(),
+      await fixedPriceSwapRouter.getAddress(),
+      await weth.getAddress()
+    ]
+  })
+  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  await (await fixedPriceSwapRouter.addWhitelistedClient(keeperFeePayer.getAddress())).wait()
+
   console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate)
   const distributor = await deployContract<GelatoVaultEarningDistributor>(
     'GelatoVaultEarningDistributor',
@@ -87,5 +95,5 @@ export async function deploy() {
     await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
   }
 
-  return { marketFactory, keeperFeePayer, liquidator }
+  return { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter }
 }

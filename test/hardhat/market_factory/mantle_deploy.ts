@@ -1,9 +1,11 @@
 import {
   ChromaticMarketFactory,
   ChromaticVault,
+  FixedPriceSwapRouter,
   IMate2AutomationRegistry__factory,
   IOwnable__factory,
-  KeeperFeePayerMock,
+  IWETH9__factory,
+  KeeperFeePayer,
   Mate2Liquidator
 } from '@chromatic/typechain-types'
 import { Mate2VaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/Mate2VaultEarningDistributor'
@@ -12,6 +14,7 @@ import { ethers } from 'hardhat'
 
 import { deployContract } from '../utils'
 
+const WMNT_ADDRESS = '0xea12be2389c2254baad383c6ed1fa1e15202b52a'
 const MATE2_AUTOMATION_ADDRESS = '0xA58c89bB5a9EA4F1ceA61fF661ED2342D845441B'
 
 export async function deploy() {
@@ -49,20 +52,21 @@ export async function deploy() {
     }
   })
 
-  const keeperFeePayer = await deployContract<KeeperFeePayerMock>('KeeperFeePayerMock', {
-    args: [await marketFactory.getAddress()]
+  const wmnt = IWETH9__factory.connect(WMNT_ADDRESS).connect(deployer)
+  const fixedPriceSwapRouter = await deployContract<FixedPriceSwapRouter>('FixedPriceSwapRouter', {
+    args: [WMNT_ADDRESS]
   })
+  await (await wmnt.deposit({ value: parseEther('5') })).wait()
 
-  if ((await marketFactory.keeperFeePayer()) === ethers.ZeroAddress) {
-    await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
-  }
-
-  await (
-    await deployer.sendTransaction({
-      to: keeperFeePayer.getAddress(),
-      value: parseEther('5')
-    })
-  ).wait()
+  const keeperFeePayer = await deployContract<KeeperFeePayer>('KeeperFeePayer', {
+    args: [
+      await marketFactory.getAddress(),
+      await fixedPriceSwapRouter.getAddress(),
+      await wmnt.getAddress()
+    ]
+  })
+  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  await (await fixedPriceSwapRouter.addWhitelistedClient(keeperFeePayer.getAddress())).wait()
 
   const distributor = await deployContract<Mate2VaultEarningDistributor>(
     'Mate2VaultEarningDistributor',
@@ -111,5 +115,5 @@ export async function deploy() {
     await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
   }
 
-  return { marketFactory, keeperFeePayer, liquidator }
+  return { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter }
 }

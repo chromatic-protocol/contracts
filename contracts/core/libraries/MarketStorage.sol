@@ -7,7 +7,6 @@ import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/I
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
-import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
@@ -20,7 +19,6 @@ struct MarketStorage {
     ICLBToken clbToken;
     ILiquidator liquidator;
     IChromaticVault vault;
-    IKeeperFeePayer keeperFeePayer;
     LiquidityPool liquidityPool;
     uint8 feeProtocol;
 }

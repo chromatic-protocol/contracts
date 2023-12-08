@@ -15,11 +15,13 @@ export function deploy(target: string = 'arbitrum') {
       console.log('deploy target :', target)
       const marketFactoryDeploy =
         target === 'arbitrum' ? arbitrumMarketFactoryDeploy : mantleMarketFactoryDeploy
-      const { marketFactory, keeperFeePayer, liquidator } = await marketFactoryDeploy()
+      const { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter } =
+        await marketFactoryDeploy()
       const oracleProvider = await oracleProviderDeploy()
       const settlementToken = await deployContract<TestSettlementToken>('TestSettlementToken', {
-        args: ['Token', 'ST', parseEther("1000"), 86400]
+        args: ['Token', 'ST', parseEther('1000'), 86400]
       })
+      await fixedPriceSwapRouter.setEthPriceInToken(settlementToken, parseEther('1'))
 
       const oracleProviderAddress = await oracleProvider.getAddress()
       if (!(await marketFactory.isRegisteredOracleProvider(oracleProviderAddress))) {

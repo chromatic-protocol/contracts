@@ -68,11 +68,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     error AlreadySetVault();
 
     /**
-     * @dev Throws an error indicating that the keeper fee payer address is already set.
-     */
-    error AlreadySetKeeperFeePayer();
-
-    /**
      * @dev Throws an error indicating that the market settlement task address is already set.
      */
     error AlreadySetMarketSettlement();
@@ -219,7 +214,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
         require(_keeperFeePayer != address(0));
-        if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
 
         keeperFeePayer = _keeperFeePayer;
         emit SetKeeperFeePayer(keeperFeePayer);

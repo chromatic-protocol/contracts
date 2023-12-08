@@ -7,7 +7,6 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
-import {IKeeperFeePayer} from "@chromatic-protocol/contracts/core/interfaces/IKeeperFeePayer.sol";
 
 /**
  * @title IMarketState
@@ -56,12 +55,6 @@ interface IMarketState {
      * @return The vault contract.
      */
     function vault() external view returns (IChromaticVault);
-
-    /**
-     * @dev Returns the keeper fee payer contract for the market.
-     * @return The keeper fee payer contract.
-     */
-    function keeperFeePayer() external view returns (IKeeperFeePayer);
 
     /**
      * @notice Returns the denominator of the protocol's % share of the fees

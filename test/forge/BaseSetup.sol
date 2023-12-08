@@ -2,14 +2,17 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
+import {IWETH9} from "@chromatic-protocol/contracts/core/interfaces/IWETH9.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {OracleProviderProperties} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
 import {ChromaticMarketFactory} from "@chromatic-protocol/contracts/core/ChromaticMarketFactory.sol";
-import {KeeperFeePayerMock} from "@chromatic-protocol/contracts/mocks/KeeperFeePayerMock.sol";
+import {KeeperFeePayer} from "@chromatic-protocol/contracts/core/KeeperFeePayer.sol";
+import {FixedPriceSwapRouter} from "@chromatic-protocol/contracts/mocks/FixedPriceSwapRouter.sol";
 import {OracleProviderMock} from "@chromatic-protocol/contracts/mocks/OracleProviderMock.sol";
 import {TestSettlementToken} from "@chromatic-protocol/contracts/mocks/TestSettlementToken.sol";
 import {GelatoLiquidatorMock} from "@chromatic-protocol/contracts/mocks/GelatoLiquidatorMock.sol";
@@ -24,8 +27,22 @@ import {MarketLiquidateFacet} from "@chromatic-protocol/contracts/core/facets/ma
 import {MarketSettleFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketSettleFacet.sol";
 import {ChromaticRouter} from "@chromatic-protocol/contracts/periphery/ChromaticRouter.sol";
 
+contract WETH is IWETH9, ERC20 {
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {}
+
+    function deposit() external payable override {
+        _mint(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256 amount) external override {
+        _burn(msg.sender, amount);
+        (bool sent, bytes memory data) = msg.sender.call{value: amount}("");
+    }
+}
+
 abstract contract BaseSetup is Test {
-    KeeperFeePayerMock keeperFeePayer;
+    FixedPriceSwapRouter swapRouter;
+    KeeperFeePayer keeperFeePayer;
     OracleProviderMock oracleProvider;
     TestSettlementToken ctst;
     ChromaticMarketFactory factory;
@@ -35,6 +52,7 @@ abstract contract BaseSetup is Test {
     ICLBToken clbToken;
     ChromaticRouter router;
 
+    IWETH9 weth;
     IAutomate automate;
     IOpsProxyFactory opf;
 
@@ -68,8 +86,14 @@ abstract contract BaseSetup is Test {
         oracleProvider = new OracleProviderMock();
         oracleProvider.increaseVersion(1 ether);
 
+        weth = new WETH("Wrapped Ether", "wETH");
+        swapRouter = new FixedPriceSwapRouter(weth);
+        weth.deposit{value: 1000000 ether}();
+        weth.transfer(address(swapRouter), 1000000 ether);
+
         ctst = new TestSettlementToken("cTST", "cTST", 1000000 ether, 86400);
         ctst.faucet();
+        swapRouter.setEthPriceInToken(address(ctst), 1 ether);
 
         factory = new ChromaticMarketFactory(
             address(new MarketDiamondCutFacet()),
@@ -82,7 +106,8 @@ abstract contract BaseSetup is Test {
             address(new MarketSettleFacet())
         );
 
-        keeperFeePayer = new KeeperFeePayerMock(factory);
+        keeperFeePayer = new KeeperFeePayer(factory, swapRouter, weth);
+        swapRouter.addWhitelistedClient(address(keeperFeePayer));
         factory.setKeeperFeePayer(address(keeperFeePayer));
 
         vault = new ChromaticVaultMock(factory, IVaultEarningDistributor(address(this)));
