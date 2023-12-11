@@ -5,7 +5,6 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
-import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {CLBTokenDeployerLib} from "@chromatic-protocol/contracts/core/libraries/deployer/CLBTokenDeployer.sol";
 import {MarketStorage, MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
@@ -26,7 +25,6 @@ contract ChromaticMarket is Diamond {
         ms.oracleProvider = IOracleProvider(_oracleProvider);
         ms.settlementToken = IERC20Metadata(_settlementToken);
         ms.clbToken = ICLBToken(CLBTokenDeployerLib.deploy());
-        ms.liquidator = ILiquidator(factory.liquidator());
         ms.vault = IChromaticVault(factory.vault());
 
         ms.liquidityPool.initialize();

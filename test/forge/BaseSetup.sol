@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IAutomate, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
+import {IAutomate, IGelato, IProxyModule, IOpsProxyFactory} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {IWETH9} from "@chromatic-protocol/contracts/core/interfaces/IWETH9.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
@@ -54,13 +54,10 @@ abstract contract BaseSetup is Test {
 
     IWETH9 weth;
     IAutomate automate;
-    IOpsProxyFactory opf;
 
     function setUp() public virtual {
         IAutomate _automate = IAutomate(address(5555));
-        IOpsProxyFactory _opf = IOpsProxyFactory(address(6666));
         automate = _automate;
-        opf = _opf;
 
         vm.mockCall(
             address(_automate),
@@ -74,13 +71,28 @@ abstract contract BaseSetup is Test {
         );
         vm.mockCall(
             address(_automate),
-            abi.encodeWithSelector(_automate.createTask.selector),
-            abi.encode(bytes32(""))
+            abi.encodeWithSelector(IGelato(address(_automate)).feeCollector.selector),
+            abi.encode(address(_automate))
         );
         vm.mockCall(
-            address(_opf),
-            abi.encodeWithSelector(_opf.getProxyOf.selector),
-            abi.encode(address(this), true)
+            address(_automate),
+            abi.encodeWithSelector(_automate.taskModuleAddresses.selector),
+            abi.encode(address(_automate))
+        );
+        vm.mockCall(
+            address(_automate),
+            abi.encodeWithSelector(IProxyModule(address(_automate)).opsProxyFactory.selector),
+            abi.encode(address(_automate))
+        );
+        vm.mockCall(
+            address(_automate),
+            abi.encodeWithSelector(IOpsProxyFactory(address(_automate)).getProxyOf.selector),
+            abi.encode(address(_automate), true)
+        );
+        vm.mockCall(
+            address(_automate),
+            abi.encodeWithSelector(_automate.createTask.selector),
+            abi.encode(bytes32(""))
         );
 
         oracleProvider = new OracleProviderMock();
@@ -113,7 +125,7 @@ abstract contract BaseSetup is Test {
         vault = new ChromaticVaultMock(factory, IVaultEarningDistributor(address(this)));
         factory.setVault(address(vault));
 
-        liquidator = new GelatoLiquidatorMock(factory, address(_automate), address(_opf));
+        liquidator = new GelatoLiquidatorMock(factory, address(_automate));
         factory.setLiquidator(address(liquidator));
 
         factory.registerOracleProvider(

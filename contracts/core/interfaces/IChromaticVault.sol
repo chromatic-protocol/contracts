@@ -42,6 +42,18 @@ interface IChromaticVault is IVault, ILendingPool {
         uint256 marketBalance
     );
 
+    /**
+     * @notice Emitted when the vault earning distributor address is set.
+     * @param vaultEarningDistributor The vault earning distributor address.
+     * @param oldVaultEarningDistributor The old vault earning distributor address.
+     */
+    event VaultEarningDistributorSet(
+        address indexed vaultEarningDistributor,
+        address indexed oldVaultEarningDistributor
+    );
+
+    function setVaultEarningDistributor(address _earningDistributor) external;
+
     function pendingMakerEarnings(address token) external view returns (uint256);
 
     function pendingMarketEarnings(address market) external view returns (uint256);

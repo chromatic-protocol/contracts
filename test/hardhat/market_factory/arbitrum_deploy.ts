@@ -69,11 +69,7 @@ export async function deploy() {
   const distributor = await deployContract<GelatoVaultEarningDistributor>(
     'GelatoVaultEarningDistributor',
     {
-      args: [
-        await marketFactory.getAddress(),
-        GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-        ZeroAddress
-      ]
+      args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate]
     }
   )
 
@@ -85,11 +81,7 @@ export async function deploy() {
   }
 
   const liquidator = await deployContract<GelatoLiquidator>('GelatoLiquidator', {
-    args: [
-      await marketFactory.getAddress(),
-      GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-      ZeroAddress
-    ]
+    args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate]
   })
   if ((await marketFactory.liquidator()) === ZeroAddress) {
     await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()

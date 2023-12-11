@@ -90,15 +90,7 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
             takerMargin,
             settlementAmount
         );
-        _callClaimPositionCallback(
-            ctx,
-            position,
-            realizedPnl,
-            interest,
-            data,
-            address(ms.liquidator),
-            cause
-        );
+        _callClaimPositionCallback(ctx, position, realizedPnl, interest, data, cause);
 
         // Delete the claimed position from the positions mapping
         PositionStorageLib.positionStorage().deletePosition(position.id);
@@ -110,7 +102,6 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         int256 realizedPnl,
         uint256 interest,
         bytes memory data,
-        address liquidatorAddress,
         bytes4 cause
     ) internal {
         uint256 currentOracleVersion = ctx.currentOracleVersion().version;
@@ -137,7 +128,7 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
                 data
             )
         {} catch (bytes memory /* e */ /*lowLevelData*/) {
-            if (msg.sender != liquidatorAddress) {
+            if (msg.sender != position.liquidator) {
                 revert ClaimPositionCallbackError();
             }
         }

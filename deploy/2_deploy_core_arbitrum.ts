@@ -2,7 +2,6 @@ import { ChromaticMarketFactory__factory } from '@chromatic/typechain-types'
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
-import { ZeroAddress } from 'ethers'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -27,7 +26,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('gelato automate address', GELATO_ADDRESSES[echainId].automate)
   const { address: distributor } = await deploy('GelatoVaultEarningDistributor', {
     ...deployOpts,
-    args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+    args: [factory.address, GELATO_ADDRESSES[echainId].automate]
   })
   console.log(chalk.yellow(`✨ GelatoVaultEarningDistributor: ${distributor}`))
 
@@ -46,7 +45,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     network.name === 'anvil' ? 'GelatoLiquidatorMock' : 'GelatoLiquidator',
     {
       ...deployOpts,
-      args: [factory.address, GELATO_ADDRESSES[echainId].automate, ZeroAddress]
+      args: [factory.address, GELATO_ADDRESSES[echainId].automate]
     }
   )
   console.log(chalk.yellow(`✨ GelatoLiquidator: ${liquidator}`))

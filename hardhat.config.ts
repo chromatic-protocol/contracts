@@ -48,7 +48,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 19474553
+        blockNumber: 58355046
       },
       ...common,
       accounts: {

@@ -9,6 +9,8 @@ import {
   ChromaticVault__factory,
   FlashLoanExample,
   FlashLoanExample__factory,
+  GelatoTest,
+  GelatoTest__factory,
   ICLBToken,
   ICLBToken__factory,
   IChromaticMarket,
@@ -37,8 +39,7 @@ import {
   USDC_ON,
   WETH9
 } from '@uniswap/smart-order-router'
-import { MaxUint256, Signer, Wallet, ZeroAddress, parseUnits } from 'ethers'
-import gaussian from 'gaussian'
+import { Signer, Wallet, ZeroAddress } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
@@ -75,6 +76,7 @@ export class Contracts {
   private _cbtc: TestSettlementToken | undefined
   private _swapRouter!: ISwapRouter
   private _marketSettlement: Mate2MarketSettlement | undefined
+  private _gelatoTest: GelatoTest | undefined
 
   constructor(public readonly hre: HardhatRuntimeEnvironment) {}
 
@@ -129,6 +131,11 @@ export class Contracts {
         marketSettlementAddress,
         this._signer
       )
+    }
+
+    const gelatoTestAddress = await this.addressOf('GelatoTest')
+    if (gelatoTestAddress) {
+      this._gelatoTest = this.connectGelatoTest(gelatoTestAddress)
     }
   }
 
@@ -192,6 +199,10 @@ export class Contracts {
     return this._marketSettlement
   }
 
+  get gelatoTest(): GelatoTest | undefined {
+    return this._gelatoTest
+  }
+
   connectOracleProvider(address: string): IOracleProvider {
     return IOracleProvider__factory.connect(address, this._signer!)
   }
@@ -234,6 +245,10 @@ export class Contracts {
 
   connectTestSettlementToken(address: string): TestSettlementToken {
     return TestSettlementToken__factory.connect(address, this._signer)
+  }
+
+  connectGelatoTest(address: string): GelatoTest {
+    return GelatoTest__factory.connect(address, this._signer)
   }
 
   /*

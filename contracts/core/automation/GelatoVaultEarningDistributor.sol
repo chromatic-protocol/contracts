@@ -5,7 +5,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
 import {AutomateReady} from "@chromatic-protocol/contracts/core/automation/gelato/AutomateReady.sol";
-import {IAutomate, Module, ModuleData} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
+import {ModuleData, Module, TriggerType, IAutomate, IGelato} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {VaultEarningDistributorBase} from "@chromatic-protocol/contracts/core/automation/VaultEarningDistributorBase.sol";
 
 contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateReady {
@@ -14,14 +14,24 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
     mapping(address => bytes32) public makerEarningDistributionTaskIds; // settlement token => task id
     mapping(address => bytes32) public marketEarningDistributionTaskIds; // market => task id
 
+    /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
+    error OnlyAccessableByDao();
+
+    /**
+     * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
+     */
+    modifier onlyDao() {
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
+        _;
+    }
+
     constructor(
         IChromaticMarketFactory _factory,
-        address _automate,
-        address opsProxyFactory
-    )
-        VaultEarningDistributorBase(_factory)
-        AutomateReady(_automate, address(this), opsProxyFactory)
-    {}
+        address _automate
+    ) VaultEarningDistributorBase(_factory) AutomateReady(_automate, address(this)) {}
 
     /**
      * @inheritdoc IVaultEarningDistributor
@@ -35,13 +45,13 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
 
         moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
+        moduleData.modules[1] = Module.PROXY;
+        moduleData.modules[2] = Module.TRIGGER;
         moduleData.args[0] = _resolverModuleArg(
             abi.encodeCall(this.resolveMakerEarningDistribution, (token))
         );
-        moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
-        moduleData.args[2] = _proxyModuleArg();
+        moduleData.args[1] = _proxyModuleArg();
+        moduleData.args[2] = _timeTriggerModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
 
         makerEarningDistributionTaskIds[token] = automate.createTask(
             address(this),
@@ -51,6 +61,11 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
         );
     }
 
+    // for management
+    function cancelGelatoTask(bytes32 taskId) external onlyDao {
+        automate.cancelTask(taskId);
+    }
+
     /**
      * @inheritdoc IVaultEarningDistributor
      */
@@ -58,7 +73,11 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
         bytes32 taskId = makerEarningDistributionTaskIds[token];
         if (taskId != bytes32(0)) {
             delete makerEarningDistributionTaskIds[token];
-            automate.cancelTask(taskId);
+            try automate.cancelTask(taskId) {
+                emit CancelTaskSucceeded(taskId);
+            } catch {
+                emit CancelTaskFailed(taskId);
+            }
         }
     }
 
@@ -87,13 +106,13 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
         ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
 
         moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
+        moduleData.modules[1] = Module.PROXY;
+        moduleData.modules[2] = Module.TRIGGER;
         moduleData.args[0] = _resolverModuleArg(
             abi.encodeCall(this.resolveMarketEarningDistribution, market)
         );
-        moduleData.args[1] = _timeModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
-        moduleData.args[2] = _proxyModuleArg();
+        moduleData.args[1] = _proxyModuleArg();
+        moduleData.args[2] = _timeTriggerModuleArg(block.timestamp, DISTRIBUTION_INTERVAL);
 
         marketEarningDistributionTaskIds[market] = automate.createTask(
             address(this),
@@ -129,18 +148,19 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
 
     function _getFeeInfo() internal view override returns (uint256 fee, address feePayee) {
         (fee, ) = _getFeeDetails();
-        feePayee = automate.gelato();
+        feePayee = IGelato(automate.gelato()).feeCollector();
     }
 
     function _resolverModuleArg(bytes memory _resolverData) internal view returns (bytes memory) {
         return abi.encode(address(this), _resolverData);
     }
 
-    function _timeModuleArg(
+    function _timeTriggerModuleArg(
         uint256 _startTime,
         uint256 _interval
     ) internal pure returns (bytes memory) {
-        return abi.encode(uint128(_startTime), uint128(_interval));
+        bytes memory triggerConfig = abi.encode(uint128(_startTime), uint128(_interval));
+        return abi.encode(TriggerType.TIME, triggerConfig);
     }
 
     function _proxyModuleArg() internal pure returns (bytes memory) {
