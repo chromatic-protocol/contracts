@@ -106,10 +106,10 @@ jobs:
           commit-message: ${{ github.event.pull_request.title }}
           title: Changes from contracts
 
-      # make a PR to chromatic-protocol/liquidity-provider-tasks
+      # make a PR to chromatic-protocol/chromatic-tasks
       - uses: actions/checkout@v3
         with:
-          repository: chromatic-protocol/liquidity-provider-tasks
+          repository: chromatic-protocol/chromatic-tasks
           ref: main
           path: tasks
           token: ${{ steps.generate-token.outputs.token }}
