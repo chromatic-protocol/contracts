@@ -1,4 +1,3 @@
-import { USDC_ARBITRUM_GOERLI } from '@uniswap/smart-order-router'
 import { parseEther, parseUnits } from 'ethers'
 
 import { ethers } from 'hardhat'
@@ -15,11 +14,13 @@ export function deploy(target: string = 'arbitrum') {
       console.log('deploy target :', target)
       const marketFactoryDeploy =
         target === 'arbitrum' ? arbitrumMarketFactoryDeploy : mantleMarketFactoryDeploy
-      const { marketFactory, keeperFeePayer, liquidator } = await marketFactoryDeploy()
+      const { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter } =
+        await marketFactoryDeploy()
       const oracleProvider = await oracleProviderDeploy()
       const settlementToken = await deployContract<TestSettlementToken>('TestSettlementToken', {
-        args: ['Token', 'ST', parseEther("1000"), 86400]
+        args: ['Token', 'ST', parseEther('1000'), 86400]
       })
+      await fixedPriceSwapRouter.setEthPriceInToken(settlementToken, parseEther('1'))
 
       const oracleProviderAddress = await oracleProvider.getAddress()
       if (!(await marketFactory.isRegisteredOracleProvider(oracleProviderAddress))) {
@@ -37,10 +38,10 @@ export function deploy(target: string = 'arbitrum') {
           await marketFactory.registerSettlementToken(
             settlementToken.getAddress(),
             oracleProviderAddress,
-            parseUnits('10', USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
+            10000000n, // minimumMargin
             BigInt('1000'), // interestRate, 10%
             BigInt('500'), // flashLoanFeeRate, 5%
-            parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
+            parseUnits('1000', await settlementToken.decimals()), // earningDistributionThreshold, $1000
             BigInt('3000') // uniswapFeeRate, 0.3%),
           )
         ).wait()

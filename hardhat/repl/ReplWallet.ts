@@ -32,7 +32,7 @@ export class ReplWallet {
     signer: SignerWithAddress,
     addresses: {
       weth: string
-      usdc: string
+      tst: string
       swapRouter: string
       marketFactory: string
       oracleProvider: string
@@ -42,7 +42,7 @@ export class ReplWallet {
     ensureAccount: boolean
   ): Promise<ReplWallet> {
     const weth = IWETH9__factory.connect(addresses.weth, signer)
-    const usdc = IERC20Metadata__factory.connect(addresses.usdc, signer)
+    const tst = IERC20Metadata__factory.connect(addresses.tst, signer)
     const swapRouter = ISwapRouter__factory.connect(addresses.swapRouter, signer)
     const oracleProvider = IOracleProvider__factory.connect(addresses.oracleProvider, signer)
     const marketFactory = IChromaticMarketFactory__factory.connect(addresses.marketFactory, signer)
@@ -56,7 +56,7 @@ export class ReplWallet {
     const w = new ReplWallet(
       signer,
       weth,
-      usdc,
+      tst,
       swapRouter,
       oracleProvider,
       marketFactory,

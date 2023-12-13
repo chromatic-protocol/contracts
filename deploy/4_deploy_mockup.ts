@@ -40,16 +40,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ).wait()
   console.log(chalk.yellow('✨ Register OracleProvider'))
 
-  // await marketFactory.registerSettlementToken(
-  //   USDC_ARBITRUM_GOERLI.address,
-  //   parseUnits('10', USDC_ARBITRUM_GOERLI.decimals), // minimumMargin
-  //   BigInt('1000'), // interestRate, 10%
-  //   BigInt('500'), // flashLoanFeeRate, 5%
-  //   parseUnits('1000', USDC_ARBITRUM_GOERLI.decimals), // earningDistributionThreshold, $1000
-  //   BigInt('3000'), // uniswapFeeRate, 0.3%
-  //   deployOpts
-  // )
-  // console.log(chalk.yellow('✨ Register SettlementToken'))
   await (
     await marketFactory.registerSettlementToken(
       settlementTokenAddress,
@@ -70,8 +60,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   ).wait()
 
   console.log(chalk.yellow('✨ Create Market (cTST)'))
-  // await marketFactory.createMarket(oracleProviderAddress, USDC_ARBITRUM_GOERLI.address, deployOpts)
-  // console.log(chalk.yellow('✨ Create Market'))
   console.log(chalk.yellow('✨ Done!'))
 }
 

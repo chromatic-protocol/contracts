@@ -11,6 +11,7 @@ import {IMarketDeployer} from "@chromatic-protocol/contracts/core/interfaces/fac
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {ISettlementTokenRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/ISettlementTokenRegistry.sol";
 import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
+import {OracleProviderProperties, OracleProviderPropertiesLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
@@ -57,19 +58,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     error OnlyAccessableByDao();
 
     /**
-     * @dev Throws an error indicating that the chromatic liquidator address is already set.
-     */
-    error AlreadySetLiquidator();
-
-    /**
      * @dev Throws an error indicating that the chromatic vault address is already set.
      */
     error AlreadySetVault();
-
-    /**
-     * @dev Throws an error indicating that the keeper fee payer address is already set.
-     */
-    error AlreadySetKeeperFeePayer();
 
     /**
      * @dev Throws an error indicating that the market settlement task address is already set.
@@ -192,8 +183,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function setLiquidator(address _liquidator) external override onlyDao {
         require(_liquidator != address(0));
-        if (liquidator != address(0)) revert AlreadySetLiquidator();
-
         liquidator = _liquidator;
         emit SetLiquidator(liquidator);
     }
@@ -214,12 +203,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
-     *      Throws an `AlreadySetKeeperFeePayer` error if the keeper fee payer address has already been set.
      */
     function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
         require(_keeperFeePayer != address(0));
-        if (keeperFeePayer != address(0)) revert AlreadySetKeeperFeePayer();
-
         keeperFeePayer = _keeperFeePayer;
         emit SetKeeperFeePayer(keeperFeePayer);
     }
@@ -349,6 +335,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address oracleProvider,
         OracleProviderProperties memory properties
     ) external override onlyDao {
+        require(OracleProviderPropertiesLib.checkValidLeverageLevel(properties.leverageLevel));
         _oracleProviderRegistry.register(
             oracleProvider,
             properties.minTakeProfitBPS,
@@ -434,7 +421,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address oracleProvider,
         uint8 level
     ) external override onlyDao onlyRegisteredOracleProvider(oracleProvider) {
-        require(level <= 1);
+        require(OracleProviderPropertiesLib.checkValidLeverageLevel(level));
         _oracleProviderRegistry.setLeverageLevel(oracleProvider, level);
         emit UpdateLeverageLevel(oracleProvider, level);
     }

@@ -18,6 +18,7 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
 import {MarketStorage, MarketStorageLib, PositionStorage, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
+import {OracleProviderProperties} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
 import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacetBase.sol";
 
 /**
@@ -100,6 +101,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
     ) external override nonReentrant returns (OpenPositionInfo memory positionInfo) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         IChromaticMarketFactory factory = ms.factory;
+        address liquidator = factory.liquidator();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
 
         LpContext memory ctx = newLpContext(ms);
@@ -115,7 +117,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             factory.getOracleProviderProperties(address(ctx.oracleProvider))
         );
 
-        Position memory position = _newPosition(ctx, qty, takerMargin, ms.feeProtocol);
+        Position memory position = _newPosition(ctx, qty, takerMargin, ms.feeProtocol, liquidator);
         position.setBinMargins(
             liquidityPool.prepareBinMargins(ctx, position.qty, makerMargin, minMargin)
         );
@@ -125,7 +127,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         // write position
         PositionStorageLib.positionStorage().setPosition(position);
         // create keeper task
-        ms.liquidator.createLiquidationTask(position.id);
+        ILiquidator(liquidator).createLiquidationTask(position.id);
 
         emit OpenPosition(position.owner, position);
     }
@@ -134,12 +136,12 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         int256 qty,
         uint256 takerMargin,
         uint256 makerMargin,
-        IOracleProviderRegistry.OracleProviderProperties memory properties
+        OracleProviderProperties memory properties
     ) private pure {
         uint256 absQty = qty.abs();
         uint256 leverage = absQty.mulDiv(LEVERAGE_PRECISION, takerMargin);
 
-        uint256 maxAllowableLeverage = (properties.leverageLevel + 1) * 10;
+        uint256 maxAllowableLeverage = properties.maxAllowableLeverage();
         if (leverage > maxAllowableLeverage * LEVERAGE_PRECISION)
             revert ExceedMaxAllowableLeverage();
 
@@ -224,7 +226,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
 
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
-        ILiquidator liquidator = ms.liquidator;
+        ILiquidator liquidator = ILiquidator(position.liquidator);
 
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
@@ -289,14 +291,15 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         uint256 interest = _claimPosition(ctx, position, pnl, 0, recipient, data, CLAIM_USER);
         emit ClaimPosition(position.owner, pnl, interest, position);
 
-        ms.liquidator.cancelClaimPositionTask(position.id);
+        ILiquidator(position.liquidator).cancelClaimPositionTask(position.id);
     }
 
     function _newPosition(
         LpContext memory ctx,
         int256 qty,
         uint256 takerMargin,
-        uint8 feeProtocol
+        uint8 feeProtocol,
+        address liquidator
     ) private returns (Position memory) {
         PositionStorage storage ps = PositionStorageLib.positionStorage();
 
@@ -310,6 +313,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
                 closeTimestamp: 0,
                 takerMargin: takerMargin,
                 owner: msg.sender,
+                liquidator: liquidator,
                 _binMargins: new BinMargin[](0),
                 _feeProtocol: feeProtocol
             });

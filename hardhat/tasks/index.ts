@@ -1,5 +1,6 @@
-import './settlement-token'
-import './oracle-provider'
+import './fixed-price-swap-router'
 import './market'
+import './oracle-provider'
+import './settlement-token'
 import './upkeep'
 import './verify'

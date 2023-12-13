@@ -23,8 +23,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     using Math for uint256;
 
     IChromaticMarketFactory public immutable factory;
-    IKeeperFeePayer public immutable keeperFeePayer;
-    IVaultEarningDistributor public immutable earningDistributor;
+    IVaultEarningDistributor public earningDistributor;
 
     mapping(address => uint256) public makerBalances; // settlement token => balance
     mapping(address => uint256) public takerBalances; // settlement token => balance
@@ -34,6 +33,11 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     mapping(address => uint256) public pendingMarketEarnings; // market => earning
     mapping(address => uint256) public pendingDeposits; // settlement token => deposit
     mapping(address => uint256) public pendingWithdrawals; // settlement token => deposit
+
+    /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
+    error OnlyAccessableByDao();
 
     /**
      * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
@@ -59,6 +63,15 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      * @dev Throws an error indicating that the recipient has not paid the sufficient flash loan fee.
      */
     error NotEnoughFeePaid();
+
+    /**
+     * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
+     */
+    modifier onlyDao() {
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
+        _;
+    }
 
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
@@ -95,18 +108,16 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     constructor(IChromaticMarketFactory _factory, IVaultEarningDistributor _earningDistributor) {
         factory = _factory;
         earningDistributor = _earningDistributor;
-        keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
     }
 
     // Internal Functions
-    
+
     /**
-    * @dev This function can only be called by the modifier onlyMarket.
-    */
+     * @dev This function can only be called by the modifier onlyMarket.
+     */
     function _checkMarket() internal view {
         if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
     }
-
 
     // implement IVault
 
@@ -261,6 +272,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     ) internal returns (uint256 usedFee) {
         if (fee == 0) return 0;
 
+        IKeeperFeePayer keeperFeePayer = IKeeperFeePayer(factory.keeperFeePayer());
         // swap to native token
         SafeERC20.safeTransfer(IERC20(token), address(keeperFeePayer), margin);
 
@@ -383,6 +395,46 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     }
 
     // automation - distribute maker earning to each markets
+
+    // for management
+    function migrateEarningDistributionTasks(
+        IVaultEarningDistributor oldEarningDistributor
+    ) external nonReentrant onlyDao {
+        require(address(oldEarningDistributor) != address(earningDistributor));
+
+        // migrate tasks
+        address[] memory markets = factory.getMarkets();
+        for (uint256 i; i < markets.length; ) {
+            oldEarningDistributor.cancelMarketEarningDistributionTask(markets[i]);
+            earningDistributor.createMarketEarningDistributionTask(markets[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        address[] memory tokens = factory.registeredSettlementTokens();
+        for (uint256 i; i < tokens.length; ) {
+            oldEarningDistributor.cancelMakerEarningDistributionTask(tokens[i]);
+            earningDistributor.createMakerEarningDistributionTask(tokens[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc IChromaticVault
+     * @dev This function can only be called by the DAO address.
+     */
+    function setVaultEarningDistributor(
+        address _earningDistributor
+    ) external override nonReentrant onlyDao {
+        require(_earningDistributor != address(0));
+        require(_earningDistributor != address(earningDistributor));
+
+        emit VaultEarningDistributorSet(_earningDistributor, address(earningDistributor));
+        earningDistributor = IVaultEarningDistributor(_earningDistributor);
+    }
 
     /**
      * @inheritdoc IChromaticVault

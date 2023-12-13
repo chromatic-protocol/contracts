@@ -47,8 +47,8 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 19474553
+        url: `https://arb-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+        blockNumber: 2618307
       },
       ...common,
       accounts: {
@@ -88,11 +88,11 @@ const config: HardhatUserConfig = {
       url: 'https://nova.arbitrum.io/rpc',
       chainId: 42170
     },
-    arbitrum_goerli: {
+    arbitrum_sepolia: {
       // testnet
       ...common,
-      url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-      chainId: 421613
+      url: `https://arb-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+      chainId: 421614
     },
     arbitrum_one: {
       // mainnet
@@ -129,11 +129,19 @@ const config: HardhatUserConfig = {
   docgen: docgenConfig,
   etherscan: {
     apiKey: {
-      arbitrumGoerli: process.env.ARBISCAN_GOERLI_API_KEY!,
+      arbitrumSepolia: process.env.ARBISCAN_SEPOLIA_API_KEY!,
       mantleTestnet: 'test', // prevent MissingApiKeyError
       mantle: 'test' // prevent MissingApiKeyError
     },
     customChains: [
+      {
+        network: 'arbitrumSepolia',
+        chainId: 421614,
+        urls: {
+          apiURL: 'https://api-sepolia.arbiscan.io/api',
+          browserURL: 'https://sepolia.arbiscan.io/'
+        }
+      },
       {
         network: 'mantle',
         chainId: 5000,

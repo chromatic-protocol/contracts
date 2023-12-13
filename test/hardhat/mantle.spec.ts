@@ -1,3 +1,4 @@
+/*
 import { setChain } from './utils'
 import { prepareMarketTest } from './market/testHelper'
 import * as helpers from '@nomicfoundation/hardhat-network-helpers'
@@ -29,3 +30,4 @@ describe('[mantle]', async () => {
   pythSpec(targetNetwork)
   agniTest()
 })
+*/

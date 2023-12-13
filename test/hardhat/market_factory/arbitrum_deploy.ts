@@ -1,14 +1,20 @@
 import {
   ChromaticMarketFactory,
   ChromaticVault,
+  FixedPriceSwapRouter,
   GelatoLiquidator,
-  KeeperFeePayerMock
+  GelatoVaultEarningDistributor,
+  IWETH9__factory,
+  KeeperFeePayer
 } from '@chromatic/typechain-types'
-import { GelatoVaultEarningDistributor } from '@chromatic/typechain-types/contracts/core/automation/GelatoVaultEarningDistributor'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
+
+const WETH: { [key: number]: string } = {
+  421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
+}
 
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
@@ -45,27 +51,27 @@ export async function deploy() {
     }
   })
 
-  const keeperFeePayer = await deployContract<KeeperFeePayerMock>('KeeperFeePayerMock', {
-    args: [await marketFactory.getAddress()]
+  const weth = IWETH9__factory.connect(WETH[CHAIN_ID.ARBSEPOLIA]).connect(deployer)
+  const fixedPriceSwapRouter = await deployContract<FixedPriceSwapRouter>('FixedPriceSwapRouter', {
+    args: [await weth.getAddress()]
   })
-  if ((await marketFactory.keeperFeePayer()) === ethers.ZeroAddress) {
-    await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
-  }
-  await (
-    await deployer.sendTransaction({
-      to: keeperFeePayer.getAddress(),
-      value: parseEther('5')
-    })
-  ).wait()
-  console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate)
+  await (await weth.deposit({ value: parseEther('5') })).wait()
+
+  const keeperFeePayer = await deployContract<KeeperFeePayer>('KeeperFeePayer', {
+    args: [
+      await marketFactory.getAddress(),
+      await fixedPriceSwapRouter.getAddress(),
+      await weth.getAddress()
+    ]
+  })
+  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  await (await fixedPriceSwapRouter.addWhitelistedClient(keeperFeePayer.getAddress())).wait()
+
+  console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate)
   const distributor = await deployContract<GelatoVaultEarningDistributor>(
     'GelatoVaultEarningDistributor',
     {
-      args: [
-        await marketFactory.getAddress(),
-        GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-        ZeroAddress
-      ]
+      args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate]
     }
   )
 
@@ -77,15 +83,11 @@ export async function deploy() {
   }
 
   const liquidator = await deployContract<GelatoLiquidator>('GelatoLiquidator', {
-    args: [
-      await marketFactory.getAddress(),
-      GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate,
-      ZeroAddress
-    ]
+    args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate]
   })
   if ((await marketFactory.liquidator()) === ZeroAddress) {
     await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
   }
 
-  return { marketFactory, keeperFeePayer, liquidator }
+  return { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter }
 }

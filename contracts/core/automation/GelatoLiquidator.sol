@@ -5,7 +5,7 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {AutomateReady} from "@chromatic-protocol/contracts/core/automation/gelato/AutomateReady.sol";
-import {ModuleData, Module, IAutomate} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
+import {ModuleData, Module, TriggerType, IAutomate, IGelato} from "@chromatic-protocol/contracts/core/automation/gelato/Types.sol";
 import {LiquidatorBase} from "@chromatic-protocol/contracts/core/automation/LiquidatorBase.sol";
 
 /**
@@ -14,58 +14,38 @@ import {LiquidatorBase} from "@chromatic-protocol/contracts/core/automation/Liqu
  *      It extends the AutomateReady contracts and implements the ILiquidator interface.
  */
 contract GelatoLiquidator is LiquidatorBase, AutomateReady {
-    uint256 private constant DEFAULT_LIQUIDATION_INTERVAL = 1 minutes;
-    uint256 private constant DEFAULT_CLAIM_INTERVAL = 1 days;
+    uint256 private constant WAIT_POSITION_CLAIM = 1 days;
 
-    uint256 public liquidationInterval;
-    uint256 public claimInterval;
+    uint256 public waitPositionClaim;
 
     mapping(address => mapping(uint256 => bytes32)) private _liquidationTaskIds;
     mapping(address => mapping(uint256 => bytes32)) private _claimPositionTaskIds;
 
     /**
-     * @notice Emitted when the liquidation task interval is updated.
-     * @param interval The new liquidation task interval.
+     * @notice Emitted when the waiting time of the claim task is updated.
+     * @param waitingTime The new waiting time of the claim task.
      */
-    event UpdateLiquidationInterval(uint256 indexed interval);
-
-    /**
-     * @notice Emitted when the claim task interval is updated.
-     * @param interval The new claim task interval.
-     */
-    event UpdateClaimInterval(uint256 indexed interval);
+    event WaitPositionClaimUpdated(uint256 indexed waitingTime);
 
     /**
      * @dev Constructor function.
      * @param _factory The address of the Chromatic Market Factory contract.
      * @param _automate The address of the Gelato Automate contract.
-     * @param opsProxyFactory The address of the Ops Proxy Factory contract.
      */
     constructor(
         IChromaticMarketFactory _factory,
-        address _automate,
-        address opsProxyFactory
-    ) LiquidatorBase(_factory) AutomateReady(_automate, address(this), opsProxyFactory) {
-        liquidationInterval = DEFAULT_LIQUIDATION_INTERVAL;
-        claimInterval = DEFAULT_CLAIM_INTERVAL;
+        address _automate
+    ) LiquidatorBase(_factory) AutomateReady(_automate, address(this)) {
+        waitPositionClaim = WAIT_POSITION_CLAIM;
     }
 
     /**
-     * @notice Updates the liquidation task interval.
-     * @param interval The new liquidation task interval.
+     * @notice Updates the waiting time of the claim task. 
+     * @param waitingTime The new waiting time of the claim task. 
      */
-    function updateLiquidationInterval(uint256 interval) external onlyDao {
-        liquidationInterval = interval;
-        emit UpdateLiquidationInterval(interval);
-    }
-
-    /**
-     * @notice Updates the claim task interval.
-     * @param interval The new claim task interval.
-     */
-    function updateClaimInterval(uint256 interval) external onlyDao {
-        claimInterval = interval;
-        emit UpdateClaimInterval(interval);
+    function updateWaitPositionClaim(uint256 waitingTime) external onlyDao {
+        waitPositionClaim = waitingTime;
+        emit WaitPositionClaimUpdated(waitingTime);
     }
 
     /**
@@ -73,7 +53,31 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
      * @dev Can only be called by a registered market.
      */
     function createLiquidationTask(uint256 positionId) external override onlyMarket {
-        _createTask(_liquidationTaskIds, positionId, this.resolveLiquidation, liquidationInterval);
+        address market = msg.sender;
+        if (_liquidationTaskIds[market][positionId] != bytes32(0)) {
+            return;
+        }
+
+        ModuleData memory moduleData = ModuleData({modules: new Module[](4), args: new bytes[](4)});
+
+        moduleData.modules[0] = Module.RESOLVER;
+        moduleData.modules[1] = Module.PROXY;
+        moduleData.modules[2] = Module.SINGLE_EXEC;
+        moduleData.modules[3] = Module.TRIGGER;
+        moduleData.args[0] = abi.encode(
+            address(this),
+            abi.encodeCall(this.resolveLiquidation, (market, positionId))
+        );
+        moduleData.args[1] = bytes("");
+        moduleData.args[2] = bytes("");
+        moduleData.args[3] = abi.encode(TriggerType.BLOCK, bytes(""));
+
+        _liquidationTaskIds[market][positionId] = automate.createTask(
+            address(this),
+            abi.encode(this.liquidate.selector),
+            moduleData,
+            ETH
+        );
     }
 
     /**
@@ -103,7 +107,34 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
      * @dev Can only be called by a registered market.
      */
     function createClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _createTask(_claimPositionTaskIds, positionId, this.resolveClaimPosition, claimInterval);
+        address market = msg.sender;
+        if (_claimPositionTaskIds[market][positionId] != bytes32(0)) {
+            return;
+        }
+
+        ModuleData memory moduleData = ModuleData({modules: new Module[](4), args: new bytes[](4)});
+
+        moduleData.modules[0] = Module.RESOLVER;
+        moduleData.modules[1] = Module.PROXY;
+        moduleData.modules[2] = Module.SINGLE_EXEC;
+        moduleData.modules[3] = Module.TRIGGER;
+        moduleData.args[0] = abi.encode(
+            address(this),
+            abi.encodeCall(this.resolveClaimPosition, (market, positionId))
+        );
+        moduleData.args[1] = bytes("");
+        moduleData.args[2] = bytes("");
+        moduleData.args[3] = abi.encode(
+            TriggerType.TIME,
+            abi.encode(uint128(block.timestamp + waitPositionClaim), uint128(waitPositionClaim))
+        );
+
+        _claimPositionTaskIds[market][positionId] = automate.createTask(
+            address(this),
+            abi.encode(this.liquidate.selector),
+            moduleData,
+            ETH
+        );
     }
 
     /**
@@ -128,42 +159,9 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
         return (false, "");
     }
 
-    /**
-     * @dev Internal function to create a Gelato task for liquidation or claim position.
-     * @param registry The mapping to store task IDs.
-     * @param positionId The ID of the position.
-     * @param resolve The resolve function to be called by the Gelato automation system.
-     * @param interval The interval between task executions.
-     */
-    function _createTask(
-        mapping(address => mapping(uint256 => bytes32)) storage registry,
-        uint256 positionId,
-        function(address, uint256) external view returns (bool, bytes memory) resolve,
-        uint256 interval
-    ) internal {
-        address market = msg.sender;
-        if (registry[market][positionId] != bytes32(0)) {
-            return;
-        }
-
-        ModuleData memory moduleData = ModuleData({modules: new Module[](3), args: new bytes[](3)});
-
-        moduleData.modules[0] = Module.RESOLVER;
-        moduleData.modules[1] = Module.TIME;
-        moduleData.modules[2] = Module.PROXY;
-        moduleData.args[0] = abi.encode(
-            address(this),
-            abi.encodeCall(resolve, (market, positionId))
-        );
-        moduleData.args[1] = abi.encode(uint128(block.timestamp + interval), uint128(interval));
-        moduleData.args[2] = bytes("");
-
-        registry[market][positionId] = automate.createTask(
-            address(this),
-            abi.encode(this.liquidate.selector),
-            moduleData,
-            ETH
-        );
+    // for management
+    function cancelGelatoTask(bytes32 taskId) external onlyDao {
+        automate.cancelTask(taskId);
     }
 
     /**
@@ -178,8 +176,12 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
         address market = msg.sender;
         bytes32 taskId = registry[market][positionId];
         if (taskId != bytes32(0)) {
-            automate.cancelTask(taskId);
             delete registry[market][positionId];
+            try automate.cancelTask(taskId) {
+                emit CancelTaskSucceeded(taskId);
+            } catch {
+                emit CancelTaskFailed(taskId);
+            }
         }
     }
 
@@ -199,6 +201,6 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
 
     function _getFeeInfo() internal view override returns (uint256 fee, address feePayee) {
         (fee, ) = _getFeeDetails();
-        feePayee = automate.gelato();
+        feePayee = IGelato(automate.gelato()).feeCollector();
     }
 }
