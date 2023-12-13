@@ -8,7 +8,7 @@ import {
   IMarketSettle__factory,
   OracleProviderMock__factory
 } from '@chromatic/typechain-types'
-import { SWAP_ROUTER_02_ADDRESSES, USDC_ARBITRUM_GOERLI, WETH9 } from '@uniswap/smart-order-router'
+import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
 import { ethers } from 'ethers'
 import { extendEnvironment } from 'hardhat/config'
@@ -19,7 +19,11 @@ import './type-extensions'
 
 const SIGNERS = ['alice', 'bob', 'charlie', 'david', 'eve', 'frank', 'grace', 'heidi']
 
-const ARB_GOERLI_SWAP_ROUTER_ADDRESS = '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86'
+const WETH: { [key: number]: string } = {
+  421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
+}
+
+const ARB_SEPOLIA_SWAP_ROUTER_ADDRESS = '0x64d630A03A9792F28769B2E5d781eaf0A1540D63'
 
 const ORACLE_PROVIDER_DECIMALS = 18
 
@@ -27,7 +31,7 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
   const { config, deployments, network } = hre
   const echainId: keyof typeof WETH9 =
     network.name === 'anvil'
-      ? config.networks.arbitrum_goerli.chainId!
+      ? config.networks.arbitrum_sepolia.chainId!
       : network.name === 'anvil_mantle'
       ? config.networks.mantle_testnet.chainId!
       : network.config.chainId!
@@ -76,7 +80,6 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
         console.log(chalk.yellow(`💸 ERC20 balance charged : ${address} ${amount}`))
       }
 
-      await setSlotBalance(USDC_ARBITRUM_GOERLI.address, 33, erc20Amount, 6)
       await setSlotBalance(TestSettlementToken.address, 0, erc20Amount, 18)
     }
   )
@@ -112,11 +115,11 @@ extendEnvironment((hre: HardhatRuntimeEnvironment) => {
       const wallet = await ReplWallet.create(
         signer,
         {
-          weth: WETH9[echainId].address,
-          usdc: USDC_ARBITRUM_GOERLI.address,
+          weth: WETH[echainId] ?? WETH9[echainId].address,
+          tst: TestSettlementToken.address,
           swapRouter:
-            echainId === config.networks.arbitrum_goerli.chainId!
-              ? ARB_GOERLI_SWAP_ROUTER_ADDRESS
+            echainId === config.networks.arbitrum_sepolia.chainId!
+              ? ARB_SEPOLIA_SWAP_ROUTER_ADDRESS
               : SWAP_ROUTER_02_ADDRESSES(echainId),
           marketFactory,
           oracleProvider,

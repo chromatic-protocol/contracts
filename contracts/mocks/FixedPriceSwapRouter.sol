@@ -16,7 +16,7 @@ contract FixedPriceSwapRouter is ISwapRouter, Ownable {
     uint256 internal constant ETH_PRECISION = 1e18;
 
     IWETH9 public immutable WETH9;
-    mapping(address token => uint256) ethPriceInToken;
+    mapping(address token => uint256) public ethPriceInToken;
     EnumerableSet.AddressSet internal s_whitelistedClients;
 
     error DuplicateEntry();

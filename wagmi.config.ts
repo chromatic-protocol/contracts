@@ -10,7 +10,7 @@ function getDeployments(packageConfig: any) {
   const chainNames = Object.keys(deployedAddress)
   const chainIds = {
     anvil: 31337,
-    arbitrum_goerli: 421613,
+    arbitrum_sepolia: 421614,
     arbitrum_one: 42161,
     mantle: 5000,
     mantle_testnet: 5001

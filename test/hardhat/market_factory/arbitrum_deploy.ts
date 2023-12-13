@@ -8,11 +8,13 @@ import {
   KeeperFeePayer
 } from '@chromatic/typechain-types'
 import { CHAIN_ID, GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
-import { ChainId } from '@uniswap/sdk-core'
-import { WETH9 } from '@uniswap/smart-order-router'
 import { Contract, ZeroAddress, parseEther } from 'ethers'
 import { ethers } from 'hardhat'
 import { deployContract } from '../utils'
+
+const WETH: { [key: number]: string } = {
+  421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
+}
 
 export async function deploy() {
   const [deployer] = await ethers.getSigners()
@@ -49,7 +51,7 @@ export async function deploy() {
     }
   })
 
-  const weth = IWETH9__factory.connect(WETH9[ChainId.ARBITRUM_GOERLI].address).connect(deployer)
+  const weth = IWETH9__factory.connect(WETH[CHAIN_ID.ARBSEPOLIA]).connect(deployer)
   const fixedPriceSwapRouter = await deployContract<FixedPriceSwapRouter>('FixedPriceSwapRouter', {
     args: [await weth.getAddress()]
   })
@@ -65,11 +67,11 @@ export async function deploy() {
   await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
   await (await fixedPriceSwapRouter.addWhitelistedClient(keeperFeePayer.getAddress())).wait()
 
-  console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate)
+  console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate)
   const distributor = await deployContract<GelatoVaultEarningDistributor>(
     'GelatoVaultEarningDistributor',
     {
-      args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate]
+      args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate]
     }
   )
 
@@ -81,7 +83,7 @@ export async function deploy() {
   }
 
   const liquidator = await deployContract<GelatoLiquidator>('GelatoLiquidator', {
-    args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBITRUM_GOERLI].automate]
+    args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate]
   })
   if ((await marketFactory.liquidator()) === ZeroAddress) {
     await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
