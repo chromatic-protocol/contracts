@@ -13,11 +13,11 @@ import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken
  */
 interface IMarketState {
     /**
-     * @notice Emitted when the protocol fee is changed by the market
-     * @param feeProtocolOld The previous value of the protocol fee
-     * @param feeProtocolNew The updated value of the protocol fee
+     * @notice Emitted when the protocol fee rate is changed by the market
+     * @param protocolFeeRateOld The previous value of the protocol fee rate
+     * @param protocolFeeRateNew The updated value of the protocol fee rate
      */
-    event SetFeeProtocol(uint8 feeProtocolOld, uint8 feeProtocolNew);
+    event ProtocolFeeRateSet(uint16 protocolFeeRateOld, uint16 protocolFeeRateNew);
 
     /**
      * @dev Returns the factory contract for the market.
@@ -50,14 +50,14 @@ interface IMarketState {
     function vault() external view returns (IChromaticVault);
 
     /**
-     * @notice Returns the denominator of the protocol's % share of the fees
-     * @return The protocol fee for the market
+     * @notice Returns the protocol fee rate
+     * @return The protocol fee rate for the market
      */
-    function feeProtocol() external view returns (uint8);
+    function protocolFeeRate() external view returns (uint16);
 
     /**
-     * @notice Set the denominator of the protocol's % share of the fees
-     * @param _feeProtocol new protocol fee for the market
+     * @notice Set the new protocol fee rate
+     * @param _protocolFeeRate new protocol fee rate for the market
      */
-    function setFeeProtocol(uint8 _feeProtocol) external;
+    function setProtocolFeeRate(uint16 _protocolFeeRate) external;
 }

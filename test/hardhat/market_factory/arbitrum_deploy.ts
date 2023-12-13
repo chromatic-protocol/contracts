@@ -64,7 +64,7 @@ export async function deploy() {
       await weth.getAddress()
     ]
   })
-  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  await (await marketFactory.updateKeeperFeePayer(keeperFeePayer.getAddress())).wait()
   await (await fixedPriceSwapRouter.addWhitelistedClient(keeperFeePayer.getAddress())).wait()
 
   console.log('gelato automate address', GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate)
@@ -86,7 +86,7 @@ export async function deploy() {
     args: [await marketFactory.getAddress(), GELATO_ADDRESSES[CHAIN_ID.ARBSEPOLIA].automate]
   })
   if ((await marketFactory.liquidator()) === ZeroAddress) {
-    await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
+    await (await marketFactory.updateLiquidator(liquidator.getAddress())).wait()
   }
 
   return { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter }

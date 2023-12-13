@@ -13,8 +13,12 @@ interface IMarketDeployer {
      * @dev Called by the market constructor to fetch the parameters of the market
      * Returns underlyingAsset The underlying asset of the market
      * Returns settlementToken The settlement token of the market
+     * Returns protocolFeeRate The protocol fee rate of the market
      * Returns vPoolCapacity Capacity of virtual future pool
      * Returns vPoolA Amplification coefficient of virtual future pool, precise value
      */
-    function parameters() external view returns (address oracleProvider, address settlementToken);
+    function parameters()
+        external
+        view
+        returns (address oracleProvider, address settlementToken, uint16 protocolFeeRate);
 }

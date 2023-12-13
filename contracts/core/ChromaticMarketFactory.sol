@@ -15,7 +15,7 @@ import {OracleProviderProperties, OracleProviderPropertiesLib} from "@chromatic-
 import {OracleProviderRegistry, OracleProviderRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderRegistry.sol";
 import {SettlementTokenRegistry, SettlementTokenRegistryLib} from "@chromatic-protocol/contracts/core/libraries/registry/SettlementTokenRegistry.sol";
 import {InterestRate} from "@chromatic-protocol/contracts/core/libraries/InterestRate.sol";
-import {MarketDeployer, MarketDeployerLib, Parameters} from "@chromatic-protocol/contracts/core/libraries/deployer/MarketDeployer.sol";
+import {MarketDeployer, MarketDeployerLib, Parameters, DeployArgs} from "@chromatic-protocol/contracts/core/libraries/deployer/MarketDeployer.sol";
 
 /**
  * @title ChromaticMarketFactory
@@ -34,6 +34,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address public override keeperFeePayer;
     address public override treasury;
     address public override marketSettlement;
+    uint16 public override defaultProtocolFeeRate;
 
     address private immutable marketDiamondCutFacet;
     address private immutable marketLoupeFacet;
@@ -162,8 +163,9 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function updateDao(address _dao) external override onlyDao {
         require(_dao != address(0));
+        address daoOld = dao;
         dao = _dao;
-        emit UpdateDao(dao);
+        emit DaoUpdated(daoOld, dao);
     }
 
     /**
@@ -172,19 +174,44 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      */
     function updateTreasury(address _treasury) external override onlyDao {
         require(_treasury != address(0));
+        address treasuryOld = treasury;
         treasury = _treasury;
-        emit UpdateTreasury(treasury);
+        emit TreasuryUpdated(treasuryOld, treasury);
     }
 
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
-     *      Throws an `AlreadySetLiquidator` error if the liquidator address has already been set.
      */
-    function setLiquidator(address _liquidator) external override onlyDao {
+    function updateLiquidator(address _liquidator) external override onlyDao {
         require(_liquidator != address(0));
+        address liquidatorOld = liquidator;
         liquidator = _liquidator;
-        emit SetLiquidator(liquidator);
+        emit LiquidatorUpdated(liquidatorOld, liquidator);
+    }
+
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
+    function updateKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
+        require(_keeperFeePayer != address(0));
+        address keeperFeePayerOld = keeperFeePayer;
+        keeperFeePayer = _keeperFeePayer;
+        emit KeeperFeePayerUpdated(keeperFeePayerOld, keeperFeePayer);
+    }
+
+    /**
+     * @inheritdoc IChromaticMarketFactory
+     * @dev This function can only be called by the DAO address.
+     */
+    function updateDefaultProtocolFeeRate(
+        uint16 _defaultProtocolFeeRate
+    ) external override onlyDao {
+        require(_defaultProtocolFeeRate <= 5000); // 50%
+        uint16 defaultProtocolFeeRateOld = defaultProtocolFeeRate;
+        defaultProtocolFeeRate = _defaultProtocolFeeRate;
+        emit DefaultProtocolFeeRateUpdated(defaultProtocolFeeRateOld, defaultProtocolFeeRate);
     }
 
     /**
@@ -198,16 +225,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
 
         vault = _vault;
         emit SetVault(vault);
-    }
-
-    /**
-     * @inheritdoc IChromaticMarketFactory
-     * @dev This function can only be called by the DAO address.
-     */
-    function setKeeperFeePayer(address _keeperFeePayer) external override onlyDao {
-        require(_keeperFeePayer != address(0));
-        keeperFeePayer = _keeperFeePayer;
-        emit SetKeeperFeePayer(keeperFeePayer);
     }
 
     /**
@@ -286,16 +303,19 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         _registered[oracleProvider][settlementToken] = true;
 
         address market = _deployer.deploy(
-            oracleProvider,
-            settlementToken,
-            marketDiamondCutFacet,
-            marketLoupeFacet,
-            marketStateFacet,
-            marketLiquidityFacet,
-            marketLensFacet,
-            marketTradeFacet,
-            marketLiquidateFacet,
-            marketSettleFacet
+            DeployArgs({
+                oracleProvider: oracleProvider,
+                settlementToken: settlementToken,
+                marketDiamondCutFacet: marketDiamondCutFacet,
+                marketLoupeFacet: marketLoupeFacet,
+                marketStateFacet: marketStateFacet,
+                marketLiquidityFacet: marketLiquidityFacet,
+                marketLensFacet: marketLensFacet,
+                marketTradeFacet: marketTradeFacet,
+                marketLiquidateFacet: marketLiquidateFacet,
+                marketSettleFacet: marketSettleFacet,
+                protocolFeeRate: defaultProtocolFeeRate
+            })
         );
 
         //slither-disable-next-line reentrancy-benign
@@ -319,10 +339,10 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         external
         view
         override
-        returns (address oracleProvider, address settlementToken)
+        returns (address oracleProvider, address settlementToken, uint16 protocolFeeRate)
     {
         Parameters memory params = _deployer.parameters;
-        return (params.oracleProvider, params.settlementToken);
+        return (params.oracleProvider, params.settlementToken, params.protocolFeeRate);
     }
 
     // implement IOracleProviderRegistry

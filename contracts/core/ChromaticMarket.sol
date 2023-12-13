@@ -18,7 +18,8 @@ contract ChromaticMarket is Diamond {
     constructor(address diamondCutFacet) Diamond(diamondCutFacet) {
         IChromaticMarketFactory factory = IChromaticMarketFactory(msg.sender);
 
-        (address _oracleProvider, address _settlementToken) = factory.parameters();
+        (address _oracleProvider, address _settlementToken, uint16 _protocolFeeRate) = factory
+            .parameters();
         MarketStorage storage ms = MarketStorageLib.marketStorage();
 
         ms.factory = factory;
@@ -26,6 +27,7 @@ contract ChromaticMarket is Diamond {
         ms.settlementToken = IERC20Metadata(_settlementToken);
         ms.clbToken = ICLBToken(CLBTokenDeployerLib.deploy());
         ms.vault = IChromaticVault(factory.vault());
+        ms.protocolFeeRate = _protocolFeeRate;
 
         ms.liquidityPool.initialize();
     }

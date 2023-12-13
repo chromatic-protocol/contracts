@@ -26,6 +26,35 @@ struct MarketDeployer {
 struct Parameters {
     address oracleProvider;
     address settlementToken;
+    uint16 protocolFeeRate;
+}
+
+/**
+ * @title the arguments for deploy
+ * @param oracleProvider The address of the oracle provider
+ * @param settlementToken The address of the settlement token
+ * @param marketDiamondCutFacet The market diamond cut facet address.
+ * @param marketLoupeFacet The market loupe facet address.
+ * @param marketStateFacet The market state facet address.
+ * @param marketLiquidityFacet The market liquidity facet address.
+ * @param marketLensFacet The market liquidity lens facet address.
+ * @param marketTradeFacet The market trade facet address.
+ * @param marketLiquidateFacet The market liquidate facet address.
+ * @param marketSettleFacet The market settle facet address.
+ * @param protocolFeeRate The protocol fee rate for the market.
+ */
+struct DeployArgs {
+    address oracleProvider;
+    address settlementToken;
+    address marketDiamondCutFacet;
+    address marketLoupeFacet;
+    address marketStateFacet;
+    address marketLiquidityFacet;
+    address marketLensFacet;
+    address marketTradeFacet;
+    address marketLiquidateFacet;
+    address marketSettleFacet;
+    uint16 protocolFeeRate;
 }
 
 /**
@@ -36,50 +65,33 @@ library MarketDeployerLib {
     /**
      * @notice Deploys a ChromaticMarket contract
      * @param self The MarketDeployer storage
-     * @param oracleProvider The address of the oracle provider
-     * @param settlementToken The address of the settlement token
-     * @param marketDiamondCutFacet The market diamond cut facet address.
-     * @param marketLoupeFacet The market loupe facet address.
-     * @param marketStateFacet The market state facet address.
-     * @param marketLiquidityFacet The market liquidity facet address.
-     * @param marketLensFacet The market liquidity lens facet address.
-     * @param marketTradeFacet The market trade facet address.
-     * @param marketLiquidateFacet The market liquidate facet address.
-     * @param marketSettleFacet The market settle facet address.
+     * @param args The arguments for deploy
      * @return market The address of the deployed ChromaticMarket contract
      */
     function deploy(
         MarketDeployer storage self,
-        address oracleProvider,
-        address settlementToken,
-        address marketDiamondCutFacet,
-        address marketLoupeFacet,
-        address marketStateFacet,
-        address marketLiquidityFacet,
-        address marketLensFacet,
-        address marketTradeFacet,
-        address marketLiquidateFacet,
-        address marketSettleFacet
+        DeployArgs memory args
     ) external returns (address market) {
         self.parameters = Parameters({
-            oracleProvider: oracleProvider,
-            settlementToken: settlementToken
+            oracleProvider: args.oracleProvider,
+            settlementToken: args.settlementToken,
+            protocolFeeRate: args.protocolFeeRate
         });
         market = address(
-            new ChromaticMarket{salt: keccak256(abi.encode(oracleProvider, settlementToken))}(
-                marketDiamondCutFacet
-            )
+            new ChromaticMarket{
+                salt: keccak256(abi.encode(args.oracleProvider, args.settlementToken))
+            }(args.marketDiamondCutFacet)
         );
         delete self.parameters;
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](7);
-        cut[0] = _marketLoupeFacetCut(marketLoupeFacet);
-        cut[1] = _marketStateFacetCut(marketStateFacet);
-        cut[2] = _marketLiquidityFacetCut(marketLiquidityFacet);
-        cut[3] = _marketLensFacetCut(marketLensFacet);
-        cut[4] = _marketTradeFacetCut(marketTradeFacet);
-        cut[5] = _marketLiquidateFacetCut(marketLiquidateFacet);
-        cut[6] = _marketSettleFacetCut(marketSettleFacet);
+        cut[0] = _marketLoupeFacetCut(args.marketLoupeFacet);
+        cut[1] = _marketStateFacetCut(args.marketStateFacet);
+        cut[2] = _marketLiquidityFacetCut(args.marketLiquidityFacet);
+        cut[3] = _marketLensFacetCut(args.marketLensFacet);
+        cut[4] = _marketTradeFacetCut(args.marketTradeFacet);
+        cut[5] = _marketLiquidateFacetCut(args.marketLiquidateFacet);
+        cut[6] = _marketSettleFacetCut(args.marketSettleFacet);
         IDiamondCut(market).diamondCut(cut, address(0), "");
     }
 
@@ -108,8 +120,8 @@ library MarketDeployerLib {
         functionSelectors[2] = IMarketState.oracleProvider.selector;
         functionSelectors[3] = IMarketState.clbToken.selector;
         functionSelectors[4] = IMarketState.vault.selector;
-        functionSelectors[5] = IMarketState.feeProtocol.selector;
-        functionSelectors[6] = IMarketState.setFeeProtocol.selector;
+        functionSelectors[5] = IMarketState.protocolFeeRate.selector;
+        functionSelectors[6] = IMarketState.setProtocolFeeRate.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketStateFacet,

@@ -52,21 +52,21 @@ contract MarketStateFacet is MarketFacetBase, IMarketState {
     /**
      * @inheritdoc IMarketState
      */
-    function feeProtocol() external view returns (uint8 _feeProtocol) {
-        _feeProtocol = MarketStorageLib.marketStorage().feeProtocol;
+    function protocolFeeRate() external view returns (uint16 _protocolFeeRate) {
+        _protocolFeeRate = MarketStorageLib.marketStorage().protocolFeeRate;
     }
 
     /**
      * @inheritdoc IMarketState
      */
-    function setFeeProtocol(uint8 _feeProtocol) external override onlyDao {
-        require(_feeProtocol == 0 || (_feeProtocol >= 4 && _feeProtocol <= 10));
+    function setProtocolFeeRate(uint16 _protocolFeeRate) external override onlyDao {
+        require(_protocolFeeRate <= 5000); // 50%
 
         MarketStorage storage ps = MarketStorageLib.marketStorage();
 
-        uint8 feeProtocolOld = ps.feeProtocol;
-        ps.feeProtocol = _feeProtocol;
+        uint16 protocolFeeRateOld = ps.protocolFeeRate;
+        ps.protocolFeeRate = _protocolFeeRate;
 
-        emit SetFeeProtocol(feeProtocolOld, _feeProtocol);
+        emit ProtocolFeeRateSet(protocolFeeRateOld, _protocolFeeRate);
     }
 }

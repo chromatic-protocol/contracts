@@ -117,7 +117,13 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             factory.getOracleProviderProperties(address(ctx.oracleProvider))
         );
 
-        Position memory position = _newPosition(ctx, qty, takerMargin, ms.feeProtocol, liquidator);
+        Position memory position = _newPosition(
+            ctx,
+            qty,
+            takerMargin,
+            ms.protocolFeeRate,
+            liquidator
+        );
         position.setBinMargins(
             liquidityPool.prepareBinMargins(ctx, position.qty, makerMargin, minMargin)
         );
@@ -298,7 +304,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         LpContext memory ctx,
         int256 qty,
         uint256 takerMargin,
-        uint8 feeProtocol,
+        uint16 protocolFeeRate,
         address liquidator
     ) private returns (Position memory) {
         PositionStorage storage ps = PositionStorageLib.positionStorage();
@@ -314,8 +320,8 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
                 takerMargin: takerMargin,
                 owner: msg.sender,
                 liquidator: liquidator,
-                _binMargins: new BinMargin[](0),
-                _feeProtocol: feeProtocol
+                _protocolFeeRate: protocolFeeRate,
+                _binMargins: new BinMargin[](0)
             });
     }
 }

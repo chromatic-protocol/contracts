@@ -18,7 +18,7 @@ import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.
  * @param owner The owner of the position, usually it is the account address of trader
  * @param liquidator The liquidator contract address
  * @param _binMargins The bin margins for the position, it represents the amount of collateral for each bin
- * @param _feeProtocol The protocol fee for the market
+ * @param _protocolFeeRate The protocol fee rate for the market
  */
 struct Position {
     uint256 id;
@@ -30,8 +30,8 @@ struct Position {
     uint256 takerMargin;
     address owner;
     address liquidator;
+    uint16 _protocolFeeRate;
     BinMargin[] _binMargins;
-    uint8 _feeProtocol;
 }
 
 using PositionLib for Position global;
@@ -97,7 +97,7 @@ library PositionLib {
             margin += self._binMargins[i].amount;
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -111,10 +111,10 @@ library PositionLib {
      */
     function tradingFee(Position memory self) internal pure returns (uint256 fee) {
         for (uint256 i; i < self._binMargins.length; ) {
-            fee += self._binMargins[i].tradingFee(self._feeProtocol);
+            fee += self._binMargins[i].tradingFee(self._protocolFeeRate);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -126,10 +126,10 @@ library PositionLib {
      */
     function protocolFee(Position memory self) internal pure returns (uint256 fee) {
         for (uint256 i; i < self._binMargins.length; ) {
-            fee += self._binMargins[i].protocolFee(self._feeProtocol);
+            fee += self._binMargins[i].protocolFee(self._protocolFeeRate);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

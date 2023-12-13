@@ -105,8 +105,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ KeeperFeePayer: ${keeperFeePayer}`))
 
-  await marketFactory.setKeeperFeePayer(keeperFeePayer, deployOpts)
+  await marketFactory.updateKeeperFeePayer(keeperFeePayer, deployOpts)
   console.log(chalk.yellow('✨ Set KeeperFeePayer'))
+
+  await marketFactory.updateDefaultProtocolFeeRate(5000, deployOpts) // 50%
+  console.log(chalk.yellow('✨ Set DefaultProtocolFeeRate'))
 }
 
 export default func

@@ -217,8 +217,8 @@ contract LiquidityPoolTest is Test {
                 closeTimestamp: 0,
                 owner: address(0),
                 liquidator: address(0),
-                _binMargins: new BinMargin[](0),
-                _feeProtocol: 0
+                _protocolFeeRate: 0,
+                _binMargins: new BinMargin[](0)
             });
     }
 }

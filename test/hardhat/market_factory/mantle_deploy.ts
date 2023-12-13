@@ -65,7 +65,7 @@ export async function deploy() {
       await wmnt.getAddress()
     ]
   })
-  await (await marketFactory.setKeeperFeePayer(keeperFeePayer.getAddress())).wait()
+  await (await marketFactory.updateKeeperFeePayer(keeperFeePayer.getAddress())).wait()
   await (await fixedPriceSwapRouter.addWhitelistedClient(keeperFeePayer.getAddress())).wait()
 
   const distributor = await deployContract<Mate2VaultEarningDistributor>(
@@ -112,7 +112,7 @@ export async function deploy() {
   }
 
   if ((await marketFactory.liquidator()) === ZeroAddress) {
-    await (await marketFactory.setLiquidator(liquidator.getAddress())).wait()
+    await (await marketFactory.updateLiquidator(liquidator.getAddress())).wait()
   }
 
   return { marketFactory, keeperFeePayer, liquidator, fixedPriceSwapRouter }
