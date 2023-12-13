@@ -1,16 +1,11 @@
 import {
-  ChainlinkFeedOracle__factory,
   ChromaticMarketFactory,
   ChromaticMarketFactory__factory,
   IERC20Metadata,
-  IERC20Metadata__factory,
-  IOracleProvider,
-  IOracleProvider__factory,
-  PythFeedOracle__factory,
-  SupraFeedOracle__factory
+  IERC20Metadata__factory
 } from '@chromatic/typechain-types'
 import { Token } from '@uniswap/sdk-core'
-import { DAI_ON, USDC_ON, USDT_ON, WETH9 } from '@uniswap/smart-order-router'
+import { WETH9 } from '@uniswap/smart-order-router'
 import { ContractRunner, getAddress, isAddress } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
@@ -54,16 +49,23 @@ export async function findSettlementToken(
   }
 }
 
+const WETH: { [key: number]: string } = {
+  421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
+}
+
 const WMNT: { [key: number]: string } = {
   5000: '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8', // mantle
   5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
 }
 
 const TOKEN_SYMBOLS: Record<string, (chainId: keyof typeof WETH9) => Token> = {
-  DAI: DAI_ON,
-  USDC: USDC_ON,
-  USDT: USDT_ON,
+  // DAI: DAI_ON,
+  // USDC: USDC_ON,
+  // USDT: USDT_ON,
   WETH: (chainId) => {
+    if (WETH[chainId]) {
+      return new Token(chainId, WETH[chainId], 18)
+    }
     const weth = WETH9[chainId]
     if (weth) return weth
     throw new Error(`Chain id: ${chainId} not supported`)
@@ -85,7 +87,7 @@ export function getToken(
   const { config, network } = hre
   const echainId =
     network.name === 'anvil'
-      ? config.networks.arbitrum_goerli.chainId!
+      ? config.networks.arbitrum_sepolia.chainId!
       : network.name === 'anvil_mantle'
       ? config.networks.mantle_testnet.chainId!
       : network.config.chainId!

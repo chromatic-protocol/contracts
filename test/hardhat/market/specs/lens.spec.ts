@@ -5,9 +5,9 @@ import {
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { Result, formatEther, parseEther } from 'ethers'
+import { ethers } from 'hardhat'
 import util from 'util'
 import { helpers, prepareMarketTest } from '../testHelper'
-import { ethers } from 'hardhat'
 
 export function spec(getDeps: Function) {
   describe('lens', async () => {
@@ -126,7 +126,7 @@ export function spec(getDeps: Function) {
 
         const openPositionEvent = await market.queryFilter(
           market.filters.OpenPosition(),
-          blockStart
+          blockStart + 1
         )
         console.log(
           'position opened Event ',

@@ -43,9 +43,13 @@ import { Signer, Wallet, ZeroAddress } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
-  421613: '0xF1596041557707B1bC0b3ffB34346c1D9Ce94E86', // arbitrum_goerli UNISWAP
+  421614: '0x64d630A03A9792F28769B2E5d781eaf0A1540D63', // FixedPriceSwapRouter
   5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
   5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
+}
+
+const WETH: { [key: number]: string } = {
+  421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
 }
 
 const WMNT: { [key: number]: string } = {
@@ -84,7 +88,7 @@ export class Contracts {
     const { config, network, ethers } = this.hre
     const echainId: keyof typeof WETH9 =
       network.name === 'anvil'
-        ? config.networks.arbitrum_goerli.chainId!
+        ? config.networks.arbitrum_sepolia.chainId!
         : network.name === 'anvil_mantle'
         ? config.networks.mantle_testnet.chainId!
         : network.config.chainId!
@@ -114,9 +118,10 @@ export class Contracts {
     const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
     this._swapRouter = ISwapRouter__factory.connect(swapRouterAddress, this._signer)
 
+    this._weth = IWETH9__factory.connect(WETH[echainId] ?? WETH9[echainId].address, this._signer!)
+
     if (SUPPORTED_CHAINS.includes(echainId)) {
       const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
-      this._weth = IWETH9__factory.connect(WETH9[chainId].address, this._signer!)
       this._usdc = this.connectToken(USDC_ON(chainId).address)
     }
 

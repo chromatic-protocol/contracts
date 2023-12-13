@@ -10,14 +10,14 @@ import { evmMainnet, evmTestnet } from '../pythFeedIds'
 
 const IPYTH_ADDRESSES: { [key: string]: string } = {
   arbitrum_one: '0xff1a0f4744e8582DF1aE09D5611b887B6a12925C',
-  arbitrum_goerli: '0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900',
+  arbitrum_sepolia: '0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF',
   mantle: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
   mantle_testnet: '0xA2aa501b19aff244D90cc15a4Cf739D2725B5729',
 }
 
 const priceFeedIdsMap: { [key: string]: { [key: string]: string } } = {
   arbitrum_one: evmMainnet,
-  arbitrum_goerli: evmTestnet,
+  arbitrum_sepolia: evmTestnet,
   mantle: evmMainnet,
   mantle_testnet: evmTestnet
 }

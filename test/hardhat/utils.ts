@@ -106,9 +106,9 @@ export async function mantleGetLogs(param: EthGetLogsParam): Promise<Result[]> {
 }
 
 export const forkingOptions = {
-  arbitrum_goerli: {
-    url: `https://arb-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-    blockNumber: 58355046
+  arbitrum_sepolia: {
+    url: `https://arb-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+    blockNumber: 2618307
   },
   mantle_testnet: {
     url: `https://lb.drpc.org/ogrpc?network=mantle-testnet&dkey=${process.env.DRPC_KEY}`,

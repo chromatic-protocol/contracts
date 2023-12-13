@@ -12,8 +12,8 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
  * @dev A contract that pays keeper fees using a Uniswap router.
  */
 contract KeeperFeePayer is IKeeperFeePayer {
-    IChromaticMarketFactory immutable factory;
-    ISwapRouter uniswapRouter;
+    IChromaticMarketFactory public immutable factory;
+    ISwapRouter public uniswapRouter;
     IWETH9 public immutable WETH9;
 
     /**

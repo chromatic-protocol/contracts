@@ -5,7 +5,7 @@ import { pythSpec } from './oracle_provider/specs'
 describe('[arbitrum]', async () => {
   let initChainSnapshot: helpers.SnapshotRestorer
   let deps: any
-  const targetNetwork = 'arbitrum_goerli'
+  const targetNetwork = 'arbitrum_sepolia'
   before(async () => {
     console.log('set chain')
     await setChain(targetNetwork)
