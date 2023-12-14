@@ -50,7 +50,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   )
   console.log(chalk.yellow(`✨ GelatoLiquidator: ${liquidator}`))
 
-  await marketFactory.setLiquidator(liquidator, deployOpts)
+  await marketFactory.updateLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
 }
 

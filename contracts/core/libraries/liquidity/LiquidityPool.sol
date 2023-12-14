@@ -246,7 +246,7 @@ library LiquidityPoolLib {
                 _bins[binMargins[i].tradingFeeRate].openPosition(
                     ctx,
                     param,
-                    binMargin.tradingFee(position._feeProtocol)
+                    binMargin.tradingFee(position._protocolFeeRate)
                 );
             }
 

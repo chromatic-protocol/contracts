@@ -18,33 +18,50 @@ interface IChromaticMarketFactory is
 {
     /**
      * @notice Emitted when the DAO address is updated.
-     * @param dao The new DAO address.
+     * @param daoOld The old DAO address.
+     * @param daoNew The new DAO address.
      */
-    event UpdateDao(address indexed dao);
+    event DaoUpdated(address indexed daoOld, address indexed daoNew);
 
     /**
      * @notice Emitted when the DAO treasury address is updated.
-     * @param treasury The new DAO treasury address.
+     * @param treasuryOld The old DAO treasury address.
+     * @param treasuryNew The new DAO treasury address.
      */
-    event UpdateTreasury(address indexed treasury);
+    event TreasuryUpdated(address indexed treasuryOld, address indexed treasuryNew);
 
     /**
-     * @notice Emitted when the liquidator address is set.
-     * @param liquidator The liquidator address.
+     * @notice Emitted when the liquidator address is updated.
+     * @param liquidatorOld The old liquidator address.
+     * @param liquidatorNew The new liquidator address.
      */
-    event SetLiquidator(address indexed liquidator);
+    event LiquidatorUpdated(address indexed liquidatorOld, address indexed liquidatorNew);
+
+    /**
+     * @notice Emitted when the keeper fee payer address is updated.
+     * @param keeperFeePayerOld The old keeper fee payer address.
+     * @param keeperFeePayerNew The new keeper fee payer address.
+     */
+    event KeeperFeePayerUpdated(
+        address indexed keeperFeePayerOld,
+        address indexed keeperFeePayerNew
+    );
+
+    /**
+     * @notice Emitted when the default protocol fee rate is updated.
+     * @param defaultProtocolFeeRateOld The old default protocol fee rate.
+     * @param defaultProtocolFeeRateNew The new default protocol fee rate.
+     */
+    event DefaultProtocolFeeRateUpdated(
+        uint16 indexed defaultProtocolFeeRateOld,
+        uint16 indexed defaultProtocolFeeRateNew
+    );
 
     /**
      * @notice Emitted when the vault address is set.
      * @param vault The vault address.
      */
     event SetVault(address indexed vault);
-
-    /**
-     * @notice Emitted when the keeper fee payer address is set.
-     * @param keeperFeePayer The keeper fee payer address.
-     */
-    event SetKeeperFeePayer(address indexed keeperFeePayer);
 
     /**
      * @notice Emitted when the market settlement task address is set.
@@ -101,6 +118,12 @@ interface IChromaticMarketFactory is
     function marketSettlement() external view returns (address);
 
     /**
+     * @notice Returns the default protocol fee rate.
+     * @return The default protocol fee rate.
+     */
+    function defaultProtocolFeeRate() external view returns (uint16);
+
+    /**
      * @notice Updates the DAO address.
      * @param _dao The new DAO address.
      */
@@ -113,22 +136,28 @@ interface IChromaticMarketFactory is
     function updateTreasury(address _treasury) external;
 
     /**
-     * @notice Sets the liquidator address.
-     * @param _liquidator The liquidator address.
+     * @notice Updates the liquidator address.
+     * @param _liquidator The new liquidator address.
      */
-    function setLiquidator(address _liquidator) external;
+    function updateLiquidator(address _liquidator) external;
+
+    /**
+     * @notice Updates the keeper fee payer address.
+     * @param _keeperFeePayer The new keeper fee payer address.
+     */
+    function updateKeeperFeePayer(address _keeperFeePayer) external;
+
+    /**
+     * @notice Updates the default protocl fee rate.
+     * @param _defaultProtocolFeeRate The new default protocol fee rate.
+     */
+    function updateDefaultProtocolFeeRate(uint16 _defaultProtocolFeeRate) external;
 
     /**
      * @notice Sets the vault address.
      * @param _vault The vault address.
      */
     function setVault(address _vault) external;
-
-    /**
-     * @notice Sets the keeper fee payer address.
-     * @param _keeperFeePayer The keeper fee payer address.
-     */
-    function setKeeperFeePayer(address _keeperFeePayer) external;
 
     /**
      * @notice Sets the market settlement task address.

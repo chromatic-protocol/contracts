@@ -18,7 +18,7 @@ struct MarketStorage {
     ICLBToken clbToken;
     IChromaticVault vault;
     LiquidityPool liquidityPool;
-    uint8 feeProtocol;
+    uint16 protocolFeeRate;
 }
 
 struct LpReceiptStorage {
@@ -113,7 +113,7 @@ library PositionStorageLib {
         _p.takerMargin = position.takerMargin;
         _p.owner = position.owner;
         _p.liquidator = position.liquidator;
-        _p._feeProtocol = position._feeProtocol;
+        _p._protocolFeeRate = position._protocolFeeRate;
         // can not convert memory array to storage array
         delete _p._binMargins;
         for (uint i; i < position._binMargins.length; ) {

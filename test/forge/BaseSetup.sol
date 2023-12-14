@@ -120,13 +120,13 @@ abstract contract BaseSetup is Test {
 
         keeperFeePayer = new KeeperFeePayer(factory, swapRouter, weth);
         swapRouter.addWhitelistedClient(address(keeperFeePayer));
-        factory.setKeeperFeePayer(address(keeperFeePayer));
+        factory.updateKeeperFeePayer(address(keeperFeePayer));
 
         vault = new ChromaticVaultMock(factory, IVaultEarningDistributor(address(this)));
         factory.setVault(address(vault));
 
         liquidator = new GelatoLiquidatorMock(factory, address(_automate));
-        factory.setLiquidator(address(liquidator));
+        factory.updateLiquidator(address(liquidator));
 
         factory.registerOracleProvider(
             address(oracleProvider),
