@@ -64,11 +64,6 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     error AlreadySetVault();
 
     /**
-     * @dev Throws an error indicating that the market settlement task address is already set.
-     */
-    error AlreadySetMarketSettlement();
-
-    /**
      * @dev Throws an error indicating that the oracle provider is not registered.
      */
     error NotRegisteredOracleProvider();
@@ -224,20 +219,18 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         if (vault != address(0)) revert AlreadySetVault();
 
         vault = _vault;
-        emit SetVault(vault);
+        emit VaultSet(vault);
     }
 
     /**
      * @inheritdoc IChromaticMarketFactory
      * @dev This function can only be called by the DAO address.
-     *      Throws an `AlreadySetMarketSettlement` error if the market settlement task address has already been set.
      */
-    function setMarketSettlement(address _marketSettlement) external override onlyDao {
+    function updateMarketSettlement(address _marketSettlement) external override onlyDao {
         require(_marketSettlement != address(0));
-        if (marketSettlement != address(0)) revert AlreadySetMarketSettlement();
-
+        address marketSettlementOld = marketSettlement;
         marketSettlement = _marketSettlement;
-        emit SetMarketSettlement(marketSettlement);
+        emit MarketSettlementUpdated(marketSettlementOld, marketSettlement);
     }
 
     /**

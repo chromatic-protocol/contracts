@@ -10,6 +10,11 @@ abstract contract VaultEarningDistributorBase is IVaultEarningDistributor {
     IChromaticMarketFactory public immutable factory;
 
     /**
+     * @dev Throws an error indicating that the caller is not the DAO.
+     */
+    error OnlyAccessableByDao();
+
+    /**
      * @dev Throws an error indicating that the caller is not the chromatch vault contract.
      */
     error OnlyAccessableByVault();
@@ -23,6 +28,15 @@ abstract contract VaultEarningDistributorBase is IVaultEarningDistributor {
      * @dev Throws an error indicating that a market earning distribution task already exists.
      */
     error ExistMarketEarningDistributionTask();
+
+    /**
+     * @dev Modifier to restrict access to only the DAO.
+     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
+     */
+    modifier onlyDao() {
+        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
+        _;
+    }
 
     /**
      * @dev Modifier to restrict a function to be called only by the vault contract.

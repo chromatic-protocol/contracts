@@ -14,20 +14,6 @@ contract GelatoVaultEarningDistributor is VaultEarningDistributorBase, AutomateR
     mapping(address => bytes32) public makerEarningDistributionTaskIds; // settlement token => task id
     mapping(address => bytes32) public marketEarningDistributionTaskIds; // market => task id
 
-    /**
-     * @dev Throws an error indicating that the caller is not the DAO.
-     */
-    error OnlyAccessableByDao();
-
-    /**
-     * @dev Modifier to restrict access to only the DAO.
-     *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
-     */
-    modifier onlyDao() {
-        if (msg.sender != factory.dao()) revert OnlyAccessableByDao();
-        _;
-    }
-
     constructor(
         IChromaticMarketFactory _factory,
         address _automate
