@@ -61,13 +61,17 @@ interface IChromaticMarketFactory is
      * @notice Emitted when the vault address is set.
      * @param vault The vault address.
      */
-    event SetVault(address indexed vault);
+    event VaultSet(address indexed vault);
 
     /**
-     * @notice Emitted when the market settlement task address is set.
-     * @param marketSettlement The market settlement task address.
+     * @notice Emitted when the market settlement task address is updated.
+     * @param marketSettlementOld The old market settlement task address.
+     * @param marketSettlementNew The new market settlement task address.
      */
-    event SetMarketSettlement(address indexed marketSettlement);
+    event MarketSettlementUpdated(
+        address indexed marketSettlementOld,
+        address indexed marketSettlementNew
+    );
 
     /**
      * @notice Emitted when a market is created.
@@ -160,10 +164,10 @@ interface IChromaticMarketFactory is
     function setVault(address _vault) external;
 
     /**
-     * @notice Sets the market settlement task address.
-     * @param _marketSettlement The market settlement task address.
+     * @notice Updates the market settlement task address.
+     * @param _marketSettlement The new market settlement task address.
      */
-    function setMarketSettlement(address _marketSettlement) external;
+    function updateMarketSettlement(address _marketSettlement) external;
 
     /**
      * @notice Returns an array of all market addresses.

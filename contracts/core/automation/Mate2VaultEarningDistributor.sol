@@ -152,4 +152,9 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
         fee = automate.getPerformUpkeepFee();
         feePayee = address(automate);
     }
+
+    // for management
+    function cancelUpkeep(uint256 upkeepId) external onlyDao {
+        automate.cancelUpkeep(upkeepId);
+    }
 }

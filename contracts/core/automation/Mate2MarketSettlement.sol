@@ -121,7 +121,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         PendingPosition[] memory pendingPositions = IChromaticMarket(market).pendingPositionBatch(
             feeRates
         );
-        for (uint256 i; i < pendingPositions.length;) {
+        for (uint256 i; i < pendingPositions.length; ) {
             PendingPosition memory _pos = pendingPositions[i];
             if (_pos.openVersion != 0 && _pos.openVersion < currentOracleVersion.version) {
                 return (true, abi.encode(market));
@@ -135,7 +135,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         ClosingPosition[] memory closingPositions = IChromaticMarket(market).closingPositionBatch(
             feeRates
         );
-        for (uint256 i; i < closingPositions.length;) {
+        for (uint256 i; i < closingPositions.length; ) {
             ClosingPosition memory _pos = closingPositions[i];
             if (_pos.closeVersion != 0 && _pos.closeVersion < currentOracleVersion.version) {
                 return (true, abi.encode(market));
@@ -148,7 +148,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
 
         PendingLiquidity[] memory pendingLiquidities = IChromaticMarket(market)
             .pendingLiquidityBatch(feeRates);
-        for (uint256 i; i < pendingLiquidities.length;) {
+        for (uint256 i; i < pendingLiquidities.length; ) {
             PendingLiquidity memory _liq = pendingLiquidities[i];
             if (_liq.oracleVersion != 0 && _liq.oracleVersion < currentOracleVersion.version) {
                 return (true, abi.encode(market));
@@ -172,7 +172,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     function _feeRates() private pure returns (int16[] memory rates) {
         rates = new int16[](FEE_RATES_LENGTH * 2);
         uint16[FEE_RATES_LENGTH] memory _tradingFeeRates = CLBTokenLib.tradingFeeRates();
-        for (uint i; i < FEE_RATES_LENGTH;) {
+        for (uint i; i < FEE_RATES_LENGTH; ) {
             rates[i] = int16(_tradingFeeRates[i]);
             rates[i + FEE_RATES_LENGTH] = -int16(_tradingFeeRates[i]);
 
@@ -194,5 +194,9 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     ) external onlyDao {
         IUpkeepTreasury treasury = IUpkeepTreasury(automate.getUpkeepTreasury());
         treasury.withdrawFunds(_receiver, _amount);
+    }
+
+    function cancelUpkeep(uint256 upkeepId) external onlyDao {
+        automate.cancelUpkeep(upkeepId);
     }
 }

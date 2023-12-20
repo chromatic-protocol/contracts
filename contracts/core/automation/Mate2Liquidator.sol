@@ -197,4 +197,9 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
         fee = automate.getPerformUpkeepFee();
         feePayee = address(automate);
     }
+
+    // for management
+    function cancelUpkeep(uint256 upkeepId) external onlyDao {
+        automate.cancelUpkeep(upkeepId);
+    }
 }
