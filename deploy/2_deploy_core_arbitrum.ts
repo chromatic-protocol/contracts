@@ -1,11 +1,76 @@
-import { ChromaticMarketFactory__factory } from '@chromatic/typechain-types'
+import {
+  ChromaticMarketFactory__factory,
+  IMate2AutomationRegistry__factory
+} from '@chromatic/typechain-types'
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
+export const MATE2_AUTOMATION_ADDRESS: { [key: number]: string } = {
+  421614: '0xCc25d82dd205bF21eCd6CE63559415AFce93a00F'
+}
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const { config, deployments, getNamedAccounts, ethers, network } = hre
+  const { deploy } = deployments
+  const { deployer } = await getNamedAccounts()
+  const automationAddress = MATE2_AUTOMATION_ADDRESS[network.config.chainId!]
+
+  const echainId: keyof typeof WETH9 =
+    network.name === 'anvil' ? config.networks.arbitrum_sepolia.chainId! : network.config.chainId!
+
+  console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
+
+  const deployOpts = { from: deployer }
+  const factory = await deployments.get('ChromaticMarketFactory')
+  const marketFactory = ChromaticMarketFactory__factory.connect(
+    factory.address,
+    await ethers.getSigner(deployer)
+  )
+
+  // deploy & set ChromaticVault
+  const { address: distributor } = await deploy('Mate2VaultEarningDistributor', {
+    ...deployOpts,
+    args: [factory.address, automationAddress]
+  })
+  console.log(chalk.yellow(`✨ Mate2VaultEarningDistributor: ${distributor}`))
+
+  const mate2automate = IMate2AutomationRegistry__factory.connect(
+    automationAddress,
+    await ethers.getSigner(deployer)
+  )
+  await (await mate2automate.addWhitelistedRegistrar(distributor)).wait()
+
+  const { address: vault } = await deploy('ChromaticVault', {
+    ...deployOpts,
+    args: [factory.address, distributor]
+  })
+  console.log(chalk.yellow(`✨ ChromaticVault: ${vault}`))
+
+  await marketFactory.setVault(vault, deployOpts)
+  console.log(chalk.yellow('✨ Set Vault'))
+
+  // deploy & set Liquidator
+
+  const { address: liquidator } = await deploy('Mate2Liquidator', {
+    ...deployOpts,
+    args: [factory.address, automationAddress]
+  })
+  console.log(chalk.yellow(`✨ Mate2Liquidator: ${liquidator}`))
+
+  await (await mate2automate.addWhitelistedRegistrar(liquidator)).wait()
+  await marketFactory.updateLiquidator(liquidator, deployOpts)
+  console.log(chalk.yellow('✨ Set Liquidator'))
+}
+
+export default func
+
+func.id = 'deploy_core_for_chain' // id required to prevent reexecution
+func.tags = ['arbitrum']
+
+const _func_for_gelato: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
@@ -53,8 +118,3 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await marketFactory.updateLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
 }
-
-export default func
-
-func.id = 'deploy_core_for_chain' // id required to prevent reexecution
-func.tags = ['arbitrum']
