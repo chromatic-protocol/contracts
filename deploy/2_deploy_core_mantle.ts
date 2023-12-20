@@ -37,6 +37,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await ethers.getSigner(deployer)
   )
   await (await mate2automate.addWhitelistedRegistrar(distributor)).wait()
+
   const { address: vault } = await deploy('ChromaticVault', {
     ...deployOpts,
     args: [factory.address, distributor]
