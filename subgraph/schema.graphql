@@ -37,6 +37,21 @@ type ChromaticMarketBinStatus @entity(immutable: true) {
   blockTimestamp: BigInt!
 }
 
+type CLBToken @entity(immutable: true) {
+  id: Bytes! # clb token address
+  market: Bytes! # address
+  decimals: Int!
+}
+
+type CLBTokenTotalSupply @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  tokenId: BigInt!
+  amount: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
 type OracleVersion @entity(immutable: true) {
   id: ID!
   oracleProvider: Bytes! # address
