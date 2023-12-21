@@ -18,17 +18,17 @@ function saveABI(contract, deployment) {
   fs.writeFileSync(join(abiPath, `${contract}.json`), JSON.stringify(deployment.abi, null, 2))
 }
 
-async function loadInterfaceABI(interfaceName, path) {
-  const interfacesPath = join(...'../../artifacts/contracts'.split('/'), path, 'interfaces')
+async function loadABIFromArtifacts(interfaceName, path) {
+  const interfacesPath = join(...'../../artifacts'.split('/'), ...path.split('/'))
   const json = await import(join(interfacesPath, `${interfaceName}.sol`, `${interfaceName}.json`), {
     assert: { type: 'json' }
   })
   return json.default
 }
 
-async function saveInterfaceABI(interfaceName, path) {
+async function saveABIFromArtifacts(interfaceName, path) {
   if (!fs.existsSync(abiPath)) fs.mkdirSync(abiPath, { recursive: true })
-  const json = await loadInterfaceABI(interfaceName, path)
+  const json = await loadABIFromArtifacts(interfaceName, path)
 
   fs.writeFileSync(join(abiPath, `${interfaceName}.json`), JSON.stringify(json.abi, null, 2))
 }
@@ -38,16 +38,24 @@ async function main() {
   const templateFile = process.argv[3]
   const outputFile = process.argv[4]
 
+  const factory = await loadDeployment(network, 'ChromaticMarketFactory')
   const router = await loadDeployment(network, 'ChromaticRouter')
 
+  saveABI('ChromaticMarketFactory', factory)
+  await saveABIFromArtifacts('IERC20Metadata', '@openzeppelin/contracts/token/ERC20/extensions')
+  await saveABIFromArtifacts('IOracleProvider', 'contracts/oracle/interfaces')
+  await saveABIFromArtifacts('IChromaticMarket', 'contracts/core/interfaces')
+
   saveABI('ChromaticRouter', router)
-  await saveInterfaceABI('IChromaticAccount', 'periphery')
+  await saveABIFromArtifacts('IChromaticAccount', 'contracts/periphery/interfaces')
 
   const template = fs.readFileSync(templateFile).toString()
   const output = Mustache.render(template, {
     network: network === 'mantle_testnet' ? 'testnet' : network,
-    blockNumber: router.receipt.blockNumber,
-    ChromaticRouter: router.address
+    ChromaticMarketFactory: factory.address,
+    ChromaticMarketFactory_blockNumber: factory.receipt.blockNumber,
+    ChromaticRouter: router.address,
+    ChromaticRouter_blockNumber: router.receipt.blockNumber
   })
   fs.writeFileSync(outputFile, output)
 

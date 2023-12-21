@@ -1,3 +1,52 @@
+type MarketCreated @entity(immutable: true) {
+  id: Bytes!
+  oracleProvider: Bytes! # address
+  settlementToken: Bytes! # address
+  market: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ChromaticMarket @entity(immutable: true) {
+  id: Bytes! # market address
+  settlementToken: Bytes! #address
+  settlementTokenSymbol: String!
+  settlementTokenDecimals: Int!
+  oracleProvider: Bytes! # address
+  oracleDescription: String!
+}
+
+type LiquidityBinStatus @entity(immutable: true) {
+  id: ID!
+  liquidity: BigInt!
+  freeLiquidity: BigInt!
+  binValue: BigInt!
+  tradingFeeRate: Int!
+  _parent: ChromaticMarketBinStatus!
+}
+
+type ChromaticMarketBinStatus @entity(immutable: true) {
+  id: ID!
+  market: Bytes! # address
+  totalLiquidity: BigInt!
+  totalFreeLiquidity: BigInt!
+  totalBinValue: BigInt!
+  statuses: [LiquidityBinStatus!]! @derivedFrom(field: "_parent")
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
+type OracleVersion @entity(immutable: true) {
+  id: ID!
+  oracleProvider: Bytes! # address
+  version: BigInt!
+  timestamp: BigInt!
+  price: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
 type AccountCreated @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address

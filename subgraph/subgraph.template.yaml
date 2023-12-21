@@ -3,12 +3,40 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
+    name: ChromaticMarketFactory
+    network: '{{network}}'
+    source:
+      address: '{{ChromaticMarketFactory}}'
+      abi: ChromaticMarketFactory
+      startBlock: {{ChromaticMarketFactory_blockNumber}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - MarketCreated
+        - Market
+      abis:
+        - name: ChromaticMarketFactory
+          file: ./abis/ChromaticMarketFactory.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
+        - name: IOracleProvider
+          file: ./abis/IOracleProvider.json
+      eventHandlers:
+        - event: MarketCreated(indexed address,indexed address,indexed address)
+          handler: handleMarketCreated
+        - event: OracleProviderRegistered(indexed address,(uint32,uint32,uint8))
+          handler: handleOracleProviderRegistered
+      file: ./src/chromatic-market-factory.ts
+
+  - kind: ethereum/contract
     name: ChromaticRouter
     network: '{{network}}'
     source:
       address: '{{ChromaticRouter}}'
       abi: ChromaticRouter
-      startBlock: {{blockNumber}}
+      startBlock: {{ChromaticRouter_blockNumber}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -31,7 +59,7 @@ dataSources:
     network: '{{network}}'
     source:
       abi: IChromaticAccount
-      startBlock: {{blockNumber}}
+      startBlock: {{ChromaticRouter_blockNumber}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -50,3 +78,67 @@ dataSources:
         - event: ClaimPosition(indexed address,indexed uint256,uint256,uint256,int256,uint256,bytes4)
           handler: handleClaimPosition
       file: ./src/chromatic-account.ts
+
+templates:
+
+  - kind: ethereum/contract
+    name: IChromaticMarket
+    network: '{{network}}'
+    source:
+      abi: IChromaticMarket
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ChromaticMarketBinStatus
+        - LiquidityBinStatus
+      abis:
+        - name: IChromaticMarket
+          file: ./abis/IChromaticMarket.json
+      eventHandlers:
+        - event: AddLiquidity((uint256,uint256,uint256,address,uint8,int16))
+          handler: handleAddLiquidity
+        - event: AddLiquidityBatch((uint256,uint256,uint256,address,uint8,int16)[])
+          handler: handleAddLiquidityBatch
+        - event: ClaimLiquidity((uint256,uint256,uint256,address,uint8,int16),indexed uint256)
+          handler: handleClaimLiquidity
+        - event: ClaimLiquidityBatch((uint256,uint256,uint256,address,uint8,int16)[],uint256[])
+          handler: handleClaimLiquidityBatch
+        - event: RemoveLiquidity((uint256,uint256,uint256,address,uint8,int16))
+          handler: handleRemoveLiquidity
+        - event: RemoveLiquidityBatch((uint256,uint256,uint256,address,uint8,int16)[])
+          handler: handleRemoveLiquidityBatch
+        - event: WithdrawLiquidity((uint256,uint256,uint256,address,uint8,int16),indexed uint256,indexed uint256)
+          handler: handleWithdrawLiquidity
+        - event: WithdrawLiquidityBatch((uint256,uint256,uint256,address,uint8,int16)[],uint256[],uint256[])
+          handler: handleWithdrawLiquidityBatch
+        - event: OpenPosition(indexed address,(uint256,uint256,uint256,int256,uint256,uint256,uint256,address,address,uint16,(uint16,uint256)[]))
+          handler: handleOpenPosition
+        - event: ClosePosition(indexed address,(uint256,uint256,uint256,int256,uint256,uint256,uint256,address,address,uint16,(uint16,uint256)[]))
+          handler: handleClosePosition
+        - event: ClaimPosition(indexed address,indexed int256,indexed uint256,(uint256,uint256,uint256,int256,uint256,uint256,uint256,address,address,uint16,(uint16,uint256)[]))
+          handler: handleClaimPosition
+        - event: ClaimPositionByKeeper(indexed address,indexed int256,indexed uint256,uint256,(uint256,uint256,uint256,int256,uint256,uint256,uint256,address,address,uint16,(uint16,uint256)[]))
+          handler: handleClaimPositionByKeeper
+        - event: Liquidate(indexed address,indexed int256,indexed uint256,uint256,(uint256,uint256,uint256,int256,uint256,uint256,uint256,address,address,uint16,(uint16,uint256)[]))
+          handler: handleLiquidate
+      file: ./src/chromatic-market.ts
+
+  - kind: ethereum/contract
+    name: IOracleProvider
+    network: '{{network}}'
+    source:
+      abi: IOracleProvider
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - OracleVersion
+      abis:
+        - name: IOracleProvider
+          file: ./abis/IOracleProvider.json
+      blockHandlers:
+        - handler: saveOracleVersion
+      file: ./src/oracle-provider.ts
