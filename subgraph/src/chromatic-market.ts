@@ -76,23 +76,35 @@ function saveLiquidityBinStatus(event: ethereum.Event): void {
     let market = IChromaticMarket.bind(event.address)
     let statuses = market.liquidityBinStatuses()
 
-    let totalLiquidity = BigInt.zero()
-    let totalFreeLiquidity = BigInt.zero()
-    let totalBinValue = BigInt.zero()
+    let longLiquidity = BigInt.zero()
+    let longFreeLiquidity = BigInt.zero()
+    let longBinValue = BigInt.zero()
+    let shortLiquidity = BigInt.zero()
+    let shortFreeLiquidity = BigInt.zero()
+    let shortBinValue = BigInt.zero()
     for (let i = 0; i < statuses.length; i++) {
       let status = statuses[i]
-      totalLiquidity = totalLiquidity.plus(status.liquidity)
-      totalFreeLiquidity = totalFreeLiquidity.plus(status.freeLiquidity)
-      totalBinValue = totalBinValue.plus(status.binValue)
+      if (status.tradingFeeRate > 0) {
+        longLiquidity = longLiquidity.plus(status.liquidity)
+        longFreeLiquidity = longFreeLiquidity.plus(status.freeLiquidity)
+        longBinValue = longBinValue.plus(status.binValue)
+      } else {
+        shortLiquidity = shortLiquidity.plus(status.liquidity)
+        shortFreeLiquidity = shortFreeLiquidity.plus(status.freeLiquidity)
+        shortBinValue = shortBinValue.plus(status.binValue)
+      }
     }
 
     entity = new ChromaticMarketBinStatus(id)
     entity.market = market._address
     entity.blockNumber = event.block.number
     entity.blockTimestamp = event.block.timestamp
-    entity.totalLiquidity = totalLiquidity
-    entity.totalFreeLiquidity = totalFreeLiquidity
-    entity.totalBinValue = totalBinValue
+    entity.longLiquidity = longLiquidity
+    entity.longFreeLiquidity = longFreeLiquidity
+    entity.longBinValue = longBinValue
+    entity.shortLiquidity = shortLiquidity
+    entity.shortFreeLiquidity = shortFreeLiquidity
+    entity.shortBinValue = shortBinValue
     entity.save()
 
     for (let i = 0; i < statuses.length; i++) {

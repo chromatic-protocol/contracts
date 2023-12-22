@@ -16,6 +16,9 @@ dataSources:
       entities:
         - MarketCreated
         - Market
+        - InterestRate
+        - InterestRatesSnapshot
+        - OracleProviderProperty
       abis:
         - name: ChromaticMarketFactory
           file: ./abis/ChromaticMarketFactory.json
@@ -32,6 +35,16 @@ dataSources:
           handler: handleMarketCreated
         - event: OracleProviderRegistered(indexed address,(uint32,uint32,uint8))
           handler: handleOracleProviderRegistered
+        - event: UpdateLeverageLevel(indexed address,indexed uint8)
+          handler: handleUpdateLeverageLevel
+        - event: UpdateTakeProfitBPSRange(indexed address,indexed uint32,indexed uint32)
+          handler: handleUpdateTakeProfitBPSRange
+        - event: SettlementTokenRegistered(indexed address,indexed address,uint256,uint256,uint256,uint256,uint24)
+          handler: handleSettlementTokenRegistered
+        - event: InterestRateRecordAppended(indexed address,indexed uint256,indexed uint256)
+          handler: handleInterestRateRecordAppended
+        - event: LastInterestRateRecordRemoved(indexed address,indexed uint256,indexed uint256)
+          handler: handleLastInterestRateRecordRemoved
       file: ./src/chromatic-market-factory.ts
 
   - kind: ethereum/contract
