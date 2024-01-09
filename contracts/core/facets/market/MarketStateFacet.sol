@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {PositionMode, LiquidityMode, DisplayMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
@@ -59,14 +60,71 @@ contract MarketStateFacet is MarketFacetBase, IMarketState {
     /**
      * @inheritdoc IMarketState
      */
-    function setProtocolFeeRate(uint16 _protocolFeeRate) external override onlyDao {
+    function updateProtocolFeeRate(uint16 _protocolFeeRate) external override onlyDao {
         require(_protocolFeeRate <= 5000); // 50%
 
-        MarketStorage storage ps = MarketStorageLib.marketStorage();
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
 
-        uint16 protocolFeeRateOld = ps.protocolFeeRate;
-        ps.protocolFeeRate = _protocolFeeRate;
+        uint16 protocolFeeRateOld = ms.protocolFeeRate;
+        ms.protocolFeeRate = _protocolFeeRate;
 
-        emit ProtocolFeeRateSet(protocolFeeRateOld, _protocolFeeRate);
+        emit ProtocolFeeRateUpdated(protocolFeeRateOld, _protocolFeeRate);
+    }
+
+    /**
+     * @inheritdoc IMarketState
+     */
+    function positionMode() external view returns (PositionMode _positionMode) {
+        _positionMode = MarketStorageLib.marketStorage().positionMode;
+    }
+
+    /**
+     * @inheritdoc IMarketState
+     */
+    function updatePositionMode(PositionMode _positionMode) external override onlyDao {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        PositionMode positionModeOld = ms.positionMode;
+        ms.positionMode = _positionMode;
+
+        emit PositionModeUpdated(positionModeOld, _positionMode);
+    }
+
+    /**
+     * @inheritdoc IMarketState
+     */
+    function liquidityMode() external view returns (LiquidityMode _liquidityMode) {
+        _liquidityMode = MarketStorageLib.marketStorage().liquidityMode;
+    }
+
+    /**
+     * @inheritdoc IMarketState
+     */
+    function updateLiquidityMode(LiquidityMode _liquidityMode) external override onlyDao {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        LiquidityMode liquidityModeOld = ms.liquidityMode;
+        ms.liquidityMode = _liquidityMode;
+
+        emit LiquidityModeUpdated(liquidityModeOld, _liquidityMode);
+    }
+
+    /**
+     * @inheritdoc IMarketState
+     */
+    function displayMode() external view returns (DisplayMode _displayMode) {
+        _displayMode = MarketStorageLib.marketStorage().displayMode;
+    }
+
+    /**
+     * @inheritdoc IMarketState
+     */
+    function updateDisplayMode(DisplayMode _displayMode) external override onlyDao {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+
+        DisplayMode displayModeOld = ms.displayMode;
+        ms.displayMode = _displayMode;
+
+        emit DisplayModeUpdated(displayModeOld, _displayMode);
     }
 }

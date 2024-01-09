@@ -5,6 +5,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {PositionMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
@@ -77,6 +78,9 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      */
     error NotAllowableMakerMargin();
 
+    error OpenPositionDisabled();
+    error ClosePositionDisabled();
+
     /**
      * @inheritdoc IMarketTrade
      * @dev Throws a `TooSmallTakerMargin` error if the `takerMargin` is smaller than the minimum required margin for the settlement token.
@@ -100,6 +104,8 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         bytes calldata data
     ) external override nonReentrant returns (OpenPositionInfo memory positionInfo) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireOpenPositionEnabled(ms);
+
         IChromaticMarketFactory factory = ms.factory;
         address liquidator = factory.liquidator();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
@@ -223,6 +229,9 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
     function closePosition(
         uint256 positionId
     ) external override nonReentrant returns (ClosePositionInfo memory closed) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireClosePositionEnabled(ms);
+
         Position storage position = PositionStorageLib.positionStorage().getStoragePosition(
             positionId
         );
@@ -230,7 +239,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         if (position.owner != msg.sender) revert NotPermitted();
         if (position.closeVersion != 0) revert AlreadyClosedPosition();
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
         ILiquidator liquidator = ILiquidator(position.liquidator);
 
@@ -306,7 +314,7 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         uint256 takerMargin,
         uint16 protocolFeeRate,
         address liquidator
-    ) private returns (Position memory) {
+    ) internal returns (Position memory) {
         PositionStorage storage ps = PositionStorageLib.positionStorage();
 
         return
@@ -323,5 +331,25 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
                 _protocolFeeRate: protocolFeeRate,
                 _binMargins: new BinMargin[](0)
             });
+    }
+
+    /**
+     * @dev Throws if open position is disabled.
+     */
+    function _requireOpenPositionEnabled(MarketStorage storage ms) internal view virtual {
+        PositionMode mode = ms.positionMode;
+        if (mode == PositionMode.OpenDisabled || mode == PositionMode.Suspended) {
+            revert OpenPositionDisabled();
+        }
+    }
+
+    /**
+     * @dev Throws if close position is disabled.
+     */
+    function _requireClosePositionEnabled(MarketStorage storage ms) internal view virtual {
+        PositionMode mode = ms.positionMode;
+        if (mode == PositionMode.CloseDisabled || mode == PositionMode.Suspended) {
+            revert ClosePositionDisabled();
+        }
     }
 }
