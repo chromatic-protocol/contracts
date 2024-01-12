@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {PositionMode, LiquidityMode, DisplayMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
@@ -19,6 +20,9 @@ struct MarketStorage {
     IChromaticVault vault;
     LiquidityPool liquidityPool;
     uint16 protocolFeeRate;
+    PositionMode positionMode;
+    LiquidityMode liquidityMode;
+    DisplayMode displayMode;
 }
 
 struct LpReceiptStorage {

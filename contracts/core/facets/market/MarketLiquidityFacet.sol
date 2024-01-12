@@ -5,6 +5,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
+import {LiquidityMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
@@ -52,6 +53,9 @@ contract MarketLiquidityFacet is
      */
     error InvalidTransferredTokenAmount();
 
+    error AddLiquidityDisabled();
+    error RemoveLiquidityDisabled();
+
     /**
      * @inheritdoc IMarketLiquidity
      */
@@ -61,6 +65,7 @@ contract MarketLiquidityFacet is
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt memory receipt) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireAddLiquidityEnabled(ms);
 
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
@@ -94,9 +99,11 @@ contract MarketLiquidityFacet is
         uint256[] calldata amounts,
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt[] memory receipts) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireAddLiquidityEnabled(ms);
+
         require(tradingFeeRates.length == amounts.length);
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
 
         LpContext memory ctx = newLpContext(ms);
@@ -284,6 +291,7 @@ contract MarketLiquidityFacet is
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt memory receipt) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireRemoveLiquidityEnabled(ms);
 
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
@@ -320,9 +328,11 @@ contract MarketLiquidityFacet is
         uint256[] calldata clbTokenAmounts,
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt[] memory receipts) {
+        MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireRemoveLiquidityEnabled(ms);
+
         require(tradingFeeRates.length == clbTokenAmounts.length);
 
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
         LiquidityPool storage liquidityPool = ms.liquidityPool;
 
         LpContext memory ctx = newLpContext(ms);
@@ -542,6 +552,26 @@ contract MarketLiquidityFacet is
      */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         MarketStorageLib.marketStorage().liquidityPool.distributeEarning(earning, marketBalance);
+    }
+
+    /**
+     * @dev Throws if add liquidity is disabled.
+     */
+    function _requireAddLiquidityEnabled(MarketStorage storage ms) internal view virtual {
+        LiquidityMode mode = ms.liquidityMode;
+        if (mode == LiquidityMode.AddDisabled || mode == LiquidityMode.Suspended) {
+            revert AddLiquidityDisabled();
+        }
+    }
+
+    /**
+     * @dev Throws if remove liquidity is disabled.
+     */
+    function _requireRemoveLiquidityEnabled(MarketStorage storage ms) internal view virtual {
+        LiquidityMode mode = ms.liquidityMode;
+        if (mode == LiquidityMode.RemoveDisabled || mode == LiquidityMode.Suspended) {
+            revert RemoveLiquidityDisabled();
+        }
     }
 
     // implement IERC1155Receiver
