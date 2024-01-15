@@ -94,4 +94,10 @@ contract FixedPriceSwapRouter is ISwapRouter, Ownable {
         }
         s_whitelistedClients.remove(client);
     }
+
+    fallback() external payable {
+        if (msg.value > 0) {
+            WETH9.deposit{value: msg.value}();
+        }
+    }
 }
