@@ -1,4 +1,4 @@
-import { ChromaticRouter } from '@chromatic/typechain-types'
+import { ChromaticRouter, IChromaticMarketFactory__factory } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import { subtask, task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
@@ -67,6 +67,21 @@ task('verify:core').setAction(
       constructorArguments: vault.args
     })
     console.log(chalk.yellow(`✨ verify ChromaticVault`))
+
+    const signers = await hre.ethers.getSigners()
+    const marketFactory = IChromaticMarketFactory__factory.connect(factory.address, signers[0])
+    const marketAddresses = await marketFactory.getMarkets()
+
+    if (marketAddresses.length > 0) {
+      await verify(hre, {
+        address: marketAddresses[0],
+        constructorArguments: [marketDiamondCutFacet.address],
+        libraries: {
+          CLBTokenDeployerLib: (await deployments.get('CLBTokenDeployerLib')).address
+        }
+      })
+      console.log(chalk.yellow(`✨ verify ChromaticMarket`))
+    }
 
     switch (true) {
       case /^arbitrum/.test(network.name):
