@@ -13,10 +13,15 @@ import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Con
 import {PendingPosition, ClosingPosition, PendingLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
+    uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 2e7;
+
     IChromaticMarketFactory public immutable factory;
     IMate2AutomationRegistry public immutable automate;
 
+    uint32 public upkeepGasLimit;
     mapping(address => uint256) public marketSettlementUpkeepIds; // market => upkeep id
+
+    event UpkeepGasLimitUpdated(uint32 gasLimitOld, uint32 gasLimitNew);
 
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
@@ -55,6 +60,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     constructor(IChromaticMarketFactory _factory, address _automate) {
         factory = _factory;
         automate = IMate2AutomationRegistry(_automate);
+        upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
     }
 
     /**
@@ -85,7 +91,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
 
         marketSettlementUpkeepIds[market] = automate.registerUpkeep(
             address(this),
-            2e7, //uint32 gasLimit,
+            upkeepGasLimit,
             address(this), // address admin,
             true, // bool useTreasury,
             false, // bool singleExec,
@@ -198,5 +204,11 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
 
     function cancelUpkeep(uint256 upkeepId) external onlyDao {
         automate.cancelUpkeep(upkeepId);
+    }
+
+    function updateUpkeepGasLimit(uint32 gasLimit) external onlyDao {
+        uint32 gasLimitOld = upkeepGasLimit;
+        upkeepGasLimit = gasLimit;
+        emit UpkeepGasLimitUpdated(gasLimitOld, gasLimit);
     }
 }
