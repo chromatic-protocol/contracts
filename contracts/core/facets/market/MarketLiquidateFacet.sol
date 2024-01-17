@@ -167,6 +167,10 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         Position memory position,
         IOracleProvider.OracleVersion memory oracleVersion
     ) internal view returns (bool _liquidate, int256 _pnl) {
+        if (position.openVersion >= oracleVersion.version) {
+            return (false, 0);
+        }
+
         uint256 interest = ctx.calculateInterest(
             position.makerMargin(),
             position.openTimestamp,
