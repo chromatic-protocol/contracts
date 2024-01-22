@@ -98,19 +98,19 @@ subtask('verify:core:arbitrum').setAction(
   async (taskArgs: TaskArguments, hre: HardhatRuntimeEnvironment): Promise<any> => {
     const { deployments } = hre
 
-    const distributor = await deployments.get('GelatoVaultEarningDistributor')
+    const distributor = await deployments.get('Mate2VaultEarningDistributor')
     await verify(hre, {
       address: distributor.address,
       constructorArguments: distributor.args
     })
-    console.log(chalk.yellow(`✨ verify GelatoVaultEarningDistributor`))
+    console.log(chalk.yellow(`✨ verify Mate2VaultEarningDistributor`))
 
-    const liquidator = await deployments.get('GelatoLiquidator')
+    const liquidator = await deployments.get('Mate2Liquidator')
     await verify(hre, {
       address: liquidator.address,
       constructorArguments: liquidator.args
     })
-    console.log(chalk.yellow(`✨ verify GelatoLiquidator`))
+    console.log(chalk.yellow(`✨ verify Mate2Liquidator`))
   }
 )
 
