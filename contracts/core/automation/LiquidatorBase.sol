@@ -47,7 +47,10 @@ abstract contract LiquidatorBase is ILiquidator {
     /**
      * @inheritdoc ILiquidator
      */
-    function liquidate(address market, uint256 positionId) public override {
+    function liquidate(
+        address market,
+        uint256 positionId
+    ) public override {
         // feeToken is the native token because ETH is set as a fee token when creating task
         (uint256 fee, address feePayee) = _getFeeInfo();
         IMarketLiquidate(market).liquidate(positionId, feePayee, fee);

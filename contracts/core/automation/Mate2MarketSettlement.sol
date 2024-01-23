@@ -4,19 +4,21 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IOracleProviderPullBased} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProviderPullBased.sol";
 import {IMarketSettlement} from "@chromatic-protocol/contracts/core/interfaces/IMarketSettlement.sol";
-import {IMate2Automation} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation.sol";
+import {IMate2Automation1_1} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
 import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
+import {IMate2AutomationRegistry1_1, ExtraModule} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry1_1.sol";
 import {IUpkeepTreasury} from "@chromatic-protocol/contracts/core/automation/mate2/IUpkeepTreasury.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {PendingPosition, ClosingPosition, PendingLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
-contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
+contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
     uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 2e7;
 
     IChromaticMarketFactory public immutable factory;
-    IMate2AutomationRegistry public immutable automate;
+    IMate2AutomationRegistry1_1 public immutable automate;
 
     uint32 public upkeepGasLimit;
     mapping(address => uint256) public marketSettlementUpkeepIds; // market => upkeep id
@@ -59,25 +61,27 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
 
     constructor(IChromaticMarketFactory _factory, address _automate) {
         factory = _factory;
-        automate = IMate2AutomationRegistry(_automate);
+        automate = IMate2AutomationRegistry1_1(_automate);
         upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
     }
 
     /**
-     * @inheritdoc IMate2Automation
+     * @inheritdoc IMate2Automation1_1
      */
     function checkUpkeep(
-        bytes calldata checkData
+        bytes calldata checkData,
+        bytes calldata extraData
     ) external view returns (bool upkeepNeeded, bytes memory performData) {
         address market = abi.decode(checkData, (address));
-        return resolveSettlement(market);
+        return resolveSettlement(market, extraData);
     }
 
     /**
-     * @inheritdoc IMate2Automation
+     * @inheritdoc IMate2Automation1_1
      */
     function performUpkeep(bytes calldata performData) external {
-        address market = abi.decode(performData, (address));
+        (address market, bytes memory extraData) = abi.decode(performData, (address, bytes));
+        updatePrice(market, extraData);
         settle(market);
     }
 
@@ -89,13 +93,28 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
     function createSettlementTask(address market) external override onlyFactoryOrDao {
         if (marketSettlementUpkeepIds[market] != 0) revert ExistMarketSettlementTask();
 
-        marketSettlementUpkeepIds[market] = automate.registerUpkeep(
+        IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
+
+        ExtraModule extraModule; // = ExtraModule.None;
+        bytes memory extraParam; // = bytes("");
+
+        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+            IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
+                address(oracleProvider)
+            );
+            extraModule = pullBasedOracle.extraModule();
+            extraParam = pullBasedOracle.extraParam();
+        }
+
+        automate.registerUpkeep(
             address(this),
             upkeepGasLimit,
             address(this), // address admin,
             true, // bool useTreasury,
             false, // bool singleExec,
-            abi.encode(market)
+            abi.encode(market),
+            extraModule,
+            extraParam
         );
     }
 
@@ -117,7 +136,8 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
      * @inheritdoc IMarketSettlement
      */
     function resolveSettlement(
-        address market
+        address market,
+        bytes calldata extraData
     ) public view override returns (bool canExec, bytes memory execPayload) {
         int16[] memory feeRates = _feeRates();
         IOracleProvider.OracleVersion memory currentOracleVersion = IChromaticMarket(market)
@@ -130,7 +150,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         for (uint256 i; i < pendingPositions.length; ) {
             PendingPosition memory _pos = pendingPositions[i];
             if (_pos.openVersion != 0 && _pos.openVersion < currentOracleVersion.version) {
-                return (true, abi.encode(market));
+                return (true, abi.encode(market, extraData));
             }
 
             unchecked {
@@ -144,7 +164,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         for (uint256 i; i < closingPositions.length; ) {
             ClosingPosition memory _pos = closingPositions[i];
             if (_pos.closeVersion != 0 && _pos.closeVersion < currentOracleVersion.version) {
-                return (true, abi.encode(market));
+                return (true, abi.encode(market, extraData));
             }
 
             unchecked {
@@ -157,7 +177,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         for (uint256 i; i < pendingLiquidities.length; ) {
             PendingLiquidity memory _liq = pendingLiquidities[i];
             if (_liq.oracleVersion != 0 && _liq.oracleVersion < currentOracleVersion.version) {
-                return (true, abi.encode(market));
+                return (true, abi.encode(market, extraData));
             }
 
             unchecked {
@@ -210,5 +230,18 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation {
         uint32 gasLimitOld = upkeepGasLimit;
         upkeepGasLimit = gasLimit;
         emit UpkeepGasLimitUpdated(gasLimitOld, gasLimit);
+    }
+
+    function updatePrice(address market, bytes memory extraData) public override {
+        IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
+
+        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+            IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
+                address(oracleProvider)
+            );
+            uint256 fee = pullBasedOracle.getUpdateFee(extraData);
+            require(address(this).balance < fee, "Insufficient balance");
+            pullBasedOracle.updatePrice{value: fee}(extraData);
+        }
     }
 }

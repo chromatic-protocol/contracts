@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./interfaces/IOracleProvider.sol";
+import "./base/OracleProviderBase.sol";
 import "./types/SupraSValueFeed.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract SupraFeedOracle is IOracleProvider {
+contract SupraFeedOracle is OracleProviderBase {
     using SafeMath for uint256;
 
     uint256 private constant BASE = 1e18;

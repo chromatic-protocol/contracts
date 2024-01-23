@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./interfaces/IOracleProvider.sol";
+import "./base/OracleProviderPullBasedBase.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
+import {PythOffchainPrice} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
 
-contract PythFeedOracle is IOracleProvider {
+// TODO mapping(bytes => uint256) => vaa : version
+// 이미 업데이트 된 vaa는 업데이트 안하게
+contract PythFeedOracle is OracleProviderPullBasedBase {
     using SignedMath for int256;
     using SignedSafeMath for int256;
 
@@ -31,6 +34,8 @@ contract PythFeedOracle is IOracleProvider {
 
     /// @dev Mapping of version to OracleVersion
     mapping(uint256 => OracleVersion) private oracleVersions;
+
+    // lastSyncedVersion external TODO
 
     /**
      * @notice Initializes the contract state
@@ -107,5 +112,35 @@ contract PythFeedOracle is IOracleProvider {
      */
     function oracleProviderName() external pure override returns (string memory) {
         return "pyth";
+    }
+
+    function extraModule() external pure override returns (ExtraModule) {
+        return ExtraModule.Pyth;
+    }
+
+    function extraParam() external view override returns (bytes memory) {
+        return abi.encodePacked(priceFeedId);
+    }
+
+    function updatePrice(bytes calldata offchainData) external payable override {
+        // TODO validation : id, price, timestamp...
+        bytes[] memory updateDatas = new bytes[](1);
+        PythOffchainPrice memory offChainPrice = decodeOffchainData(offchainData);
+        updateDatas[0] = offChainPrice.vaa;
+        pyth.updatePriceFeeds{value: msg.value}(updateDatas);
+        PythStructs.Price memory onchainPrice = pyth.getPrice(priceFeedId);
+        // TODO validate and update internal struct
+    }
+
+    function getUpdateFee(bytes calldata offchainData) external view override returns (uint256) {
+        bytes[] memory updateDatas = new bytes[](1);
+        updateDatas[0] = decodeOffchainData(offchainData).vaa;
+        return pyth.getUpdateFee(updateDatas);
+    }
+
+    function decodeOffchainData(
+        bytes calldata offchainData
+    ) internal pure returns (PythOffchainPrice memory) {
+        return abi.decode(offchainData, (PythOffchainPrice));
     }
 }
