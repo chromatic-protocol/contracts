@@ -12,4 +12,6 @@ interface IOracleProviderPullBased is IOracleProvider {
     function getUpdateFee(bytes calldata offchainData) external view returns (uint256);
 
     function updatePrice(bytes calldata offchainData) external payable;
+
+    function parseExtraData(bytes calldata extraData) external view returns (OracleVersion memory);
 }

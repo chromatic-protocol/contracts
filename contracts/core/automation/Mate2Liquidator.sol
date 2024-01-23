@@ -3,21 +3,25 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
-import {IMate2Automation} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation.sol";
-import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
+import {IMate2Automation1_1, ExtraModule} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
+import {IMate2AutomationRegistry1_1} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry1_1.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {LiquidatorBase} from "@chromatic-protocol/contracts/core/automation/LiquidatorBase.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {IOracleProviderPullBased} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProviderPullBased.sol";
+import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
+import {IMarketSettlement} from "@chromatic-protocol/contracts/core/interfaces/IMarketSettlement.sol";
 
 /**
  * @title Mate2Liquidator
  * @dev A contract that handles the liquidation and claiming of positions in Chromatic markets.
  *      It implements the ILiquidator and the IMate2Automation interface.
  */
-contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
+contract Mate2Liquidator is LiquidatorBase, IMate2Automation1_1 {
     uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 1e7;
     uint256 public constant DEFAULT_WAIT_POSITION_CLAIM = 1 days;
 
-    IMate2AutomationRegistry public immutable automate;
+    IMate2AutomationRegistry1_1 public immutable automate;
 
     uint32 public upkeepGasLimit;
     uint256 public waitPositionClaim;
@@ -39,7 +43,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      * @param _automate The address of the Mate2 Automate contract.
      */
     constructor(IChromaticMarketFactory _factory, address _automate) LiquidatorBase(_factory) {
-        automate = IMate2AutomationRegistry(_automate);
+        automate = IMate2AutomationRegistry1_1(_automate);
         upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
         waitPositionClaim = DEFAULT_WAIT_POSITION_CLAIM;
     }
@@ -65,10 +69,27 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      */
     function resolveLiquidation(
         address _market,
-        uint256 positionId
+        uint256 positionId,
+        bytes calldata extraData
     ) public view override returns (bool canExec, bytes memory execPayload) {
-        if (IMarketLiquidate(_market).checkLiquidation(positionId)) {
-            return (true, abi.encode(_market, positionId, UpkeepType.LiquidatePosition));
+        IOracleProvider oracleProvider = IChromaticMarket(_market).oracleProvider();
+
+        bool shouldLiquidate;
+
+        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+            IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
+                address(oracleProvider)
+            );
+            shouldLiquidate = IMarketLiquidate(_market).checkLiquidationWithOracleVersion(
+                positionId,
+                pullBasedOracle.parseExtraData(extraData)
+            );
+        } else {
+            shouldLiquidate = IMarketLiquidate(_market).checkLiquidation(positionId);
+        }
+
+        if (shouldLiquidate) {
+            return (true, abi.encode(_market, positionId, UpkeepType.LiquidatePosition, extraData));
         }
 
         return (false, bytes(""));
@@ -100,10 +121,11 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      */
     function resolveClaimPosition(
         address _market,
-        uint256 positionId
+        uint256 positionId,
+        bytes calldata extraData
     ) public view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkClaimPosition(positionId)) {
-            return (true, abi.encode(_market, positionId, UpkeepType.ClaimPosition));
+            return (true, abi.encode(_market, positionId, UpkeepType.ClaimPosition, extraData));
         }
 
         return (false, "");
@@ -126,13 +148,28 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
             return;
         }
 
+        IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
+
+        ExtraModule extraModule; // = ExtraModule.None;
+        bytes memory extraParam; // = bytes("");
+
+        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+            IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
+                address(oracleProvider)
+            );
+            extraModule = pullBasedOracle.extraModule();
+            extraParam = pullBasedOracle.extraParam();
+        }
+
         uint256 upkeepId = automate.registerUpkeep(
             address(this),
             upkeepGasLimit,
             address(this), // address admin,
             false, // bool useTreasury,
             true, // bool singleExec,
-            abi.encode(market, positionId, upkeepType, executableTime)
+            abi.encode(market, positionId, upkeepType, executableTime),
+            extraModule,
+            extraParam
         );
 
         registry[market][positionId] = upkeepId;
@@ -159,28 +196,33 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
     }
 
     function checkUpkeep(
-        bytes calldata checkData
+        bytes calldata checkData,
+        bytes calldata extraData
     ) external view returns (bool upkeepNeeded, bytes memory performData) {
         (address market, uint256 positionId, UpkeepType upkeepType, uint256 claimTime) = abi.decode(
             checkData,
             (address, uint256, UpkeepType, uint256)
         );
         if (upkeepType == UpkeepType.LiquidatePosition)
-            return resolveLiquidation(market, positionId);
+            return resolveLiquidation(market, positionId, extraData);
         else if (upkeepType == UpkeepType.ClaimPosition) {
             if (block.timestamp < claimTime) {
                 return (false, bytes(""));
             }
-            return resolveClaimPosition(market, positionId);
+            return resolveClaimPosition(market, positionId, extraData);
         }
     }
 
     function performUpkeep(bytes memory performData) external {
-        (address market, uint256 positionId, UpkeepType upkeepType) = abi.decode(
-            performData,
-            (address, uint256, UpkeepType)
-        );
+        (address market, uint256 positionId, UpkeepType upkeepType, bytes memory extraData) = abi
+            .decode(performData, (address, uint256, UpkeepType, bytes));
         if (upkeepType == UpkeepType.LiquidatePosition) {
+            IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
+            if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+                IMarketSettlement(
+                    IChromaticMarketFactory(IChromaticMarket(market).factory()).marketSettlement()
+                ).updatePrice(market, extraData);
+            }
             liquidate(market, positionId);
         } else if (upkeepType == UpkeepType.ClaimPosition) {
             claimPosition(market, positionId);
