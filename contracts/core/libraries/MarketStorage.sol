@@ -83,7 +83,7 @@ library LpReceiptStorageLib {
             delete self.lpReceipts[receiptIds[i]];
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -127,7 +127,7 @@ library PositionStorageLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

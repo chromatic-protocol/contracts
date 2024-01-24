@@ -266,7 +266,7 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
         return address(0);

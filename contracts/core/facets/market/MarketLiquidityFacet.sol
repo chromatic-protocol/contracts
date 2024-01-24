@@ -124,7 +124,7 @@ contract MarketLiquidityFacet is
             );
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -140,7 +140,7 @@ contract MarketLiquidityFacet is
             totalAmount += amounts[i];
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -235,7 +235,7 @@ contract MarketLiquidityFacet is
             _tokenAmounts[i] = _receipts[i].amount;
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -351,7 +351,7 @@ contract MarketLiquidityFacet is
             );
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -371,7 +371,7 @@ contract MarketLiquidityFacet is
             _clbTokenIds[i] = CLBTokenLib.encodeId(tradingFeeRates[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -388,7 +388,7 @@ contract MarketLiquidityFacet is
                 revert InvalidTransferredTokenAmount();
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -509,7 +509,7 @@ contract MarketLiquidityFacet is
             );
             _feeRates[i] = _receipts[i].tradingFeeRate;
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
