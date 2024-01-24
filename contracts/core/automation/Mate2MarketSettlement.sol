@@ -95,26 +95,23 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
 
         IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
 
-        ExtraModule extraModule; // = ExtraModule.None;
-        bytes memory extraParam; // = bytes("");
-
-        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
-            IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
-                address(oracleProvider)
-            );
-            extraModule = pullBasedOracle.extraModule();
-            extraParam = pullBasedOracle.extraParam();
+        if (!oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+            return;
         }
+
+        IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
+            address(oracleProvider)
+        );
 
         automate.registerUpkeep(
             address(this),
             upkeepGasLimit,
             address(this), // address admin,
-            true, // bool useTreasury,
+            false, // bool useTreasury,
             false, // bool singleExec,
             abi.encode(market),
-            extraModule,
-            extraParam
+            pullBasedOracle.extraModule(),
+            pullBasedOracle.extraParam()
         );
     }
 
