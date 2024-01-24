@@ -68,7 +68,7 @@ library CLBTokenLib {
             ids[i + FEE_RATES_LENGTH] = _encodeId(feeRates[i], false);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 

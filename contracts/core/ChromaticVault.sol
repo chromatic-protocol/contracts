@@ -485,7 +485,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
             emit MarketEarningAccumulated(market, marketEarning);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 

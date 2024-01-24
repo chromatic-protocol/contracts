@@ -61,7 +61,7 @@ contract ChromaticLens {
             result[i] = market.getLpReceipt(receiptIds[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -83,7 +83,7 @@ contract ChromaticLens {
             accounts[i] = owner;
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -101,7 +101,7 @@ contract ChromaticLens {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -122,7 +122,7 @@ contract ChromaticLens {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -140,7 +140,7 @@ contract ChromaticLens {
             });
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
