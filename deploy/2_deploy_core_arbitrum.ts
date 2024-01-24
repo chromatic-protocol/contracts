@@ -17,15 +17,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
-  const automationAddress = MATE2_AUTOMATION_ADDRESS[network.config.chainId!]
 
   const echainId: keyof typeof WETH9 =
     network.name === 'anvil' ? config.networks.arbitrum_sepolia.chainId! : network.config.chainId!
+
+  const automationAddress = MATE2_AUTOMATION_ADDRESS[echainId]
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
 
   const deployOpts = { from: deployer }
   const factory = await deployments.get('ChromaticMarketFactory')
+  console.log('factory.address', factory.address)
   const marketFactory = ChromaticMarketFactory__factory.connect(
     factory.address,
     await ethers.getSigner(deployer)
