@@ -3,11 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {OracleProviderBase, IOracleProvider} from "@chromatic-protocol/contracts/oracle/base/OracleProviderBase.sol";
 import {CLBToken} from "@chromatic-protocol/contracts/core/CLBToken.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 
-contract OracleProviderMock is IOracleProvider {
+contract OracleProviderMock is OracleProviderBase {
     // add this to be excluded from coverage report
     function test() public {}
 
