@@ -83,6 +83,44 @@ export function spec(networkName: keyof typeof forkingOptions) {
       ).changeEtherBalance(await signer.getAddress(), 0)
     })
 
+    it('emit event', async () => {
+      const ts = (await timestamp()) - 1
+      const offchainPrice = await fetchOffchainPrice(btcUsdId, ts)
+
+      const fee = await pythOracleProvider.getUpdateFee(offchainPrice.extraData)
+
+      const pyth = await ethers.getContractAt('IPyth', await pythOracleProvider.pyth())
+
+      await expect(pythOracleProvider.updatePrice(offchainPrice.extraData, { value: fee })).emit(
+        pyth,
+        'PriceFeedUpdate'
+      )
+
+      // PriceFeedUpdate
+    })
+
+    it('pyth onchain update test', async () => {
+      const ts = (await timestamp()) - 1
+      const offchainPrice = await fetchOffchainPrice(btcUsdId, ts)
+
+      const fee = await pythOracleProvider.getUpdateFee(offchainPrice.extraData)
+
+      const pyth = await ethers.getContractAt('IPyth', await pythOracleProvider.pyth())
+
+      const priceBeforeUpdate = await pyth.getPriceUnsafe(btcUsdId)
+      console.log(priceBeforeUpdate)
+      // prettier-ignore
+      await (await pyth.parsePriceFeedUpdates([(await fetchOffchainPrice(btcUsdId, ts-10)).vaa], [btcUsdId], 0, ts+100, { value: fee })).wait()
+      const priceAfterPasePriceFeedUpdates = await pyth.getPriceUnsafe(btcUsdId)
+      expect(priceBeforeUpdate).to.deep.equal(priceAfterPasePriceFeedUpdates)
+
+      // prettier-ignore
+      await (await pyth.updatePriceFeeds([(await fetchOffchainPrice(btcUsdId, ts - 8)).vaa], { value: fee })).wait()
+      const priceAfterUpdatePriceFeeds = await pyth.getPriceUnsafe(btcUsdId)
+      expect(priceAfterUpdatePriceFeeds.publishTime).greaterThan(priceBeforeUpdate.publishTime)
+      expect(priceAfterUpdatePriceFeeds.publishTime).equal(ts - 8)
+    })
+
     async function timestamp() {
       return (await ethers.provider.getBlock('latest'))!.timestamp
     }
