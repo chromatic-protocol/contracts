@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./base/OracleProviderPullBasedBase.sol";
-import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SignedSafeMath} from "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
-import {PythOffchainPrice} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
+import {PythOffchainPrice, ExtraModule} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
+import {OracleProviderPullBasedBase, IOracleProvider, IOracleProviderPullBased} from "@chromatic-protocol/contracts/oracle/base/OracleProviderPullBasedBase.sol";
+import {AbstractPyth, PythStructs} from "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 
 contract PythFeedOracle is OracleProviderPullBasedBase {
     using SignedMath for int256;
@@ -24,15 +24,13 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
     string private _description;
 
     /// @dev Last version index seen when `sync` was called
-    uint256 private lastSyncedVersion;
+    uint256 private lastSyncedVersionIndex;
 
     /// @dev Mapping of version to OracleVersion
     mapping(uint256 => OracleVersion) private oracleVersions;
 
     /// @dev Mapping of updateData(vaa) to version index
     mapping(bytes32 => uint256) private updatedVersion;
-
-    // lastSyncedVersion external TODO
 
     /**
      * @notice Initializes the contract state
@@ -55,12 +53,15 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
      */
     function sync() public returns (OracleVersion memory) {
         PythStructs.Price memory price = pyth.getPriceUnsafe(priceFeedId);
-        OracleVersion memory lastVersion = oracleVersions[lastSyncedVersion];
+        OracleVersion memory lastVersion = oracleVersions[lastSyncedVersionIndex];
         if (lastVersion.timestamp < price.publishTime) {
-            ++lastSyncedVersion;
-            oracleVersions[lastSyncedVersion] = pythPriceToOracleVersion(price, lastSyncedVersion);
+            ++lastSyncedVersionIndex;
+            oracleVersions[lastSyncedVersionIndex] = pythPriceToOracleVersion(
+                price,
+                lastSyncedVersionIndex
+            );
         }
-        return oracleVersions[lastSyncedVersion];
+        return oracleVersions[lastSyncedVersionIndex];
     }
 
     /**
@@ -68,10 +69,17 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
      */
     function currentVersion() public view returns (OracleVersion memory oracleVersion) {
         PythStructs.Price memory price = pyth.getPriceUnsafe(priceFeedId);
-        oracleVersion = oracleVersions[lastSyncedVersion];
+        oracleVersion = oracleVersions[lastSyncedVersionIndex];
         if (price.publishTime > oracleVersion.timestamp) {
-            oracleVersion = pythPriceToOracleVersion(price, lastSyncedVersion + 1);
+            oracleVersion = pythPriceToOracleVersion(price, lastSyncedVersionIndex + 1);
         }
+    }
+
+    /**
+     * @inheritdoc IOracleProviderPullBased
+     */
+    function lastSyncedVersion() external view returns (OracleVersion memory) {
+        return oracleVersions[lastSyncedVersionIndex];
     }
 
     /**
@@ -105,7 +113,6 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
 
     function updatePrice(bytes calldata offchainData) external payable override {
         PythOffchainPrice memory offChainPrice = decodeOffchainData(offchainData);
-        OracleVersion memory lastVersion = oracleVersions[lastSyncedVersion];
 
         bytes32 vaa = keccak256(offChainPrice.vaa);
         if (updatedVersion[vaa] != 0) {
@@ -115,24 +122,11 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
         }
 
         bytes[] memory updateDatas = new bytes[](1);
-        bytes32[] memory idList = new bytes32[](1);
         updateDatas[0] = offChainPrice.vaa;
-        idList[0] = priceFeedId;
 
-        PythStructs.Price memory price = pyth
-        .parsePriceFeedUpdates{value: msg.value}(
-            updateDatas,
-            idList,
-            uint64(lastVersion.timestamp + 1),
-            uint64(block.timestamp)
-        )[0].price;
+        pyth.updatePriceFeeds{value: msg.value}(updateDatas);
 
-        if (price.price != offChainPrice.price || price.publishTime != offChainPrice.publishTime)
-            revert WrongData();
-
-        ++lastSyncedVersion;
-        oracleVersions[lastSyncedVersion] = pythPriceToOracleVersion(price, lastSyncedVersion);
-        updatedVersion[vaa] = lastSyncedVersion;
+        updatedVersion[vaa] = lastSyncedVersionIndex;
     }
 
     function getUpdateFee(bytes calldata offchainData) external view override returns (uint256) {
@@ -173,7 +167,7 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
         PythOffchainPrice memory offChainPrice = decodeOffchainData(extraData);
         return
             OracleVersion(
-                lastSyncedVersion + 1,
+                lastSyncedVersionIndex + 1,
                 offChainPrice.publishTime,
                 baseDecimalPrice(offChainPrice.price, offChainPrice.expo)
             );
