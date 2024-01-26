@@ -138,7 +138,7 @@ abstract contract BaseSetup is Test {
         );
         factory.registerSettlementToken(
             address(ctst),
-            address(1), // oracleProvider
+            address(oracleProvider), // oracleProvider
             1 ether, // minimumMargin
             1000, // interestRate, 10%
             500, // flashLoanFeeRate, 5%
