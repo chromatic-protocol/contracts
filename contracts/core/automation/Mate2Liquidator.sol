@@ -11,6 +11,7 @@ import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/I
 import {IOracleProviderPullBased} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProviderPullBased.sol";
 import {IChromaticMarket} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarket.sol";
 import {IMarketSettlement} from "@chromatic-protocol/contracts/core/interfaces/IMarketSettlement.sol";
+import {OracleProviderLib} from "@chromatic-protocol/contracts/oracle/libraries/OracleProviderLib.sol";
 
 /**
  * @title Mate2Liquidator
@@ -76,7 +77,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation1_1 {
 
         bool shouldLiquidate;
 
-        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+        if (OracleProviderLib.isPullBased(oracleProvider)) {
             IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
                 address(oracleProvider)
             );
@@ -153,7 +154,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation1_1 {
         ExtraModule extraModule; // = ExtraModule.None;
         bytes memory extraParam; // = bytes("");
 
-        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+        if (OracleProviderLib.isPullBased(oracleProvider)) {
             IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
                 address(oracleProvider)
             );
@@ -221,7 +222,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation1_1 {
             .decode(performData, (address, uint256, UpkeepType, bytes));
         if (upkeepType == UpkeepType.LiquidatePosition) {
             IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
-            if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+            if (OracleProviderLib.isPullBased(oracleProvider)) {
                 IMarketSettlement(
                     IChromaticMarketFactory(IChromaticMarket(market).factory()).marketSettlement()
                 ).updatePrice(market, extraData);
