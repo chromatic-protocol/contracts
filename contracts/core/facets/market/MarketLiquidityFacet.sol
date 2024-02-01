@@ -6,7 +6,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 import {LiquidityMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
-import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
@@ -71,16 +71,21 @@ contract MarketLiquidityFacet is
         ctx.syncOracleVersion();
 
         IERC20Metadata settlementToken = IERC20Metadata(ctx.settlementToken);
-        IVault vault = ctx.vault;
+        IChromaticVault vault = ctx.vault;
 
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
+        uint256 pendingMakerEarningBefore = vault.pendingMakerEarnings(address(settlementToken));
         IChromaticLiquidityCallback(msg.sender).addLiquidityCallback(
             address(settlementToken),
             address(vault),
             data
         );
 
-        uint256 amount = settlementToken.balanceOf(address(vault)) - balanceBefore;
+        uint256 pendingMakerEarning = vault.pendingMakerEarnings(address(settlementToken)) -
+            pendingMakerEarningBefore;
+        uint256 amount = settlementToken.balanceOf(address(vault)) -
+            balanceBefore -
+            pendingMakerEarning;
 
         vault.onAddLiquidity(ctx.settlementToken, amount);
 
