@@ -230,6 +230,9 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
         emit UpkeepGasLimitUpdated(gasLimitOld, gasLimit);
     }
 
+    /**
+     * @inheritdoc IMarketSettlement
+     */
     function updatePrice(address market, bytes memory extraData) public override {
         IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
 
@@ -242,4 +245,14 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
             pullBasedOracle.updatePrice{value: fee}(extraData);
         }
     }
+
+    /**
+     * @dev Fallback function to receive ETH payments.
+     */
+    receive() external payable {}
+
+    /**
+     * @dev Fallback function to receive ETH payments.
+     */
+    fallback() external payable {}
 }
