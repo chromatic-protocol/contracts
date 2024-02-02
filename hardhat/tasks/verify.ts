@@ -34,9 +34,13 @@ task('verify:core').setAction(
     await verify(hre, { address: marketLensFacet.address })
     console.log(chalk.yellow(`✨ verify MarketLensFacet`))
 
-    const marketTradeFacet = await deployments.get('MarketTradeFacet')
-    await verify(hre, { address: marketTradeFacet.address })
-    console.log(chalk.yellow(`✨ verify MarketTradeFacet`))
+    const marketTradeOpenPositionFacet = await deployments.get('MarketTradeOpenPositionFacet')
+    await verify(hre, { address: marketTradeOpenPositionFacet.address })
+    console.log(chalk.yellow(`✨ verify MarketTradeOpenPositionFacet`))
+
+    const marketTradeClosePositionFacet = await deployments.get('MarketTradeClosePositionFacet')
+    await verify(hre, { address: marketTradeClosePositionFacet.address })
+    console.log(chalk.yellow(`✨ verify MarketTradeClosePositionFacet`))
 
     const marketLiquidateFacet = await deployments.get('MarketLiquidateFacet')
     await verify(hre, { address: marketLiquidateFacet.address })

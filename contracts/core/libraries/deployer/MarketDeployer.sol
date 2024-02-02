@@ -8,7 +8,8 @@ import {IDiamondLoupe} from "@chromatic-protocol/contracts/core/interfaces/IDiam
 import {IMarketState} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketState.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IMarketLens} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLens.sol";
-import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {IMarketTradeOpenPosition} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTradeOpenPosition.sol";
+import {IMarketTradeClosePosition} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTradeClosePosition.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {IMarketSettle} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketSettle.sol";
 import {ChromaticMarket} from "@chromatic-protocol/contracts/core/ChromaticMarket.sol";
@@ -38,7 +39,8 @@ struct Parameters {
  * @param marketStateFacet The market state facet address.
  * @param marketLiquidityFacet The market liquidity facet address.
  * @param marketLensFacet The market liquidity lens facet address.
- * @param marketTradeFacet The market trade facet address.
+ * @param marketTradeOpenPositionFacet The market trade facet for opending positions address.
+ * @param marketTradeClosePositionFacet The market trade facet for closing and claiming positions address.
  * @param marketLiquidateFacet The market liquidate facet address.
  * @param marketSettleFacet The market settle facet address.
  * @param protocolFeeRate The protocol fee rate for the market.
@@ -51,7 +53,8 @@ struct DeployArgs {
     address marketStateFacet;
     address marketLiquidityFacet;
     address marketLensFacet;
-    address marketTradeFacet;
+    address marketTradeOpenPositionFacet;
+    address marketTradeClosePositionFacet;
     address marketLiquidateFacet;
     address marketSettleFacet;
     uint16 protocolFeeRate;
@@ -84,14 +87,15 @@ library MarketDeployerLib {
         );
         delete self.parameters;
 
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](7);
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](8);
         cut[0] = _marketLoupeFacetCut(args.marketLoupeFacet);
         cut[1] = _marketStateFacetCut(args.marketStateFacet);
         cut[2] = _marketLiquidityFacetCut(args.marketLiquidityFacet);
         cut[3] = _marketLensFacetCut(args.marketLensFacet);
-        cut[4] = _marketTradeFacetCut(args.marketTradeFacet);
-        cut[5] = _marketLiquidateFacetCut(args.marketLiquidateFacet);
-        cut[6] = _marketSettleFacetCut(args.marketSettleFacet);
+        cut[4] = _marketTradeOpenPositionFacetCut(args.marketTradeOpenPositionFacet);
+        cut[5] = _marketTradeClosePositionFacetCut(args.marketTradeClosePositionFacet);
+        cut[6] = _marketLiquidateFacetCut(args.marketLiquidateFacet);
+        cut[7] = _marketSettleFacetCut(args.marketSettleFacet);
         IDiamondCut(market).diamondCut(cut, address(0), "");
     }
 
@@ -188,13 +192,25 @@ library MarketDeployerLib {
         });
     }
 
-    function _marketTradeFacetCut(
+    function _marketTradeOpenPositionFacetCut(
         address marketTradeFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](3);
-        functionSelectors[0] = IMarketTrade.openPosition.selector;
-        functionSelectors[1] = IMarketTrade.closePosition.selector;
-        functionSelectors[2] = IMarketTrade.claimPosition.selector;
+        bytes4[] memory functionSelectors = new bytes4[](1);
+        functionSelectors[0] = IMarketTradeOpenPosition.openPosition.selector;
+
+        cut = IDiamondCut.FacetCut({
+            facetAddress: marketTradeFacet,
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: functionSelectors
+        });
+    }
+
+    function _marketTradeClosePositionFacetCut(
+        address marketTradeFacet
+    ) private pure returns (IDiamondCut.FacetCut memory cut) {
+        bytes4[] memory functionSelectors = new bytes4[](2);
+        functionSelectors[0] = IMarketTradeClosePosition.closePosition.selector;
+        functionSelectors[1] = IMarketTradeClosePosition.claimPosition.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketTradeFacet,
