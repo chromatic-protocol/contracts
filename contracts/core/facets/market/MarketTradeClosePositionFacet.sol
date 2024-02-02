@@ -18,60 +18,16 @@ import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/ma
  * @title MarketTradeClosePositionFacet
  * @dev A contract that manages trading positions.
  */
-contract MarketTradeClosePositionFacet is MarketTradeFacetBase, IMarketTradeClosePosition, ReentrancyGuard {
+contract MarketTradeClosePositionFacet is
+    MarketTradeFacetBase,
+    IMarketTradeClosePosition,
+    ReentrancyGuard
+{
     using Math for uint256;
     using SignedMath for int256;
 
     uint256 constant LEVERAGE_DECIMALS = 2;
     uint256 constant LEVERAGE_PRECISION = 10 ** LEVERAGE_DECIMALS;
-
-    /**
-     * @dev Throws an error indicating that the taker margin provided is smaller than the minimum required margin for the specific settlement token.
-     *      The minimum required margin is determined by the DAO and represents the minimum amount required for operations such as liquidation and payment of keeper fees.
-     */
-    error TooSmallTakerMargin();
-
-    /**
-     * @dev Throws an error indicating that the margin settlement token balance does not increase by the required margin amount after the callback.
-     */
-    error NotEnoughMarginTransferred();
-
-    /**
-     * @dev Throws an error indicating that the caller is not permitted to perform the action as they are not the owner of the position.
-     */
-    error NotPermitted();
-
-    /**
-     * @dev Throws an error indicating that the position has already been closed and cannot be closed again.
-     */
-    error AlreadyClosedPosition();
-
-    /**
-     * @dev Throws an error indicating that the position cannot be claimed as it is not eligible for claim in the current oracle version.
-     */
-    error NotClaimablePosition();
-
-    /**
-     * @dev Throws an error indicating that the total trading fee (including protocol fee) exceeds the maximum allowable trading fee.
-     */
-    error ExceedMaxAllowableTradingFee();
-
-    /**
-     * @dev Throws an error indicating thatwhen the specified leverage exceeds the maximum allowable leverage level set by the Oracle Provider.
-     *      Each Oracle Provider has a specific maximum allowable leverage level, which is determined by the DAO.
-     *      The default maximum allowable leverage level is 0, which corresponds to a leverage of up to 10x.
-     */
-    error ExceedMaxAllowableLeverage();
-
-    /**
-     * @dev Throws an error indicating that the maker margin value is not within the allowable range based on the absolute quantity and the specified minimum/maximum take-profit basis points (BPS).
-     *      The maker margin must fall within the range calculated based on the absolute quantity of the position and the specified minimum/maximum take-profit basis points (BPS) set by the Oracle Provider.
-     *      The default range for the minimum/maximum take-profit basis points is 10% to 1000%.
-     */
-    error NotAllowableMakerMargin();
-
-    error OpenPositionDisabled();
-    error ClosePositionDisabled();
 
     /**
      * @inheritdoc IMarketTradeClosePosition

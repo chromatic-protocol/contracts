@@ -23,16 +23,6 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
     using SignedMath for int256;
 
     /**
-     * @dev Throws an error indicating that the position has already been closed.
-     */
-    error AlreadyClosedPosition();
-
-    /**
-     *@dev Throws an error indicating that the position is not claimable.
-     */
-    error NotClaimablePosition();
-
-    /**
      * @inheritdoc IMarketLiquidate
      * @dev This function can only be called by the chromatic liquidator contract.
      *      Throws a `NotExistPosition` error if the requested position does not exist.

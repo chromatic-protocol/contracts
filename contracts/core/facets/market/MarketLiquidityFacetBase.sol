@@ -7,11 +7,6 @@ import {LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contrac
 import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
 
 abstract contract MarketLiquidityFacetBase is MarketFacetBase {
-    /**
-     * @dev Throws an error indicating that the specified liquidity receipt does not exist.
-     */
-    error NotExistLpReceipt();
-
     function _getLpReceipt(
         LpReceiptStorage storage ls,
         uint256 receiptId

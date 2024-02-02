@@ -9,68 +9,6 @@ import {LpReceipt} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.
  */
 interface IMarketLiquidity {
     /**
-     * @dev Emitted when liquidity is added to the market.
-     * @param receipt The liquidity receipt.
-     */
-    event AddLiquidity(LpReceipt receipt);
-
-    /**
-     * @dev Emitted when liquidity is added to the market.
-     * @param receipts An array of LP receipts.
-     */
-    event AddLiquidityBatch(LpReceipt[] receipts);
-
-    /**
-     * @dev Emitted when liquidity is claimed from the market.
-     * @param clbTokenAmount The amount of CLB tokens claimed.
-     * @param receipt The liquidity receipt.
-     */
-    event ClaimLiquidity(LpReceipt receipt, uint256 indexed clbTokenAmount);
-
-    /**
-     * @dev Emitted when liquidity is claimed from the market.
-     * @param receipts An array of LP receipts.
-     * @param clbTokenAmounts The amount list of CLB tokens claimed.
-     */
-    event ClaimLiquidityBatch(LpReceipt[] receipts, uint256[] clbTokenAmounts);
-
-    /**
-     * @dev Emitted when liquidity is removed from the market.
-     * @param receipt The liquidity receipt.
-     */
-    event RemoveLiquidity(LpReceipt receipt);
-
-    /**
-     * @dev Emitted when liquidity is removed from the market.
-     * @param receipts An array of LP receipts.
-     */
-    event RemoveLiquidityBatch(LpReceipt[] receipts);
-
-    /**
-     * @dev Emitted when liquidity is withdrawn from the market.
-     * @param receipt The liquidity receipt.
-     * @param amount The amount of liquidity withdrawn.
-     * @param burnedCLBTokenAmount The amount of burned CLB tokens.
-     */
-    event WithdrawLiquidity(
-        LpReceipt receipt,
-        uint256 indexed amount,
-        uint256 indexed burnedCLBTokenAmount
-    );
-
-    /**
-     * @dev Emitted when liquidity is withdrawn from the market.
-     * @param receipts An array of LP receipts.
-     * @param amounts The amount list of liquidity withdrawn.
-     * @param burnedCLBTokenAmounts The amount list of burned CLB tokens.
-     */
-    event WithdrawLiquidityBatch(
-        LpReceipt[] receipts,
-        uint256[] amounts,
-        uint256[] burnedCLBTokenAmounts
-    );
-
-    /**
      * @dev Adds liquidity to the market.
      * @param recipient The address to receive the liquidity tokens.
      * @param tradingFeeRate The trading fee rate for the liquidity.
