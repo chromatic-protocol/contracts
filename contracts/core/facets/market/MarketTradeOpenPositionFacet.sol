@@ -8,11 +8,10 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {PositionMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
-import {IOracleProviderRegistry} from "@chromatic-protocol/contracts/core/interfaces/factory/IOracleProviderRegistry.sol";
 import {IChromaticTradeCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticTradeCallback.sol";
-import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
-import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
-import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
+import {IMarketTradeOpenPosition} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTradeOpenPosition.sol";
+import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
+import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {BinMargin} from "@chromatic-protocol/contracts/core/libraries/BinMargin.sol";
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
@@ -20,13 +19,17 @@ import {MarketStorage, MarketStorageLib, PositionStorage, PositionStorageLib} fr
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {LiquidityPool} from "@chromatic-protocol/contracts/core/libraries/liquidity/LiquidityPool.sol";
 import {OracleProviderProperties} from "@chromatic-protocol/contracts/core/libraries/registry/OracleProviderProperties.sol";
-import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacetBase.sol";
+import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
 
 /**
- * @title MarketTradeFacet
+ * @title MarketTradeOpenPositionFacet
  * @dev A contract that manages trading positions.
  */
-contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard {
+contract MarketTradeOpenPositionFacet is
+    MarketFacetBase,
+    IMarketTradeOpenPosition,
+    ReentrancyGuard
+{
     using Math for uint256;
     using SignedMath for int256;
 
@@ -43,21 +46,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
      * @dev Throws an error indicating that the margin settlement token balance does not increase by the required margin amount after the callback.
      */
     error NotEnoughMarginTransferred();
-
-    /**
-     * @dev Throws an error indicating that the caller is not permitted to perform the action as they are not the owner of the position.
-     */
-    error NotPermitted();
-
-    /**
-     * @dev Throws an error indicating that the position has already been closed and cannot be closed again.
-     */
-    error AlreadyClosedPosition();
-
-    /**
-     * @dev Throws an error indicating that the position cannot be claimed as it is not eligible for claim in the current oracle version.
-     */
-    error NotClaimablePosition();
 
     /**
      * @dev Throws an error indicating that the total trading fee (including protocol fee) exceeds the maximum allowable trading fee.
@@ -79,10 +67,9 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
     error NotAllowableMakerMargin();
 
     error OpenPositionDisabled();
-    error ClosePositionDisabled();
 
     /**
-     * @inheritdoc IMarketTrade
+     * @inheritdoc IMarketTradeOpenPosition
      * @dev Throws a `TooSmallTakerMargin` error if the `takerMargin` is smaller than the minimum required margin for the settlement token.
      *      Throws an `ExceedMaxAllowableLeverage` if the leverage exceeds the maximum allowable leverage.
      *      Throws a `NotAllowableMakerMargin` if the maker margin is not within the allowable range based on the absolute quantity and min/max take-profit basis points (BPS).
@@ -178,10 +165,11 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         }
 
         IERC20Metadata settlementToken = IERC20Metadata(ctx.settlementToken);
-        IVault vault = ctx.vault;
+        IChromaticVault vault = ctx.vault;
 
         // call callback
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
+        uint256 pendingMakerEarningBefore = vault.pendingMakerEarnings(address(settlementToken));
 
         uint256 requiredMargin = position.takerMargin + protocolFee + tradingFee;
         IChromaticTradeCallback(msg.sender).openPositionCallback(
@@ -190,9 +178,16 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             requiredMargin,
             data
         );
-        // check margin settlementToken increased
-        if (balanceBefore + requiredMargin < settlementToken.balanceOf(address(vault)))
-            revert NotEnoughMarginTransferred();
+
+        {
+            // check margin settlementToken increased
+            uint256 pendingMakerEarning = vault.pendingMakerEarnings(address(settlementToken)) -
+                pendingMakerEarningBefore;
+            if (
+                requiredMargin <
+                settlementToken.balanceOf(address(vault)) - balanceBefore - pendingMakerEarning
+            ) revert NotEnoughMarginTransferred();
+        }
 
         liquidityPool.acceptOpenPosition(ctx, position); // settle()
 
@@ -213,99 +208,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
             makerMargin: position.makerMargin(),
             tradingFee: tradingFee + protocolFee
         });
-    }
-
-    /**
-     * @inheritdoc IMarketTrade
-     * @dev This function allows the owner of the position to close it. The position must exist, be owned by the caller,
-     *      and not have already been closed. Upon successful closure, the position is settled, and a `ClosePosition` event is emitted.
-     *      If the position is closed in a different oracle version than the open version, a claim position task is created by the liquidator.
-     *      Otherwise, the position is immediately claimed, and a `ClaimPosition` event is emitted.
-     *      Throws a `NotExistPosition` error if the specified position does not exist.
-     *      Throws a `NotPermitted` error if the caller is not the owner of the position.
-     *      Throws an `AlreadyClosedPosition` error if the position has already been closed.
-     *      Throws a `ClaimPositionCallbackError` error if an error occurred during the claim position callback.
-     */
-    function closePosition(
-        uint256 positionId
-    ) external override nonReentrant returns (ClosePositionInfo memory closed) {
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-        _requireClosePositionEnabled(ms);
-
-        Position storage position = PositionStorageLib.positionStorage().getStoragePosition(
-            positionId
-        );
-        if (position.id == 0) revert NotExistPosition();
-        if (position.owner != msg.sender) revert NotPermitted();
-        if (position.closeVersion != 0) revert AlreadyClosedPosition();
-
-        LiquidityPool storage liquidityPool = ms.liquidityPool;
-        ILiquidator liquidator = ILiquidator(position.liquidator);
-
-        LpContext memory ctx = newLpContext(ms);
-        ctx.syncOracleVersion();
-
-        position.closeVersion = ctx.currentOracleVersion().version;
-        position.closeTimestamp = block.timestamp;
-
-        liquidityPool.acceptClosePosition(ctx, position);
-        liquidator.cancelLiquidationTask(position.id);
-
-        emit ClosePosition(position.owner, position);
-
-        if (position.closeVersion > position.openVersion) {
-            liquidator.createClaimPositionTask(position.id);
-        } else {
-            // process claim if the position is closed in the same oracle version as the open version
-            uint256 interest = _claimPosition(
-                ctx,
-                position,
-                0,
-                0,
-                position.owner,
-                bytes(""),
-                CLAIM_USER
-            );
-            emit ClaimPosition(position.owner, 0, interest, position);
-        }
-        closed = ClosePositionInfo({
-            id: position.id,
-            closeVersion: position.closeVersion,
-            closeTimestamp: position.closeTimestamp
-        });
-    }
-
-    /**
-     * @inheritdoc IMarketTrade
-     * @dev Claims the position by transferring the available funds to the recipient.
-     *      The caller must be the owner of the position.
-     *      The position must be eligible for claim in the current oracle version.
-     *      The claimed amount is determined based on the position's profit and loss (pnl).
-     *      Throws a `NotExistPosition` error if the requested position does not exist.
-     *      Throws a `NotPermitted` error if the caller is not permitted to perform the action as they are not the owner of the position.
-     *      Throws a `NotClaimablePosition` error if the position cannot be claimed as it is not eligible for claim in the current oracle version.
-     *      Throws a `ClaimPositionCallbackError` error if an error occurred during the claim position callback.
-     */
-    function claimPosition(
-        uint256 positionId,
-        address recipient, // EOA or account contract
-        bytes calldata data
-    ) external override nonReentrant {
-        Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
-        if (position.owner != msg.sender) revert NotPermitted();
-
-        MarketStorage storage ms = MarketStorageLib.marketStorage();
-
-        LpContext memory ctx = newLpContext(ms);
-        ctx.syncOracleVersion();
-
-        if (!ctx.isPastVersion(position.closeVersion)) revert NotClaimablePosition();
-
-        int256 pnl = position.pnl(ctx);
-        uint256 interest = _claimPosition(ctx, position, pnl, 0, recipient, data, CLAIM_USER);
-        emit ClaimPosition(position.owner, pnl, interest, position);
-
-        ILiquidator(position.liquidator).cancelClaimPositionTask(position.id);
     }
 
     function _newPosition(
@@ -340,16 +242,6 @@ contract MarketTradeFacet is MarketTradeFacetBase, IMarketTrade, ReentrancyGuard
         PositionMode mode = ms.positionMode;
         if (mode == PositionMode.OpenDisabled || mode == PositionMode.Suspended) {
             revert OpenPositionDisabled();
-        }
-    }
-
-    /**
-     * @dev Throws if close position is disabled.
-     */
-    function _requireClosePositionEnabled(MarketStorage storage ms) internal view virtual {
-        PositionMode mode = ms.positionMode;
-        if (mode == PositionMode.CloseDisabled || mode == PositionMode.Suspended) {
-            revert ClosePositionDisabled();
         }
     }
 }

@@ -22,7 +22,8 @@ import {MarketDiamondCutFacet} from "@chromatic-protocol/contracts/core/facets/m
 import {MarketStateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketStateFacet.sol";
 import {MarketLiquidityFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacet.sol";
 import {MarketLensFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLensFacet.sol";
-import {MarketTradeFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacet.sol";
+import {MarketTradeOpenPositionFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeOpenPositionFacet.sol";
+import {MarketTradeClosePositionFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeClosePositionFacet.sol";
 import {MarketLiquidateFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidateFacet.sol";
 import {MarketSettleFacet} from "@chromatic-protocol/contracts/core/facets/market/MarketSettleFacet.sol";
 import {ChromaticRouter} from "@chromatic-protocol/contracts/periphery/ChromaticRouter.sol";
@@ -113,7 +114,8 @@ abstract contract BaseSetup is Test {
             address(new MarketStateFacet()),
             address(new MarketLiquidityFacet()),
             address(new MarketLensFacet()),
-            address(new MarketTradeFacet()),
+            address(new MarketTradeOpenPositionFacet()),
+            address(new MarketTradeClosePositionFacet()),
             address(new MarketLiquidateFacet()),
             address(new MarketSettleFacet())
         );

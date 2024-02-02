@@ -41,7 +41,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address private immutable marketStateFacet;
     address private immutable marketLiquidityFacet;
     address private immutable marketLensFacet;
-    address private immutable marketTradeFacet;
+    address private immutable marketTradeOpenPositionFacet;
+    address private immutable marketTradeClosePositionFacet;
     address private immutable marketLiquidateFacet;
     address private immutable marketSettleFacet;
 
@@ -109,7 +110,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @param _marketStateFacet The market state facet address.
      * @param _marketLiquidityFacet The market liquidity facet address.
      * @param _marketLiquidityLensFacet The market liquidity lens facet address.
-     * @param _marketTradeFacet The market trade facet address.
+     * @param _marketTradeOpenPositionFacet The market trade facet for opening positions address.
+     * @param _marketTradeClosePositionFacet The market trade facet for closing and claiming positions address.
      * @param _marketLiquidateFacet The market liquidate facet address.
      * @param _marketSettleFacet The market settle facet address.
      */
@@ -119,7 +121,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address _marketStateFacet,
         address _marketLiquidityFacet,
         address _marketLiquidityLensFacet,
-        address _marketTradeFacet,
+        address _marketTradeOpenPositionFacet,
+        address _marketTradeClosePositionFacet,
         address _marketLiquidateFacet,
         address _marketSettleFacet
     ) {
@@ -128,7 +131,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         require(_marketStateFacet != address(0));
         require(_marketLiquidityFacet != address(0));
         require(_marketLiquidityLensFacet != address(0));
-        require(_marketTradeFacet != address(0));
+        require(_marketTradeOpenPositionFacet != address(0));
+        require(_marketTradeClosePositionFacet != address(0));
         require(_marketLiquidateFacet != address(0));
         require(_marketSettleFacet != address(0));
 
@@ -140,7 +144,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         marketStateFacet = _marketStateFacet;
         marketLiquidityFacet = _marketLiquidityFacet;
         marketLensFacet = _marketLiquidityLensFacet;
-        marketTradeFacet = _marketTradeFacet;
+        marketTradeOpenPositionFacet = _marketTradeOpenPositionFacet;
+        marketTradeClosePositionFacet = _marketTradeClosePositionFacet;
         marketLiquidateFacet = _marketLiquidateFacet;
         marketSettleFacet = _marketSettleFacet;
     }
@@ -304,7 +309,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
                 marketStateFacet: marketStateFacet,
                 marketLiquidityFacet: marketLiquidityFacet,
                 marketLensFacet: marketLensFacet,
-                marketTradeFacet: marketTradeFacet,
+                marketTradeOpenPositionFacet: marketTradeOpenPositionFacet,
+                marketTradeClosePositionFacet: marketTradeClosePositionFacet,
                 marketLiquidateFacet: marketLiquidateFacet,
                 marketSettleFacet: marketSettleFacet,
                 protocolFeeRate: defaultProtocolFeeRate

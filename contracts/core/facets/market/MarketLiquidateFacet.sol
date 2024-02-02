@@ -12,7 +12,6 @@ import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/Positio
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {MarketStorage, MarketStorageLib, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacetBase.sol";
-import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 /**
