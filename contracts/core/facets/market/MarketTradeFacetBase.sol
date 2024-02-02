@@ -15,15 +15,6 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
     using SignedMath for int256;
 
     uint32 internal constant CLAIM_POSITION_CALLBACK_GASLIMIT = 1e6;
-    /**
-     * @dev Throws an error indicating that the requested position does not exist.
-     */
-    error NotExistPosition();
-
-    /**
-     * @dev Throws an error indicating that an error occurred during the claim position callback.
-     */
-    error ClaimPositionCallbackError();
 
     /**
      * @dev Internal function for claiming a position.

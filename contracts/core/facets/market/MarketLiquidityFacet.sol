@@ -28,38 +28,6 @@ contract MarketLiquidityFacet is
     ReentrancyGuard
 {
     /**
-     * @dev Throws an error indicating that the amount of liquidity is too small.
-     *      This error is thrown when attempting to remove liquidity with an amount of zero.
-     */
-    error TooSmallAmount();
-
-    /**
-     * @dev Throws an error indicating that the liquidity receipt is not claimable.
-     */
-    error NotClaimableLpReceipt();
-
-    /**
-     * @dev Throws an error indicating that the liquidity receipt is not withdrawable.
-     */
-    error NotWithdrawableLpReceipt();
-
-    /**
-     * @dev Throws an error indicating that the liquidity receipt action is invalid.
-     */
-    error InvalidLpReceiptAction();
-
-    /**
-     * @dev Throws an error indicating that the transferred token amount is invalid.
-     *      This error is thrown when the transferred token amount does not match the expected amount.
-     */
-    error InvalidTransferredTokenAmount();
-
-    error DuplicatedTradingFeeRate();
-
-    error AddLiquidityDisabled();
-    error RemoveLiquidityDisabled();
-
-    /**
      * @inheritdoc IMarketLiquidity
      */
     function addLiquidity(
@@ -268,7 +236,7 @@ contract MarketLiquidityFacet is
         receipt = _getLpReceipt(ls, receiptId);
         if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotClaimableLpReceipt();
-        
+
         ls.deleteReceipt(receiptId);
 
         clbTokenAmount = liquidityPool.acceptClaimLiquidity(
@@ -535,7 +503,7 @@ contract MarketLiquidityFacet is
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotWithdrawableLpReceipt();
 
         ls.deleteReceipt(receiptId);
-        
+
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
 
