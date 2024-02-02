@@ -703,7 +703,7 @@ library LiquidityPoolLib {
 
         uint16 absFeeRate = abs(tradingFeeRate);
 
-        uint256 idx = findUpperBound(_tradingFeeRates, absFeeRate);
+        uint256 idx = CLBTokenLib.feeRateIndex(absFeeRate);
         require(
             idx < _tradingFeeRates.length && absFeeRate == _tradingFeeRates[idx],
             Errors.UNSUPPORTED_TRADING_FEE_RATE
@@ -717,47 +717,6 @@ library LiquidityPoolLib {
      */
     function abs(int16 i) private pure returns (uint16) {
         return i < 0 ? uint16(-i) : uint16(i);
-    }
-
-    /**
-     * @notice Finds the upper bound index of an element in a sorted array.
-     * @dev This function performs a binary search on the sorted array
-     *      to find * the index of the upper bound of the given element.
-     *      It returns the index as the exclusive upper bound,
-     *      or the inclusive upper bound if the element is found at the end of the array.
-     * @param array The sorted array.
-     * @param element The element to find the upper bound for.
-     * @return uint256 The index of the upper bound of the element in the array.
-     */
-    function findUpperBound(
-        uint16[FEE_RATES_LENGTH] memory array,
-        uint16 element
-    ) private pure returns (uint256) {
-        if (array.length == 0) {
-            return 0;
-        }
-
-        uint256 low = 0;
-        uint256 high = array.length;
-
-        while (low < high) {
-            uint256 mid = Math.average(low, high);
-
-            // Note that mid will always be strictly less than high (i.e. it will be a valid array index)
-            // because Math.average rounds down (it does integer division with truncation).
-            if (array[mid] > element) {
-                high = mid;
-            } else {
-                low = mid + 1;
-            }
-        }
-
-        // At this point `low` is the exclusive upper bound. We will return the inclusive upper bound.
-        if (low != 0 && array[low - 1] == element) {
-            return low - 1;
-        } else {
-            return low;
-        }
     }
 
     /**
