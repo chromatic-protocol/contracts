@@ -9,6 +9,7 @@ import {LiquidityMode} from "@chromatic-protocol/contracts/core/interfaces/marke
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
@@ -52,6 +53,8 @@ contract MarketLiquidityFacet is
      *      This error is thrown when the transferred token amount does not match the expected amount.
      */
     error InvalidTransferredTokenAmount();
+
+    error DuplicatedTradingFeeRate();
 
     error AddLiquidityDisabled();
     error RemoveLiquidityDisabled();
@@ -106,6 +109,7 @@ contract MarketLiquidityFacet is
     ) external override nonReentrant returns (LpReceipt[] memory receipts) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         _requireAddLiquidityEnabled(ms);
+        _requireFeeRatesUniqueness(tradingFeeRates);
 
         require(tradingFeeRates.length == amounts.length);
 
@@ -336,6 +340,7 @@ contract MarketLiquidityFacet is
     ) external override nonReentrant returns (LpReceipt[] memory receipts) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         _requireRemoveLiquidityEnabled(ms);
+        _requireFeeRatesUniqueness(tradingFeeRates);
 
         require(tradingFeeRates.length == clbTokenAmounts.length);
 
@@ -559,6 +564,25 @@ contract MarketLiquidityFacet is
      */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         MarketStorageLib.marketStorage().liquidityPool.distributeEarning(earning, marketBalance);
+    }
+
+    function _requireFeeRatesUniqueness(int16[] memory tradingFeeRates) internal pure {
+        bool[FEE_RATES_LENGTH * 2] memory flags;
+
+        for (uint256 i = 0; i < tradingFeeRates.length; ) {
+            int16 feeRate = tradingFeeRates[i];
+            uint256 idx = CLBTokenLib.feeRateIndex(uint16(feeRate < 0 ? -feeRate : feeRate));
+            idx = feeRate < 0 ? idx + FEE_RATES_LENGTH : idx;
+
+            if (flags[idx]) {
+                revert DuplicatedTradingFeeRate();
+            }
+            flags[idx] = true;
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
