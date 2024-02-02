@@ -77,16 +77,6 @@ library LpReceiptStorageLib {
     function deleteReceipt(LpReceiptStorage storage self, uint256 receiptId) internal {
         delete self.lpReceipts[receiptId];
     }
-
-    function deleteReceipts(LpReceiptStorage storage self, uint256[] memory receiptIds) internal {
-        for (uint256 i; i < receiptIds.length; ) {
-            delete self.lpReceipts[receiptIds[i]];
-
-            unchecked {
-                ++i;
-            }
-        }
-    }
 }
 
 using PositionStorageLib for PositionStorage global;
