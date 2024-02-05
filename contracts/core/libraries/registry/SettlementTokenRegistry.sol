@@ -101,10 +101,10 @@ library SettlementTokenRegistryLib {
     }
 
     /**
-     * @notice Retrieves the oracle provider address for a asettlement token.
+     * @notice Retrieves the oracle provider address for a settlement token.
      * @param self The SettlementTokenRegistry storage.
-     * @param token The address of the asettlement token.
-     * @return address The oralce provider address for the asettlement token.
+     * @param token The address of the settlement token.
+     * @return address The oralce provider address for the settlement token.
      */
     function getOracleProvider(
         SettlementTokenRegistry storage self,
@@ -114,7 +114,7 @@ library SettlementTokenRegistryLib {
     }
 
     /**
-     * @notice Sets the oracle provider address for asettlement token.
+     * @notice Sets the oracle provider address for a settlement token.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the settlement token.
      * @param oracleProvider The new oracle provider address for the settlement token.
@@ -128,10 +128,10 @@ library SettlementTokenRegistryLib {
     }
 
     /**
-     * @notice Retrieves the minimum margin for a asettlement token.
+     * @notice Retrieves the minimum margin for a settlement token.
      * @param self The SettlementTokenRegistry storage.
-     * @param token The address of the asettlement token.
-     * @return uint256 The minimum margin for the asettlement token.
+     * @param token The address of the settlement token.
+     * @return uint256 The minimum margin for the settlement token.
      */
     function getMinimumMargin(
         SettlementTokenRegistry storage self,
@@ -141,7 +141,7 @@ library SettlementTokenRegistryLib {
     }
 
     /**
-     * @notice Sets the minimum margin for asettlement token.
+     * @notice Sets the minimum margin for a settlement token.
      * @param self The SettlementTokenRegistry storage.
      * @param token The address of the settlement token.
      * @param minimumMargin The new minimum margin for the settlement token.
