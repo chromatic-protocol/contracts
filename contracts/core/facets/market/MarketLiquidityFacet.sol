@@ -261,7 +261,7 @@ contract MarketLiquidityFacet is
      * @inheritdoc IMarketLiquidity
      * @dev This function is called by the liquidity provider to remove their liquidity from the market.
      *      The liquidity provider must have previously added liquidity to the market.
-     *      Throws a `TooSmallAmount` error if the CLB tokne amount of liquidity to be removed is zero.
+     *      Throws a `TooSmallAmount` error if the CLB token amount of liquidity to be removed is zero.
      */
     function removeLiquidity(
         address recipient,
