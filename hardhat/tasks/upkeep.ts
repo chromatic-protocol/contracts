@@ -6,8 +6,8 @@ import {
   IChromaticMarket,
   IChromaticMarket__factory,
   IERC20Metadata__factory,
-  IMate2AutomationRegistry,
-  IMate2AutomationRegistry__factory,
+  IMate2AutomationRegistry1_1,
+  IMate2AutomationRegistry1_1__factory,
   IOracleProvider__factory,
   IUpkeepTreasury,
   IUpkeepTreasury__factory,
@@ -204,8 +204,11 @@ async function marketName(market: IChromaticMarket): Promise<string> {
 
 async function automationRegistry(
   settlement: Mate2MarketSettlement
-): Promise<IMate2AutomationRegistry> {
-  return IMate2AutomationRegistry__factory.connect(await settlement.automate(), settlement.runner)
+): Promise<IMate2AutomationRegistry1_1> {
+  return IMate2AutomationRegistry1_1__factory.connect(
+    await settlement.automate(),
+    settlement.runner
+  )
 }
 
 async function upkeepTreasury(settlement: Mate2MarketSettlement): Promise<IUpkeepTreasury> {
