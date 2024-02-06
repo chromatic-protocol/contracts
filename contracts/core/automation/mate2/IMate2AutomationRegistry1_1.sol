@@ -57,4 +57,8 @@ interface IMate2AutomationRegistry1_1 {
     ) external view returns (bytes memory performData, uint256 maxPayment, uint256 gasLimit);
 
     function getPerformUpkeepFee() external view returns (uint256 fee);
+
+    function addWhitelistedRegistrar(address registrar) external;
+
+    function removeWhitelistedRegistrar(address registrar) external;
 }
