@@ -42,6 +42,21 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
     error ExistMarketSettlementTask();
 
     /**
+     * @dev Throws an error indicating that the keeper fee is insufficient
+     */
+    error InsufficientKeeperFee();
+
+    /**
+     * @dev Throws an error indicating that the payment of the keeper fee has failed.
+     */
+    error PayKeeperFeeFailed();
+
+    /**
+     * @dev Throws an error indicating that the transfer of Ether has failed.
+     */
+    error EthTransferFailed();
+
+    /**
      * @dev Modifier to restrict access to only the DAO.
      *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
      */
@@ -81,6 +96,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
      * @inheritdoc IMate2Automation1_1
      */
     function performUpkeep(bytes calldata performData) external {
+        _payKeeperFee();
         (address market, bytes memory extraData) = abi.decode(performData, (address, bytes));
         updatePrice(market, extraData);
         settle(market);
@@ -241,9 +257,15 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
                 address(oracleProvider)
             );
             uint256 fee = pullBasedOracle.getUpdateFee(extraData);
-            require(address(this).balance < fee, "Insufficient balance");
             pullBasedOracle.updatePrice{value: fee}(extraData);
         }
+    }
+
+    function _payKeeperFee() private {
+        uint256 keeperFee = automate.getPerformUpkeepFee();
+        if (address(this).balance < keeperFee) revert InsufficientKeeperFee();
+        (bool success, ) = address(automate).call{value: keeperFee}("");
+        if (!success) revert PayKeeperFeeFailed();
     }
 
     /**
@@ -255,4 +277,12 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
      * @dev Fallback function to receive ETH payments.
      */
     fallback() external payable {}
+
+    /**
+     * @inheritdoc IMarketSettlement
+     */
+    function withdraw(address recipient, uint256 amount) external override onlyDao {
+        (bool success, ) = recipient.call{value: amount}("");
+        if (!success) revert EthTransferFailed();
+    }
 }
