@@ -7,7 +7,6 @@ import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/I
 import {IOracleProviderPullBased} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProviderPullBased.sol";
 import {IMarketSettlement} from "@chromatic-protocol/contracts/core/interfaces/IMarketSettlement.sol";
 import {IMate2Automation1_1} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
-import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
 import {IMate2AutomationRegistry1_1, ExtraModule} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry1_1.sol";
 import {IUpkeepTreasury} from "@chromatic-protocol/contracts/core/automation/mate2/IUpkeepTreasury.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";

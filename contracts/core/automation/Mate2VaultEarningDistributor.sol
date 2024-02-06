@@ -4,14 +4,14 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IVaultEarningDistributor} from "@chromatic-protocol/contracts/core/interfaces/IVaultEarningDistributor.sol";
-import {IMate2Automation} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation.sol";
-import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry.sol";
+import {IMate2Automation1_1} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2Automation1_1.sol";
+import {IMate2AutomationRegistry1_1, ExtraModule} from "@chromatic-protocol/contracts/core/automation/mate2/IMate2AutomationRegistry1_1.sol";
 import {VaultEarningDistributorBase} from "@chromatic-protocol/contracts/core/automation/VaultEarningDistributorBase.sol";
 
-contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Automation {
+contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Automation1_1 {
     uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 1e7;
 
-    IMate2AutomationRegistry public immutable automate;
+    IMate2AutomationRegistry1_1 public immutable automate;
 
     uint32 public upkeepGasLimit;
     mapping(address => uint256) public makerEarningDistributionUpkeepIds; // settlement token => upkeep id
@@ -28,16 +28,17 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
         IChromaticMarketFactory _factory,
         address _automate
     ) VaultEarningDistributorBase(_factory) {
-        automate = IMate2AutomationRegistry(_automate);
+        automate = IMate2AutomationRegistry1_1(_automate);
         upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
     }
 
     /**
-     * @inheritdoc IMate2Automation
+     * @inheritdoc IMate2Automation1_1
      */
     function checkUpkeep(
-        bytes calldata checkData
-    ) external view returns (bool upkeepNeeded, bytes memory performData) {
+        bytes calldata checkData,
+        bytes calldata
+    ) external view override returns (bool upkeepNeeded, bytes memory performData) {
         (UpkeepType upkeepType, address tokenOrMarket) = abi.decode(
             checkData,
             (UpkeepType, address)
@@ -49,9 +50,9 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
     }
 
     /**
-     * @inheritdoc IMate2Automation
+     * @inheritdoc IMate2Automation1_1
      */
-    function performUpkeep(bytes calldata performData) external {
+    function performUpkeep(bytes calldata performData) external override {
         (UpkeepType upkeepType, address tokenOrMarket) = abi.decode(
             performData,
             (UpkeepType, address)
@@ -77,7 +78,9 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
             address(this), // address admin,
             false, // bool useTreasury,
             false, // bool singleExec,
-            abi.encode(UpkeepType.MakerEarningDistribution, token)
+            abi.encode(UpkeepType.MakerEarningDistribution, token),
+            ExtraModule.None,
+            bytes("")
         );
     }
 
@@ -123,7 +126,9 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
             address(this), // address admin,
             false, // bool useTreasury,
             false, // bool singleExec,
-            abi.encode(UpkeepType.MarketEarningDistribution, market)
+            abi.encode(UpkeepType.MarketEarningDistribution, market),
+            ExtraModule.None,
+            bytes("")
         );
     }
 
