@@ -21,6 +21,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
     liquidator,
     oracleProvider,
     market,
+    marketEvents,
     chromaticRouter,
     settlementToken,
     lens
@@ -63,6 +64,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
     marketFactory,
     settlementToken,
     market,
+    marketEvents,
     chromaticRouter,
     owner,
     tester,

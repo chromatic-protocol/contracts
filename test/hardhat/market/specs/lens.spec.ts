@@ -28,7 +28,7 @@ export function spec(getDeps: Function) {
         addLiquidityBatch,
         claimLiquidityBatch
       } = helpers(testData)
-      const { lens, market } = testData
+      const { lens, market, marketEvents } = testData
 
       await updatePrice(1000)
       await awaitTx(addLiquidityBatch(amounts, feeRates))
@@ -36,7 +36,7 @@ export function spec(getDeps: Function) {
       await updatePrice(1000)
       await awaitTx(claimLiquidityBatch(await getLpReceiptIds()))
       const claimLiquidityEvent = await market.queryFilter(
-        market.filters.ClaimLiquidity(),
+        marketEvents.filters.ClaimLiquidity(),
         (await ethers.provider.getBlockNumber()) - 1000
       )
       console.log(
@@ -88,7 +88,8 @@ export function spec(getDeps: Function) {
     })
 
     it('removable liquidity info ', async () => {
-      const { lens, market, clbToken, tester, chromaticRouter, traderAccount } = testData
+      const { lens, market, marketEvents, clbToken, tester, chromaticRouter, traderAccount } =
+        testData
       const {
         openPosition,
         removeLiquidity,
@@ -124,8 +125,8 @@ export function spec(getDeps: Function) {
           maxAllowFeeRate: 3n
         })
 
-        const openPositionEvent = await market.queryFilter(
-          market.filters.OpenPosition(),
+        const openPositionEvent = await marketEvents.queryFilter(
+          marketEvents.filters.OpenPosition(),
           blockStart + 1
         )
         console.log(
@@ -195,8 +196,8 @@ export function spec(getDeps: Function) {
 
       // console.log('eventSubStartBlock', eventSubStartBlock , (ethers.getSigners())[0].provider)
 
-      const removeLiquidityEvent = await market.queryFilter(
-        market.filters.RemoveLiquidity(),
+      const removeLiquidityEvent = await marketEvents.queryFilter(
+        marketEvents.filters.RemoveLiquidity(),
         eventSubStartBlock
       )
       receipts = [...removeLiquidityEvent.map((e) => e.args[0])]
