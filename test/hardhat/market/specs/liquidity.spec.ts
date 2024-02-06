@@ -41,7 +41,7 @@ export function spec(getDeps: Function) {
     })
 
     it('add/remove liquidity', async () => {
-      const { market, chromaticRouter, tester, clbToken, settlementToken } = testData
+      const { market, marketEvents, chromaticRouter, tester, clbToken, settlementToken } = testData
       const {
         addLiquidityTx,
         updatePrice,
@@ -77,7 +77,7 @@ export function spec(getDeps: Function) {
       const removeLiqReceiptId = getEventFromTxReceipt({
         receipt: removeLiqTxReceipt!,
         eventName: 'RemoveLiquidity',
-        iface: market.interface
+        iface: marketEvents.interface
       })[0].id
 
       await updatePrice(1000)

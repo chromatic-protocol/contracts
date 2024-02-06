@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "./interfaces/IOracleProvider.sol";
+import "./base/OracleProviderBase.sol";
 import "./types/SupraSValueFeed.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract SupraFeedOracle is IOracleProvider {
+contract SupraFeedOracle is OracleProviderBase {
     using SafeMath for uint256;
-
-    uint256 private constant BASE = 1e18;
 
     /// @dev Supra feed address (https://supraoracles.com/docs/price-feeds/networks)
     SupraSValueFeed public immutable feed;
@@ -49,7 +47,7 @@ contract SupraFeedOracle is IOracleProvider {
             oracleVersion = OracleVersion({
                 version: lastSyncedVersion,
                 timestamp: timestamp,
-                price: int256(price.mul(BASE).div(10 ** supraDecimal))
+                price: int256(price.mul(uint256(BASE)).div(10 ** supraDecimal))
             });
             oracleVersions[lastSyncedVersion] = oracleVersion;
         }
@@ -65,7 +63,7 @@ contract SupraFeedOracle is IOracleProvider {
             oracleVersion = OracleVersion({
                 version: lastSyncedVersion + 1,
                 timestamp: timestamp,
-                price: int256(price.mul(BASE).div(10 ** supraDecimal))
+                price: int256(price.mul(uint256(BASE)).div(10 ** supraDecimal))
             });
         }
     }

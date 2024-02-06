@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ChainlinkAggregator} from "@chromatic-protocol/contracts/oracle/types/ChainlinkAggregator.sol";
-import {OracleProviderBase, IOracleProvider} from "@chromatic-protocol/contracts/oracle/base/OracleProviderBase.sol";
+import {OracleProviderPullBasedBase, IOracleProvider, ExtraModule} from "@chromatic-protocol/contracts/oracle/base/OracleProviderPullBasedBase.sol";
 
-contract OracleProviderMock is OracleProviderBase {
-    ChainlinkAggregator public immutable aggregator;
+contract OracleProviderPullBasedMock is OracleProviderPullBasedBase {
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
 
-    constructor() {
-        aggregator = ChainlinkAggregator.wrap(address(0));
-    }
+    constructor() {}
 
     function increaseVersion(int256 price) public {
         latestVersion++;
@@ -59,5 +55,31 @@ contract OracleProviderMock is OracleProviderBase {
 
     function oracleProviderName() external pure override returns (string memory) {
         return "chainlink";
+    }
+
+    function extraModule() external pure override returns (ExtraModule) {
+        return ExtraModule.Pyth;
+    }
+
+    function extraParam() external pure override returns (bytes memory) {
+        return "0x";
+    }
+
+    function getUpdateFee(
+        bytes calldata /* offchainData */
+    ) external pure override returns (uint256) {
+        return 1;
+    }
+
+    function updatePrice(bytes calldata offchainData) external payable override {}
+
+    function parseExtraData(
+        bytes calldata /* extraData */
+    ) external view override returns (OracleVersion memory) {
+        return oracleVersions[latestVersion];
+    }
+
+    function lastSyncedVersion() external view override returns (OracleVersion memory) {
+        return oracleVersions[latestVersion];
     }
 }

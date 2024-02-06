@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "./interfaces/IOracleProvider.sol";
+import "./base/OracleProviderBase.sol";
 import "./types/ChainlinkAggregator.sol";
 
 /**
@@ -12,10 +12,8 @@ import "./types/ChainlinkAggregator.sol";
  *      ChainlinkOracle instance if their payoff functions are based on the same underlying oracle.
  *      This implementation only support non-negative prices.
  */
-contract ChainlinkFeedOracle is IOracleProvider {
+contract ChainlinkFeedOracle is OracleProviderBase {
     error UnableToSyncError();
-
-    int256 private constant BASE = 1e18;
 
     /// @dev Chainlink feed aggregator address
     ChainlinkAggregator public immutable aggregator;

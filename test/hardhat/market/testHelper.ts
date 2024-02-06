@@ -21,6 +21,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
     liquidator,
     oracleProvider,
     market,
+    marketEvents,
     chromaticRouter,
     settlementToken,
     lens
@@ -63,6 +64,7 @@ export const prepareMarketTest = async (target: string = 'arbitrum') => {
     marketFactory,
     settlementToken,
     market,
+    marketEvents,
     chromaticRouter,
     owner,
     tester,
@@ -127,7 +129,7 @@ export const helpers = function (testData: Awaited<ReturnType<typeof prepareMark
   }
 
   async function getLpReceiptIds() {
-    console.log('tester : ', tester, 'market address', await market.getAddress())
+    // console.log('tester : ', tester, 'market address', await market.getAddress())
     return chromaticRouter.connect(tester)['getLpReceiptIds(address)'](await market.getAddress())
   }
 

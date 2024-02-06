@@ -2,9 +2,28 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {ChainlinkAggregator} from "@chromatic-protocol/contracts/oracle/types/ChainlinkAggregator.sol";
-import {OracleProviderBase, IOracleProvider} from "@chromatic-protocol/contracts/oracle/base/OracleProviderBase.sol";
 
-contract OracleProviderMock is OracleProviderBase {
+interface IOracleProviderLegacy {
+    error InvalidOracleRound();
+
+    struct OracleVersion {
+        uint256 version;
+        uint256 timestamp;
+        int256 price;
+    }
+
+    function sync() external returns (OracleVersion memory);
+
+    function currentVersion() external view returns (OracleVersion memory);
+
+    function atVersion(uint256 version) external view returns (OracleVersion memory);
+
+    function description() external view returns (string memory);
+
+    function oracleProviderName() external view returns (string memory);
+}
+
+contract OracleProviderLegacyMock is IOracleProviderLegacy {
     ChainlinkAggregator public immutable aggregator;
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
@@ -16,7 +35,7 @@ contract OracleProviderMock is OracleProviderBase {
     function increaseVersion(int256 price) public {
         latestVersion++;
 
-        IOracleProvider.OracleVersion memory oracleVersion;
+        OracleVersion memory oracleVersion;
         oracleVersion.version = latestVersion;
         oracleVersion.timestamp = block.timestamp;
         oracleVersion.price = price;
