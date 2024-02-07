@@ -1,6 +1,6 @@
 import {
   ChromaticMarketFactory__factory,
-  IMate2AutomationRegistry__factory
+  IMate2AutomationRegistry1_1__factory
 } from '@chromatic/typechain-types'
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
 import { WETH9 } from '@uniswap/smart-order-router'
@@ -9,8 +9,8 @@ import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 export const MATE2_AUTOMATION_ADDRESS: { [key: number]: string } = {
-  421614: '0xCc25d82dd205bF21eCd6CE63559415AFce93a00F',
-  31337: '0xCc25d82dd205bF21eCd6CE63559415AFce93a00F'  // same to forked from arbitrum_sepolia
+  421614: '0x14cC9A5B88425d357AEca1B13B8cd6F81388Fe86',
+  31337: '0x14cC9A5B88425d357AEca1B13B8cd6F81388Fe86' // same to forked from arbitrum_sepolia
 }
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -40,7 +40,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ Mate2VaultEarningDistributor: ${distributor}`))
 
-  const mate2automate = IMate2AutomationRegistry__factory.connect(
+  const mate2automate = IMate2AutomationRegistry1_1__factory.connect(
     automationAddress,
     await ethers.getSigner(deployer)
   )
