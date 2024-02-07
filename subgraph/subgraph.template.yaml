@@ -156,6 +156,8 @@ templates:
       abis:
         - name: IOracleProvider
           file: ./abis/IOracleProvider.json
+        - name: IOracleProviderPullBased
+          file: ./abis/IOracleProviderPullBased.json
       blockHandlers:
         - handler: saveOracleVersion
       file: ./src/oracle-provider.ts
