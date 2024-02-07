@@ -17,8 +17,6 @@ import {
   IChromaticMarket__factory,
   IERC20Metadata,
   IERC20Metadata__factory,
-  ILiquidator,
-  ILiquidator__factory,
   IOracleProvider,
   IOracleProvider__factory,
   ISwapRouter,
@@ -27,6 +25,8 @@ import {
   IWETH9__factory,
   KeeperFeePayer,
   KeeperFeePayer__factory,
+  Mate2Liquidator,
+  Mate2Liquidator__factory,
   Mate2MarketSettlement,
   Mate2MarketSettlement__factory,
   TestSettlementToken,
@@ -69,7 +69,7 @@ export class Contracts {
   private _signer!: Signer
   private _factory!: ChromaticMarketFactory
   private _vault!: ChromaticVault
-  private _liquidator!: ILiquidator
+  private _liquidator!: Mate2Liquidator
   private _router!: ChromaticRouter
   private _lens!: ChromaticLens
   private _keeperFeePayer!: KeeperFeePayer
@@ -78,6 +78,7 @@ export class Contracts {
   private _usdc!: IERC20Metadata
   private _ceth: TestSettlementToken | undefined
   private _cbtc: TestSettlementToken | undefined
+  private _cusdt: TestSettlementToken | undefined
   private _swapRouter!: ISwapRouter
   private _marketSettlement: Mate2MarketSettlement | undefined
   private _gelatoTest: GelatoTest | undefined
@@ -113,6 +114,10 @@ export class Contracts {
     const cbtcAddress = await this.addressOf('cBTC')
     if (cbtcAddress) {
       this._cbtc = this.connectTestSettlementToken(cbtcAddress)
+    }
+    const cusdtddress = await this.addressOf('cUSDT')
+    if (cusdtddress) {
+      this._cusdt = this.connectTestSettlementToken(cusdtddress)
     }
 
     const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
@@ -160,7 +165,7 @@ export class Contracts {
     return this._vault
   }
 
-  get liquidator(): ILiquidator {
+  get liquidator(): Mate2Liquidator {
     return this._liquidator
   }
 
@@ -194,6 +199,10 @@ export class Contracts {
 
   get cbtc(): TestSettlementToken | undefined {
     return this._cbtc
+  }
+
+  get cusdt(): TestSettlementToken | undefined {
+    return this._cusdt
   }
 
   get swapRouter(): ISwapRouter {
@@ -232,8 +241,8 @@ export class Contracts {
     return ChromaticVault__factory.connect(address, this._signer)
   }
 
-  connectLiquidator(address: string): ILiquidator {
-    return ILiquidator__factory.connect(address, this._signer)
+  connectLiquidator(address: string): Mate2Liquidator {
+    return Mate2Liquidator__factory.connect(address, this._signer)
   }
 
   connectRouter(address: string): ChromaticRouter {
