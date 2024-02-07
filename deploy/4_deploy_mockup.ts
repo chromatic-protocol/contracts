@@ -14,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(chalk.yellow(`✨ OracleProviderMock: ${oracleProviderAddress}`))
 
   const { address: settlementTokenAddress } = await deploy('TestSettlementToken', {
-    args: ['TestSettlementToken', 'cTST', parseEther("100"), 86400],
+    args: ['TestSettlementToken', 'cTST', parseEther("100"), 86400, 18],
     ...deployOpts
   })
   console.log(chalk.yellow('✨ Test Settlement Token', settlementTokenAddress))

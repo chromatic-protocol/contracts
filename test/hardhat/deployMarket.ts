@@ -18,7 +18,7 @@ export function deploy(target: string = 'arbitrum') {
         await marketFactoryDeploy()
       const oracleProvider = await oracleProviderDeploy()
       const settlementToken = await deployContract<TestSettlementToken>('TestSettlementToken', {
-        args: ['Token', 'ST', parseEther('1000'), 86400]
+        args: ['Token', 'ST', parseEther('1000'), 86400, 6]
       })
       await fixedPriceSwapRouter.setEthPriceInToken(settlementToken, parseEther('1'))
 

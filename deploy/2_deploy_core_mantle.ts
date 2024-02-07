@@ -1,6 +1,6 @@
 import {
   ChromaticMarketFactory__factory,
-  IMate2AutomationRegistry__factory
+  IMate2AutomationRegistry1_1__factory
 } from '@chromatic/typechain-types'
 import chalk from 'chalk'
 import type { DeployFunction } from 'hardhat-deploy/types'
@@ -32,7 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
   console.log(chalk.yellow(`✨ Mate2VaultEarningDistributor: ${distributor}`))
 
-  const mate2automate = IMate2AutomationRegistry__factory.connect(
+  const mate2automate = IMate2AutomationRegistry1_1__factory.connect(
     automationAddress,
     await ethers.getSigner(deployer)
   )

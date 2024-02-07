@@ -9,6 +9,7 @@ contract TestSettlementToken is ERC20, Ownable {
     string private _symbol;
     uint256 private _faucetAmount;
     uint256 private _faucetMinInterval;
+    uint8 private _decimals;
 
     mapping(address => uint256) public lastFaucetTimestamp;
 
@@ -18,12 +19,18 @@ contract TestSettlementToken is ERC20, Ownable {
         string memory name_,
         string memory symbol_,
         uint256 faucetAmount_,
-        uint256 faucetMinInterval_
+        uint256 faucetMinInterval_,
+        uint8 decimals_
     ) ERC20("", "") {
         _name = name_;
         _symbol = symbol_;
         _faucetAmount = faucetAmount_;
         _faucetMinInterval = faucetMinInterval_;
+        _decimals = decimals_;
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
     }
 
     function mint(address recipient, uint256 amount) external onlyOwner {
