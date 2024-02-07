@@ -7,6 +7,18 @@ const CHAINLINK_AGGREGATORS: Record<string, string> = {
   BTC_USD: '0x56a43EB56Da12C0dc1D972ACb089c06a5dEF8e69'
 }
 
+const PYTH_ADDRESSES: { [key: number]: string } = {
+  421614: '0x4374e5a8b9c22271e9eb878a2aa31de97df15daf',
+  42161: '0xff1a0f4744e8582DF1aE09D5611b887B6a12925C'
+}
+
+const PYTH_PRICE_FEED_IDS: Record<string, { feedId: string; description: string }> = {
+  BTC_USD: {
+    feedId: '0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43',
+    description: 'BTC/USD'
+  }
+}
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { config, deployments, getNamedAccounts, ethers, network } = hre
   const { deploy } = deployments
@@ -17,6 +29,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { address: oracleProviderAddress } = await deploy(oracleProviderName, {
       contract: 'ChainlinkFeedOracle',
       args: [address],
+      from: deployer
+    })
+
+    console.log(chalk.yellow(`✨ ${oracleProviderName}: ${oracleProviderAddress}`))
+  }
+
+  for (const [name, info] of Object.entries(PYTH_PRICE_FEED_IDS)) {
+    const oracleProviderName = `PythOracleProvider_${name}`
+    const { address: oracleProviderAddress } = await deploy(oracleProviderName, {
+      contract: 'PythFeedOracle',
+      args: [PYTH_ADDRESSES[network.config.chainId!], info.feedId, info.description],
       from: deployer
     })
 
