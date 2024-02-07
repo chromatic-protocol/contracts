@@ -44,6 +44,7 @@ async function main() {
   saveABI('ChromaticMarketFactory', factory)
   await saveABIFromArtifacts('IERC20Metadata', '@openzeppelin/contracts/token/ERC20/extensions')
   await saveABIFromArtifacts('IOracleProvider', 'contracts/oracle/interfaces')
+  await saveABIFromArtifacts('IOracleProviderPullBased', 'contracts/oracle/interfaces')
   await saveABIFromArtifacts('IChromaticMarket', 'contracts/core/interfaces')
   await saveABIFromArtifacts('ICLBToken', 'contracts/core/interfaces')
 
