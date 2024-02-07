@@ -98,7 +98,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
         _payKeeperFee();
         (address market, bytes memory extraData) = abi.decode(performData, (address, bytes));
         updatePrice(market, extraData);
-        settle(market);
+        // settle(market);
     }
 
     /**
@@ -257,6 +257,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
             );
             uint256 fee = pullBasedOracle.getUpdateFee(extraData);
             pullBasedOracle.updatePrice{value: fee}(extraData);
+            pullBasedOracle.sync();
         }
     }
 
