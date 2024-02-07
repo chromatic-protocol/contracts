@@ -4,7 +4,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const CHAINLINK_AGGREGATORS: Record<string, string> = {
   ETH_USD: '0xd30e2101a97dcbAeBCBC04F14C3f624E67A35165',
-  BTC_USD: '0x56a43EB56Da12C0dc1D972ACb089c06a5dEF8e69'
+  BTC_USD: '0x56a43EB56Da12C0dc1D972ACb089c06a5dEF8e69',
+  USDT_USD: '0x80EDee6f667eCc9f63a0a6f55578F870651f06A4'
 }
 
 const PYTH_ADDRESSES: { [key: number]: string } = {
