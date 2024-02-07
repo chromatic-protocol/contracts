@@ -265,6 +265,10 @@ export class Contracts {
     return GelatoTest__factory.connect(address, this._signer)
   }
 
+  connectMarketSettlement(address: string): Mate2MarketSettlement {
+    return Mate2MarketSettlement__factory.connect(address, this._signer)
+  }
+
   /*
   async addLiquidityWithGaussianDistribution(
     marketAddress: string,
