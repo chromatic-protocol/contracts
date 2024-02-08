@@ -32,7 +32,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external override nonReentrant {
+    ) external override nonReentrant withTradingLock {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (msg.sender != position.liquidator) revert OnlyAccessableByLiquidator();
 
@@ -78,7 +78,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external override nonReentrant {
+    ) external override nonReentrant withTradingLock {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (msg.sender != position.liquidator) revert OnlyAccessableByLiquidator();
         if (position.closeVersion != 0) revert AlreadyClosedPosition();

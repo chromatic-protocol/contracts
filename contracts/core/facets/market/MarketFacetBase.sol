@@ -28,6 +28,12 @@ abstract contract MarketFacetBase is IMarketEvents, IMarketErrors {
         _;
     }
 
+    modifier withTradingLock() {
+        MarketStorageLib.marketStorage().vault.acquireTradingLock();
+        _;
+        MarketStorageLib.marketStorage().vault.releaseTradingLock();
+    }
+
     /**
      * @dev Creates a new LP context.
      * @return The LP context.

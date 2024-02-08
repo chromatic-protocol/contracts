@@ -26,9 +26,6 @@ contract MarketTradeClosePositionFacet is
     using Math for uint256;
     using SignedMath for int256;
 
-    uint256 constant LEVERAGE_DECIMALS = 2;
-    uint256 constant LEVERAGE_PRECISION = 10 ** LEVERAGE_DECIMALS;
-
     /**
      * @inheritdoc IMarketTradeClosePosition
      * @dev This function allows the owner of the position to close it. The position must exist, be owned by the caller,
@@ -42,7 +39,7 @@ contract MarketTradeClosePositionFacet is
      */
     function closePosition(
         uint256 positionId
-    ) external override nonReentrant returns (ClosePositionInfo memory closed) {
+    ) external override nonReentrant withTradingLock returns (ClosePositionInfo memory closed) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         _requireClosePositionEnabled(ms);
 
@@ -104,7 +101,7 @@ contract MarketTradeClosePositionFacet is
         uint256 positionId,
         address recipient, // EOA or account contract
         bytes calldata data
-    ) external override nonReentrant {
+    ) external override nonReentrant withTradingLock {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (position.owner != msg.sender) revert NotPermitted();
 

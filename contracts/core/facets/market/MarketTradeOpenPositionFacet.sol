@@ -57,7 +57,13 @@ contract MarketTradeOpenPositionFacet is
         uint256 makerMargin,
         uint256 maxAllowableTradingFee,
         bytes calldata data
-    ) external override nonReentrant returns (OpenPositionInfo memory positionInfo) {
+    )
+        external
+        override
+        nonReentrant
+        withTradingLock
+        returns (OpenPositionInfo memory positionInfo)
+    {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
         _requireOpenPositionEnabled(ms);
 
@@ -137,7 +143,6 @@ contract MarketTradeOpenPositionFacet is
 
         // call callback
         uint256 balanceBefore = settlementToken.balanceOf(address(vault));
-        uint256 pendingMakerEarningBefore = vault.pendingMakerEarnings(address(settlementToken));
 
         uint256 requiredMargin = position.takerMargin + protocolFee + tradingFee;
         IChromaticTradeCallback(msg.sender).openPositionCallback(
@@ -147,15 +152,9 @@ contract MarketTradeOpenPositionFacet is
             data
         );
 
-        {
-            // check margin settlementToken increased
-            uint256 pendingMakerEarning = vault.pendingMakerEarnings(address(settlementToken)) -
-                pendingMakerEarningBefore;
-            if (
-                requiredMargin <
-                settlementToken.balanceOf(address(vault)) - balanceBefore - pendingMakerEarning
-            ) revert NotEnoughMarginTransferred();
-        }
+        // check margin settlementToken increased
+        if (requiredMargin < settlementToken.balanceOf(address(vault)) - balanceBefore)
+            revert NotEnoughMarginTransferred();
 
         liquidityPool.acceptOpenPosition(ctx, position); // settle()
 

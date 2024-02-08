@@ -39,7 +39,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address private immutable marketDiamondCutFacet;
     address private immutable marketLoupeFacet;
     address private immutable marketStateFacet;
-    address private immutable marketLiquidityFacet;
+    address private immutable marketAddLiquidityFacet;
+    address private immutable marketRemoveLiquidityFacet;
     address private immutable marketLensFacet;
     address private immutable marketTradeOpenPositionFacet;
     address private immutable marketTradeClosePositionFacet;
@@ -108,10 +109,11 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @param _marketDiamondCutFacet The market diamond cut facet address.
      * @param _marketLoupeFacet The market loupe facet address.
      * @param _marketStateFacet The market state facet address.
-     * @param _marketLiquidityFacet The market liquidity facet address.
+     * @param _marketAddLiquidityFacet The market liquidity facet address for adding and claiming liquidity.
+     * @param _marketRemoveLiquidityFacet The market liquidity facet address for removing and withdrawing liquidity.
      * @param _marketLiquidityLensFacet The market liquidity lens facet address.
-     * @param _marketTradeOpenPositionFacet The market trade facet for opening positions address.
-     * @param _marketTradeClosePositionFacet The market trade facet for closing and claiming positions address.
+     * @param _marketTradeOpenPositionFacet The market trade facet address for opening positions.
+     * @param _marketTradeClosePositionFacet The market trade facet address for closing and claiming positions.
      * @param _marketLiquidateFacet The market liquidate facet address.
      * @param _marketSettleFacet The market settle facet address.
      */
@@ -119,7 +121,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address _marketDiamondCutFacet,
         address _marketLoupeFacet,
         address _marketStateFacet,
-        address _marketLiquidityFacet,
+        address _marketAddLiquidityFacet,
+        address _marketRemoveLiquidityFacet,
         address _marketLiquidityLensFacet,
         address _marketTradeOpenPositionFacet,
         address _marketTradeClosePositionFacet,
@@ -129,7 +132,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         require(_marketDiamondCutFacet != address(0));
         require(_marketLoupeFacet != address(0));
         require(_marketStateFacet != address(0));
-        require(_marketLiquidityFacet != address(0));
+        require(_marketAddLiquidityFacet != address(0));
+        require(_marketRemoveLiquidityFacet != address(0));
         require(_marketLiquidityLensFacet != address(0));
         require(_marketTradeOpenPositionFacet != address(0));
         require(_marketTradeClosePositionFacet != address(0));
@@ -142,7 +146,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         marketDiamondCutFacet = _marketDiamondCutFacet;
         marketLoupeFacet = _marketLoupeFacet;
         marketStateFacet = _marketStateFacet;
-        marketLiquidityFacet = _marketLiquidityFacet;
+        marketAddLiquidityFacet = _marketAddLiquidityFacet;
+        marketRemoveLiquidityFacet = _marketRemoveLiquidityFacet;
         marketLensFacet = _marketLiquidityLensFacet;
         marketTradeOpenPositionFacet = _marketTradeOpenPositionFacet;
         marketTradeClosePositionFacet = _marketTradeClosePositionFacet;
@@ -307,7 +312,8 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
                 marketDiamondCutFacet: marketDiamondCutFacet,
                 marketLoupeFacet: marketLoupeFacet,
                 marketStateFacet: marketStateFacet,
-                marketLiquidityFacet: marketLiquidityFacet,
+                marketAddLiquidityFacet: marketAddLiquidityFacet,
+                marketRemoveLiquidityFacet: marketRemoveLiquidityFacet,
                 marketLensFacet: marketLensFacet,
                 marketTradeOpenPositionFacet: marketTradeOpenPositionFacet,
                 marketTradeClosePositionFacet: marketTradeClosePositionFacet,

@@ -4,6 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
 import {LpReceiptStorage, LpReceiptStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
+import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
+import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {MarketFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketFacetBase.sol";
 
 abstract contract MarketLiquidityFacetBase is MarketFacetBase {
@@ -40,5 +42,24 @@ abstract contract MarketLiquidityFacetBase is MarketFacetBase {
                 recipient: recipient,
                 tradingFeeRate: tradingFeeRate
             });
+    }
+
+    function _requireFeeRatesUniqueness(int16[] memory tradingFeeRates) internal pure {
+        bool[FEE_RATES_LENGTH * 2] memory flags;
+
+        for (uint256 i = 0; i < tradingFeeRates.length; ) {
+            int16 feeRate = tradingFeeRates[i];
+            uint256 idx = CLBTokenLib.feeRateIndex(uint16(feeRate < 0 ? -feeRate : feeRate));
+            idx = feeRate < 0 ? idx + FEE_RATES_LENGTH : idx;
+
+            if (flags[idx]) {
+                revert DuplicatedTradingFeeRate();
+            }
+            flags[idx] = true;
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 }
