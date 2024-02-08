@@ -109,6 +109,7 @@ export function spec(getDeps: Function) {
       const {
         traderAccount,
         market,
+        marketEvents,
         traderRouter,
         oracleProvider,
         settlementToken,
@@ -230,7 +231,7 @@ export function spec(getDeps: Function) {
         console.log(`pnl ${(parseFloat(expectedPnl.toString()) / parseFloat(r.qty)) * 100}%`)
 
         await expect(tx, 'not matched actual pnl')
-          .to.emit(market, 'ClaimPosition')
+          .to.emit(marketEvents, 'ClaimPosition')
           .withArgs(await traderAccount.getAddress(), expectedPnl, interestFee, anyValue)
 
         await expect(tx)

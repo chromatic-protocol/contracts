@@ -11,26 +11,15 @@ import {PositionUtil} from "@chromatic-protocol/contracts/core/libraries/Positio
 import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 import {MarketStorage, MarketStorageLib, PositionStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketTradeFacetBase.sol";
-import {IMarketTrade} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
 import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAIM_KEEPER, CLAIM_SL, CLAIM_TP} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 
 /**
  * @title MarketLiquidateFacet
  * @dev A contract that manages liquidations.
  */
-contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, ReentrancyGuard {
+contract MarketLiquidateFacet is ReentrancyGuard, MarketTradeFacetBase, IMarketLiquidate {
     using SafeCast for uint256;
     using SignedMath for int256;
-
-    /**
-     * @dev Throws an error indicating that the position has already been closed.
-     */
-    error AlreadyClosedPosition();
-
-    /**
-     *@dev Throws an error indicating that the position is not claimable.
-     */
-    error NotClaimablePosition();
 
     /**
      * @inheritdoc IMarketLiquidate
@@ -42,7 +31,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external override nonReentrant {
+    ) external override nonReentrant withTradingLock {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (msg.sender != position.liquidator) revert OnlyAccessableByLiquidator();
 
@@ -88,7 +77,7 @@ contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, Reentra
         uint256 positionId,
         address keeper,
         uint256 keeperFee // native token amount
-    ) external override nonReentrant {
+    ) external override nonReentrant withTradingLock {
         Position memory position = _getPosition(PositionStorageLib.positionStorage(), positionId);
         if (msg.sender != position.liquidator) revert OnlyAccessableByLiquidator();
         if (position.closeVersion != 0) revert AlreadyClosedPosition();

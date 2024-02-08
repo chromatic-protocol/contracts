@@ -57,14 +57,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { address: marketStateFacet } = await deploy('MarketStateFacet', deployOpts)
   console.log(chalk.yellow(`✨ MarketStateFacet: ${marketStateFacet}`))
 
-  const { address: marketLiquidityFacet } = await deploy('MarketLiquidityFacet', deployOpts)
-  console.log(chalk.yellow(`✨ MarketLiquidityFacet: ${marketLiquidityFacet}`))
+  const { address: marketAddLiquidityFacet } = await deploy('MarketAddLiquidityFacet', deployOpts)
+  console.log(chalk.yellow(`✨ MarketAddLiquidityFacet: ${marketAddLiquidityFacet}`))
+
+  const { address: marketRemoveLiquidityFacet } = await deploy('MarketRemoveLiquidityFacet', deployOpts)
+  console.log(chalk.yellow(`✨ MarketRemoveLiquidityFacet: ${marketRemoveLiquidityFacet}`))
 
   const { address: marketLensFacet } = await deploy('MarketLensFacet', deployOpts)
   console.log(chalk.yellow(`✨ MarketLensFacet: ${marketLensFacet}`))
 
-  const { address: marketTradeFacet } = await deploy('MarketTradeFacet', deployOpts)
-  console.log(chalk.yellow(`✨ MarketTradeFacet: ${marketTradeFacet}`))
+  const { address: marketTradeOpenPositionFacet } = await deploy('MarketTradeOpenPositionFacet', deployOpts)
+  console.log(chalk.yellow(`✨ MarketTradeOpenPositionFacet: ${marketTradeOpenPositionFacet}`))
+
+  const { address: marketTradeClosePositionFacet } = await deploy('MarketTradeClosePositionFacet', deployOpts)
+  console.log(chalk.yellow(`✨ MarketTradeClosePositionFacet: ${marketTradeClosePositionFacet}`))
 
   const { address: marketLiquidateFacet } = await deploy('MarketLiquidateFacet', deployOpts)
   console.log(chalk.yellow(`✨ MarketLiquidateFacet: ${marketLiquidateFacet}`))
@@ -78,9 +84,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       marketDiamondCutFacet,
       marketLoupeFacet,
       marketStateFacet,
-      marketLiquidityFacet,
+      marketAddLiquidityFacet,
+      marketRemoveLiquidityFacet,
       marketLensFacet,
-      marketTradeFacet,
+      marketTradeOpenPositionFacet,
+      marketTradeClosePositionFacet,
       marketLiquidateFacet,
       marketSettleFacet
     ],

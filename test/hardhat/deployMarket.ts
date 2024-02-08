@@ -68,6 +68,7 @@ export function deploy(target: string = 'arbitrum') {
       }
 
       const market = await ethers.getContractAt('IChromaticMarket', marketAddress)
+      const marketEvents = await ethers.getContractAt('IMarketEvents', marketAddress)
 
       const chromaticRouter = await deployContract<ChromaticRouter>('ChromaticRouter', {
         args: [await marketFactory.getAddress()]
@@ -82,6 +83,7 @@ export function deploy(target: string = 'arbitrum') {
         liquidator,
         oracleProvider,
         market,
+        marketEvents,
         chromaticRouter,
         settlementToken,
         lens

@@ -19,7 +19,7 @@ import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
  * @dev A contract that implements the ChromaticVault interface
  *      and provides functionality for managing positions, liquidity, and fees in Chromatic markets.
  */
-contract ChromaticVault is IChromaticVault, ReentrancyGuard {
+contract ChromaticVault is ReentrancyGuard, IChromaticVault {
     using Math for uint256;
 
     IChromaticMarketFactory public immutable factory;
@@ -33,6 +33,8 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     mapping(address => uint256) public pendingMarketEarnings; // market => earning
     mapping(address => uint256) public pendingDeposits; // settlement token => deposit
     mapping(address => uint256) public pendingWithdrawals; // settlement token => deposit
+
+    address internal _tradingLockOwner;
 
     /**
      * @dev Throws an error indicating that the caller is not the DAO.
@@ -64,6 +66,9 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      */
     error NotEnoughFeePaid();
 
+    error TradingLockAlreadyAcquired();
+    error NotTradingLockOwner();
+
     /**
      * @dev Modifier to restrict access to only the DAO.
      *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
@@ -84,19 +89,21 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     }
 
     /**
-     * @dev Modifier to restrict access to only the Market contract.
-     *      Throws an `OnlyAccessableByMarket` error if the caller is not a registered market.
-     */
-    modifier onlyMarket() {
-        _checkMarket();
-        _;
-    }
-    /**
      * @dev Modifier to restrict access to only the Vault earning distribute contract.
      *      Throws an `OnlyAccessableByEarningDistributor` error if the caller is not the Vault earning distribute contract.
      */
     modifier onlyEarningDistributor() {
         if (msg.sender != address(earningDistributor)) revert OnlyAccessableByEarningDistributor();
+        _;
+    }
+
+    modifier requireUnacquiredTradingLock() {
+        _requireUnacquiredTradingLock();
+        _;
+    }
+
+    modifier requireTradingLock() {
+        _requireTradingLock();
         _;
     }
 
@@ -108,15 +115,6 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     constructor(IChromaticMarketFactory _factory, IVaultEarningDistributor _earningDistributor) {
         factory = _factory;
         earningDistributor = _earningDistributor;
-    }
-
-    // Internal Functions
-
-    /**
-     * @dev This function can only be called by the modifier onlyMarket.
-     */
-    function _checkMarket() internal view {
-        if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
     }
 
     // implement IVault
@@ -131,7 +129,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         uint256 takerMargin,
         uint256 tradingFee,
         uint256 protocolFee
-    ) external override nonReentrant onlyMarket {
+    ) external override nonReentrant requireTradingLock {
         address market = msg.sender;
 
         takerBalances[settlementToken] += takerMargin;
@@ -155,7 +153,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address recipient,
         uint256 takerMargin,
         uint256 settlementAmount
-    ) external override nonReentrant onlyMarket {
+    ) external override nonReentrant requireTradingLock {
         address market = msg.sender;
 
         takerBalances[settlementToken] -= takerMargin;
@@ -186,7 +184,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
     function onAddLiquidity(
         address settlementToken,
         uint256 amount
-    ) external override nonReentrant onlyMarket {
+    ) external override nonReentrant requireTradingLock {
         address market = msg.sender;
 
         pendingDeposits[settlementToken] += amount;
@@ -202,7 +200,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address settlementToken,
         uint256 pendingDeposit,
         uint256 pendingWithdrawal
-    ) external override nonReentrant onlyMarket {
+    ) external override nonReentrant requireTradingLock {
         address market = msg.sender;
 
         pendingDeposits[settlementToken] -= pendingDeposit;
@@ -227,7 +225,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address settlementToken,
         address recipient,
         uint256 amount
-    ) external override nonReentrant onlyMarket {
+    ) external override nonReentrant requireTradingLock {
         if (amount == 0) return;
 
         address market = msg.sender;
@@ -246,7 +244,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address keeper,
         uint256 fee,
         uint256 margin
-    ) external override nonReentrant onlyMarket returns (uint256 usedFee) {
+    ) external override nonReentrant requireTradingLock returns (uint256 usedFee) {
         if (fee == 0) return 0;
 
         address market = msg.sender;
@@ -322,7 +320,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         uint256 amount,
         address recipient,
         bytes calldata data
-    ) external nonReentrant {
+    ) external nonReentrant requireUnacquiredTradingLock {
         uint256 balance = IERC20(token).balanceOf(address(this));
 
         // Ensure that the loan amount does not exceed the available balance
@@ -565,5 +563,28 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address token
     ) private view returns (bool) {
         return pendingMarketEarnings[market] >= factory.getEarningDistributionThreshold(token);
+    }
+
+    function acquireTradingLock() external {
+        _checkMarket();
+        _requireUnacquiredTradingLock();
+        _tradingLockOwner = msg.sender;
+    }
+
+    function releaseTradingLock() external {
+        _requireTradingLock();
+        delete _tradingLockOwner;
+    }
+
+    function _requireUnacquiredTradingLock() internal view {
+        if (_tradingLockOwner != address(0)) revert TradingLockAlreadyAcquired();
+    }
+
+    function _requireTradingLock() internal view {
+        if (_tradingLockOwner != msg.sender) revert NotTradingLockOwner();
+    }
+
+    function _checkMarket() internal view {
+        if (!factory.isRegisteredMarket(msg.sender)) revert OnlyAccessableByMarket();
     }
 }

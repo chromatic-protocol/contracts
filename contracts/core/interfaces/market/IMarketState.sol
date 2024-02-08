@@ -13,13 +13,6 @@ import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken
  */
 interface IMarketState {
     /**
-     * @notice Emitted when the protocol fee rate is changed by the market
-     * @param protocolFeeRateOld The previous value of the protocol fee rate
-     * @param protocolFeeRateNew The updated value of the protocol fee rate
-     */
-    event ProtocolFeeRateSet(uint16 protocolFeeRateOld, uint16 protocolFeeRateNew);
-
-    /**
      * @dev Returns the factory contract for the market.
      * @return The factory contract.
      */

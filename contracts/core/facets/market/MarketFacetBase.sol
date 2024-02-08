@@ -4,24 +4,10 @@ pragma solidity >=0.8.0 <0.9.0;
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {MarketStorage, MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
+import {IMarketEvents} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketEvents.sol";
+import {IMarketErrors} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketErrors.sol";
 
-abstract contract MarketFacetBase {
-    /**
-     * @dev Throws an error indicating that the caller is not the DAO.
-     */
-    error OnlyAccessableByDao();
-
-    /**
-     * @dev Throws an error indicating that the caller is not the chromatic liquidator contract.
-     */
-
-    error OnlyAccessableByLiquidator();
-
-    /**
-     * @dev Throws an error indicating that the caller is not the chromatch vault contract.
-     */
-    error OnlyAccessableByVault();
-
+abstract contract MarketFacetBase is IMarketEvents, IMarketErrors {
     /**
      * @dev Modifier to restrict access to only the DAO.
      *      Throws an `OnlyAccessableByDao` error if the caller is not the DAO.
@@ -40,6 +26,12 @@ abstract contract MarketFacetBase {
         if (msg.sender != address(MarketStorageLib.marketStorage().vault))
             revert OnlyAccessableByVault();
         _;
+    }
+
+    modifier withTradingLock() {
+        MarketStorageLib.marketStorage().vault.acquireTradingLock();
+        _;
+        MarketStorageLib.marketStorage().vault.releaseTradingLock();
     }
 
     /**

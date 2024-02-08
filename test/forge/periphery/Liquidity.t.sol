@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {MarketLiquidityFacetBase} from "@chromatic-protocol/contracts/core/facets/market/MarketLiquidityFacetBase.sol";
+import {IMarketErrors} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketErrors.sol";
 import {BaseSetup} from "../BaseSetup.sol";
 import "forge-std/console.sol";
 import "forge-std/StdStyle.sol";
@@ -85,7 +85,7 @@ contract LiquidityTest is BaseSetup {
             ),
             user1
         );
-        vm.expectRevert(MarketLiquidityFacetBase.NotExistLpReceipt.selector);
+        vm.expectRevert(IMarketErrors.NotExistLpReceipt.selector);
         router.claimLiquidityBatch(address(market), _receiptIds);
         console.log(
             StdStyle.red("contract_CLBToken.balanceOf(user1, 1) -> %s"),

@@ -30,9 +30,15 @@ export async function deploy() {
   const marketDiamondCutFacet = await deployContract<Contract>('MarketDiamondCutFacet')
   const marketLoupeFacet = await deployContract<Contract>('DiamondLoupeFacet')
   const marketStateFacet = await deployContract<Contract>('MarketStateFacet')
-  const marketLiquidityFacet = await deployContract<Contract>('MarketLiquidityFacet')
+  const marketAddLiquidityFacet = await deployContract<Contract>('MarketAddLiquidityFacet')
+  const marketRemoveLiquidityFacet = await deployContract<Contract>('MarketRemoveLiquidityFacet')
   const marketLensFacet = await deployContract<Contract>('MarketLensFacet')
-  const marketTradeFacet = await deployContract<Contract>('MarketTradeFacet')
+  const marketTradeOpenPositionFacet = await deployContract<Contract>(
+    'MarketTradeOpenPositionFacet'
+  )
+  const marketTradeClosePositionFacet = await deployContract<Contract>(
+    'MarketTradeClosePositionFacet'
+  )
   const marketLiquidateFacet = await deployContract<Contract>('MarketLiquidateFacet')
   const marketSettleFacet = await deployContract<Contract>('MarketSettleFacet')
 
@@ -41,9 +47,11 @@ export async function deploy() {
       await marketDiamondCutFacet.getAddress(),
       await marketLoupeFacet.getAddress(),
       await marketStateFacet.getAddress(),
-      await marketLiquidityFacet.getAddress(),
+      await marketAddLiquidityFacet.getAddress(),
+      await marketRemoveLiquidityFacet.getAddress(),
       await marketLensFacet.getAddress(),
-      await marketTradeFacet.getAddress(),
+      await marketTradeOpenPositionFacet.getAddress(),
+      await marketTradeClosePositionFacet.getAddress(),
       await marketLiquidateFacet.getAddress(),
       await marketSettleFacet.getAddress()
     ],
