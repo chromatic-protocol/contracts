@@ -14,6 +14,7 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
     using SafeCast for uint256;
     using SignedMath for int256;
 
+    uint32 internal constant CLAIM_POSITION_CALLBACK_GASLIMIT = 1e6;
 
     /**
      * @dev Internal function for claiming a position.
@@ -106,7 +107,9 @@ abstract contract MarketTradeFacetBase is MarketFacetBase {
         // Call the claim position callback function on the position owner's contract
         // If an exception occurs during the callback, revert the transaction unless the caller is the liquidator
         try
-            IChromaticTradeCallback(position.owner).claimPositionCallback(
+            IChromaticTradeCallback(position.owner).claimPositionCallback{
+                gas: CLAIM_POSITION_CALLBACK_GASLIMIT
+            }(
                 position,
                 ClaimPositionInfo({
                     id: position.id,
