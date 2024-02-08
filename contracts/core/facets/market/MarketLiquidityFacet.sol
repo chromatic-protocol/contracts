@@ -239,7 +239,6 @@ contract MarketLiquidityFacet is
             _clbTokenAmounts,
             data
         );
-        ls.deleteReceipts(receiptIds);
 
         emit ClaimLiquidityBatch(_receipts, _clbTokenAmounts);
     }
@@ -253,6 +252,8 @@ contract MarketLiquidityFacet is
         receipt = _getLpReceipt(ls, receiptId);
         if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotClaimableLpReceipt();
+        
+        ls.deleteReceipt(receiptId);
 
         clbTokenAmount = liquidityPool.acceptClaimLiquidity(
             ctx,
@@ -466,7 +467,6 @@ contract MarketLiquidityFacet is
             _burnedCLBTokenAmounts,
             data
         );
-        ls.deleteReceipts(receiptIds);
 
         emit WithdrawLiquidityBatch(_receipts, _amounts, _burnedCLBTokenAmounts);
     }
@@ -514,6 +514,8 @@ contract MarketLiquidityFacet is
         if (receipt.action != LpAction.REMOVE_LIQUIDITY) revert InvalidLpReceiptAction();
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotWithdrawableLpReceipt();
 
+        ls.deleteReceipt(receiptId);
+        
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
 
