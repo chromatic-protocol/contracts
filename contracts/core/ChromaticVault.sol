@@ -131,7 +131,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         uint256 takerMargin,
         uint256 tradingFee,
         uint256 protocolFee
-    ) external override onlyMarket {
+    ) external override nonReentrant onlyMarket {
         address market = msg.sender;
 
         takerBalances[settlementToken] += takerMargin;
@@ -155,7 +155,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address recipient,
         uint256 takerMargin,
         uint256 settlementAmount
-    ) external override onlyMarket {
+    ) external override nonReentrant onlyMarket {
         address market = msg.sender;
 
         takerBalances[settlementToken] -= takerMargin;
@@ -183,7 +183,10 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      * @inheritdoc IVault
      * @dev This function can only be called by a market contract.
      */
-    function onAddLiquidity(address settlementToken, uint256 amount) external override onlyMarket {
+    function onAddLiquidity(
+        address settlementToken,
+        uint256 amount
+    ) external override nonReentrant onlyMarket {
         address market = msg.sender;
 
         pendingDeposits[settlementToken] += amount;
@@ -199,7 +202,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address settlementToken,
         uint256 pendingDeposit,
         uint256 pendingWithdrawal
-    ) external override onlyMarket {
+    ) external override nonReentrant onlyMarket {
         address market = msg.sender;
 
         pendingDeposits[settlementToken] -= pendingDeposit;
@@ -224,7 +227,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address settlementToken,
         address recipient,
         uint256 amount
-    ) external override onlyMarket {
+    ) external override nonReentrant onlyMarket {
         if (amount == 0) return;
 
         address market = msg.sender;
@@ -243,7 +246,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address keeper,
         uint256 fee,
         uint256 margin
-    ) external override onlyMarket returns (uint256 usedFee) {
+    ) external override nonReentrant onlyMarket returns (uint256 usedFee) {
         if (fee == 0) return 0;
 
         address market = msg.sender;
@@ -441,14 +444,16 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      */
     function createMakerEarningDistributionTask(
         address token
-    ) external virtual override onlyFactoryOrDao {
+    ) external virtual override nonReentrant onlyFactoryOrDao {
         earningDistributor.createMakerEarningDistributionTask(token);
     }
 
     /**
      * @inheritdoc IChromaticVault
      */
-    function cancelMakerEarningDistributionTask(address token) external override onlyFactoryOrDao {
+    function cancelMakerEarningDistributionTask(
+        address token
+    ) external override nonReentrant onlyFactoryOrDao {
         earningDistributor.cancelMakerEarningDistributionTask(token);
     }
 
@@ -459,7 +464,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address token,
         uint256 fee,
         address keeper
-    ) external override onlyEarningDistributor {
+    ) external override nonReentrant onlyEarningDistributor {
         if (!_makerEarningDistributable(token)) return;
 
         address[] memory markets = factory.getMarketsBySettlmentToken(token);
@@ -508,7 +513,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      */
     function createMarketEarningDistributionTask(
         address market
-    ) external virtual override onlyFactoryOrDao {
+    ) external virtual override nonReentrant onlyFactoryOrDao {
         earningDistributor.createMarketEarningDistributionTask(market);
     }
 
@@ -517,7 +522,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
      */
     function cancelMarketEarningDistributionTask(
         address market
-    ) external override onlyFactoryOrDao {
+    ) external override nonReentrant onlyFactoryOrDao {
         earningDistributor.cancelMarketEarningDistributionTask(market);
     }
 
@@ -528,7 +533,7 @@ contract ChromaticVault is IChromaticVault, ReentrancyGuard {
         address market,
         uint256 fee,
         address keeper
-    ) external override onlyEarningDistributor {
+    ) external override nonReentrant onlyEarningDistributor {
         address token = address(IChromaticMarket(market).settlementToken());
         if (!_marketEarningDistributable(market, token)) return;
 
