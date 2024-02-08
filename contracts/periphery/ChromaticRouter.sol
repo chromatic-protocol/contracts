@@ -18,7 +18,7 @@ import {IChromaticRouter} from "@chromatic-protocol/contracts/periphery/interfac
 import {AccountFactory} from "@chromatic-protocol/contracts/periphery/base/AccountFactory.sol";
 import {VerifyCallback} from "@chromatic-protocol/contracts/periphery/base/VerifyCallback.sol";
 import {ChromaticAccount} from "@chromatic-protocol/contracts/periphery/ChromaticAccount.sol";
-import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTrade.sol";
+import {OpenPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTradeOpenPosition.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 

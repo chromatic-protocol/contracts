@@ -15,7 +15,7 @@ contract MarketSettleFacet is MarketFacetBase, IMarketSettle {
      * @dev This function settles the market by synchronizing the oracle version
      *      and calling the settle function of the liquidity pool.
      */
-    function settle(int16[] calldata feeRates) external override {
+    function settle(int16[] calldata feeRates) external override withTradingLock {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
 
         LpContext memory ctx = newLpContext(ms);
@@ -29,7 +29,7 @@ contract MarketSettleFacet is MarketFacetBase, IMarketSettle {
      * @dev This function settles the market by synchronizing the oracle version
      *      and calling the settle function of the liquidity pool.
      */
-    function settleAll() external override {
+    function settleAll() external override withTradingLock {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
 
         LpContext memory ctx = newLpContext(ms);

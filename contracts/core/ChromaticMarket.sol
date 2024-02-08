@@ -6,6 +6,8 @@ import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interf
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ICLBToken} from "@chromatic-protocol/contracts/core/interfaces/ICLBToken.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
+import {IMarketEvents} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketEvents.sol";
+import {IMarketErrors} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketErrors.sol";
 import {CLBTokenDeployerLib} from "@chromatic-protocol/contracts/core/libraries/deployer/CLBTokenDeployer.sol";
 import {MarketStorage, MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 import {Diamond} from "@chromatic-protocol/contracts/core/base/Diamond.sol";
@@ -14,7 +16,7 @@ import {Diamond} from "@chromatic-protocol/contracts/core/base/Diamond.sol";
  * @title ChromaticMarket
  * @dev A contract that represents a Chromatic market, combining trade and liquidity functionalities.
  */
-contract ChromaticMarket is Diamond {
+contract ChromaticMarket is IMarketEvents, IMarketErrors, Diamond {
     constructor(address diamondCutFacet) Diamond(diamondCutFacet) {
         IChromaticMarketFactory factory = IChromaticMarketFactory(msg.sender);
 

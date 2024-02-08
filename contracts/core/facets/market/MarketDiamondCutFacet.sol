@@ -2,15 +2,11 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
+import {IMarketErrors} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketErrors.sol";
 import {DiamondCutFacetBase} from "@chromatic-protocol/contracts/core/facets/DiamondCutFacetBase.sol";
 import {MarketStorageLib} from "@chromatic-protocol/contracts/core/libraries/MarketStorage.sol";
 
-contract MarketDiamondCutFacet is DiamondCutFacetBase {
-    /**
-     * @dev Throws an error indicating that the caller is nether the chormatic factory contract nor the DAO.
-     */
-    error OnlyAccessableByFactoryOrDao();
-
+contract MarketDiamondCutFacet is IMarketErrors, DiamondCutFacetBase {
     /**
      * @dev Modifier to restrict access to only the factory or the DAO.
      *      Throws an `OnlyAccessableByFactoryOrDao` error if the caller is nether the chormatic factory contract nor the DAO.

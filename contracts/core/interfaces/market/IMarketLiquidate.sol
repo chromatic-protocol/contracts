@@ -1,45 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.sol";
 
 /**
  * @title IMarketLiquidate
  * @dev Interface for liquidating and claiming positions in a market.
  */
 interface IMarketLiquidate {
-    /**
-     * @dev Emitted when a position is claimed by keeper.
-     * @param account The address of the account claiming the position.
-     * @param pnl The profit or loss of the claimed position.
-     * @param interest The interest paid for the claimed position.
-     * @param usedKeeperFee The amount of keeper fee used for the liquidation.
-     * @param position The claimed position.
-     */
-    event ClaimPositionByKeeper(
-        address indexed account,
-        int256 indexed pnl,
-        uint256 indexed interest,
-        uint256 usedKeeperFee,
-        Position position
-    );
-
-    /**
-     * @dev Emitted when a position is liquidated.
-     * @param account The address of the account being liquidated.
-     * @param pnl The profit or loss of the claimed position.
-     * @param interest The interest paid for the claimed position.
-     * @param usedKeeperFee The amount of keeper fee used for the liquidation.
-     * @param position The liquidated position.
-     */
-    event Liquidate(
-        address indexed account,
-        int256 indexed pnl,
-        uint256 indexed interest,
-        uint256 usedKeeperFee,
-        Position position
-    );
-
     /**
      * @dev Checks if a position is eligible for liquidation.
      * @param positionId The ID of the position to check.

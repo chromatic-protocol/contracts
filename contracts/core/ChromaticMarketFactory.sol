@@ -39,9 +39,11 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
     address private immutable marketDiamondCutFacet;
     address private immutable marketLoupeFacet;
     address private immutable marketStateFacet;
-    address private immutable marketLiquidityFacet;
+    address private immutable marketAddLiquidityFacet;
+    address private immutable marketRemoveLiquidityFacet;
     address private immutable marketLensFacet;
-    address private immutable marketTradeFacet;
+    address private immutable marketTradeOpenPositionFacet;
+    address private immutable marketTradeClosePositionFacet;
     address private immutable marketLiquidateFacet;
     address private immutable marketSettleFacet;
 
@@ -107,9 +109,11 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
      * @param _marketDiamondCutFacet The market diamond cut facet address.
      * @param _marketLoupeFacet The market loupe facet address.
      * @param _marketStateFacet The market state facet address.
-     * @param _marketLiquidityFacet The market liquidity facet address.
+     * @param _marketAddLiquidityFacet The market liquidity facet address for adding and claiming liquidity.
+     * @param _marketRemoveLiquidityFacet The market liquidity facet address for removing and withdrawing liquidity.
      * @param _marketLiquidityLensFacet The market liquidity lens facet address.
-     * @param _marketTradeFacet The market trade facet address.
+     * @param _marketTradeOpenPositionFacet The market trade facet address for opening positions.
+     * @param _marketTradeClosePositionFacet The market trade facet address for closing and claiming positions.
      * @param _marketLiquidateFacet The market liquidate facet address.
      * @param _marketSettleFacet The market settle facet address.
      */
@@ -117,18 +121,22 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         address _marketDiamondCutFacet,
         address _marketLoupeFacet,
         address _marketStateFacet,
-        address _marketLiquidityFacet,
+        address _marketAddLiquidityFacet,
+        address _marketRemoveLiquidityFacet,
         address _marketLiquidityLensFacet,
-        address _marketTradeFacet,
+        address _marketTradeOpenPositionFacet,
+        address _marketTradeClosePositionFacet,
         address _marketLiquidateFacet,
         address _marketSettleFacet
     ) {
         require(_marketDiamondCutFacet != address(0));
         require(_marketLoupeFacet != address(0));
         require(_marketStateFacet != address(0));
-        require(_marketLiquidityFacet != address(0));
+        require(_marketAddLiquidityFacet != address(0));
+        require(_marketRemoveLiquidityFacet != address(0));
         require(_marketLiquidityLensFacet != address(0));
-        require(_marketTradeFacet != address(0));
+        require(_marketTradeOpenPositionFacet != address(0));
+        require(_marketTradeClosePositionFacet != address(0));
         require(_marketLiquidateFacet != address(0));
         require(_marketSettleFacet != address(0));
 
@@ -138,9 +146,11 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
         marketDiamondCutFacet = _marketDiamondCutFacet;
         marketLoupeFacet = _marketLoupeFacet;
         marketStateFacet = _marketStateFacet;
-        marketLiquidityFacet = _marketLiquidityFacet;
+        marketAddLiquidityFacet = _marketAddLiquidityFacet;
+        marketRemoveLiquidityFacet = _marketRemoveLiquidityFacet;
         marketLensFacet = _marketLiquidityLensFacet;
-        marketTradeFacet = _marketTradeFacet;
+        marketTradeOpenPositionFacet = _marketTradeOpenPositionFacet;
+        marketTradeClosePositionFacet = _marketTradeClosePositionFacet;
         marketLiquidateFacet = _marketLiquidateFacet;
         marketSettleFacet = _marketSettleFacet;
     }
@@ -302,9 +312,11 @@ contract ChromaticMarketFactory is IChromaticMarketFactory {
                 marketDiamondCutFacet: marketDiamondCutFacet,
                 marketLoupeFacet: marketLoupeFacet,
                 marketStateFacet: marketStateFacet,
-                marketLiquidityFacet: marketLiquidityFacet,
+                marketAddLiquidityFacet: marketAddLiquidityFacet,
+                marketRemoveLiquidityFacet: marketRemoveLiquidityFacet,
                 marketLensFacet: marketLensFacet,
-                marketTradeFacet: marketTradeFacet,
+                marketTradeOpenPositionFacet: marketTradeOpenPositionFacet,
+                marketTradeClosePositionFacet: marketTradeClosePositionFacet,
                 marketLiquidateFacet: marketLiquidateFacet,
                 marketSettleFacet: marketSettleFacet,
                 protocolFeeRate: defaultProtocolFeeRate

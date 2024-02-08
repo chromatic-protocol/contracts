@@ -67,6 +67,6 @@ contract MarketStateFacet is MarketFacetBase, IMarketState {
         uint16 protocolFeeRateOld = ps.protocolFeeRate;
         ps.protocolFeeRate = _protocolFeeRate;
 
-        emit ProtocolFeeRateSet(protocolFeeRateOld, _protocolFeeRate);
+        emit ProtocolFeeRateUpdated(protocolFeeRateOld, _protocolFeeRate);
     }
 }

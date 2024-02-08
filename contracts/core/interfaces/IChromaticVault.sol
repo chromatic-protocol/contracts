@@ -97,4 +97,8 @@ interface IChromaticVault is IVault, ILendingPool {
      * @param keeper The keeper address to receive fee.
      */
     function distributeMarketEarning(address market, uint256 fee, address keeper) external;
+
+    function acquireTradingLock() external;
+
+    function releaseTradingLock() external;
 }
