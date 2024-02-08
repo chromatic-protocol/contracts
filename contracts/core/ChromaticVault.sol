@@ -19,7 +19,7 @@ import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
  * @dev A contract that implements the ChromaticVault interface
  *      and provides functionality for managing positions, liquidity, and fees in Chromatic markets.
  */
-contract ChromaticVault is IChromaticVault, ReentrancyGuard {
+contract ChromaticVault is ReentrancyGuard, IChromaticVault {
     using Math for uint256;
 
     IChromaticMarketFactory public immutable factory;

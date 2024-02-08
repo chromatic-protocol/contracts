@@ -19,9 +19,9 @@ import {MarketTradeFacetBase} from "@chromatic-protocol/contracts/core/facets/ma
  * @dev A contract that manages trading positions.
  */
 contract MarketTradeClosePositionFacet is
+    ReentrancyGuard,
     MarketTradeFacetBase,
-    IMarketTradeClosePosition,
-    ReentrancyGuard
+    IMarketTradeClosePosition
 {
     using Math for uint256;
     using SignedMath for int256;

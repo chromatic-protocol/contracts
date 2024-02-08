@@ -18,7 +18,7 @@ import {OpenPositionInfo, ClosePositionInfo, ClaimPositionInfo, CLAIM_USER, CLAI
  * @title MarketLiquidateFacet
  * @dev A contract that manages liquidations.
  */
-contract MarketLiquidateFacet is MarketTradeFacetBase, IMarketLiquidate, ReentrancyGuard {
+contract MarketLiquidateFacet is ReentrancyGuard, MarketTradeFacetBase, IMarketLiquidate {
     using SafeCast for uint256;
     using SignedMath for int256;
 
