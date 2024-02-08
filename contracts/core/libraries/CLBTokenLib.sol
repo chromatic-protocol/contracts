@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
+import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";
 
 /**
  * @title CLBTokenLib
@@ -57,6 +58,24 @@ library CLBTokenLib {
             100, 200, 300, 400, 500, 600, 700, 800, 900, // 1% ~ 9%, step 1%
             1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000 // 10% ~ 50%, step 5%
         ];
+    }
+
+    function feeRateIndex(uint16 feeRate) internal pure returns (uint256) {
+        require(feeRate >= MIN_FEE_RATE && feeRate <= 5000, Errors.UNSUPPORTED_TRADING_FEE_RATE);
+
+        if (feeRate < 10) {
+            // 0..8
+            return feeRate - 1;
+        } else if (feeRate < 100) {
+            // 9..17
+            return (feeRate / 10) + 8;
+        } else if (feeRate < 1000) {
+            // 18..26
+            return (feeRate / 100) + 17;
+        } else {
+            // 27..35
+            return (feeRate / 500) + 25;
+        }
     }
 
     function tokenIds() internal pure returns (uint256[] memory) {

@@ -8,6 +8,7 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Recei
 import {IVault} from "@chromatic-protocol/contracts/core/interfaces/vault/IVault.sol";
 import {IMarketLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
+import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
 import {LpReceipt, LpAction} from "@chromatic-protocol/contracts/core/libraries/LpReceipt.sol";
@@ -52,6 +53,11 @@ contract MarketLiquidityFacet is
      */
     error InvalidTransferredTokenAmount();
 
+    error DuplicatedTradingFeeRate();
+
+    error AddLiquidityDisabled();
+    error RemoveLiquidityDisabled();
+
     /**
      * @inheritdoc IMarketLiquidity
      */
@@ -94,6 +100,8 @@ contract MarketLiquidityFacet is
         uint256[] calldata amounts,
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt[] memory receipts) {
+        _requireFeeRatesUniqueness(tradingFeeRates);
+
         require(tradingFeeRates.length == amounts.length);
 
         MarketStorage storage ms = MarketStorageLib.marketStorage();
@@ -252,7 +260,7 @@ contract MarketLiquidityFacet is
         receipt = _getLpReceipt(ls, receiptId);
         if (receipt.action != LpAction.ADD_LIQUIDITY) revert InvalidLpReceiptAction();
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotClaimableLpReceipt();
-        
+
         ls.deleteReceipt(receiptId);
 
         clbTokenAmount = liquidityPool.acceptClaimLiquidity(
@@ -321,6 +329,8 @@ contract MarketLiquidityFacet is
         uint256[] calldata clbTokenAmounts,
         bytes calldata data
     ) external override nonReentrant returns (LpReceipt[] memory receipts) {
+        _requireFeeRatesUniqueness(tradingFeeRates);
+
         require(tradingFeeRates.length == clbTokenAmounts.length);
 
         MarketStorage storage ms = MarketStorageLib.marketStorage();
@@ -515,7 +525,7 @@ contract MarketLiquidityFacet is
         if (!ctx.isPastVersion(receipt.oracleVersion)) revert NotWithdrawableLpReceipt();
 
         ls.deleteReceipt(receiptId);
-        
+
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
 
@@ -544,6 +554,25 @@ contract MarketLiquidityFacet is
      */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         MarketStorageLib.marketStorage().liquidityPool.distributeEarning(earning, marketBalance);
+    }
+
+    function _requireFeeRatesUniqueness(int16[] memory tradingFeeRates) internal pure {
+        bool[FEE_RATES_LENGTH * 2] memory flags;
+
+        for (uint256 i = 0; i < tradingFeeRates.length; ) {
+            int16 feeRate = tradingFeeRates[i];
+            uint256 idx = CLBTokenLib.feeRateIndex(uint16(feeRate < 0 ? -feeRate : feeRate));
+            idx = feeRate < 0 ? idx + FEE_RATES_LENGTH : idx;
+
+            if (flags[idx]) {
+                revert DuplicatedTradingFeeRate();
+            }
+            flags[idx] = true;
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     // implement IERC1155Receiver
