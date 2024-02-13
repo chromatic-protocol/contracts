@@ -238,11 +238,12 @@ library MarketDeployerLib {
     function _marketLiquidateFacetCut(
         address marketLiquidateFacet
     ) private pure returns (IDiamondCut.FacetCut memory cut) {
-        bytes4[] memory functionSelectors = new bytes4[](4);
+        bytes4[] memory functionSelectors = new bytes4[](5);
         functionSelectors[0] = IMarketLiquidate.checkLiquidation.selector;
-        functionSelectors[1] = IMarketLiquidate.liquidate.selector;
-        functionSelectors[2] = IMarketLiquidate.checkClaimPosition.selector;
-        functionSelectors[3] = IMarketLiquidate.claimPosition.selector;
+        functionSelectors[1] = IMarketLiquidate.checkLiquidationWithOracleVersion.selector;
+        functionSelectors[2] = IMarketLiquidate.liquidate.selector;
+        functionSelectors[3] = IMarketLiquidate.checkClaimPosition.selector;
+        functionSelectors[4] = IMarketLiquidate.claimPosition.selector;
 
         cut = IDiamondCut.FacetCut({
             facetAddress: marketLiquidateFacet,

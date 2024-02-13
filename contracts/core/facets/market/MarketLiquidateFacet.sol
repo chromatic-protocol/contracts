@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IMarketLiquidate} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketLiquidate.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
@@ -87,7 +88,11 @@ contract MarketLiquidateFacet is ReentrancyGuard, MarketTradeFacetBase, IMarketL
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
-        (bool _liquidate, int256 _pnl) = _checkLiquidation(ctx, position);
+        (bool _liquidate, int256 _pnl) = _checkLiquidation(
+            ctx,
+            position,
+            ctx.currentOracleVersion()
+        );
         if (!_liquidate) return;
 
         uint256 usedKeeperFee = keeperFee != 0
@@ -120,22 +125,36 @@ contract MarketLiquidateFacet is ReentrancyGuard, MarketTradeFacetBase, IMarketL
         Position memory position = PositionStorageLib.positionStorage().getPosition(positionId);
         if (position.id == 0) return false;
 
-        (_liquidate, ) = _checkLiquidation(
-            newLpContext(MarketStorageLib.marketStorage()),
-            position
-        );
+        LpContext memory ctx = newLpContext(MarketStorageLib.marketStorage());
+        (_liquidate, ) = _checkLiquidation(ctx, position, ctx.currentOracleVersion());
+    }
+
+    /**
+     * @inheritdoc IMarketLiquidate
+     */
+    function checkLiquidationWithOracleVersion(
+        uint256 positionId,
+        IOracleProvider.OracleVersion memory oracleVersion
+    ) external view override returns (bool _liquidate) {
+        Position memory position = PositionStorageLib.positionStorage().getPosition(positionId);
+        if (position.id == 0) return false;
+
+        LpContext memory ctx = newLpContext(MarketStorageLib.marketStorage());
+        (_liquidate, ) = _checkLiquidation(ctx, position, oracleVersion);
     }
 
     /**
      * @dev Internal function for checking if a position should be liquidated.
      * @param ctx The LpContext containing the current oracle version and synchronization information.
      * @param position The Position object representing the position to be checked.
+     * @param oracleVersion The oracle version data for liquidation check.
      * @return _liquidate A boolean indicating whether the position should be liquidated.
      * @return _pnl The profit or loss amount of the position.
      */
     function _checkLiquidation(
         LpContext memory ctx,
-        Position memory position
+        Position memory position,
+        IOracleProvider.OracleVersion memory oracleVersion
     ) internal view returns (bool _liquidate, int256 _pnl) {
         uint256 interest = ctx.calculateInterest(
             position.makerMargin(),
@@ -147,7 +166,7 @@ contract MarketLiquidateFacet is ReentrancyGuard, MarketTradeFacetBase, IMarketL
             PositionUtil.pnl(
                 position.qty,
                 position.entryPrice(ctx),
-                PositionUtil.oraclePrice(ctx.currentOracleVersion())
+                PositionUtil.oraclePrice(oracleVersion)
             ) -
             interest.toInt256();
 

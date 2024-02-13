@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
+import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 
 /**
  * @title IMarketLiquidate
@@ -13,6 +14,17 @@ interface IMarketLiquidate {
      * @return A boolean indicating if the position is eligible for liquidation.
      */
     function checkLiquidation(uint256 positionId) external view returns (bool);
+
+    /**
+     * @dev Checks if a position is eligible for liquidation.
+     * @param positionId The ID of the position to check.
+     * @param oracleVersion The oracle version data for liquidation check.
+     * @return A boolean indicating if the position is eligible for liquidation.
+     */
+    function checkLiquidationWithOracleVersion(
+        uint256 positionId,
+        IOracleProvider.OracleVersion memory oracleVersion
+    ) external view returns (bool);
 
     /**
      * @dev Liquidates a position.
