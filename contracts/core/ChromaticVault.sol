@@ -352,10 +352,10 @@ contract ChromaticVault is ReentrancyGuard, IChromaticVault {
         uint256 paidToTakerPool = paid.mulDiv(takerBalance, takerBalance + makerBalance);
         uint256 paidToMakerPool = paid - paidToTakerPool;
 
+        // Add the amount paid to the maker pool to the pending maker earnings
+        pendingMakerEarnings[token] += paidToMakerPool;
         // Transfer the amount paid to the taker pool to the DAO treasury address
         if (paidToTakerPool != 0) {
-            // Add the amount paid to the maker pool to the pending maker earnings
-            pendingMakerEarnings[token] += paidToMakerPool;
             SafeERC20.safeTransfer(IERC20(token), factory.treasury(), paidToTakerPool);
         }
 
