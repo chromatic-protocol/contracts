@@ -6,3 +6,4 @@ test = 'test/forge'
 cache_path  = 'cache_forge'
 solc_version = '0.8.19'
 evm_version = 'london'
+fs_permissions = [{ access = "read-write", path = "./test/forge/halborn/fuzzer/"}]

@@ -41,3 +41,5 @@ wagmi/
 subgraph/build
 subgraph/generated
 subgraph/subgraph.yaml
+
+test/forge/halborn/fuzzer/logs/
