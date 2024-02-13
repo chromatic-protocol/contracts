@@ -26,7 +26,8 @@ interface IMarketSettlement {
      * @return execPayload The encoded function call to execute the settlement.
      */
     function resolveSettlement(
-        address market
+        address market,
+        bytes calldata extraData
     ) external view returns (bool canExec, bytes memory execPayload);
 
     /**
@@ -34,4 +35,6 @@ interface IMarketSettlement {
      * @param market The address of the market contract.
      */
     function settle(address market) external;
+
+    function updatePrice(address market, bytes calldata extraData) external;
 }

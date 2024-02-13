@@ -2,9 +2,9 @@
 pragma solidity 0.8.19;
 
 import {ChainlinkAggregator} from "@chromatic-protocol/contracts/oracle/types/ChainlinkAggregator.sol";
-import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
+import {OracleProviderBase, IOracleProvider} from "@chromatic-protocol/contracts/oracle/base/OracleProviderBase.sol";
 
-contract OracleProviderMock is IOracleProvider {
+contract OracleProviderMock is OracleProviderBase {
     ChainlinkAggregator public immutable aggregator;
     mapping(uint256 => OracleVersion) oracleVersions;
     uint256 private latestVersion;
