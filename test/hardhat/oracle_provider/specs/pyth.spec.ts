@@ -1,7 +1,10 @@
-import { PythFeedOracle } from '@chromatic/typechain-types'
+import { PythErrors__factory, PythFeedOracle } from '@chromatic/typechain-types'
 import { ethers } from 'hardhat'
 import { forkingOptions } from '../../utils'
 import { evmMainnet, evmTestnet } from '../pythFeedIds'
+import { expect } from 'chai'
+import { Interface } from 'ethers'
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 
 const IPYTH_ADDRESSES: { [key: string]: string } = {
   arbitrum_one: '0xff1a0f4744e8582DF1aE09D5611b887B6a12925C',
@@ -22,38 +25,97 @@ export function spec(networkName: keyof typeof forkingOptions) {
     let pythOracleProvider: PythFeedOracle
     let pythAddress: string
     let btcUsdId: string
-    before(async () => {
+    let signer: HardhatEthersSigner
+
+    beforeEach(async () => {
       pythAddress = IPYTH_ADDRESSES[networkName]
-
       btcUsdId = priceFeedIdsMap[networkName]['Crypto.BTC/USD']
-
-      const pythFeedOracleF = await ethers.getContractFactory('PythFeedOracle')
+      ;[signer] = await ethers.getSigners()
+      const pythFeedOracleF = await ethers.getContractFactory('PythFeedOracle', signer)
       pythOracleProvider = await pythFeedOracleF.deploy(pythAddress, btcUsdId, 'BTC/USD')
-      // pythOracleProvider.
     })
 
-    it('update price', async () => {
-      //pyth test
-      // const vaa = await fetchOffchainPrice(btcUsdId)
-      console.log(await pythOracleProvider.currentVersion())
-      // await (await pythOracleProvider.updatePrice(vaa)).wait()
-      // console.log(await pythOracleProvider.currentVersion())
+    it('updatePrice and sync', async () => {
+      const ts = (await timestamp()) - 1
+      const offchainPrice = await fetchOffchainPrice(btcUsdId, ts)
+
+      const fee = await pythOracleProvider.getUpdateFee(offchainPrice.extraData)
+      const beforeVersion = await pythOracleProvider.lastSyncedVersion()
+
+      await (await pythOracleProvider.updatePrice(offchainPrice.extraData, { value: fee })).wait()
+      const versionAfterUpdate = await pythOracleProvider.lastSyncedVersion()
+      expect(beforeVersion).to.deep.equal(versionAfterUpdate)
+
+      await (await pythOracleProvider.sync()).wait()
+      const versionAfterSync = await pythOracleProvider.lastSyncedVersion()
+      expect(beforeVersion.version).lessThan(versionAfterSync.version)
+      expect(beforeVersion.timestamp).lessThan(versionAfterSync.timestamp)
+      expect(BigInt(offchainPrice.publishTime)).equal(versionAfterSync.timestamp)
+      // expect(BigInt(offchainPrice.price)).equal(versionAfterSync.price) // decimal diff
     })
+
+    it('revert test', async () => {
+      const ts = (await timestamp()) - 1
+      const offchainPrice = await fetchOffchainPrice(btcUsdId, ts)
+
+      const iface = new Interface(PythErrors__factory.abi)
+
+      await expect(pythOracleProvider.updatePrice(offchainPrice.extraData)).revertedWithCustomError(
+        { interface: iface },
+        'InsufficientFee'
+      )
+
+      await expect(pythOracleProvider.updatePrice('0xDD')).revertedWithoutReason()
+    })
+
+    it('refund test', async () => {
+      const ts = (await timestamp()) - 1
+      const offchainPrice = await fetchOffchainPrice(btcUsdId, ts)
+
+      const fee = await pythOracleProvider.getUpdateFee(offchainPrice.extraData)
+
+      await expect(
+        pythOracleProvider.updatePrice(offchainPrice.extraData, { value: fee })
+      ).changeEtherBalance(await signer.getAddress(), -fee)
+
+      await expect(
+        pythOracleProvider.updatePrice(offchainPrice.extraData, { value: fee })
+      ).changeEtherBalance(await signer.getAddress(), 0)
+    })
+
+    async function timestamp() {
+      return (await ethers.provider.getBlock('latest'))!.timestamp
+    }
   })
 }
 
 async function fetchOffchainPrice(feedId: string, publishTimeReq?: number) {
   try {
     // https://hermes.pyth.network/docs/#/
-    let url = `https://hermes.pyth.network/api/latest_price_feeds?binary=true&ids[]=${feedId}`
+    let url = `https://hermes.pyth.network/api/get_price_feed?binary=true&id=${feedId}`
     if (publishTimeReq) {
       url = `${url}&publish_time=${publishTimeReq}`
     }
+    // console.log(url)
 
     const res = await fetch(url)
     const result = await res.json()
+    const price = result.price
 
-    return '0x' + Buffer.from(result[0].vaa, 'base64').toString('hex')
+    const vaa = '0x' + Buffer.from(result.vaa, 'base64').toString('hex')
+
+    return {
+      id: feedId,
+      conf: price.conf,
+      price: price.price,
+      expo: price.expo,
+      publishTime: price.publish_time,
+      vaa: vaa,
+      extraData: ethers.AbiCoder.defaultAbiCoder().encode(
+        ['tuple(uint256, int64, int32, bytes)'],
+        [[price.publish_time, price.price, price.expo, vaa]]
+      )
+    }
   } catch (e) {
     throw e
   }
