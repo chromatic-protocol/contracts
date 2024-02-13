@@ -29,7 +29,7 @@ task('oracle-provider:register', 'Register oracle provider')
 
         await (
           await factory.registerOracleProvider(oracleProviderAddress, {
-            minTakeProfitBPS: 1000, // 10%
+            minTakeProfitBPS: 200, // 2%
             maxTakeProfitBPS: 100000, // 1000%
             leverageLevel: 0
           })
