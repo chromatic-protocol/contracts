@@ -1,4 +1,4 @@
-import { Address, ethereum } from '@graphprotocol/graph-ts'
+import { Address, Bytes, DataSourceContext, ethereum } from '@graphprotocol/graph-ts'
 import {
   ChromaticMarketFactory,
   InterestRateRecordAppended as InterestRateRecordAppendedEvent,
@@ -22,6 +22,7 @@ import {
   OracleProviderProperty
 } from '../generated/schema'
 import { ICLBToken, IChromaticMarket, IOracleProvider } from '../generated/templates'
+import { IOracleProvider as IOracleProviderContact } from '../generated/templates/IOracleProvider/IOracleProvider'
 
 export function handleMarketCreated(event: MarketCreatedEvent): void {
   let entity = new MarketCreated(event.transaction.hash.concatI32(event.logIndex.toI32()))
@@ -70,7 +71,14 @@ export function handleMarketCreated(event: MarketCreatedEvent): void {
 
 export function handleOracleProviderRegistered(event: OracleProviderRegisteredEvent): void {
   saveOracleProviderProperty(event.params.oracleProvider, event)
-  IOracleProvider.create(event.params.oracleProvider)
+
+  let context = new DataSourceContext()
+
+  let oracleProvider = IOracleProviderContact.bind(event.params.oracleProvider)
+  let result = oracleProvider.try_supportsInterface(Bytes.fromHexString('0xb6a22c2f')) // IOracleProviderPullBased
+  context.setBoolean('IOracleProviderPullBased', !result.reverted && result.value)
+
+  IOracleProvider.createWithContext(event.params.oracleProvider, context)
 }
 
 export function handleUpdateLeverageLevel(event: UpdateLeverageLevelEvent): void {
