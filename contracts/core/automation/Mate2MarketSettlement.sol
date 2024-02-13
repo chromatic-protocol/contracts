@@ -13,6 +13,7 @@ import {IUpkeepTreasury} from "@chromatic-protocol/contracts/core/automation/mat
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
 import {FEE_RATES_LENGTH} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {PendingPosition, ClosingPosition, PendingLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
+import {OracleProviderLib} from "@chromatic-protocol/contracts/oracle/libraries/OracleProviderLib.sol";
 
 contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
     uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 2e7;
@@ -95,7 +96,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
 
         IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
 
-        if (!oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+        if (!OracleProviderLib.isPullBased(oracleProvider)) {
             return;
         }
 
@@ -232,7 +233,7 @@ contract Mate2MarketSettlement is IMarketSettlement, IMate2Automation1_1 {
     function updatePrice(address market, bytes memory extraData) public override {
         IOracleProvider oracleProvider = IChromaticMarket(market).oracleProvider();
 
-        if (oracleProvider.supportsInterface(type(IOracleProviderPullBased).interfaceId)) {
+        if (OracleProviderLib.isPullBased(oracleProvider)) {
             IOracleProviderPullBased pullBasedOracle = IOracleProviderPullBased(
                 address(oracleProvider)
             );
