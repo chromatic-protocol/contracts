@@ -66,6 +66,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await (await mate2automate.addWhitelistedRegistrar(liquidator)).wait()
   await marketFactory.updateLiquidator(liquidator, deployOpts)
   console.log(chalk.yellow('✨ Set Liquidator'))
+
+  const { address: marketSettlement } = await deploy('Mate2MarketSettlement', {
+    ...deployOpts,
+    args: [factory.address, automationAddress]
+  })
+  console.log(chalk.yellow(`✨ Mate2MarketSettlement: ${marketSettlement}`))
+
+  await (await mate2automate.addWhitelistedRegistrar(marketSettlement)).wait()
+  await marketFactory.updateMarketSettlement(marketSettlement, deployOpts)
+  console.log(chalk.yellow('✨ Set MarketSettlement'))
 }
 
 export default func

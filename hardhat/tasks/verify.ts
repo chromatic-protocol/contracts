@@ -102,7 +102,7 @@ task('verify:core').setAction(
   }
 )
 
-subtask('verify:core:arbitrum').setAction(
+task('verify:core:arbitrum').setAction(
   async (taskArgs: TaskArguments, hre: HardhatRuntimeEnvironment): Promise<any> => {
     const { deployments } = hre
 
@@ -119,6 +119,13 @@ subtask('verify:core:arbitrum').setAction(
       constructorArguments: liquidator.args
     })
     console.log(chalk.yellow(`✨ verify Mate2Liquidator`))
+
+    const marketSettlement = await deployments.get('Mate2MarketSettlement')
+    await verify(hre, {
+      address: marketSettlement.address,
+      constructorArguments: marketSettlement.args
+    })
+    console.log(chalk.yellow(`✨ verify Mate2MarketSettlement`))
   }
 )
 
