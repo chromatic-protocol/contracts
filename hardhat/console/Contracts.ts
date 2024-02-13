@@ -39,11 +39,11 @@ import {
   USDC_ON,
   WETH9
 } from '@uniswap/smart-order-router'
-import { Signer, Wallet, ZeroAddress } from 'ethers'
+import { NonceManager, Signer, Wallet, ZeroAddress } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
-  421614: '0x64d630A03A9792F28769B2E5d781eaf0A1540D63', // FixedPriceSwapRouter
+  421614: '0xD26b223eeF87B529Fa3cA768DA217183081a4C8E', // FixedPriceSwapRouter
   5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
   5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
 }
@@ -93,9 +93,9 @@ export class Contracts {
         ? config.networks.mantle_testnet.chainId!
         : network.config.chainId!
 
-    this._signer = privateKey
-      ? new Wallet(privateKey, ethers.provider)
-      : (await ethers.getSigners())[0]
+    this._signer = new NonceManager(
+      privateKey ? new Wallet(privateKey, ethers.provider) : (await ethers.getSigners())[0]
+    )
 
     this._factory = this.connectFactory((await this.addressOf('ChromaticMarketFactory'))!)
     this._vault = this.connectVault((await this.addressOf('ChromaticVault'))!)
