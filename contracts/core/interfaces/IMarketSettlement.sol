@@ -22,6 +22,7 @@ interface IMarketSettlement {
      * @notice Resolves the settlement of a market.
      * @dev This function is called by the automation system.
      * @param market The address of the market contract.
+     * @param extraData passed by keeper for passing offchain data
      * @return canExec Whether the settlement can be executed.
      * @return execPayload The encoded function call to execute the settlement.
      */
@@ -36,5 +37,10 @@ interface IMarketSettlement {
      */
     function settle(address market) external;
 
+    /**
+     * @notice Updates the price using off-chain data.
+     * @param market The address of the market contract.
+     * @param extraData passed by keeper for passing offchain data
+     */
     function updatePrice(address market, bytes calldata extraData) external;
 }

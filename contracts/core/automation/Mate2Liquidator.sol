@@ -195,6 +195,9 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation1_1 {
         }
     }
 
+    /**
+     * @inheritdoc IMate2Automation1_1
+     */
     function checkUpkeep(
         bytes calldata checkData,
         bytes calldata extraData

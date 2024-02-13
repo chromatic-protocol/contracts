@@ -23,7 +23,7 @@ interface ILiquidator {
      * @dev This function is called by the automation system.
      * @param market The address of the market contract.
      * @param positionId The ID of the position to be liquidated.
-     * @param extraData The data received through the keeper
+     * @param extraData passed by keeper for passing offchain data
      * @return canExec Whether the liquidation can be executed.
      * @return execPayload The encoded function call to execute the liquidation.
      */
@@ -57,7 +57,7 @@ interface ILiquidator {
      * @dev This function is called by the automation system.
      * @param market The address of the market contract.
      * @param positionId The ID of the position to be claimed.
-     * @param extraData The data received through the keeper
+     * @param extraData passed by keeper for passing offchain data
      * @return canExec Whether the claim can be executed.
      * @return execPayload The encoded function call to execute the claim.
      */
