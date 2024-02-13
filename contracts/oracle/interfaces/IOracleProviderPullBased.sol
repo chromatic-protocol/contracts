@@ -14,4 +14,10 @@ interface IOracleProviderPullBased is IOracleProvider {
     function updatePrice(bytes calldata offchainData) external payable;
 
     function parseExtraData(bytes calldata extraData) external view returns (OracleVersion memory);
+
+    /**
+     * @notice Returns the last synced oracle version
+     * @return oracleVersion Last synced oracle version
+     */
+    function lastSyncedVersion() external view returns (OracleVersion memory);
 }
