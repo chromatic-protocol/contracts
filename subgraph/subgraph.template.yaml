@@ -23,6 +23,10 @@ dataSources:
           file: ./abis/IERC20Metadata.json
         - name: IOracleProvider
           file: ./abis/IOracleProvider.json
+        - name: IChromaticMarket
+          file: ./abis/IChromaticMarket.json
+        - name: ICLBToken
+          file: ./abis/ICLBToken.json
       eventHandlers:
         - event: MarketCreated(indexed address,indexed address,indexed address)
           handler: handleMarketCreated
@@ -142,3 +146,25 @@ templates:
       blockHandlers:
         - handler: saveOracleVersion
       file: ./src/oracle-provider.ts
+
+  - kind: ethereum/contract
+    name: ICLBToken
+    network: '{{network}}'
+    source:
+      abi: ICLBToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - CLBToken
+        - CLBTokenTotalSupply
+      abis:
+        - name: ICLBToken
+          file: ./abis/ICLBToken.json
+      eventHandlers:
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+      file: ./src/clb-token.ts
