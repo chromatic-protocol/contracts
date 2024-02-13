@@ -40,8 +40,8 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
     }
 
     /**
-     * @notice Updates the waiting time of the claim task. 
-     * @param waitingTime The new waiting time of the claim task. 
+     * @notice Updates the waiting time of the claim task.
+     * @param waitingTime The new waiting time of the claim task.
      */
     function updateWaitPositionClaim(uint256 waitingTime) external onlyDao {
         waitPositionClaim = waitingTime;
@@ -66,7 +66,7 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
         moduleData.modules[3] = Module.TRIGGER;
         moduleData.args[0] = abi.encode(
             address(this),
-            abi.encodeCall(this.resolveLiquidation, (market, positionId))
+            abi.encodeCall(this.resolveLiquidation, (market, positionId, ""))
         );
         moduleData.args[1] = bytes("");
         moduleData.args[2] = bytes("");
@@ -93,7 +93,8 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
      */
     function resolveLiquidation(
         address _market,
-        uint256 positionId
+        uint256 positionId,
+        bytes calldata /* extraData */
     ) external view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkLiquidation(positionId)) {
             return (true, abi.encodeCall(this.liquidate, (_market, positionId)));
@@ -120,7 +121,7 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
         moduleData.modules[3] = Module.TRIGGER;
         moduleData.args[0] = abi.encode(
             address(this),
-            abi.encodeCall(this.resolveClaimPosition, (market, positionId))
+            abi.encodeCall(this.resolveClaimPosition, (market, positionId, ""))
         );
         moduleData.args[1] = bytes("");
         moduleData.args[2] = bytes("");
@@ -150,7 +151,8 @@ contract GelatoLiquidator is LiquidatorBase, AutomateReady {
      */
     function resolveClaimPosition(
         address _market,
-        uint256 positionId
+        uint256 positionId,
+        bytes calldata /* extraData */
     ) external view override returns (bool canExec, bytes memory execPayload) {
         if (IMarketLiquidate(_market).checkClaimPosition(positionId)) {
             return (true, abi.encodeCall(this.claimPosition, (_market, positionId)));

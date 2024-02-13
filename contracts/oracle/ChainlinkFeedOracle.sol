@@ -15,8 +15,6 @@ import "./types/ChainlinkAggregator.sol";
 contract ChainlinkFeedOracle is OracleProviderBase {
     error UnableToSyncError();
 
-    int256 private constant BASE = 1e18;
-
     /// @dev Chainlink feed aggregator address
     ChainlinkAggregator public immutable aggregator;
 
