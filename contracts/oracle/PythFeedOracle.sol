@@ -30,7 +30,7 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
     mapping(uint256 => OracleVersion) private oracleVersions;
 
     /// @dev Mapping of updateData(vaa) to version index
-    mapping(bytes => uint256) private updatedVersion;
+    mapping(bytes32 => uint256) private updatedVersion;
 
     // lastSyncedVersion external TODO
 
@@ -104,29 +104,35 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
     }
 
     function updatePrice(bytes calldata offchainData) external payable override {
-        bytes[] memory updateDatas = new bytes[](1);
         PythOffchainPrice memory offChainPrice = decodeOffchainData(offchainData);
         OracleVersion memory lastVersion = oracleVersions[lastSyncedVersion];
 
-        if (
-            lastVersion.timestamp >= offChainPrice.publishTime ||
-            updatedVersion[offChainPrice.vaa] != 0
-        ) {
+        bytes32 vaa = keccak256(offChainPrice.vaa);
+        if (updatedVersion[vaa] != 0) {
             (bool success, ) = msg.sender.call{value: msg.value}("");
             require(success, "oracle update fee refund rejected");
             return;
         }
 
+        bytes[] memory updateDatas = new bytes[](1);
+        bytes32[] memory idList = new bytes32[](1);
         updateDatas[0] = offChainPrice.vaa;
-        pyth.updatePriceFeeds{value: msg.value}(updateDatas);
-        PythStructs.Price memory price = pyth.getPrice(priceFeedId);
+        idList[0] = priceFeedId;
+
+        PythStructs.Price memory price = pyth
+        .parsePriceFeedUpdates{value: msg.value}(
+            updateDatas,
+            idList,
+            uint64(lastVersion.timestamp + 1),
+            uint64(block.timestamp)
+        )[0].price;
 
         if (price.price != offChainPrice.price || price.publishTime != offChainPrice.publishTime)
             revert WrongData();
 
         ++lastSyncedVersion;
         oracleVersions[lastSyncedVersion] = pythPriceToOracleVersion(price, lastSyncedVersion);
-        updatedVersion[offChainPrice.vaa] = lastSyncedVersion;
+        updatedVersion[vaa] = lastSyncedVersion;
     }
 
     function getUpdateFee(bytes calldata offchainData) external view override returns (uint256) {
