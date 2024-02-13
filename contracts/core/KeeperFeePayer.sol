@@ -82,7 +82,7 @@ contract KeeperFeePayer is IKeeperFeePayer {
      * @dev Only the factory or the DAO can call this function.
      */
     function approveToRouter(address token, bool approve) external onlyFactoryOrDao {
-        require(IERC20(token).approve(address(uniswapRouter), approve ? type(uint256).max : 0));
+        SafeERC20.forceApprove(IERC20(token), address(uniswapRouter), approve ? type(uint256).max : 0);
     }
 
     /**
