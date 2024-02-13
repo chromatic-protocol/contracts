@@ -15,10 +15,13 @@ import {LiquidatorBase} from "@chromatic-protocol/contracts/core/automation/Liqu
  */
 contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
     uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 1e7;
+    uint256 public constant DEFAULT_WAIT_POSITION_CLAIM = 1 days;
 
     IMate2AutomationRegistry public immutable automate;
 
     uint32 public upkeepGasLimit;
+    uint256 public waitPositionClaim;
+
     mapping(address => mapping(uint256 => uint256)) private _liquidationUpkeepIds;
     mapping(address => mapping(uint256 => uint256)) private _claimPositionUpkeepIds;
 
@@ -28,6 +31,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
     }
 
     event UpkeepGasLimitUpdated(uint32 gasLimitOld, uint32 gasLimitNew);
+    event WaitPositionClaimUpdated(uint256 waitPositionClaimOld, uint256 waitPositionClaimNew);
 
     /**
      * @dev Constructor function.
@@ -37,6 +41,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
     constructor(IChromaticMarketFactory _factory, address _automate) LiquidatorBase(_factory) {
         automate = IMate2AutomationRegistry(_automate);
         upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
+        waitPositionClaim = DEFAULT_WAIT_POSITION_CLAIM;
     }
 
     /**
@@ -44,7 +49,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      * @dev Can only be called by a registered market.
      */
     function createLiquidationTask(uint256 positionId) external override onlyMarket {
-        _registerUpkeep(_liquidationUpkeepIds, positionId, UpkeepType.LiquidatePosition);
+        _registerUpkeep(_liquidationUpkeepIds, positionId, UpkeepType.LiquidatePosition, 0);
     }
 
     /**
@@ -74,7 +79,12 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      * @dev Can only be called by a registered market.
      */
     function createClaimPositionTask(uint256 positionId) external override onlyMarket {
-        _registerUpkeep(_claimPositionUpkeepIds, positionId, UpkeepType.ClaimPosition);
+        _registerUpkeep(
+            _claimPositionUpkeepIds,
+            positionId,
+            UpkeepType.ClaimPosition,
+            block.timestamp + waitPositionClaim
+        );
     }
 
     /**
@@ -103,11 +113,13 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      * @dev Internal function to create a Mate2 upkeep for liquidation or claim position.
      * @param registry The mapping to store task IDs.
      * @param positionId The ID of the position.
+     * @param executableTime The upkeep executable time.
      */
     function _registerUpkeep(
         mapping(address => mapping(uint256 => uint256)) storage registry,
         uint256 positionId,
-        UpkeepType upkeepType
+        UpkeepType upkeepType,
+        uint256 executableTime
     ) internal {
         address market = msg.sender;
         if (registry[market][positionId] != 0) {
@@ -120,7 +132,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
             address(this), // address admin,
             false, // bool useTreasury,
             true, // bool singleExec,
-            abi.encode(market, positionId, upkeepType)
+            abi.encode(market, positionId, upkeepType, executableTime)
         );
 
         registry[market][positionId] = upkeepId;
@@ -149,14 +161,18 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
     function checkUpkeep(
         bytes calldata checkData
     ) external view returns (bool upkeepNeeded, bytes memory performData) {
-        (address market, uint256 positionId, UpkeepType upkeepType) = abi.decode(
+        (address market, uint256 positionId, UpkeepType upkeepType, uint256 claimTime) = abi.decode(
             checkData,
-            (address, uint256, UpkeepType)
+            (address, uint256, UpkeepType, uint256)
         );
         if (upkeepType == UpkeepType.LiquidatePosition)
             return resolveLiquidation(market, positionId);
-        else if (upkeepType == UpkeepType.ClaimPosition)
+        else if (upkeepType == UpkeepType.ClaimPosition) {
+            if (block.timestamp < claimTime) {
+                return (false, bytes(""));
+            }
             return resolveClaimPosition(market, positionId);
+        }
     }
 
     function performUpkeep(bytes memory performData) external {
@@ -213,5 +229,11 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
         uint32 gasLimitOld = upkeepGasLimit;
         upkeepGasLimit = gasLimit;
         emit UpkeepGasLimitUpdated(gasLimitOld, gasLimit);
+    }
+
+    function updateWaitPositionClaim(uint256 _waitPositionClaim) external onlyDao {
+        uint256 waitPositionClaimOld = waitPositionClaim;
+        waitPositionClaim = _waitPositionClaim;
+        emit WaitPositionClaimUpdated(waitPositionClaimOld, _waitPositionClaim);
     }
 }
