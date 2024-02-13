@@ -174,7 +174,9 @@ contract ChromaticVault is ReentrancyGuard, IChromaticVault {
         }
         emit OnClaimPosition(market, positionId, recipient, takerMargin, settlementAmount);
 
-        SafeERC20.safeTransfer(IERC20(settlementToken), recipient, settlementAmount);
+        if (settlementAmount > 0) {
+            SafeERC20.safeTransfer(IERC20(settlementToken), recipient, settlementAmount);
+        }
     }
 
     /**
