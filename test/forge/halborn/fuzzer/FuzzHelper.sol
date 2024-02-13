@@ -346,7 +346,7 @@ abstract contract FuzzHelper is FuzzStorage {
                 uint256 faucetMinInterval_
             ) ERC20("", "")
         */
-        contract_TestSettlementToken = new TestSettlementToken("", "", 1000000e18, 86400);
+        contract_TestSettlementToken = new TestSettlementToken("", "", 1000000e18, 86400, 18);
 
         contract_ChromaticMarketFactory.registerSettlementToken(
             address(contract_TestSettlementToken),

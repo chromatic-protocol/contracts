@@ -153,8 +153,14 @@ contract Deploy is Test {
         );
         console.log("contract_DiamondLoupeFacet -> %s", address(contract_DiamondLoupeFacet));
         console.log("contract_MarketStateFacet -> %s", address(contract_MarketStateFacet));
-        console.log("contract_MarketAddLiquidityFacet -> %s", address(contract_MarketAddLiquidityFacet));
-        console.log("contract_MarketRemoveLiquidityFacet -> %s", address(contract_MarketRemoveLiquidityFacet));
+        console.log(
+            "contract_MarketAddLiquidityFacet -> %s",
+            address(contract_MarketAddLiquidityFacet)
+        );
+        console.log(
+            "contract_MarketRemoveLiquidityFacet -> %s",
+            address(contract_MarketRemoveLiquidityFacet)
+        );
         console.log("contract_MarketLensFacet -> %s", address(contract_MarketLensFacet));
         console.log(
             "contract_MarketTradeOpenPositionFacet -> %s",
@@ -365,7 +371,7 @@ contract Deploy is Test {
                 uint256 faucetMinInterval_
             ) ERC20("", "")
         */
-        contract_TestSettlementToken = new TestSettlementToken("", "", 1000000e18, 86400);
+        contract_TestSettlementToken = new TestSettlementToken("", "", 1000000e18, 86400, 18);
 
         contract_ChromaticMarketFactory.registerSettlementToken(
             address(contract_TestSettlementToken),

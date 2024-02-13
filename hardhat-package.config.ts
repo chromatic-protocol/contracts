@@ -25,7 +25,8 @@ export default {
     'ChromaticRouter',
     'ChromaticVault',
     'cETH',
-    'cBTC'
+    'cBTC',
+    'cUSDT'
   ],
   excludesFromDeployed: ['*Mock'],
   excludeBytecode: true

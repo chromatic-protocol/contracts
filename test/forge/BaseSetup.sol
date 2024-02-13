@@ -105,7 +105,7 @@ abstract contract BaseSetup is Test {
         weth.deposit{value: 1000000 ether}();
         weth.transfer(address(swapRouter), 1000000 ether);
 
-        ctst = new TestSettlementToken("cTST", "cTST", 1000000 ether, 86400);
+        ctst = new TestSettlementToken("cTST", "cTST", 1000000 ether, 86400, 18);
         ctst.faucet();
         swapRouter.setEthPriceInToken(address(ctst), 1 ether);
 
