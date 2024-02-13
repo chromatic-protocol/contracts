@@ -30,7 +30,7 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
     mapping(uint256 => OracleVersion) private oracleVersions;
 
     /// @dev Mapping of updateData(vaa) to version index
-    mapping(bytes32 => uint256) private updatedVersion;
+    mapping(bytes32 => bool) private updatedVaa;
 
     /**
      * @notice Initializes the contract state
@@ -103,19 +103,28 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
         return "pyth";
     }
 
+    /**
+     * @inheritdoc IOracleProviderPullBased
+     */
     function extraModule() external pure override returns (ExtraModule) {
         return ExtraModule.Pyth;
     }
 
+    /**
+     * @inheritdoc IOracleProviderPullBased
+     */
     function extraParam() external view override returns (bytes memory) {
         return abi.encodePacked(priceFeedId);
     }
 
+    /**
+     * @inheritdoc IOracleProviderPullBased
+     */
     function updatePrice(bytes calldata offchainData) external payable override {
         PythOffchainPrice memory offChainPrice = decodeOffchainData(offchainData);
 
         bytes32 vaa = keccak256(offChainPrice.vaa);
-        if (updatedVersion[vaa] != 0) {
+        if (updatedVaa[vaa]) {
             (bool success, ) = msg.sender.call{value: msg.value}("");
             require(success, "oracle update fee refund rejected");
             return;
@@ -126,9 +135,12 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
 
         pyth.updatePriceFeeds{value: msg.value}(updateDatas);
 
-        updatedVersion[vaa] = lastSyncedVersionIndex;
+        updatedVaa[vaa] = true;
     }
 
+    /**
+     * @inheritdoc IOracleProviderPullBased
+     */
     function getUpdateFee(bytes calldata offchainData) external view override returns (uint256) {
         bytes[] memory updateDatas = new bytes[](1);
         updateDatas[0] = decodeOffchainData(offchainData).vaa;
@@ -161,6 +173,9 @@ contract PythFeedOracle is OracleProviderPullBasedBase {
             });
     }
 
+    /**
+     * @inheritdoc IOracleProviderPullBased
+     */
     function parseExtraData(
         bytes calldata extraData
     ) external view override returns (OracleVersion memory) {
