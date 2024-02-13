@@ -9,8 +9,11 @@ import {IMate2AutomationRegistry} from "@chromatic-protocol/contracts/core/autom
 import {VaultEarningDistributorBase} from "@chromatic-protocol/contracts/core/automation/VaultEarningDistributorBase.sol";
 
 contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Automation {
+    uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 1e7;
+
     IMate2AutomationRegistry public immutable automate;
 
+    uint32 public upkeepGasLimit;
     mapping(address => uint256) public makerEarningDistributionUpkeepIds; // settlement token => upkeep id
     mapping(address => uint256) public marketEarningDistributionUpkeepIds; // market => upkeep id
 
@@ -19,11 +22,14 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
         MarketEarningDistribution
     }
 
+    event UpkeepGasLimitUpdated(uint32 gasLimitOld, uint32 gasLimitNew);
+
     constructor(
         IChromaticMarketFactory _factory,
         address _automate
     ) VaultEarningDistributorBase(_factory) {
         automate = IMate2AutomationRegistry(_automate);
+        upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
     }
 
     /**
@@ -67,7 +73,7 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
 
         makerEarningDistributionUpkeepIds[token] = automate.registerUpkeep(
             address(this),
-            1e6, //uint32 gasLimit,
+            upkeepGasLimit,
             address(this), // address admin,
             false, // bool useTreasury,
             false, // bool singleExec,
@@ -113,7 +119,7 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
 
         marketEarningDistributionUpkeepIds[market] = automate.registerUpkeep(
             address(this),
-            1e6, //uint32 gasLimit,
+            upkeepGasLimit,
             address(this), // address admin,
             false, // bool useTreasury,
             false, // bool singleExec,
@@ -156,5 +162,11 @@ contract Mate2VaultEarningDistributor is VaultEarningDistributorBase, IMate2Auto
     // for management
     function cancelUpkeep(uint256 upkeepId) external onlyDao {
         automate.cancelUpkeep(upkeepId);
+    }
+
+    function updateUpkeepGasLimit(uint32 gasLimit) external onlyDao {
+        uint32 gasLimitOld = upkeepGasLimit;
+        upkeepGasLimit = gasLimit;
+        emit UpkeepGasLimitUpdated(gasLimitOld, gasLimit);
     }
 }

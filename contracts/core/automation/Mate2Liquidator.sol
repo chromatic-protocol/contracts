@@ -14,8 +14,11 @@ import {LiquidatorBase} from "@chromatic-protocol/contracts/core/automation/Liqu
  *      It implements the ILiquidator and the IMate2Automation interface.
  */
 contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
+    uint32 public constant DEFAULT_UPKEEP_GAS_LIMIT = 1e7;
+
     IMate2AutomationRegistry public immutable automate;
 
+    uint32 public upkeepGasLimit;
     mapping(address => mapping(uint256 => uint256)) private _liquidationUpkeepIds;
     mapping(address => mapping(uint256 => uint256)) private _claimPositionUpkeepIds;
 
@@ -24,6 +27,8 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
         ClaimPosition
     }
 
+    event UpkeepGasLimitUpdated(uint32 gasLimitOld, uint32 gasLimitNew);
+
     /**
      * @dev Constructor function.
      * @param _factory The address of the Chromatic Market Factory contract.
@@ -31,6 +36,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
      */
     constructor(IChromaticMarketFactory _factory, address _automate) LiquidatorBase(_factory) {
         automate = IMate2AutomationRegistry(_automate);
+        upkeepGasLimit = DEFAULT_UPKEEP_GAS_LIMIT;
     }
 
     /**
@@ -110,7 +116,7 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
 
         uint256 upkeepId = automate.registerUpkeep(
             address(this),
-            1e6, //uint32 gasLimit,
+            upkeepGasLimit,
             address(this), // address admin,
             false, // bool useTreasury,
             true, // bool singleExec,
@@ -201,5 +207,11 @@ contract Mate2Liquidator is LiquidatorBase, IMate2Automation {
     // for management
     function cancelUpkeep(uint256 upkeepId) external onlyDao {
         automate.cancelUpkeep(upkeepId);
+    }
+
+    function updateUpkeepGasLimit(uint32 gasLimit) external onlyDao {
+        uint32 gasLimitOld = upkeepGasLimit;
+        upkeepGasLimit = gasLimit;
+        emit UpkeepGasLimitUpdated(gasLimitOld, gasLimit);
     }
 }
