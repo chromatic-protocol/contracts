@@ -11,11 +11,7 @@ import {Position} from "@chromatic-protocol/contracts/core/libraries/Position.so
 import {OpenPositionInfo, ClaimPositionInfo} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import "forge-std/console.sol";
 
-contract LiquidatorTest is
-    BaseSetup,
-    IChromaticTradeCallback,
-    IChromaticLiquidityCallback
-{
+contract LiquidatorTest is BaseSetup, IChromaticTradeCallback, IChromaticLiquidityCallback {
     function setUp() public override {
         super.setUp();
     }
@@ -46,7 +42,7 @@ contract LiquidatorTest is
         oracleProvider.increaseVersion(5 ether);
 
         // resolve liquidation
-        (bool canExec, ) = liquidator.resolveLiquidation(address(market), position.id);
+        (bool canExec, ) = liquidator.resolveLiquidation(address(market), position.id, "");
         assertEq(canExec, true);
 
         // liquidate

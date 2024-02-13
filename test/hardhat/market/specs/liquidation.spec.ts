@@ -130,7 +130,8 @@ export function spec(getDeps: Function) {
         for (const positionId of positionIds) {
           const { canExec } = await testData.liquidator.resolveLiquidation(
             testData.market.getAddress(),
-            positionId
+            positionId,
+            "0x"
           )
           if (canExec) {
             const marketAddress = testData.market.getAddress()
