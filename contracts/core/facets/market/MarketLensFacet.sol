@@ -48,7 +48,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             values[i] = liquidityPool.binValue(ctx, tradingFeeRates[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -74,7 +74,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             receipts[i] = _getLpReceipt(ls, receiptIds[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -101,7 +101,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             liquidities[i] = pool.pendingLiquidity(tradingFeeRates[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -133,7 +133,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             liquidities[i] = pool.claimableLiquidity(tradingFeeRates[i], oracleVersion);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -166,7 +166,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             positions[i] = _getPosition(ps, positionIds[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -193,7 +193,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             positions[i] = pool.pendingPosition(tradingFeeRates[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -220,7 +220,7 @@ contract MarketLensFacet is MarketLiquidityFacetBase, MarketTradeFacetBase, IMar
             positions[i] = pool.closingPosition(tradingFeeRates[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

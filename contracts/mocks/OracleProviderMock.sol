@@ -52,7 +52,7 @@ contract OracleProviderMock is IOracleProvider {
             results[i] = atVersion(versions[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

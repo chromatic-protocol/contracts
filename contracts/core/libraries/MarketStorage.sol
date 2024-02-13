@@ -117,7 +117,7 @@ library PositionStorageLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

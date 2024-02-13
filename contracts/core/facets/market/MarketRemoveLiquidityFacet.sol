@@ -97,7 +97,7 @@ contract MarketRemoveLiquidityFacet is
             );
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -117,7 +117,7 @@ contract MarketRemoveLiquidityFacet is
             _clbTokenIds[i] = CLBTokenLib.encodeId(tradingFeeRates[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -134,7 +134,7 @@ contract MarketRemoveLiquidityFacet is
                 revert InvalidTransferredTokenAmount();
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -254,7 +254,7 @@ contract MarketRemoveLiquidityFacet is
             );
             _feeRates[i] = _receipts[i].tradingFeeRate;
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

@@ -75,7 +75,7 @@ contract CLBToken is ICLBToken, ERC1155Supply {
             supplies[i] = super.totalSupply(ids[i]);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
         return supplies;
@@ -341,7 +341,7 @@ contract CLBToken is ICLBToken, ERC1155Supply {
             bars = abi.encodePacked(bars, _bar(i, long, color, i == activeBar));
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -476,7 +476,7 @@ contract CLBToken is ICLBToken, ERC1155Supply {
             pos = long ? pos + widths[i] : pos - widths[i];
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

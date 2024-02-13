@@ -73,7 +73,7 @@ library LiquidityPoolLib {
             self._shortBins[feeRate].initialize(-int16(feeRate));
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -99,7 +99,7 @@ library LiquidityPoolLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -117,7 +117,7 @@ library LiquidityPoolLib {
             self._shortBins[feeRate].settle(ctx);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -199,7 +199,7 @@ library LiquidityPoolLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -251,7 +251,7 @@ library LiquidityPoolLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -304,7 +304,7 @@ library LiquidityPoolLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -370,7 +370,7 @@ library LiquidityPoolLib {
                 }
 
                 unchecked {
-                    i++;
+                    ++i;
                 }
             }
         } else if (realizedPnl > 0 && absRealizedPnl == makerMargin) {
@@ -386,7 +386,7 @@ library LiquidityPoolLib {
                 }
 
                 unchecked {
-                    i++;
+                    ++i;
                 }
             }
         } else {
@@ -424,7 +424,7 @@ library LiquidityPoolLib {
                 }
 
                 unchecked {
-                    i++;
+                    ++i;
                 }
             }
 
@@ -644,7 +644,7 @@ library LiquidityPoolLib {
             remainTakerMargin -= _takerMargin;
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -787,7 +787,7 @@ library LiquidityPoolLib {
 
             if (binLiquidity == 0) {
                 unchecked {
-                    i++;
+                    ++i;
                 }
                 continue;
             }
@@ -802,7 +802,7 @@ library LiquidityPoolLib {
             emit LiquidityBinEarningAccumulated(feeRate, binType, binEarning);
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -884,7 +884,7 @@ library LiquidityPoolLib {
             });
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 

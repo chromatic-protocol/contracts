@@ -383,7 +383,7 @@ library BinLiquidityLib {
             }
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 

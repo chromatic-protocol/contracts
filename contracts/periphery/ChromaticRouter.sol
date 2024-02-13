@@ -160,7 +160,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             delete providerMap[msg.sender][receiptId];
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -247,7 +247,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             delete providerMap[msg.sender][receiptId];
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -430,7 +430,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             totalAmount += amounts[i];
 
             unchecked {
-                i++;
+                ++i;
             }
         }
 
@@ -450,7 +450,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             providerMap[market][receiptId] = msg.sender;
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
@@ -494,7 +494,7 @@ contract ChromaticRouter is AccountFactory, VerifyCallback {
             providerMap[market][receiptId] = msg.sender;
 
             unchecked {
-                i++;
+                ++i;
             }
         }
     }
