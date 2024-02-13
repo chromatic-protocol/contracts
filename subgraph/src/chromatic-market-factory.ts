@@ -1,13 +1,26 @@
-import { Address } from '@graphprotocol/graph-ts'
+import { Address, ethereum } from '@graphprotocol/graph-ts'
 import {
+  ChromaticMarketFactory,
+  InterestRateRecordAppended as InterestRateRecordAppendedEvent,
+  LastInterestRateRecordRemoved as LastInterestRateRecordRemovedEvent,
   MarketCreated as MarketCreatedEvent,
-  OracleProviderRegistered as OracleProviderRegisteredEvent
+  OracleProviderRegistered as OracleProviderRegisteredEvent,
+  SettlementTokenRegistered as SettlementTokenRegisteredEvent,
+  UpdateLeverageLevel as UpdateLeverageLevelEvent,
+  UpdateTakeProfitBPSRange as UpdateTakeProfitBPSRangeEvent
 } from '../generated/ChromaticMarketFactory/ChromaticMarketFactory'
 import { ICLBToken as ICLBToken_ } from '../generated/ChromaticMarketFactory/ICLBToken'
 import { IChromaticMarket as IChromaticMarket_ } from '../generated/ChromaticMarketFactory/IChromaticMarket'
 import { IERC20Metadata } from '../generated/ChromaticMarketFactory/IERC20Metadata'
 import { IOracleProvider as IOracleProvider_ } from '../generated/ChromaticMarketFactory/IOracleProvider'
-import { ChromaticMarket, MarketCreated, CLBToken } from '../generated/schema'
+import {
+  CLBToken,
+  ChromaticMarket,
+  InterestRate,
+  InterestRatesSnapshot,
+  MarketCreated,
+  OracleProviderProperty
+} from '../generated/schema'
 import { ICLBToken, IChromaticMarket, IOracleProvider } from '../generated/templates'
 
 export function handleMarketCreated(event: MarketCreatedEvent): void {
@@ -48,7 +61,7 @@ export function handleMarketCreated(event: MarketCreatedEvent): void {
     clbTokenEntity = new CLBToken(clbTokenContract._address)
     clbTokenEntity.market = marketContract._address
     clbTokenEntity.decimals = clbTokenContract.decimals()
-    
+
     clbTokenEntity.save()
   }
 
@@ -56,5 +69,71 @@ export function handleMarketCreated(event: MarketCreatedEvent): void {
 }
 
 export function handleOracleProviderRegistered(event: OracleProviderRegisteredEvent): void {
+  saveOracleProviderProperty(event.params.oracleProvider, event)
   IOracleProvider.create(event.params.oracleProvider)
+}
+
+export function handleUpdateLeverageLevel(event: UpdateLeverageLevelEvent): void {
+  saveOracleProviderProperty(event.params.oracleProvider, event)
+}
+
+export function handleUpdateTakeProfitBPSRange(event: UpdateTakeProfitBPSRangeEvent): void {
+  saveOracleProviderProperty(event.params.oracleProvider, event)
+}
+
+function saveOracleProviderProperty(oracleProvider: Address, event: ethereum.Event): void {
+  let id = oracleProvider.toHex() + '@' + event.block.number.toString()
+  let entity = OracleProviderProperty.load(id)
+  if (entity == null) {
+    let factoryContract = ChromaticMarketFactory.bind(event.address)
+    let props = factoryContract.getOracleProviderProperties(oracleProvider)
+
+    entity = new OracleProviderProperty(id)
+    entity.oracleProvider = oracleProvider
+    entity.minTakeProfitBPS = props.minTakeProfitBPS
+    entity.maxTakeProfitBPS = props.maxTakeProfitBPS
+    entity.leverageLevel = props.leverageLevel
+    entity.blockNumber = event.block.number
+    entity.blockTimestamp = event.block.timestamp
+    entity.save()
+  }
+}
+
+export function handleSettlementTokenRegistered(event: SettlementTokenRegisteredEvent): void {
+  saveInterestRateRecords(event.params.token, event)
+}
+
+export function handleInterestRateRecordAppended(event: InterestRateRecordAppendedEvent): void {
+  saveInterestRateRecords(event.params.token, event)
+}
+
+export function handleLastInterestRateRecordRemoved(
+  event: LastInterestRateRecordRemovedEvent
+): void {
+  saveInterestRateRecords(event.params.token, event)
+}
+
+function saveInterestRateRecords(token: Address, event: ethereum.Event): void {
+  let id = token.toHex() + '@' + event.block.number.toString()
+  let entity = InterestRatesSnapshot.load(id)
+  if (entity == null) {
+    let factoryContract = ChromaticMarketFactory.bind(event.address)
+    let records = factoryContract.getInterestRateRecords(token)
+
+    entity = new InterestRatesSnapshot(id)
+    entity.settlementToken = token
+    entity.blockNumber = event.block.number
+    entity.blockTimestamp = event.block.timestamp
+    entity.save()
+
+    for (let i = 0; i < records.length; i++) {
+      let record = records[i]
+
+      let recordEntity = new InterestRate(id + '/' + record.beginTimestamp.toString())
+      recordEntity.annualRateBPS = record.annualRateBPS
+      recordEntity.beginTimestamp = record.beginTimestamp
+      recordEntity._parent = id
+      recordEntity.save()
+    }
+  }
 }

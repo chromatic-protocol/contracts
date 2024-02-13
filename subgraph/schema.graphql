@@ -17,6 +17,31 @@ type ChromaticMarket @entity(immutable: true) {
   oracleDescription: String!
 }
 
+type InterestRate @entity(immutable: true) {
+  id: ID!
+  annualRateBPS: BigInt!
+  beginTimestamp: BigInt!
+  _parent: InterestRatesSnapshot!
+}
+
+type InterestRatesSnapshot @entity(immutable: true) {
+  id: ID!
+  settlementToken: Bytes! #address
+  rates: [InterestRate!]! @derivedFrom(field: "_parent")
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
+type OracleProviderProperty @entity(immutable: true) {
+  id: ID!
+  oracleProvider: Bytes! # address
+  minTakeProfitBPS: BigInt!
+  maxTakeProfitBPS: BigInt!
+  leverageLevel: Int!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
 type LiquidityBinStatus @entity(immutable: true) {
   id: ID!
   liquidity: BigInt!
@@ -29,9 +54,12 @@ type LiquidityBinStatus @entity(immutable: true) {
 type ChromaticMarketBinStatus @entity(immutable: true) {
   id: ID!
   market: Bytes! # address
-  totalLiquidity: BigInt!
-  totalFreeLiquidity: BigInt!
-  totalBinValue: BigInt!
+  longLiquidity: BigInt!
+  longFreeLiquidity: BigInt!
+  longBinValue: BigInt!
+  shortLiquidity: BigInt!
+  shortFreeLiquidity: BigInt!
+  shortBinValue: BigInt!
   statuses: [LiquidityBinStatus!]! @derivedFrom(field: "_parent")
   blockNumber: BigInt!
   blockTimestamp: BigInt!
