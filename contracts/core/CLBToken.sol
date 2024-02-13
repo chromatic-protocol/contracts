@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.19;
 
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/interfaces/IERC1155MetadataURI.sol";

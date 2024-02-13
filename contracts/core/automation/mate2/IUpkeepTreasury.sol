@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.19;
 
 interface IUpkeepTreasury {
     function userBalance(address owner) external view returns (uint256);

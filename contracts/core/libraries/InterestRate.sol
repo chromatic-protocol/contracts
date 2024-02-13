@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.19;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {BPS} from "@chromatic-protocol/contracts/core/libraries/Constants.sol";
 import {Errors} from "@chromatic-protocol/contracts/core/libraries/Errors.sol";

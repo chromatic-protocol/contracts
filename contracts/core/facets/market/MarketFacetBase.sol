@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.19;
 
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {LpContext} from "@chromatic-protocol/contracts/core/libraries/LpContext.sol";
