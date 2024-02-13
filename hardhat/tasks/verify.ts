@@ -102,7 +102,7 @@ task('verify:core').setAction(
   }
 )
 
-task('verify:core:arbitrum').setAction(
+subtask('verify:core:arbitrum').setAction(
   async (taskArgs: TaskArguments, hre: HardhatRuntimeEnvironment): Promise<any> => {
     const { deployments } = hre
 
