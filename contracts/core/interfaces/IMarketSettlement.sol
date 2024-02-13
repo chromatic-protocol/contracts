@@ -43,4 +43,11 @@ interface IMarketSettlement {
      * @param extraData passed by keeper for passing offchain data
      */
     function updatePrice(address market, bytes calldata extraData) external;
+
+    /**
+     * @notice Withdraws a specified amount of funds from the contract to a recipient address.
+     * @param recipient The address that will receive the withdrawn funds.
+     * @param amount The amount of funds to be withdrawn.
+     */
+    function withdraw(address recipient, uint256 amount) external;
 }
