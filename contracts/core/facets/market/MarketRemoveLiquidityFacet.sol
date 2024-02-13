@@ -187,7 +187,6 @@ contract MarketRemoveLiquidityFacet is
             burnedCLBTokenAmount,
             data
         );
-        ls.deleteReceipt(receiptId);
 
         emit WithdrawLiquidity(receipt, amount, burnedCLBTokenAmount);
     }

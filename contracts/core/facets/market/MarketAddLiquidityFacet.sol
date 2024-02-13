@@ -164,7 +164,6 @@ contract MarketAddLiquidityFacet is ReentrancyGuard, MarketLiquidityFacetBase, I
             clbTokenAmount,
             data
         );
-        ls.deleteReceipt(receiptId);
 
         emit ClaimLiquidity(receipt, clbTokenAmount);
     }
