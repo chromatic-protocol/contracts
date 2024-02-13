@@ -15,6 +15,7 @@ on:
       - hardhat-package.config.ts
       - wagmi.config.ts
       - .github/workflows/release-publish-sdk.yml
+
 permissions:
   contents: write
 
