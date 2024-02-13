@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 enum ExtraModule {
     None,
+    Echo, // for debugging
     Pyth
 }
 
