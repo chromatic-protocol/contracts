@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
+import {LiquidityMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IMarketRemoveLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketRemoveLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
 import {CLBTokenLib} from "@chromatic-protocol/contracts/core/libraries/CLBTokenLib.sol";
@@ -35,6 +36,7 @@ contract MarketRemoveLiquidityFacet is
         bytes calldata data
     ) external override nonReentrant withTradingLock returns (LpReceipt memory receipt) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireRemoveLiquidityEnabled(ms);
 
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
@@ -72,6 +74,7 @@ contract MarketRemoveLiquidityFacet is
         bytes calldata data
     ) external override nonReentrant withTradingLock returns (LpReceipt[] memory receipts) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireRemoveLiquidityEnabled(ms);
         _requireFeeRatesUniqueness(tradingFeeRates);
 
         require(tradingFeeRates.length == clbTokenAmounts.length);
@@ -289,6 +292,16 @@ contract MarketRemoveLiquidityFacet is
         }
         //slither-disable-next-line calls-loop
         ctx.vault.onWithdrawLiquidity(ctx.settlementToken, recipient, amount);
+    }
+
+    /**
+     * @dev Throws if remove liquidity is disabled.
+     */
+    function _requireRemoveLiquidityEnabled(MarketStorage storage ms) internal view virtual {
+        LiquidityMode mode = ms.liquidityMode;
+        if (mode == LiquidityMode.RemoveDisabled || mode == LiquidityMode.Suspended) {
+            revert RemoveLiquidityDisabled();
+        }
     }
 
     // implement IERC1155Receiver

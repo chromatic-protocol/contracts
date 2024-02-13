@@ -6,6 +6,27 @@ bytes4 constant CLAIM_KEEPER = "KC";
 bytes4 constant CLAIM_TP = "TP";
 bytes4 constant CLAIM_SL = "SL";
 
+enum PositionMode {
+    Normal,
+    OpenDisabled,
+    CloseDisabled,
+    Suspended
+}
+
+enum LiquidityMode {
+    Normal,
+    AddDisabled,
+    RemoveDisabled,
+    Suspended
+}
+
+enum DisplayMode {
+    Normal,
+    Suspended,
+    Deprecating,
+    Deprecated
+}
+
 /**
  * @dev The OpenPositionInfo struct represents a opened trading position.
  * @param id The position identifier

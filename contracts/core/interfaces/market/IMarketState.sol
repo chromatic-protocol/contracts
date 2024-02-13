@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {PositionMode, LiquidityMode, DisplayMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IOracleProvider} from "@chromatic-protocol/contracts/oracle/interfaces/IOracleProvider.sol";
 import {IChromaticMarketFactory} from "@chromatic-protocol/contracts/core/interfaces/IChromaticMarketFactory.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
@@ -49,8 +50,44 @@ interface IMarketState {
     function protocolFeeRate() external view returns (uint16);
 
     /**
-     * @notice Set the new protocol fee rate
+     * @notice Update the new protocol fee rate
      * @param _protocolFeeRate new protocol fee rate for the market
      */
-    function setProtocolFeeRate(uint16 _protocolFeeRate) external;
+    function updateProtocolFeeRate(uint16 _protocolFeeRate) external;
+
+    /**
+     * @notice Returns the position mode
+     * @return The position mode for the market
+     */
+    function positionMode() external view returns (PositionMode);
+
+    /**
+     * @notice Update the new position mode
+     * @param _positionMode new position mode for the market
+     */
+    function updatePositionMode(PositionMode _positionMode) external;
+
+    /**
+     * @notice Returns the liquidity mode
+     * @return The liquidity mode for the market
+     */
+    function liquidityMode() external view returns (LiquidityMode);
+
+    /**
+     * @notice Update the new liquidity mode
+     * @param _liquidityMode new liquidity mode for the market
+     */
+    function updateLiquidityMode(LiquidityMode _liquidityMode) external;
+
+    /**
+     * @notice Returns the display mode
+     * @return The display mode for the market
+     */
+    function displayMode() external view returns (DisplayMode);
+
+    /**
+     * @notice Update the new display mode
+     * @param _displayMode new display mode for the market
+     */
+    function updateDisplayMode(DisplayMode _displayMode) external;
 }

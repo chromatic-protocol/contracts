@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SignedMath} from "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {PositionMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {ILiquidator} from "@chromatic-protocol/contracts/core/interfaces/ILiquidator.sol";
 import {IMarketTradeClosePosition} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketTradeClosePosition.sol";
 import {ClosePositionInfo, CLAIM_USER} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
@@ -40,6 +41,7 @@ contract MarketTradeClosePositionFacet is
         uint256 positionId
     ) external override nonReentrant withTradingLock returns (ClosePositionInfo memory closed) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireClosePositionEnabled(ms);
 
         Position storage position = PositionStorageLib.positionStorage().getStoragePosition(
             positionId
@@ -115,5 +117,15 @@ contract MarketTradeClosePositionFacet is
         emit ClaimPosition(position.owner, pnl, interest, position);
 
         ILiquidator(position.liquidator).cancelClaimPositionTask(position.id);
+    }
+
+    /**
+     * @dev Throws if close position is disabled.
+     */
+    function _requireClosePositionEnabled(MarketStorage storage ms) internal view virtual {
+        PositionMode mode = ms.positionMode;
+        if (mode == PositionMode.CloseDisabled || mode == PositionMode.Suspended) {
+            revert ClosePositionDisabled();
+        }
     }
 }

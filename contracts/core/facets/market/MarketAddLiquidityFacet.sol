@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {LiquidityMode} from "@chromatic-protocol/contracts/core/interfaces/market/Types.sol";
 import {IChromaticVault} from "@chromatic-protocol/contracts/core/interfaces/IChromaticVault.sol";
 import {IMarketAddLiquidity} from "@chromatic-protocol/contracts/core/interfaces/market/IMarketAddLiquidity.sol";
 import {IChromaticLiquidityCallback} from "@chromatic-protocol/contracts/core/interfaces/callback/IChromaticLiquidityCallback.sol";
@@ -26,6 +27,8 @@ contract MarketAddLiquidityFacet is ReentrancyGuard, MarketLiquidityFacetBase, I
         bytes calldata data
     ) external override nonReentrant withTradingLock returns (LpReceipt memory receipt) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireAddLiquidityEnabled(ms);
+
         LpContext memory ctx = newLpContext(ms);
         ctx.syncOracleVersion();
 
@@ -59,6 +62,7 @@ contract MarketAddLiquidityFacet is ReentrancyGuard, MarketLiquidityFacetBase, I
         bytes calldata data
     ) external override nonReentrant withTradingLock returns (LpReceipt[] memory receipts) {
         MarketStorage storage ms = MarketStorageLib.marketStorage();
+        _requireAddLiquidityEnabled(ms);
         _requireFeeRatesUniqueness(tradingFeeRates);
 
         require(tradingFeeRates.length == amounts.length);
@@ -247,5 +251,15 @@ contract MarketAddLiquidityFacet is ReentrancyGuard, MarketLiquidityFacetBase, I
      */
     function distributeEarningToBins(uint256 earning, uint256 marketBalance) external onlyVault {
         MarketStorageLib.marketStorage().liquidityPool.distributeEarning(earning, marketBalance);
+    }
+
+    /**
+     * @dev Throws if add liquidity is disabled.
+     */
+    function _requireAddLiquidityEnabled(MarketStorage storage ms) internal view virtual {
+        LiquidityMode mode = ms.liquidityMode;
+        if (mode == LiquidityMode.AddDisabled || mode == LiquidityMode.Suspended) {
+            revert AddLiquidityDisabled();
+        }
     }
 }
