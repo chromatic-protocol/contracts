@@ -9,7 +9,8 @@ import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 export const MATE2_AUTOMATION_ADDRESS: { [key: number]: string } = {
-  421614: '0xCc25d82dd205bF21eCd6CE63559415AFce93a00F'
+  421614: '0xCc25d82dd205bF21eCd6CE63559415AFce93a00F',
+  31337: '0xCc25d82dd205bF21eCd6CE63559415AFce93a00F'  // same to forked from arbitrum_sepolia
 }
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
