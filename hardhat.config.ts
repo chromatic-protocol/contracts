@@ -97,7 +97,7 @@ const config: HardhatUserConfig = {
     arbitrum_one: {
       // mainnet
       ...common,
-      url: 'https://arb1.arbitrum.io/rpc',
+      url: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 42161
     },
     mantle: {
@@ -129,7 +129,6 @@ const config: HardhatUserConfig = {
   docgen: docgenConfig,
   etherscan: {
     apiKey: {
-      arbitrumSepolia: process.env.ARBISCAN_SEPOLIA_API_KEY!,
       mantleTestnet: 'test', // prevent MissingApiKeyError
       mantle: 'test' // prevent MissingApiKeyError
     },
