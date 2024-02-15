@@ -36,6 +36,7 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
       - run: |
           yarn clean
+          find contracts -name \*.sol -exec sed -i ""  "s/0.8.19;/0.8.20;/g" {} \;
           yarn docs
           rm -rf docs-repo/docs/contracts/reference/*/
           cp -r docs/out/* docs-repo/docs/contracts/reference/
