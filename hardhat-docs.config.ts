@@ -6,16 +6,10 @@ const defaultDocsConfig: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: '0.8.20', // for struct and enum
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 30000
-          }
-        }
+        version: '0.8.20' // for struct and enum
       }
     ]
-  },
+  }
 }
 
 export default defaultDocsConfig
