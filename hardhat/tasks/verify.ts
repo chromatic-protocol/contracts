@@ -120,12 +120,14 @@ subtask('verify:core:arbitrum').setAction(
     })
     console.log(chalk.yellow(`✨ verify Mate2Liquidator`))
 
-    const marketSettlement = await deployments.get('Mate2MarketSettlement')
-    await verify(hre, {
-      address: marketSettlement.address,
-      constructorArguments: marketSettlement.args
-    })
-    console.log(chalk.yellow(`✨ verify Mate2MarketSettlement`))
+    const marketSettlement = await deployments.getOrNull('Mate2MarketSettlement')
+    if (marketSettlement) {
+      await verify(hre, {
+        address: marketSettlement.address,
+        constructorArguments: marketSettlement.args
+      })
+      console.log(chalk.yellow(`✨ verify Mate2MarketSettlement`))
+    }
   }
 )
 

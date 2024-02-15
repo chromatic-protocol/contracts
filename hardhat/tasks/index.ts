@@ -1,3 +1,4 @@
+import './factory'
 import './fixed-price-swap-router'
 import './market'
 import './oracle-provider'
