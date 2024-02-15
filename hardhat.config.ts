@@ -129,6 +129,8 @@ const config: HardhatUserConfig = {
   docgen: docgenConfig,
   etherscan: {
     apiKey: {
+      arbitrumSepolia: process.env.ARBISCAN_API_KEY!,
+      arbitrumOne: process.env.ARBISCAN_API_KEY!,
       mantleTestnet: 'test', // prevent MissingApiKeyError
       mantle: 'test' // prevent MissingApiKeyError
     },
