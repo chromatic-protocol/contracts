@@ -9,6 +9,7 @@ import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 export const MATE2_AUTOMATION_ADDRESS: { [key: number]: string } = {
+  42161: '0x2959Cac7c8fB17Af213f6aA9ea50C3779FcEbbEa',
   421614: '0x14cC9A5B88425d357AEca1B13B8cd6F81388Fe86',
   31337: '0x14cC9A5B88425d357AEca1B13B8cd6F81388Fe86' // same to forked from arbitrum_sepolia
 }
