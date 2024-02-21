@@ -5,7 +5,6 @@ import {
   IERC20Metadata__factory
 } from '@chromatic/typechain-types'
 import { Token } from '@uniswap/sdk-core'
-import { WETH9 } from '@uniswap/smart-order-router'
 import { ContractRunner, getAddress, isAddress } from 'ethers'
 import { HardhatRuntimeEnvironment, TaskArguments } from 'hardhat/types'
 
@@ -50,6 +49,7 @@ export async function findSettlementToken(
 }
 
 const WETH: { [key: number]: string } = {
+  42161: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
 }
 
@@ -58,7 +58,7 @@ const WMNT: { [key: number]: string } = {
   5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
 }
 
-const TOKEN_SYMBOLS: Record<string, (chainId: keyof typeof WETH9) => Token> = {
+const TOKEN_SYMBOLS: Record<string, (chainId: number) => Token> = {
   // DAI: DAI_ON,
   // USDC: USDC_ON,
   // USDT: USDT_ON,
@@ -66,8 +66,6 @@ const TOKEN_SYMBOLS: Record<string, (chainId: keyof typeof WETH9) => Token> = {
     if (WETH[chainId]) {
       return new Token(chainId, WETH[chainId], 18)
     }
-    const weth = WETH9[chainId]
-    if (weth) return weth
     throw new Error(`Chain id: ${chainId} not supported`)
   },
   WMNT: (chainId) => {

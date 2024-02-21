@@ -1,16 +1,17 @@
 import { ChromaticMarketFactory } from '@chromatic/typechain-types'
-import { SWAP_ROUTER_02_ADDRESSES, WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
+  42161: '0xE592427A0AEce92De3Edee1F18E0157C05861564', // UniswapRouter V3
   421614: '0xD26b223eeF87B529Fa3cA768DA217183081a4C8E', // FixedPriceSwapRouter
   5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
   5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
 }
 
 const WETH: { [key: number]: string } = {
+  42161: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
 }
 
@@ -24,7 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const echainId: keyof typeof WETH9 =
+  const echainId =
     network.name === 'anvil'
       ? config.networks.arbitrum_sepolia.chainId!
       : network.name === 'anvil_mantle'
@@ -33,7 +34,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))
 
-  const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
+  const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId]
 
   const deployOpts = { from: deployer }
 
@@ -60,16 +61,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { address: marketAddLiquidityFacet } = await deploy('MarketAddLiquidityFacet', deployOpts)
   console.log(chalk.yellow(`✨ MarketAddLiquidityFacet: ${marketAddLiquidityFacet}`))
 
-  const { address: marketRemoveLiquidityFacet } = await deploy('MarketRemoveLiquidityFacet', deployOpts)
+  const { address: marketRemoveLiquidityFacet } = await deploy(
+    'MarketRemoveLiquidityFacet',
+    deployOpts
+  )
   console.log(chalk.yellow(`✨ MarketRemoveLiquidityFacet: ${marketRemoveLiquidityFacet}`))
 
   const { address: marketLensFacet } = await deploy('MarketLensFacet', deployOpts)
   console.log(chalk.yellow(`✨ MarketLensFacet: ${marketLensFacet}`))
 
-  const { address: marketTradeOpenPositionFacet } = await deploy('MarketTradeOpenPositionFacet', deployOpts)
+  const { address: marketTradeOpenPositionFacet } = await deploy(
+    'MarketTradeOpenPositionFacet',
+    deployOpts
+  )
   console.log(chalk.yellow(`✨ MarketTradeOpenPositionFacet: ${marketTradeOpenPositionFacet}`))
 
-  const { address: marketTradeClosePositionFacet } = await deploy('MarketTradeClosePositionFacet', deployOpts)
+  const { address: marketTradeClosePositionFacet } = await deploy(
+    'MarketTradeClosePositionFacet',
+    deployOpts
+  )
   console.log(chalk.yellow(`✨ MarketTradeClosePositionFacet: ${marketTradeClosePositionFacet}`))
 
   const { address: marketLiquidateFacet } = await deploy('MarketLiquidateFacet', deployOpts)
@@ -105,7 +115,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // deploy & set KeeperFeePayer
 
-  const wrappedTokenAddress = WMNT[echainId] ?? WETH[echainId] ?? WETH9[echainId].address
+  const wrappedTokenAddress = WMNT[echainId] ?? WETH[echainId]
 
   const { address: keeperFeePayer } = await deploy('KeeperFeePayer', {
     ...deployOpts,

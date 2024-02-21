@@ -3,7 +3,6 @@ import {
   IMate2AutomationRegistry1_1__factory
 } from '@chromatic/typechain-types'
 import { GELATO_ADDRESSES } from '@gelatonetwork/automate-sdk'
-import { WETH9 } from '@uniswap/smart-order-router'
 import chalk from 'chalk'
 import type { DeployFunction } from 'hardhat-deploy/types'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
@@ -19,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const echainId: keyof typeof WETH9 =
+  const echainId =
     network.name === 'anvil' ? config.networks.arbitrum_sepolia.chainId! : network.config.chainId!
 
   const automationAddress = MATE2_AUTOMATION_ADDRESS[echainId]
@@ -91,7 +90,7 @@ const _func_for_gelato: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const { deploy } = deployments
   const { deployer } = await getNamedAccounts()
 
-  const echainId: keyof typeof WETH9 =
+  const echainId =
     network.name === 'anvil' ? config.networks.arbitrum_sepolia.chainId! : network.config.chainId!
 
   console.log(chalk.yellow(`✨ Deploying... to ${network.name}`))

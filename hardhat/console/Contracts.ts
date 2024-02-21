@@ -32,29 +32,28 @@ import {
   TestSettlementToken,
   TestSettlementToken__factory
 } from '@chromatic/typechain-types'
-import {
-  ID_TO_CHAIN_ID,
-  SUPPORTED_CHAINS,
-  SWAP_ROUTER_02_ADDRESSES,
-  USDC_ON,
-  WETH9
-} from '@uniswap/smart-order-router'
 import { NonceManager, Signer, Wallet, ZeroAddress } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const SWAP_ROUTER_ADDRESS: { [key: number]: string } = {
+  42161: '0xE592427A0AEce92De3Edee1F18E0157C05861564', // UniswapRouter V3
   421614: '0xD26b223eeF87B529Fa3cA768DA217183081a4C8E', // FixedPriceSwapRouter
   5000: '0x319B69888b0d11cEC22caA5034e25FfFBDc88421', // mantle AGNI
   5001: '0xe2DB835566F8677d6889ffFC4F3304e8Df5Fc1df' // mantle_testnet AGNI
 }
 
 const WETH: { [key: number]: string } = {
+  42161: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   421614: '0x980B62Da83eFf3D4576C647993b0c1D7faf17c73'
 }
 
 const WMNT: { [key: number]: string } = {
   5000: '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8', // mantle
   5001: '0xea12be2389c2254baad383c6ed1fa1e15202b52a' // mantle_testnet
+}
+
+const USDT: { [key: number]: string } = {
+  42161: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'
 }
 
 // prettier-ignore
@@ -75,7 +74,7 @@ export class Contracts {
   private _keeperFeePayer!: KeeperFeePayer
   private _weth!: IWETH9
   private _wmnt!: IWETH9
-  private _usdc!: IERC20Metadata
+  private _usdt: IERC20Metadata | undefined
   private _ceth: TestSettlementToken | undefined
   private _cbtc: TestSettlementToken | undefined
   private _cusdt: TestSettlementToken | undefined
@@ -87,7 +86,7 @@ export class Contracts {
 
   async connect(privateKey: string | undefined) {
     const { config, network, ethers } = this.hre
-    const echainId: keyof typeof WETH9 =
+    const echainId =
       network.name === 'anvil'
         ? config.networks.arbitrum_sepolia.chainId!
         : network.name === 'anvil_mantle'
@@ -120,14 +119,14 @@ export class Contracts {
       this._cusdt = this.connectTestSettlementToken(cusdtddress)
     }
 
-    const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId] ?? SWAP_ROUTER_02_ADDRESSES(echainId)
+    const swapRouterAddress = SWAP_ROUTER_ADDRESS[echainId]
     this._swapRouter = ISwapRouter__factory.connect(swapRouterAddress, this._signer)
 
-    this._weth = IWETH9__factory.connect(WETH[echainId] ?? WETH9[echainId].address, this._signer!)
+    this._weth = IWETH9__factory.connect(WETH[echainId], this._signer!)
 
-    if (SUPPORTED_CHAINS.includes(echainId)) {
-      const chainId = ID_TO_CHAIN_ID(echainId) as keyof typeof WETH9
-      this._usdc = this.connectToken(USDC_ON(chainId).address)
+    const usdtAddress = USDT[echainId]
+    if (usdtAddress) {
+      this._usdt = IERC20Metadata__factory.connect(usdtAddress, this._signer!)
     }
 
     const wmntAddress = WMNT[echainId]
@@ -189,8 +188,8 @@ export class Contracts {
     return this._wmnt
   }
 
-  get usdc(): IERC20Metadata {
-    return this._usdc
+  get usdt(): IERC20Metadata | undefined {
+    return this._usdt
   }
 
   get ceth(): TestSettlementToken | undefined {
