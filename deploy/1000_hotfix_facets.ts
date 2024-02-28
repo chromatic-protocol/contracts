@@ -129,7 +129,7 @@ async function updateFacet(marketAddress: string, newFacets: Facets, runner: Con
           console.log('\t\tAlready updated')
           return
         } else {
-          const functionSelectors = await loupe.facetFunctionSelectors(oldFacet)
+          const functionSelectors = [...(await loupe.facetFunctionSelectors(oldFacet))]
           return {
             facetAddress: newFacet,
             action: 1,
