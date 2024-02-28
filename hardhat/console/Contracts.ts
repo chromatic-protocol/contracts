@@ -15,6 +15,8 @@ import {
   ICLBToken__factory,
   IChromaticMarket,
   IChromaticMarket__factory,
+  IDiamondLoupe,
+  IDiamondLoupe__factory,
   IERC20Metadata,
   IERC20Metadata__factory,
   IOracleProvider,
@@ -266,6 +268,10 @@ export class Contracts {
 
   connectMarketSettlement(address: string): Mate2MarketSettlement {
     return Mate2MarketSettlement__factory.connect(address, this._signer)
+  }
+
+  connectIDiamondLoupe(address: string): IDiamondLoupe {
+    return IDiamondLoupe__factory.connect(address, this._signer);
   }
 
   /*
