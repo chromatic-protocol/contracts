@@ -50,7 +50,6 @@ contract MarketRemoveLiquidityFacet is
         );
 
         uint256 clbTokenAmount = ctx.clbToken.balanceOf(address(this), clbTokenId) - balanceBefore;
-        if (clbTokenAmount == 0) revert TooSmallAmount();
 
         receipt = _removeLiquidity(
             ctx,
@@ -146,6 +145,8 @@ contract MarketRemoveLiquidityFacet is
         int16 tradingFeeRate,
         uint256 clbTokenAmount
     ) private returns (LpReceipt memory receipt) {
+        if (clbTokenAmount == 0) revert TooSmallAmount();
+        
         liquidityPool.acceptRemoveLiquidity(ctx, tradingFeeRate, clbTokenAmount);
 
         receipt = _newLpReceipt(
@@ -272,6 +273,8 @@ contract MarketRemoveLiquidityFacet is
 
         address recipient = receipt.recipient;
         uint256 clbTokenAmount = receipt.amount;
+
+        if (clbTokenAmount == 0) return (receipt, 0, 0);
 
         (amount, burnedCLBTokenAmount) = liquidityPool.acceptWithdrawLiquidity(
             ctx,

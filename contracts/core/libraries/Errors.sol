@@ -24,7 +24,7 @@ library Errors {
     /**
      * @dev Error code indicating that the specified value exceeds the allowed margin range when claim a position.
      */
-    string constant EXCEED_MARGIN_RANGE = "IOV";
+    string constant EXCEED_MARGIN_RANGE = "EMR";
 
     /**
      * @dev Error code indicating that the provided trading fee rate is not supported.
