@@ -1,0 +1,54 @@
+name: pr to mage
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+    paths:
+      - contracts/**
+      - deployments/**
+      - hardhat.config.ts
+      - .github/workflows/pr-mage.yml
+      - package.json
+      - yarn.lock
+permissions:
+  contents: write
+
+jobs:
+  PR:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 # Checkout our working repository
+      - uses: chromatic-protocol/action-github-app-token@v1
+        id: generate-token
+        with:
+          app_id: ${{ secrets.PR_ACTION_APP_ID }}
+          private_key: ${{ secrets.PR_ACTION_PRIVATE }}
+
+      # make a PR to chromatic-protocol/mage-hardhat
+      - uses: actions/checkout@v3
+        with:
+          repository: chromatic-protocol/mage-hardhat
+          ref: main
+          path: hardhat
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: copy contracts
+        run: |
+          cp -rf contracts/* hardhat/contracts/
+          cp -rf deployments/* hardhat/deployments/
+
+      - name: pull-request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          base: main
+          branch: gen-contracts
+          path: hardhat
+          add-paths: |
+            contracts/**
+            deployments/**
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: ${{ github.event.pull_request.title }}
+          title: Changes from contracts
