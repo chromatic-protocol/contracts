@@ -27,10 +27,10 @@ jobs:
       tag: ${{ steps.changelog.outputs.tag }}
       version: ${{ steps.changelog.outputs.version }}
     steps:
-      - uses: actions/checkout@v3 # Checkout our working repository
+      - uses: actions/checkout@v4 # Checkout our working repository
       - name: Conventional Changelog Action
         id: changelog
-        uses: chromatic-protocol/conventional-changelog-action@v4
+        uses: chromatic-protocol/conventional-changelog-action@v5.2.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           output-file: false
@@ -40,13 +40,13 @@ jobs:
           # skip-version-file: false
           # skip-commit: false
       - name: Create Release # This action will create the actual release
-        uses: actions/create-release@v1.1.4
+        uses: ncipollo/release-action@v1.14.0
         if: ${{ steps.changelog.outputs.skipped == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.changelog.outputs.tag }}
-          release_name: ${{ steps.changelog.outputs.tag }}
+          tag: ${{ steps.changelog.outputs.tag }}
+          name: ${{ steps.changelog.outputs.tag }}
           body: ${{ steps.changelog.outputs.clean_changelog }}
           prerelease: true
   Publish:
@@ -56,7 +56,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: chromatic-protocol/action-setup-foundry-yarn@v1
+      - uses: chromatic-protocol/action-setup-foundry-yarn@v2
         with:
           registry-url: https://registry.npmjs.org
           scope: '@chromatic-protocol'
@@ -74,14 +74,14 @@ jobs:
           yarn wagmi generate
           npm pkg set dependencies="`npm pkg get dependencies`" --prefix ./contracts --json
           yarn publish --new-version="${{ needs.Release.outputs.version }}" --cwd contracts --no-git-tag-version --no-commit-hooks --access public
-      - uses: chromatic-protocol/action-github-app-token@v1
+      - uses: chromatic-protocol/action-github-app-token@v2
         id: generate-token
         with:
           app_id: ${{ secrets.PR_ACTION_APP_ID }}
           private_key: ${{ secrets.PR_ACTION_PRIVATE }}
 
       # make a PR to chromatic-protocol/sdk
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: chromatic-protocol/sdk
           ref: main
@@ -94,7 +94,7 @@ jobs:
           cp -r package-build-v6/src.ts/* sdk/packages/sdk-ethers-v6/src/gen/
           cp wagmi/index.ts sdk/packages/sdk-viem/src/gen/index.ts
       - name: pull-request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           base: main
           branch: gen-contract
@@ -108,7 +108,7 @@ jobs:
           title: Changes from contracts
 
       # make a PR to chromatic-protocol/chromatic-tasks
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: chromatic-protocol/chromatic-tasks
           ref: main
@@ -118,7 +118,7 @@ jobs:
           rm -rf tasks/src/gen/market/*
           cp -r wagmi/* tasks/src/gen/market/
       - name: pull-request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           base: main
           branch: gen-contract
