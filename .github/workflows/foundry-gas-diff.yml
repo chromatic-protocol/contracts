@@ -18,7 +18,7 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - uses: chromatic-protocol/action-setup-foundry-yarn@v1
+      - uses: chromatic-protocol/action-setup-foundry-yarn@v2
       # Add any step generating a gas report to a temporary file named gasreport.ansi. For example:
       - name: Run tests
         run: forge test --gas-report --optimizer-runs 30000 --no-match-path "**/*.integrated.t.sol" > gasreport.ansi # <- this file name should be unique in your repository!
@@ -29,7 +29,7 @@ jobs:
           FUZZ_ENTROPY: 0x${{ github.event.pull_request.base.sha || github.sha }}
 
       - name: Compare gas reports
-        uses: Rubilmax/foundry-gas-diff@v3.13
+        uses: chromatic-protocol/foundry-gas-diff@v3.17
         with:
           summaryQuantile: 0.9 # only display the 10% most significant gas diffs in the summary (defaults to 20%)
           sortCriteria: avg,max # sort diff rows by criteria

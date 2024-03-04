@@ -21,15 +21,15 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3 # Checkout our working repository
-      - uses: chromatic-protocol/action-github-app-token@v1
+      - uses: actions/checkout@v4 # Checkout our working repository
+      - uses: chromatic-protocol/action-github-app-token@v2
         id: generate-token
         with:
           app_id: ${{ secrets.PR_ACTION_APP_ID }}
           private_key: ${{ secrets.PR_ACTION_PRIVATE }}
 
       # make a PR to chromatic-protocol/mage-hardhat
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: chromatic-protocol/mage-hardhat
           ref: main
@@ -41,7 +41,7 @@ jobs:
           cp -rf deployments/* hardhat/deployments/
 
       - name: pull-request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           base: main
           branch: gen-contracts
